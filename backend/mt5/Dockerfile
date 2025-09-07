@@ -20,7 +20,6 @@ RUN apt-get install -y \
     python3-pip \
     wget \
     python3-pyxdg \
-    netcat \
     netcat-openbsd
 
 # Add WineHQ repository key and APT source
