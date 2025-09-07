@@ -82,6 +82,7 @@ Thumbs.db
 
 # Jupyter Notebook
 .ipynb_checkpoints
+WARP.md
 
 # pyenv
 .python-version

@@ -1,5 +1,5 @@
 # Stage 1: Base image with apt packages
-FROM ghcr.io/linuxserver/baseimage-kasmvnc:debianbullseye-8446af38-ls104 AS base
+FROM ghcr.io/linuxserver/baseimage-kasmvnc:ubuntunoble-ffa21aaf-ls56 AS base
 
 ENV TITLE=MetaTrader
 ENV WINEARCH=win64
@@ -21,23 +21,26 @@ RUN apt-get install -y \
     wget \
     python3-pyxdg \
     netcat \
-    && pip3 install --upgrade pip
+    netcat-openbsd
 
 # Add WineHQ repository key and APT source
-RUN wget -q https://dl.winehq.org/wine-builds/winehq.key > /dev/null 2>&1\
-    && apt-key add winehq.key \
-    && add-apt-repository 'deb https://dl.winehq.org/wine-builds/debian/ bullseye main' \
-    && rm winehq.key
+RUN mkdir -pm755 /etc/apt/keyrings && \
+    wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
+    echo "deb [arch=amd64,i386 signed-by=/etc/apt/keyrings/winehq-archive.key] https://dl.winehq.org/wine-builds/ubuntu/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/winehq.list
 
 # Add i386 architecture and update package lists
-RUN dpkg --add-architecture i386 \
-    && apt-get update
+RUN dpkg --add-architecture i386 && \
+    apt-get update
 
 # Install WineHQ stable package and dependencies
-RUN apt-get install --install-recommends -y \
-    winehq-stable \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get install --install-recommends -y winehq-stable
+
+# Install Winetricks
+RUN wget -O /tmp/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && \
+    chmod +x /tmp/winetricks && \
+    mv /tmp/winetricks /usr/local/bin/winetricks && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Stage 2: Final image
 FROM base

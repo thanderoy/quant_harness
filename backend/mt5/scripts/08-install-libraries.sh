@@ -2,7 +2,7 @@
 
 source /scripts/02-common.sh
 
-log_message "RUNNING" "06-install-libraries.sh"
+log_message "RUNNING" "08-install-libraries.sh"
 
 # Install MetaTrader5 library in Windows if not installed
 log_message "INFO" "Installing MetaTrader5 library and dependencies in Windows"

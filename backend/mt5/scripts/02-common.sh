@@ -3,16 +3,16 @@
 # Set variables
 mt5setup_url="https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe"
 mt5file="/config/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe"
-python_url="https://www.python.org/ftp/python/3.9.13/python-3.9.13-amd64.exe"
+python_url="https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe"
 wine_executable="wine"
-metatrader_version="5.0.36"
+metatrader_version="5.2.60"
 mt5server_port=18812
 
 # Function to show messages
 log_message() {
     local level=$1
     local message=$2
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - [$level] $message" >> /var/log/mt5_setup.log
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - [$level] $message" | tee -a /var/log/mt5_setup.log
 }
 
 # Function to check if a Python package is installed in Wine
