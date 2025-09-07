@@ -18,10 +18,10 @@ if [ ! -e "/config/.wine/drive_c/windows/gecko" ]; then
     wget -O "$TMP_DIR/gecko64.msi" "$GECKO_X64_URL" > /dev/null 2>&1
     wget -O "$TMP_DIR/gecko32.msi" "$GECKO_X86_URL" > /dev/null 2>&1
     if [ -f "$TMP_DIR/gecko64.msi" ]; then
-        wine msiexec /i "$TMP_DIR/gecko64.msi" /qn || true
+        $wine_executable msiexec /i "$TMP_DIR/gecko64.msi" /qn || true
     fi
     if [ -f "$TMP_DIR/gecko32.msi" ]; then
-        wine msiexec /i "$TMP_DIR/gecko32.msi" /qn
+        $wine_executable msiexec /i "$TMP_DIR/gecko32.msi" /qn
     fi
     rm -rf "$TMP_DIR"
 else

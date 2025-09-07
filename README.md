@@ -1,32 +1,29 @@
-# MetaTrader 5 Docker Setup
+# MetaTrader5 on Wine with Python Setup
 
-![Banner](https://github.com/user-attachments/assets/6b5101ea-275b-4ae4-8f65-6a4fc30f30bf)
 
 ## Table of Contents
 
-- [MetaTrader 5 Docker Setup](#metatrader-5-docker-setup)
-  - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
-  - [Features](#features)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Configuration](#configuration)
-    - [Environment Variables](#environment-variables)
-    - [Docker Compose Services](#docker-compose-services)
-    - [Volumes](#volumes)
-  - [Usage](#usage)
-  - [Logging](#logging)
-  - [Troubleshooting](#troubleshooting)
-  - [Contributing](#contributing)
-  - [License](#license)
+   - [Overview](#overview)
+   - [Features](#features)
+   - [Prerequisites](#prerequisites)
+   - [Installation](#installation)
+   - [Configuration](#configuration)
+   - [Usage](#usage)
+   - [Troubleshooting](#troubleshooting)
+   - [Contributing](#contributing)
+   - [License](#license)
 
 ## Overview
 
-This project provides a Docker-based setup to run MetaTrader 5 (MT5) using Wine on a Debian-based environment. It leverages Traefik as a reverse proxy for managing HTTP/HTTPS traffic and ensures secure access through Let's Encrypt certificates. The setup includes VNC for remote desktop access and is configured to run as a background service with proper logging and environment management.
+Right off the bat!!! This project HEAVILY borrows inspiration from [Sesto's Project](https://github.com/sesto-dev/metatrader5-quant-server-python/tree/chapter-4).
+   It's basically an untethered fork.
+
+This project provides a Dockerized setup to run MetaTrader5 (MT5) using Wine on an Ubuntu environment. It leverages Traefik as a reverse proxy for managing HTTP/HTTPS traffic and ensures secure access through Let's Encrypt certificates. The setup includes VNC for remote desktop access and is configured to run as a background service with proper logging and environment management.
+
 
 ## Features
 
-- **Dockerized Environment:** Simplifies deployment and management of MT5.
+- **Dockerized Environment:** Simplifies deployment, management and, scalability of MT5 instances.
 - **Wine Compatibility:** Runs MetaTrader 5 on a Linux-based system.
 - **Traefik Integration:** Handles reverse proxying with automatic SSL certificate generation via Let's Encrypt.
 - **VNC Access:** Provides remote desktop access to the MT5 application.
@@ -42,54 +39,41 @@ This project provides a Docker-based setup to run MetaTrader 5 (MT5) using Wine 
 
 ## Installation
 
-1. **Clone the Repository**
+1. **Clone Repository:**
+```bash
+git clone https://github.com/thanderoy/wine-mt5-python-setup.git
+cd wine-mt5-python-setup
+```
 
-   ```bash
-   git clone -b chapter-1 --single-branch https://github.com/sesto-dev/metatrader5-linux-django-docker.git
-   cd metatrader5-linux-django-docker
-   ```
+2. **Environment Setup:**
+```bash
+cp .env.example .env
+```
 
-2. **Configure Environment Variables**
+3. **Configure Environment:**
+```env
+# Required Variables
+TRAEFIK_DOMAIN=traefik.yourdomain.com
+VNC_DOMAIN=vnc.yourdomain.com
+API_DOMAIN=api.yourdomain.com
+DJANGO_DOMAIN=app.yourdomain.com
 
-   Create a `.env` file based on the provided example:
+# Security
+TRAEFIK_USERNAME=admin
+TRAEFIK_HASHED_PASSWORD=your_hashed_password
+ACME_EMAIL=your@email.com
 
-   ```bash
-   cp .env.example .env
-   ```
+# Database
+POSTGRES_DB=mt5db
+POSTGRES_USER=mt5user
+POSTGRES_PASSWORD=securepassword
+```
 
-   Open the `.env` file and set the necessary variables:
-
-   ```env
-   # Backend - MT5
-   CUSTOM_USER=admin
-   PASSWORD=yourpassword
-   VNC_DOMAIN=your-vnc-domain.com
-
-   # Traefik
-   TRAEFIK_DOMAIN=your-traefik-domain.com
-   TRAEFIK_USERNAME=yourusername
-   ACME_EMAIL=youremail@example.com
-   ```
-
-   **Note:** To generate and set the hashed password in one command for Traefik's HTTP Basic Auth, you can use the following command:
-
-   ```bash
-   export TRAEFIK_HASHED_PASSWORD=$(openssl passwd -apr1 $PASSWORD)
-   ```
-
-3. **Create Docker Network**
-
-   ```bash
-   docker network create traefik-public
-   ```
-
-4. **Build and Start the Services**
-
-   ```bash
-   docker-compose up -d
-   ```
-
-This command builds the Docker images and starts the services in detached mode.
+4. **Start Services:**
+```bash
+docker network create traefik-public
+docker-compose up -d
+```
 
 ## Configuration
 
@@ -102,46 +86,42 @@ This command builds the Docker images and starts the services in detached mode.
 - `TRAEFIK_USERNAME`: Username for Traefik basic authentication.
 - `ACME_EMAIL`: Email address for Let's Encrypt notifications.
 
-### Docker Compose Services
+### Service Architecture
 
-- **Traefik:** Acts as a reverse proxy with HTTPS support.
-- **MT5:** Runs MetaTrader 5 using Wine.
+- **Traefik (Port 80, 443):** Reverse proxy, SSL termination
+- **MT5 (Port 5001):** Trading platform API
+- **VNC (Port 3000):** Remote desktop access
+- **Django (Port 8000):** Web interface
+- **PostgreSQL (Port 5432):** Database
+- **Redis (Port 6379):** Cache and message broker
 
 ### Volumes
 
-- `/var/run/docker.sock`: Allows Traefik to monitor Docker services.
-- `./config`: Stores Wine configurations and MT5 data.
-- `traefik-public-certificates`: Persists SSL certificates generated by Let's Encrypt.
+- `./config:/config`: Wine and MT5 configuration
+- `postgres-data:/var/lib/postgresql/data`: Database persistence
+- `static_volume:/app/staticfiles`: Django static files
 
 ## Usage
 
-1. **Accessing MetaTrader 5**
+### Access Points
 
-   Navigate to `https://your-vnc-domain.com` in your web browser to access the VNC interface for MetaTrader 5.
+- MT5 VNC Interface: `https://vnc.yourdomain.com`
+- API Endpoint: `https://api.yourdomain.com`
+- Django Admin: `https://app.yourdomain.com/admin`
+- Traefik Dashboard: `https://traefik.yourdomain.com`
 
-2. **Traefik Dashboard**
+### Common Commands
 
-   Access the Traefik dashboard at `https://your-traefik-domain.com`. You will be prompted for the Traefik username and password configured in the `.env` file.
+```bash
+# View logs
+docker-compose logs -f mt5
 
-3. **Managing Services**
+# Restart specific service
+docker-compose restart mt5
 
-   - **Start Services:**
-
-     ```bash
-     docker-compose up -d
-     ```
-
-   - **Stop Services:**
-
-     ```bash
-     docker-compose down
-     ```
-
-   - **View Logs:**
-
-     ```bash
-     docker-compose logs -f
-     ```
+# Check service status
+docker-compose ps
+```
 
 ## Logging
 
@@ -155,45 +135,30 @@ Logs are managed per service and can be viewed using Docker commands or integrat
 
 ## Troubleshooting
 
-- **Traefik Not Accessible:**
+### Common Issues
 
-  - Ensure that ports `80` and `443` are open and not blocked by a firewall.
-  - Verify that your domain DNS settings are correctly pointing to your server.
+1. **MT5 Container Fails to Start:**
+   - Check Wine initialization logs
+   - Verify SSL certificate permissions
+   - Ensure sufficient system resources
 
-- **MT5 Not Starting:**
+2. **API Connection Issues:**
+   - Verify MT5 terminal login credentials
+   - Check network connectivity
+   - Review API logs for errors
 
-  - Check the logs of the `mt5` service for any installation errors.
-  - Ensure that Wine dependencies are properly installed.
-
-- **VNC Connection Issues:**
-  - Confirm that the VNC service is running and accessible via the specified domain.
-  - Verify network configurations and firewall settings.
+3. **SSL Certificate Errors:**
+   - Ensure correct DNS configuration
+   - Check Traefik logs
+   - Verify ACME challenge access
 
 ## Contributing
 
-Contributions are welcome! Please follow these steps:
-
-1. **Fork the Repository**
-
-2. **Create a Feature Branch**
-
-   ```bash
-   git checkout -b feature/YourFeature
-   ```
-
-3. **Commit Your Changes**
-
-   ```bash
-   git commit -m "Add Your Feature"
-   ```
-
-4. **Push to the Branch**
-
-   ```bash
-   git push origin feature/YourFeature
-   ```
-
-5. **Open a Pull Request**
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 

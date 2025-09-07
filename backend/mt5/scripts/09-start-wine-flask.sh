@@ -2,12 +2,12 @@
 
 source /scripts/02-common.sh
 
-log_message "RUNNING" "07-start-wine-flask.sh"
+log_message "RUNNING" "09-start-wine-flask.sh"
 
 log_message "INFO" "Starting Flask server in Wine environment..."
 
 # Run the Flask app using Wine's Python
-wine python /app/app.py &
+$wine_executable python /app/app.py &
 
 FLASK_PID=$!
 

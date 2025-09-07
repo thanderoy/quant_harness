@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-%j5tpuhd$lvp23tt+bszj2(xc=b(0o#@h4#r5ty1i5tog8=cmu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [os.getenv('DJANGO_DOMAIN'), 'localhost', '127.0.0.1', 'example.com', 'django']
+ALLOWED_HOSTS = [os.getenv('DJANGO_DOMAIN'), os.getenv('GRAFANA_DOMAIN'), 'localhost', '127.0.0.1', 'roythan.de', 'django']
 
 CSRF_TRUSTED_ORIGINS = [
     f"https://{os.getenv('DJANGO_DOMAIN')}",

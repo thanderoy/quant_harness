@@ -4,8 +4,8 @@ set -euo pipefail
 # Source common variables and functions
 source /scripts/02-common.sh
 
-log_message "INFO", "------------------------------------------------"
-log_message "INFO", "Running installation scripts..."
+log_message "INFO" "------------------------------------------------"
+log_message "INFO" "Running installation scripts..."
 
 # Run installation scripts
 /scripts/03-install-gecko.sh
