@@ -3,7 +3,7 @@
 This file provides guidance to WARP (warp.dev) when working with code in this repository.
 
 Project scope
-- Docker-orchestrated stack to run MetaTrader 5 (MT5) under Wine, expose an MT5 HTTP API (Flask), and a Django app that consumes it. Traefik fronts external access. Postgres/Redis backends and a full monitoring stack (Grafana, Prometheus, Loki, Promtail, Alertmanager, cAdvisor, Node Exporter).
+- Docker-orchestrated stack to run MetaTrader 5 (MT5) under Wine, expose an MT5 HTTP API (Flask), and a Django app that consumes it. Traefik fronts external access. Postgres/Redis backends and an optional monitoring stack (Grafana, Prometheus, Loki, Promtail, Alertmanager, cAdvisor, Node Exporter).
 
 Common commands
 - Environment setup
@@ -11,25 +11,26 @@ Common commands
     ```bash
     cp .env.example .env
     ```
-  - Optional: compute a hashed password for Traefik basic auth (store the value into .env as TRAEFIK_HASHED_PASSWORD). Do not echo secrets; compute then paste into .env.
+  - Optional: compute a hashed password for Traefik basic auth (store into .env as TRAEFIK_HASHED_PASSWORD). Do not echo secrets; compute then paste into .env.
     ```bash
-    # Example generation (PASSWORD must be set in your shell prior to this step)
+    # PASSWORD must be set in your shell prior to this step
     TRAEFIK_HASHED_PASSWORD=$(openssl passwd -apr1 "$PASSWORD")
     ```
   - Create the shared Traefik network (one-time):
     ```bash
     docker network create traefik-public
     ```
-- Boot the full stack
+- Build and boot
   ```bash
+  docker-compose build
   docker-compose up -d
   ```
-- Stop the stack
+- Stop
   ```bash
   docker-compose down
   ```
 - Rebuild services after code changes
-  - This repo bakes code into images (no bind mounts), so you must rebuild affected services to pick up changes:
+  - Code is baked into images (no bind mounts). Rebuild affected services:
     ```bash
     # Rebuild and restart Django only
     docker-compose up -d --build django
@@ -55,7 +56,7 @@ Django workflows (containerized)
   docker-compose exec django python manage.py makemigrations
   docker-compose exec django python manage.py migrate
   ```
-- Admin user (example)
+- Admin user
   ```bash
   docker-compose exec django python manage.py createsuperuser
   ```
@@ -76,7 +77,7 @@ Django workflows (containerized)
   # Single module
   docker-compose exec django python manage.py test app.quant.tests
 
-  # Single test case or method (pattern)
+  # Single test case or method
   docker-compose exec django python manage.py test app.quant.tests:YourTestCase
   docker-compose exec django python manage.py test app.quant.tests:YourTestCase.test_method
   ```
@@ -86,6 +87,8 @@ MT5 API service checks
   ```bash
   docker-compose exec mt5 curl -s http://localhost:5001/health
   ```
+- Swagger UI (when routed via Traefik)
+  - https://API_DOMAIN/apidocs/ (API_DOMAIN is set in .env)
 - Django talks to MT5 via MT5_API_URL (set in .env). Default internal URL in this stack is http://mt5:5001.
 
 Monitoring quick access (when running locally with published ports)
@@ -104,9 +107,9 @@ Architecture and flow
     - API_DOMAIN: MT5 HTTP API (routes to mt5:5001).
     - DJANGO_DOMAIN: Django app (routes to django:8000).
 - MT5 service (backend/mt5)
-  - Image: debian-based KasmVNC base; installs Wine (WINEARCH=win64), prepares /config/.wine, installs Python deps.
-  - App: Flask app (backend/mt5/app/app.py) with blueprints under routes/ (data, order, position, symbol, history, health, error). Swagger docs enabled.
-  - Exposes ports 3000 (VNC), 5001 (API). Traefik proxies external access via VNC_DOMAIN and API_DOMAIN.
+  - Base image: debian KasmVNC; installs Wine (WINEARCH=win64), prepares /config/.wine, installs Python deps.
+  - App: Flask app (backend/mt5/app/app.py) with blueprints under routes/ (data, order, position, history, symbol, health, error). Swagger docs at /apidocs/.
+  - Exposes ports 3000 (VNC) and 5001 (API). Traefik proxies external access via VNC_DOMAIN and API_DOMAIN.
 - Django service (backend/django)
   - Project: app/ with two core apps
     - app.nexus: domain/admin/serializers/filters
@@ -121,6 +124,10 @@ Architecture and flow
     - quant.tasks.run_quant_entry_algorithm: every 60s
     - quant.tasks.run_quant_trailing_stop_algorithm: every 15s
     - quant.tasks.run_quant_close_algorithm: every 15s
+- Data flow
+  - Celery Beat triggers the scheduled quant tasks, which call algorithms under app.quant.algorithms.*
+  - Those algorithms use app/utils/api/* to call the MT5 Flask API.
+  - The Flask API uses the MetaTrader5 Python package to interact with the terminal running under Wine.
 - State and storage
   - Postgres volume: postgres-data
   - Django static files: static_volume
@@ -139,5 +146,12 @@ Notes for working inside this repo
 - Prefer docker-compose exec for any app commands; do not run manage.py on the host.
 - Because application code is copied into images, rebuilding is required to pick up Python code changes.
 - Traefik requires DNS hostnames to resolve to your machine for external access; for purely local testing without DNS, interact via container networking or published localhost ports (see monitoring services).
-- No Python linter or pytest configuration is present in this repo as of now; tests use Django’s built-in runner.
+- No Python linter configuration is present; tests use Django’s built-in runner.
 
+Integration caveats (Django <-> MT5 API)
+- The Django client utilities under app/utils/api/ are not fully aligned with the current Flask endpoints/response shapes. Examples:
+  - Orders: Django calls POST /send_market_order and expects {"success": true, "order_result": {...}}. Flask exposes POST /order and returns a JSON with "result" and no "success".
+  - Modify SL/TP: Django sends fields like ticket/symbol/type; Flask's /modify_sl_tp expects a "position" payload or TRADE_ACTION_SLTP request data.
+- When wiring the two services, either:
+  - Update Django client functions to match the Flask API surface, or
+  - Add compatibility routes/adapters in the Flask app to match the expectations from Django.
