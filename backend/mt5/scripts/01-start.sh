@@ -8,8 +8,8 @@ log_message "INFO" "------------------------------------------------"
 log_message "INFO" "Running installation scripts..."
 
 # Run installation scripts
-/scripts/03-install-gecko.sh
-/scripts/04-install-mono.sh
+/scripts/03-install-mono.sh
+/scripts/04-install-gecko.sh
 /scripts/05-install-winetricks.sh
 /scripts/06-install-mt5.sh
 /scripts/07-install-python.sh
