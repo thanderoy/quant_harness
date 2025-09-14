@@ -7,14 +7,14 @@ datasources:
     orgId: 1
     url: http://prometheus:9090
     version: 1
-    editable: true
-    isDefault: false
+    editable: false
+    isDefault: true
   - name: Alertmanager
     type: alertmanager
     url: http://alertmanager:9093
     access: proxy
     jsonData:
-      implementation: 'prometheus' 
+      implementation: 'prometheus'
     basicAuth: false
     #basicAuthUser: my_user
     #basicAuthPassword: test_password

@@ -12,7 +12,7 @@ x-common-labels: &default-labels
 
 services:
   traefik:
-    image: traefik:3.0
+    image: traefik:3.5
     container_name: traefik
     ports:
       - 80:80 # HTTP port
@@ -25,13 +25,14 @@ services:
       traefik.docker.network: traefik-public
       traefik.http.services.traefik-dashboard.loadbalancer.server.port: 8080
 
+
       # HTTP router configuration
       traefik.http.routers.traefik-dashboard-http.entrypoints: http
-      traefik.http.routers.traefik-dashboard-http.rule: Host(`${TRAEFIK_DOMAIN?Variable not set}`)
+      traefik.http.routers.traefik-dashboard-http.rule: Host(`${TRAEFIK_SERVICE_DOMAIN?Variable not set}`)
 
       # HTTPS router configuration
       traefik.http.routers.traefik-dashboard-https.entrypoints: https
-      traefik.http.routers.traefik-dashboard-https.rule: Host(`${TRAEFIK_DOMAIN?Variable not set}`)
+      traefik.http.routers.traefik-dashboard-https.rule: Host(`${TRAEFIK_SERVICE_DOMAIN?Variable not set}`)
       traefik.http.routers.traefik-dashboard-https.tls: true
       traefik.http.routers.traefik-dashboard-https.tls.certresolver: le
       traefik.http.routers.traefik-dashboard-https.service: api@internal
@@ -49,7 +50,7 @@ services:
       - traefik-public-certificates:/certificates # Certificate storage
     command:
       # Docker provider configuration
-      - --providers.docker
+      - --providers.docker=true
       - --providers.docker.exposedbydefault=false
 
       # Entrypoints configuration
@@ -69,7 +70,7 @@ services:
       - --metrics.prometheus.addrouterslabels=true
       - --metrics.prometheus.addserviceslabels=true
     networks:
-      - traefik-public # Public network for Traefik and other services
+      - traefik-public
     logging: *default-logging
 
   mt5:
@@ -121,13 +122,13 @@ services:
       - traefik
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     container_name: postgres
     restart: unless-stopped
     env_file:
       - .env
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-storage:/var/lib/postgresql/data
     networks:
       - default
     labels:
@@ -158,12 +159,12 @@ services:
       traefik.enable: true
       traefik.docker.network: traefik-public
 
-      traefik.http.routers.django-http.rule: Host(`${DJANGO_DOMAIN}`)
+      traefik.http.routers.django-http.rule: Host(`${DJANGO_SERVICE_DOMAIN}`)
       traefik.http.routers.django-http.entrypoints: http
       traefik.http.routers.django-http.middlewares: https-redirect
       traefik.http.routers.django-http.service: django-service
 
-      traefik.http.routers.django-https.rule: Host(`${DJANGO_DOMAIN}`)
+      traefik.http.routers.django-https.rule: Host(`${DJANGO_SERVICE_DOMAIN}`)
       traefik.http.routers.django-https.entrypoints: https
       traefik.http.routers.django-https.tls: true
       traefik.http.routers.django-https.tls.certresolver: le
@@ -171,14 +172,14 @@ services:
 
       traefik.http.services.django-service.loadbalancer.server.port: 8000
 
-      traefik.http.routers.django-static.rule: Host(`${DJANGO_DOMAIN}`) && PathPrefix(`/static/`)
+      traefik.http.routers.django-static.rule: Host(`${DJANGO_SERVICE_DOMAIN}`) && PathPrefix(`/static/`)
       traefik.http.routers.django-static.service: django-service
       traefik.http.middlewares.static-stripprefix.stripprefix.prefixes: /static
       traefik.http.routers.django-static.middlewares: static-stripprefix@docker
     logging: *default-logging
 
   redis:
-    image: redis:6
+    image: redis:8.2.1
     container_name: redis
     ports:
       - 6379:6379
@@ -231,7 +232,7 @@ services:
     logging: *default-logging
 
   grafana:
-    image: grafana/grafana:${GRAFANA_VERSION:-11.0.0}
+    image: grafana/grafana:12.2
     container_name: grafana
     restart: unless-stopped
     environment:
@@ -252,7 +253,7 @@ services:
       - ./monitoring/dashboards/log-search.json:/var/lib/grafana/dashboards/log-search.json:ro
       - ./monitoring/dashboards/traefik_official.json:/var/lib/grafana/dashboards/traefik_official.json:ro
       - ./monitoring/dashboards/alertmanager-dashboard.json:/var/lib/grafana/dashboards/alertmanager-dashboard.json:ro
-      - grafana-data:/var/lib/grafana
+      - grafana-storage:/var/lib/grafana
     depends_on:
       - prometheus
       - traefik
@@ -267,7 +268,7 @@ services:
       <<: *default-labels
       traefik.enable: true
       traefik.docker.network: traefik-public
-      traefik.http.routers.grafana.rule: Host(`${GRAFANA_DOMAIN?Variable not set}`)
+      traefik.http.routers.grafana.rule: Host(`${GRAFANA_SERVICE_DOMAIN?Variable not set}`)
       traefik.http.routers.grafana.entrypoints: https
       traefik.http.routers.grafana.tls: true
       traefik.http.routers.grafana.tls.certresolver: le
@@ -275,7 +276,7 @@ services:
     logging: *default-logging
 
   prometheus:
-    image: prom/prometheus:${PROMETHEUS_VERSION:-v2.42.0}
+    image: prom/prometheus:3.5.0
     container_name: prometheus
     restart: unless-stopped
     command:
@@ -291,7 +292,7 @@ services:
       - ./monitoring/configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./monitoring/configs/prometheus/recording-rules.yml:/etc/prometheus/recording-rules.yml
       - ./monitoring/configs/prometheus/alerting-rules.yml:/etc/prometheus/alerting-rules.yml
-      - prometheus-data:/prometheus
+      - prometheus-storage:/prometheus
     depends_on:
       - alertmanager
       - traefik
@@ -307,7 +308,7 @@ services:
     logging: *default-logging
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:${CADVISOR_VERSION:-v0.46.0}
+    image: gcr.io/cadvisor/cadvisor:0.53.0
     container_name: cadvisor
     restart: unless-stopped
     privileged: true
@@ -318,9 +319,7 @@ services:
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker:/var/lib/docker:ro
-        # https://github.com/google/cadvisor/issues/1565#issuecomment-718812180
-      - /var/run/docker.sock:/var/run/docker.sock
-      #- /dev/disk:/dev/disk:ro
+      - /dev/disk:/dev/disk:ro
     cpus: 0.5
     mem_limit: 512m
     networks:
@@ -330,7 +329,7 @@ services:
     logging: *default-logging
 
   node-exporter:
-    image: prom/node-exporter:${NODE_EXPORTER_VERSION:-v1.5.0}
+    image: prom/node-exporter:1.9.1
     container_name: node-exporter
     restart: unless-stopped
     volumes:
@@ -353,7 +352,7 @@ services:
     logging: *default-logging
 
   alertmanager:
-    image: prom/alertmanager:${ALERTMANAGER_VERSION:-v0.25.0}
+    image: prom/alertmanager:0.28.1
     container_name: alertmanager
     command:
       - "--config.file=/etc/alertmanager/config.yml"
@@ -391,7 +390,7 @@ services:
     logging: *default-logging
 
   loki:
-    image: grafana/loki:3.0.0
+    image: grafana/loki:3.5.5
     container_name: loki
     user: root
     ports:
@@ -411,7 +410,7 @@ services:
     logging: *default-logging
 
   promtail:
-    image: grafana/promtail:3.0.0
+    image: grafana/promtail:3.5
     container_name: promtail
     volumes:
       - promtail-positions:/tmp
@@ -432,9 +431,9 @@ services:
 
 volumes:
   traefik-public-certificates: # Persistent volume for certificates
-  grafana-data: {}
-  prometheus-data: {}
-  postgres-data: {}
+  grafana-storage: {}
+  prometheus-storage: {}
+  postgres-storage: {}
   static_volume: {}
   promtail-positions: {}
 

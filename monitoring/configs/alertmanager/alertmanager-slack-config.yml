@@ -99,4 +99,3 @@ receivers:
         title_link: 'http://alertmanager.homedns.xyz/prometheus/alerts'
         title: '{{ if eq .Status "firing" }}:flushed:{{ else }}:sunglasses:{{ end }} [{{ .Status | toUpper }}] {{ .CommonAnnotations.summary }} (rb-slack)'
         text: "{{ range .Alerts }}*Priority*: `{{ .Labels.severity | toUpper }}`\nTarget: {{ .Labels.instance }}\n{{ .Annotations.description }}\n{{ end }}"
-

@@ -1,3 +1,4 @@
+# TODO: Populate Variables
 # https://prometheus.io/docs/alerting/latest/notification_examples/
 # https://rtfm.co.ua/en/prometheus-alertmanagers-alerts-receivers-and-routing-based-on-severity-level-and-tags/
 global:
