@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def entry_algorithm():
     try:
-        for pair in PAIRS:            
+        for pair in PAIRS:
             logger.info(f"Checking {pair} for open positions.")
             if have_open_positions_in_symbol(pair):
                 logger.info(f"Skipping {pair} because it has open positions.")
@@ -34,12 +34,12 @@ def entry_algorithm():
             if not is_market_open(pair):
                 logger.info(f"Skipping {pair} because the market is not open.")
                 continue
-                
+
             df = fetch_data_pos(pair, MAIN_TIMEFRAME, 10)
             if df is None or df.empty:
                 logger.info(f"Skipping {pair} because there is no data.")
                 continue
-            
+
             df['mean_reversion'] = mean_reversion(df)
             last_row = df.iloc[-2]
 
@@ -87,7 +87,7 @@ def entry_algorithm():
                         error_msg = f"SL is too low for {pair}."
                         logger.error({'error_msg': error_msg, 'sl_including_commission': sl_including_commission, 'tick_info': tick_info})
                         continue
-                
+
                 order = send_market_order(
                     symbol=pair,
                     volume=order_volume_lots,
@@ -132,7 +132,7 @@ def entry_algorithm():
                     }
 
                     try:
-                        create_trade(order, pair, order_capital, order_size_usd, 
+                        create_trade(order, pair, order_capital, order_size_usd,
                                      LEVERAGE, commission, order_type, 'Alpari',
                                      'FOREX', 'MEAN REVERSION', MAIN_TIMEFRAME, order_volume_lots,
                                      sl_including_commission, None)
@@ -173,11 +173,10 @@ def entry_algorithm():
             else:
                 message = f"No mean reversion detected for {pair}."
                 logger.info(message)
-        
+
     except requests.RequestException as e:
         error_msg = f"Error fetching MT5 data: {str(e)}"
         logger.error(error_msg)
     except Exception as e:
         error_msg = f"Exception in entry_algorithm: {e}\n{traceback.format_exc()}"
         logger.error(error_msg)
-

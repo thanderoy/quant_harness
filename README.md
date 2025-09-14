@@ -1,25 +1,23 @@
 # MetaTrader5 on Wine with Python Setup
 
-
 ## Table of Contents
 
-   - [Overview](#overview)
-   - [Features](#features)
-   - [Prerequisites](#prerequisites)
-   - [Installation](#installation)
-   - [Configuration](#configuration)
-   - [Usage](#usage)
-   - [Troubleshooting](#troubleshooting)
-   - [Contributing](#contributing)
-   - [License](#license)
+- [Overview](#overview)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Overview
 
 Right off the bat!!! This project HEAVILY borrows inspiration from [Sesto's Project](https://github.com/sesto-dev/metatrader5-quant-server-python/tree/chapter-4).
-   It's basically an untethered fork.
+It's basically an untethered fork.
 
 This project provides a Dockerized setup to run MetaTrader5 (MT5) using Wine on an Ubuntu environment. It leverages Traefik as a reverse proxy for managing HTTP/HTTPS traffic and ensures secure access through Let's Encrypt certificates. The setup includes VNC for remote desktop access and is configured to run as a background service with proper logging and environment management.
-
 
 ## Features
 
@@ -40,23 +38,26 @@ This project provides a Dockerized setup to run MetaTrader5 (MT5) using Wine on 
 ## Installation
 
 1. **Clone Repository:**
+
 ```bash
 git clone https://github.com/thanderoy/wine-mt5-python-setup.git
 cd wine-mt5-python-setup
 ```
 
 2. **Environment Setup:**
+
 ```bash
 cp .env.example .env
 ```
 
 3. **Configure Environment:**
+
 ```env
 # Required Variables
-TRAEFIK_DOMAIN=traefik.yourdomain.com
+TRAEFIK_SERVICE_DOMAIN=traefik.yourdomain.com
 VNC_DOMAIN=vnc.yourdomain.com
 API_DOMAIN=api.yourdomain.com
-DJANGO_DOMAIN=app.yourdomain.com
+DJANGO_SERVICE_DOMAIN=app.yourdomain.com
 
 # Security
 TRAEFIK_USERNAME=admin
@@ -70,6 +71,7 @@ POSTGRES_PASSWORD=securepassword
 ```
 
 4. **Start Services:**
+
 ```bash
 docker network create traefik-public
 docker-compose up -d
@@ -82,7 +84,7 @@ docker-compose up -d
 - `CUSTOM_USER`: Username for accessing the MT5 service.
 - `PASSWORD`: Password for the custom user.
 - `VNC_DOMAIN`: Domain for accessing the VNC service.
-- `TRAEFIK_DOMAIN`: Domain for Traefik dashboard.
+- `TRAEFIK_SERVICE_DOMAIN`: Domain for Traefik dashboard.
 - `TRAEFIK_USERNAME`: Username for Traefik basic authentication.
 - `ACME_EMAIL`: Email address for Let's Encrypt notifications.
 
@@ -138,11 +140,13 @@ Logs are managed per service and can be viewed using Docker commands or integrat
 ### Common Issues
 
 1. **MT5 Container Fails to Start:**
+
    - Check Wine initialization logs
    - Verify SSL certificate permissions
    - Ensure sufficient system resources
 
 2. **API Connection Issues:**
+
    - Verify MT5 terminal login credentials
    - Check network connectivity
    - Review API logs for errors

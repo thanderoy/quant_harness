@@ -68,4 +68,3 @@ receivers:
         message: '{{ template "pushover.default.message" . }}'
         url: '{{ template "pushover.default.url" . }}'
         priority: '{{ if eq .Status "firing" }}2{{ else }}0{{ end }}'
-
