@@ -129,6 +129,11 @@ services:
       - .env
     volumes:
       - postgres-storage:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - default
     labels:
@@ -149,9 +154,12 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
-      - traefik
-      - redis
+      postgres:
+        condition: service_healthy
+      traefik:
+        condition: service_started
+      redis:
+        condition: service_started
     networks:
       - default
       - traefik-public
@@ -437,6 +445,7 @@ volumes:
   postgres-storage: {}
   static_volume: {}
   promtail-positions: {}
+  media_volume: {}
 
 networks:
   default:
