@@ -12,7 +12,7 @@ x-common-labels: &default-labels
 
 services:
   traefik:
-    image: traefik:3.5
+    image: traefik:v3.5.2
     container_name: traefik
     ports:
       - 80:80 # HTTP port
@@ -142,6 +142,7 @@ services:
     container_name: django
     volumes:
       - static_volume:/app/staticfiles
+      - media_volume:/app/media
     restart: unless-stopped
     ports:
       - 8000:8000
@@ -232,7 +233,7 @@ services:
     logging: *default-logging
 
   grafana:
-    image: grafana/grafana:12.2
+    image: grafana/grafana:main
     container_name: grafana
     restart: unless-stopped
     environment:
@@ -276,7 +277,7 @@ services:
     logging: *default-logging
 
   prometheus:
-    image: prom/prometheus:3.5.0
+    image: prom/prometheus:v3.5.0
     container_name: prometheus
     restart: unless-stopped
     command:
@@ -308,7 +309,7 @@ services:
     logging: *default-logging
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:0.33.0
+    image: gcr.io/cadvisor/cadvisor:v0.52.0
     container_name: cadvisor
     restart: unless-stopped
     privileged: true
@@ -329,7 +330,7 @@ services:
     logging: *default-logging
 
   node-exporter:
-    image: prom/node-exporter:1.9.1
+    image: prom/node-exporter:v1.9.1
     container_name: node-exporter
     restart: unless-stopped
     volumes:
@@ -352,7 +353,7 @@ services:
     logging: *default-logging
 
   alertmanager:
-    image: prom/alertmanager:0.28.1
+    image: prom/alertmanager:v0.28.1
     container_name: alertmanager
     command:
       - "--config.file=/etc/alertmanager/config.yml"
