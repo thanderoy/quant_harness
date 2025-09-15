@@ -25,10 +25,7 @@ RUN mkdir -p /app/logs && \
     mkdir -p /app/static && \
     chmod 777 /app/logs
 
-RUN python manage.py collectstatic --noinput && \
-    python manage.py makemigrations --noinput && \
-    python manage.py migrate --noinput && \
-    python manage.py createsuperuser --noinput
+RUN python manage.py collectstatic --noinput
 
 # Run the Django development server
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120", "app.wsgi:application"]
