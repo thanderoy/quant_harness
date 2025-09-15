@@ -2,13 +2,19 @@
 FROM python:3.11-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 # Set work directory
 WORKDIR /app
 
-# Install dependencies
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
 COPY requirements.txt /app/
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
@@ -19,7 +25,10 @@ RUN mkdir -p /app/logs && \
     mkdir -p /app/static && \
     chmod 777 /app/logs
 
-RUN python manage.py collectstatic --noinput
+RUN python manage.py collectstatic --noinput && \
+    python manage.py makemigrations --noinput && \
+    python manage.py migrate --noinput && \
+    python manage.py createsuperuser --noinput
 
 # Run the Django development server
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120", "app.wsgi:application"]
