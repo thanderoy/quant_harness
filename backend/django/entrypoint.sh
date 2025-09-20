@@ -14,19 +14,25 @@ python manage.py migrate --noinput
 if [ -n "${DJANGO_SUPERUSER_USERNAME:-}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD:-}" ]; then
 python - <<'PY'
 import os
+import sys
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
-django.setup()
-from django.contrib.auth import get_user_model
-User = get_user_model()
-username = os.environ['DJANGO_SUPERUSER_USERNAME']
-email = os.environ.get('DJANGO_SUPERUSER_EMAIL', '')
-password = os.environ['DJANGO_SUPERUSER_PASSWORD']
-if not User.objects.filter(username=username).exists():
-    User.objects.create_superuser(username=username, email=email, password=password)
-    print(f"Created superuser: {username}")
-else:
-    print(f"Superuser already exists: {username}")
+
+try:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
+    django.setup()
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    username = os.environ['DJANGO_SUPERUSER_USERNAME']
+    email = os.environ.get('DJANGO_SUPERUSER_EMAIL', '')
+    password = os.environ['DJANGO_SUPERUSER_PASSWORD']
+    if not User.objects.filter(username=username).exists():
+        User.objects.create_superuser(username=username, email=email, password=password)
+        print(f"Created superuser: {username}")
+    else:
+        print(f"Superuser already exists: {username}")
+except Exception as e:
+    print(f"Error creating superuser: {e}", file=sys.stderr)
+    sys.exit(1)
 PY
 fi
 
