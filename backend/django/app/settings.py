@@ -19,14 +19,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 DEBUG = os.getenv('DJANGO_DEBUG', False)
 
 ALLOWED_HOSTS = [
-    os.getenv('DJANGO_SERVICE_DOMAIN'), os.getenv('GRAFANA_SERVICE_DOMAIN'),
-    os.getenv('HOST_IP'), os.getenv('TRAEFIK_SERVICE_DOMAIN'),
-    'localhost', '127.0.0.1',]
+    os.getenv('HOST_IP'), '*.roythan.de', 'localhost', '127.0.0.1',]
 
-CSRF_TRUSTED_ORIGINS = [
-    f"https://{os.getenv('DJANGO_SERVICE_DOMAIN')}",
-    f"http://{os.getenv('DJANGO_SERVICE_DOMAIN')}",
-]
+CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
 
 # If you need to debug CSRF issues, you can temporarily add:
 CSRF_COOKIE_SECURE = True
