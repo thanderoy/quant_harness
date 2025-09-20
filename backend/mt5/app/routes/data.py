@@ -79,21 +79,21 @@ def fetch_data_pos_endpoint():
         symbol = request.args.get('symbol')
         timeframe = request.args.get('timeframe', 'M1')
         num_bars = int(request.args.get('num_bars', 100))
-        
+
         if not symbol:
             return jsonify({"error": "Symbol parameter is required"}), 400
 
         mt5_timeframe = get_timeframe(timeframe)
-        
+
         rates = mt5.copy_rates_from_pos(symbol, mt5_timeframe, 0, num_bars)
         if rates is None:
             return jsonify({"error": "Failed to get rates data"}), 404
-        
+
         df = pd.DataFrame(rates)
         df['time'] = pd.to_datetime(df['time'], unit='s')
-        
+
         return jsonify(df.to_dict(orient='records'))
-    
+
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
@@ -178,26 +178,26 @@ def fetch_data_range_endpoint():
         timeframe = request.args.get('timeframe', 'M1')
         start_str = request.args.get('start')
         end_str = request.args.get('end')
-        
+
         if not all([symbol, start_str, end_str]):
             return jsonify({"error": "Symbol, start, and end parameters are required"}), 400
 
         mt5_timeframe = get_timeframe(timeframe)
-        
+
         # Convert string dates to datetime objects
         utc = pytz.UTC
         start_date = utc.localize(datetime.fromisoformat(start_str.replace('Z', '+00:00')))
         end_date = utc.localize(datetime.fromisoformat(end_str.replace('Z', '+00:00')))
-        
+
         rates = mt5.copy_rates_range(symbol, mt5_timeframe, start_date, end_date)
         if rates is None:
             return jsonify({"error": "Failed to get rates data"}), 404
-        
+
         df = pd.DataFrame(rates)
         df['time'] = pd.to_datetime(df['time'], unit='s')
-        
+
         return jsonify(df.to_dict(orient='records'))
-    
+
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:

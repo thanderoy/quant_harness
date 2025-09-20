@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 BASE_URL = os.getenv('MT5_API_URL')
+TIMEOUT = float(os.getenv('REQUEST_TIMEOUT', '10'))
 
 empty_df = pd.DataFrame(columns=[
     'ticket', 'time', 'time_msc', 'time_update', 'time_update_msc', 'type',
@@ -26,7 +27,7 @@ def get_positions() -> pd.DataFrame:
     try:
         url = f"{BASE_URL}/get_positions"
         start_time = time.time()  # Start timing
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=TIMEOUT)
         end_time = time.time()    # End timing
         duration = end_time - start_time
         logger.info(f"Fetched positions in {duration:.2f} seconds")

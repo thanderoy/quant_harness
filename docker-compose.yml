@@ -136,7 +136,6 @@ services:
       retries: 5
     networks:
       - default
-      - traefik-public
     labels:
       <<: *default-labels
     logging: *default-logging
@@ -189,7 +188,7 @@ services:
     logging: *default-logging
 
   redis:
-    image: redis:8.2.1
+    image: redis:7-alpine
     container_name: redis
     ports:
       - 6379:6379

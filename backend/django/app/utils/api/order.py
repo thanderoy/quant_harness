@@ -1,62 +1,62 @@
 import os
 import requests
 import traceback
-from typing import List, Dict
-import pandas as pd
-from datetime import datetime
+from typing import List, Dict, Optional, Union
 from dotenv import load_dotenv
 import logging
-
-from app.utils.constants import MT5Timeframe
-from app.utils.api.data import symbol_info_tick
-from app.nexus.models import Trade, TradeClosePricesMutation  # Import models
-from app.utils.arithmetics import get_pnl_at_price, calculate_commission, get_price_at_pnl, calculate_order_capital, calculate_order_size_usd
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
 BASE_URL = os.getenv('MT5_API_URL')
+TIMEOUT = float(os.getenv('REQUEST_TIMEOUT', '10'))
 
-def send_market_order(symbol: str, volume: float, order_type: str, sl: float, tp: float = None,
-                      deviation: int = 20, comment: str = 'From Django Server', magic: int = 234000, type_filling: str = 'ORDER_FILLING_FOK', position_size_usd: float = None, commission: float = None, capital: float = None, leverage: int = 500
+def send_market_order(symbol: str, volume: float, order_type: Union[str, int], sl: float, tp: float = None,
+                      deviation: int = 20, comment: str = 'From Django Server', magic: int = 234000, type_filling: Optional[int] = None, position_size_usd: float = None, commission: float = None, capital: float = None, leverage: int = 500
  ) -> Dict:
     try:
-        order_type_str = order_type if isinstance(order_type, str) else order_type.name
-        
-        if order_type_str not in ['BUY', 'SELL']:
-            error_msg = f"Invalid order type: {order_type_str}. Must be 'BUY' or 'SELL'"
-            logger.error(error_msg)
+        # Map order_type ('BUY'/'SELL' or int) to MT5 numeric constants expected by Flask API
+        if isinstance(order_type, int):
+            order_type_value = order_type
+        else:
+            order_type_value = {
+                'BUY': 0,  # mt5.ORDER_TYPE_BUY
+                'SELL': 1, # mt5.ORDER_TYPE_SELL
+            }.get(str(order_type).strip().upper())
+
+        if order_type_value is None:
+            logger.error(f"Invalid order type: {order_type}. Must be 'BUY' or 'SELL' or an int constant")
             return None
 
         request = {
             "symbol": symbol,
-            "volume": float(volume),
-            "order_type": order_type_str,
-            "sl": float(sl),
-            "deviation": int(deviation),
-            "magic": int(magic),
-            "comment": str(comment),
-            "type_filling": type_filling,
+            "volume": volume,
+            "type": order_type_value,
+            "sl": sl,
+            "deviation": deviation,
+            "magic": magic,
+            "comment": comment,
         }
+        # Only include type_filling if a valid integer constant is provided
+        if isinstance(type_filling, int):
+            request["type_filling"] = type_filling
 
         if tp is not None:
-            request["tp"] = float(tp)
+            request["tp"] = tp
 
         logger.info(f"Sending market order: {request}")
 
-        url = f"{BASE_URL}/send_market_order"
-        response = requests.post(url, json=request, timeout=10)
+        url = f"{BASE_URL}/order"
+        response = requests.post(url, json=request, timeout=TIMEOUT)
         response.raise_for_status()
 
         response_data = response.json()
-        
-        if not response_data.get('success'):
+        order = response_data.get('result')
+        if not order:
             error_msg = response_data.get('error', 'Unknown error')
             details = response_data.get('details', '')
-            print(f"Order failed: {error_msg} {details}")
+            logger.error(f"Order failed: {error_msg} {details}")
             return None
-            
-        order = response_data['order_result']
 
         return order
         
@@ -75,36 +75,28 @@ def send_market_order(symbol: str, volume: float, order_type: str, sl: float, tp
 def modify_sl_tp(position, sl: float, tp: float = None) -> Dict:
     try:
         request = {
-            "ticket": position.ticket,
-            "symbol": position.symbol,
-            'type': position.type,
-            "sl": float(sl),
+            "position": position.ticket,
+            "sl": sl,
         }
 
-        if tp is not None:
-            request['tp'] = float(tp)
+        if (tp_val := tp) is not None:
+            request['tp'] = tp_val
 
         logger.info(f"Sending modify SL/TP request: {request}")
 
         url = f"{BASE_URL}/modify_sl_tp"
-        response = requests.post(url, json=request, timeout=10)
+        response = requests.post(url, json=request, timeout=TIMEOUT)
         response.raise_for_status()
 
         response_data = response.json()
 
-        if not response_data.get('success'):
-            error_msg = response_data.get('error', 'Unknown error')
-            details = response_data.get('details', '')
-            logger.error(f"Modify SL/TP failed: {error_msg} {details}")
-            return None
-
-        result = response_data.get('result')
-        if result:
+        if result := response_data.get('result'):
             logger.info(f"Modify SL/TP successful: {result}")
             return result
-        else:
-            logger.error("No result returned from modify_sl_tp endpoint.")
-            return None
+        error_msg = response_data.get('error', 'Unknown error')
+        details = response_data.get('details', '')
+        logger.error(f"Modify SL/TP failed: {error_msg} {details}")
+        return None
 
     except requests.exceptions.HTTPError as e:
         error_msg = f"HTTP error sending modify SL/TP for {position.ticket}: {e.response.text}"
