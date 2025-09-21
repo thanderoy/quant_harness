@@ -16,16 +16,34 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG', False)
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = [
-    os.getenv('HOST_IP'), '*.roythan.de', 'localhost', '127.0.0.1',]
+DJANGO_SERVICE_DOMAIN = os.getenv('DJANGO_SERVICE_DOMAIN')
+ALLOWED_HOSTS = list(filter(None, [
+    os.getenv('HOST_IP'),
+    'localhost',
+    '127.0.0.1',
+    DJANGO_SERVICE_DOMAIN,
+]))
 
-CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
+# CSRF trusted origins must include scheme://host
+CSRF_TRUSTED_ORIGINS = []
+if DJANGO_SERVICE_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.extend([
+        f"https://{DJANGO_SERVICE_DOMAIN}",
+        f"http://{DJANGO_SERVICE_DOMAIN}",
+    ])
+# Common local dev origins
+CSRF_TRUSTED_ORIGINS.extend([
+    "http://localhost",
+    "http://127.0.0.1",
+    "https://localhost",
+    "https://127.0.0.1",
+])
 
 # If you need to debug CSRF issues, you can temporarily add:
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_DOMAIN = os.getenv('DJANGO_SERVICE_DOMAIN')
+CSRF_COOKIE_DOMAIN = DJANGO_SERVICE_DOMAIN
 SESSION_COOKIE_SECURE = True
 
 LOGGING = {
@@ -91,15 +109,14 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this after SecurityMiddleware
-    'corsheaders.middleware.CorsMiddleware',  # Added for CORS
-    'django.middleware.common.CommonMiddleware',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
