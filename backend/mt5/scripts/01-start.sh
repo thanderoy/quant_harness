@@ -18,5 +18,8 @@ log_message "INFO" "Running installation scripts..."
 # Start servers
 /scripts/09-start-wine-flask.sh
 
+log_message "INFO" "------------------------------------------------"
+log_message "INFO" "Container is ready."
+
 # Keep the script running
 tail -f /dev/null
