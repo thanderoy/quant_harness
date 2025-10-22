@@ -15,8 +15,8 @@ log_message "INFO" "Running installation scripts..."
 /scripts/07-install-python.sh
 /scripts/08-install-libraries.sh
 
-# Start servers
-/scripts/09-start-wine-flask.sh
+# Start FastAPI server inside Wine
+/scripts/09-start-wine-fastapi.sh
 
 log_message "INFO" "------------------------------------------------"
 log_message "INFO" "Container is ready."

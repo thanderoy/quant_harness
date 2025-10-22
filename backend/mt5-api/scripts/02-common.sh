@@ -5,7 +5,7 @@ mt5setup_url="https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5
 mt5file="/config/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe"
 python_url="https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe"
 wine_executable="wine"
-metatrader_version="5.2.60"
+metatrader_version="5.3.70"
 mt5server_port=18812
 
 # Function to show messages
