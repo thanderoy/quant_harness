@@ -75,10 +75,9 @@ All endpoints are prefixed with `/api/v1/trading/`.
   {
     "strategy": "MeanReversion",
     "symbol": "EURUSD",
-    "mode": "live",  // or "backtest"
+    "mode": "live",
     "params": {"window": 20, "num_std_dev": 2}
   }
-  ```
   **Response:**
   ```json
   {"task_id": "abc123", "status": "started"}
