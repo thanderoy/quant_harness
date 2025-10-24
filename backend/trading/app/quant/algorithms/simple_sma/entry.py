@@ -73,7 +73,7 @@ def entry_algorithm():
 
             # Normalize potential Series
             if isinstance(order_volume_lots, (pd.Series, pd.DataFrame)):
-                order_volume_lots = order_volume_lots.iloc[0] if not getattr(order_volume_lots, 'empty', True) else 0.0
+                order_volume_lots = 0.0 if getattr(order_volume_lots, 'empty', True) else order_volume_lots.iloc[0]
 
             if order_volume_lots < 0.01:
                 logger.error({'error_msg': f"[SMA] Order volume too low for {pair}", 'order_volume_lots': order_volume_lots})
