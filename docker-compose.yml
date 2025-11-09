@@ -75,7 +75,7 @@ services:
 
   mt5:
     build:
-      context: backend/mt5
+      context: backend/mt5-api
       dockerfile: Dockerfile
     container_name: mt5
     volumes:
@@ -85,7 +85,17 @@ services:
       - default
     env_file:
       - .env
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/ >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 15m
     labels:
       <<: *default-labels
       # Enable Traefik for this service
@@ -105,7 +115,7 @@ services:
 
       traefik.http.services.vnc-mt5-service.loadbalancer.server.port: 3000
 
-      # Router for api.mt5.${domain} (Port 5001)
+      # Router for api.mt5.${domain} (Port 8000)
       traefik.http.routers.api-mt5-http.rule: Host(`${API_DOMAIN}`)
       traefik.http.routers.api-mt5-http.entrypoints: http
       traefik.http.routers.api-mt5-http.middlewares: https-redirect
@@ -116,7 +126,7 @@ services:
       traefik.http.routers.api-mt5-https.tls.certresolver: le
       traefik.http.routers.api-mt5-https.service: api-mt5-service
 
-      traefik.http.services.api-mt5-service.loadbalancer.server.port: 5001
+      traefik.http.services.api-mt5-service.loadbalancer.server.port: 8000
     logging: *default-logging
     depends_on:
       - traefik

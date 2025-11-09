@@ -1,0 +1,4 @@
+fastapi[standard]>=0.103.2
+MetaTrader5
+pandas
+uvicorn>=0.23.0

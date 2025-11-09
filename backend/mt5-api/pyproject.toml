@@ -1,0 +1,15 @@
+[project]
+name = "mt5-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi[standard]>=0.103.2",
+    "MetaTrader5; platform_system == 'Windows' and platform_machine == 'AMD64'",
+]
+
+[tool.uv]
+required-environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+]
