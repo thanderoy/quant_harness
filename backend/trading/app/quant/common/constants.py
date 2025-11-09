@@ -1,6 +1,6 @@
+# flake8: noqa: E501
 from enum import Enum
-from typing import List, Dict, Callable, Optional
-from dataclasses import dataclass, field
+from typing import List
 import pytz
 
 from enum import Enum
@@ -99,6 +99,7 @@ class RETCODE_DESCRIPTIONS(Enum):
     TRADE_RETCODE_SHORT_ONLY= "The request is rejected, because the 'Only short positions are allowed' rule is set for the symbol",
     TRADE_RETCODE_CLOSE_ONLY= "The request is rejected, because the 'Only position closing is allowed' rule is set for the symbol",
     TRADE_RETCODE_FIFO_CLOSE= "The request is rejected, because 'Position closing is allowed only by FIFO rule' flag is set for the trading account",
+
 
 TIMEZONE = pytz.timezone('UTC')
 METALS = ['XAUUSD', 'XAGUSD']

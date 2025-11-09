@@ -1,4 +1,6 @@
+from django.utils import timezone
 from django.db import models
+
 
 class Trade(models.Model):
     TRADE_TYPE_CHOICES = [
@@ -32,7 +34,7 @@ class Trade(models.Model):
     # Core trade fields
     transaction_broker_id = models.CharField(max_length=100)
     symbol = models.CharField(max_length=10)
-    entry_time = models.DateTimeField()
+    entry_time = models.DateTimeField(db_index=True, default=timezone.now)
     entry_price = models.FloatField()
     type = models.CharField(max_length=4, choices=TRADE_TYPE_CHOICES)
     position_size_usd = models.FloatField()
@@ -50,7 +52,8 @@ class Trade(models.Model):
     pnl_excluding_commission = models.FloatField(null=True, blank=True)
     max_drawdown = models.FloatField(null=True, blank=True)
     max_profit = models.FloatField(null=True, blank=True)
-    closing_reason = models.CharField(max_length=50, null=True, blank=True, choices=CLOSING_REASON_CHOICES)
+    closing_reason = models.CharField(
+        max_length=50, null=True, blank=True, choices=CLOSING_REASON_CHOICES)
 
     # Additional Info
     strategy = models.CharField(max_length=50)
@@ -63,7 +66,8 @@ class Trade(models.Model):
 
 
 class TradeClosePricesMutation(models.Model):
-    trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name='close_prices_mutations')
+    trade = models.ForeignKey(
+        Trade, on_delete=models.CASCADE, related_name='close_prices_mutations')
     mutation_time = models.DateTimeField(auto_now_add=True)
     mutation_price = models.FloatField(null=True, blank=True)
     new_tp_price = models.FloatField(null=True, blank=True)

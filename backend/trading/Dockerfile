@@ -30,5 +30,5 @@ RUN chmod +x /app/entrypoint.sh
 
 
 # Run the Django development server
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120", "app.config.wsgi:application"]

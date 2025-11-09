@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from app.trades.models import Trade, TradeClosePricesMutation  # Import models
-from app.utils.arithmetics import get_price_at_pnl, get_pnl_at_price
+from app.adapters.arithmetics import get_price_at_pnl, get_pnl_at_price
 
 logger = logging.getLogger(__name__)
 
@@ -48,3 +48,4 @@ def create_trade(order, symbol: str, capital: float, position_size_usd: float,
         return trade, mutation
     except Exception as e:
         logger.error(f"Error creating trade: {e}")
+
