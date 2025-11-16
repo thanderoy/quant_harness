@@ -164,7 +164,8 @@ services:
     env_file:
       - .env
     environment:
-      - START_FOREXERO_ON_START=false
+      - START_FOREXERO_ON_START=true
+    command: ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -433,22 +434,6 @@ services:
   promtail:
     image: grafana/promtail:3.5
 
-  forexero:
-    build:
-      context: backend/trading
-      dockerfile: Dockerfile
-    container_name: forexero
-    env_file:
-      - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      mt5:
-        condition: service_started
-    networks:
-      - default
-    command: ["python", "manage.py", "run_forexero"]
-    logging: *default-logging
     container_name: promtail
     volumes:
       - promtail-positions:/tmp
