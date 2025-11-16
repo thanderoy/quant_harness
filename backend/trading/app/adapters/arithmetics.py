@@ -2,8 +2,7 @@ import traceback
 import logging
 import pandas as pd
 
-from app.utils.constants import MT5Timeframe, METALS, OILS, CURRENCY_PAIRS, CRYPTOCURRENCIES
-from app.utils.api.data import symbol_info
+from backend.trading.app.quant.common.constants import MT5Timeframe, METALS, OILS, CURRENCY_PAIRS, CRYPTOCURRENCIES
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ def get_pnl_at_price(current_price: float, entry_price: float, order_size_usd: f
         price_change = (entry_price - current_price) / entry_price
     else:
         raise ValueError(f"Unknown trade type: {type}")
-    
+
     # Calculate gross PNL
     pnl_including_commission = order_size_usd * price_change
 
@@ -56,7 +55,7 @@ def calculate_price_with_spread(price: float, spread_multiplier: float, increase
         return price * (1 + spread_multiplier)
     else:
         return price * (1 - spread_multiplier)
-    
+
 def calculate_liquidation_price(entry_price: float, leverage: float, type: str) -> float:
     if type == 'BUY':
         liq_p = entry_price * (1 - (1 / leverage))
@@ -64,7 +63,7 @@ def calculate_liquidation_price(entry_price: float, leverage: float, type: str) 
         liq_p = entry_price * (1 + (1 / leverage))
     else:
         raise ValueError(f"Unknown position type: {type}")
-    
+
     return liq_p
 
 
@@ -90,21 +89,29 @@ def calculate_order_capital(symbol, volume_lots, leverage, price_open):
 def convert_lots_to_usd(symbol, lots, price_open):
     """
     Convert volume size from lots to USD amount.
-    
+
     :param symbol: The trading symbol (e.g., 'BITCOIN', 'ETHEREUM')
     :param lots: The volume size in lots
     :return: The equivalent USD amount
     """
     # Get the contract size for the symbol
-    symbol_info_data = symbol_info(symbol)
-    if symbol_info_data is None:
-        raise ValueError(f"Symbol {symbol} not found in MetaTrader 5")
-    
-    contract_size = symbol_info_data.get('trade_contract_size', 100000)
-    
+    try:
+        from app.adapters.api.data import symbol_info  # lazy import to avoid hard dependency
+    except Exception:
+        symbol_info = None
+
+    symbol_info_data = symbol_info(symbol) if symbol_info else None
+    # Default to common FX contract size if unavailable
+    contract_size = 100000
+    try:
+        if symbol_info_data is not None:
+            contract_size = symbol_info_data.get('trade_contract_size', contract_size)
+    except Exception:
+        pass
+
     # Calculate the USD amount using the opening price
     usd_amount = lots * contract_size * price_open
-    
+
     return usd_amount
 
 def convert_usd_to_lots(symbol: str, usd_amount: float, type: str) -> float:
@@ -117,28 +124,35 @@ def convert_usd_to_lots(symbol: str, usd_amount: float, type: str) -> float:
     :return: The equivalent amount in lots
     """
     try:
-        # Get the symbol information
-        symbol_info_data = symbol_info(symbol)
+        # Get the symbol information lazily to avoid hard dependency
+        try:
+            from app.adapters.api.data import symbol_info  # type: ignore
+        except Exception:
+            symbol_info = None
+
+        symbol_info_data = symbol_info(symbol) if symbol_info else None
+        # Fallbacks if we cannot fetch symbol info
         if symbol_info_data is None:
-            raise ValueError(f"Symbol {symbol} not found in MetaTrader 5")
-        
+            # Without live prices, we cannot compute lots reliably
+            raise RuntimeError("symbol_info unavailable")
+
         # Ensure that 'ask' and 'bid' are scalar values
         ask_price = symbol_info_data.ask.iloc[0] if isinstance(symbol_info_data.ask, pd.Series) else symbol_info_data.ask
         bid_price = symbol_info_data.bid.iloc[0] if isinstance(symbol_info_data.bid, pd.Series) else symbol_info_data.bid
-        
+
         price_dict = {
             'BUY': ask_price,
             'SELL': bid_price
         }
-        
+
         # Get the contract size and calculate lots
         contract_size = symbol_info_data.get('trade_contract_size', 100000)
         lots = usd_amount / (contract_size * price_dict[type])
-        
+
         # Round to the nearest lot step
         lot_step = symbol_info_data.get('volume_step', 0.01)
         lots = round(lots / lot_step) * lot_step
-        
+
         symbol_info_dict = {
             'ask': float(symbol_info_data.ask),
             'bid': float(symbol_info_data.bid),

@@ -9,7 +9,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # External services / integrations (centralized)
-MT5_API_URL = os.getenv('MT5_API_URL', 'http://mt5:5001')
+MT5_API_URL = os.getenv('MT5_API_URL', 'http://mt5:8000')
 REQUEST_TIMEOUT = float(os.getenv('REQUEST_TIMEOUT', '10'))
 
 
@@ -52,7 +52,6 @@ SESSION_COOKIE_SECURE = True
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
     'formatters': {
         'verbose': {
             'format': '[TRADING] {levelname} {asctime} {module} {name}:{lineno} {message}',     # noqa: E501
@@ -108,8 +107,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'celery',
     'django_extensions',
-'app.trades',
-'app.quant',
+    'app.trades',
+    'app.quant',
 ]
 
 REST_FRAMEWORK = {
@@ -224,21 +223,9 @@ CELERY_BROKER_URL = os.getenv(
     'CELERY_BROKER_URL', 'redis://redis:6379/0')
 CELERY_RESULT_BACKEND = os.getenv(
     'CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
-CELERY_BEAT_SCHEDULE = {
-    'run-quant-entry-algorithm': {
-        'task': 'quant.tasks.run_quant_entry_algorithm',
-        'schedule': 60.0 * 1,
-    },
-    'run-simple-sma-entry-algorithm': {
-        'task': 'quant.tasks.run_simple_sma_entry_algorithm',
-        'schedule': 60.0 * 1,
-    },
-    'run-quant-trailing-stop-algorithm': {
-        'task': 'quant.tasks.run_quant_trailing_stop_algorithm',
-        'schedule': 15,
-    },
-    'run-quant-close-algorithm': {
-        'task': 'quant.tasks.run_quant_close_algorithm',
-        'schedule': 15,
-    },
-}
+CELERY_BEAT_SCHEDULE = {}
+
+# Telegram API Credentials
+TELEGRAM_API_ID = ''
+TELEGRAM_API_HASH = ''
+TELEGRAM_API_TARGET_CHANNEL = ''

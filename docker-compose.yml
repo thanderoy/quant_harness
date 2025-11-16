@@ -152,7 +152,7 @@ services:
 
   django:
     build:
-      context: backend/django
+      context: backend/trading
       dockerfile: Dockerfile
     container_name: django
     volumes:
@@ -163,6 +163,8 @@ services:
       - 8000:8000
     env_file:
       - .env
+    environment:
+      - START_FOREXERO_ON_START=false
     depends_on:
       postgres:
         condition: service_healthy
@@ -214,7 +216,7 @@ services:
 
   celery:
     build:
-      context: backend/django
+      context: backend/trading
       dockerfile: Dockerfile
     container_name: celery
     command: celery -A app worker --loglevel=info --concurrency=3
@@ -233,7 +235,7 @@ services:
 
   celery-beat:
     build:
-      context: backend/django
+      context: backend/trading
       dockerfile: Dockerfile
     container_name: celery-beat
     command: celery -A app beat --loglevel=info
@@ -430,6 +432,23 @@ services:
 
   promtail:
     image: grafana/promtail:3.5
+
+  forexero:
+    build:
+      context: backend/trading
+      dockerfile: Dockerfile
+    container_name: forexero
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mt5:
+        condition: service_started
+    networks:
+      - default
+    command: ["python", "manage.py", "run_forexero"]
+    logging: *default-logging
     container_name: promtail
     volumes:
       - promtail-positions:/tmp
