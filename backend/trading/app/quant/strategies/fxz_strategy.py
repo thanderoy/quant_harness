@@ -85,9 +85,7 @@ class ForexeroStrategy(BaseStrategy):
 
     def _parse_float(self, v: Optional[str]) -> Optional[float]:
         try:
-            if v is None:
-                return None
-            return float(str(v).split()[0])
+            return None if v is None else float(str(v).split()[0])
         except Exception:
             return None
 
