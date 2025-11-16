@@ -30,7 +30,7 @@ class MT5APIClient:
             self, base_url: str, timeout: float = 30.0, verify: bool = True):
         if not base_url.startswith("http"):
             raise ValueError("base_url must start with http:// or https://")
-        self.base_url = base_url if base_url.endswith("/") else base_url + "/"
+        self.base_url = base_url if base_url.endswith("/") else f"{base_url}/"
         self.timeout = timeout
         self.verify = verify
         self.session = requests.Session()
