@@ -66,8 +66,8 @@ class ForexeroStrategy(BaseStrategy):
             m = kv_pattern.match(line)
             if not m:
                 continue
-            key = m.group('key').upper()
-            val = m.group('val').replace('\xa0', ' ').strip()
+            key = m['key'].upper()
+            val = m['val'].replace('\xa0', ' ').strip()
             # Normalize common keys
             key = {
                 'DIRECTION': 'Direction',
