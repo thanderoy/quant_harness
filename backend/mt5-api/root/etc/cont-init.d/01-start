@@ -1,5 +1,0 @@
-#!/usr/bin/with-contenv bash
-set -euo pipefail
-
-# Kick off the installer and service start sequence
-exec /scripts/01-start.sh

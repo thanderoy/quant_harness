@@ -49,18 +49,14 @@ RUN wget -O /usr/local/bin/winetricks https://raw.githubusercontent.com/Winetric
 FROM base
 
 # App and scripts
-WORKDIR /app
-COPY app/ /app/
-COPY app/scripts /scripts
+COPY app /app
+COPY scripts /scripts
 
 # Normalize and make scripts executable
 RUN dos2unix /scripts/*.sh && chmod +x /scripts/*.sh
 
-# s6 cont-init hook to start our setup
-COPY root/ /
-RUN chmod +x /etc/cont-init.d/01-start
 
-# Log file for setup
+COPY /root /
 RUN touch /var/log/mt5_setup.log && \
     chown abc:abc /var/log/mt5_setup.log && \
     chmod 644 /var/log/mt5_setup.log
