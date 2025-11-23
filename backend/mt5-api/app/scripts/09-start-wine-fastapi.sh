@@ -7,7 +7,7 @@ log_message "RUNNING" "09-start-wine-fastapi.sh"
 log_message "INFO" "Starting FastAPI server in Wine environment..."
 
 # Run the FastAPI app using Wine's Python
-$wine_executable python /app/app.py &
+$wine_executable python /app/main.py &
 
 FASTAPI_PID=$!
 
