@@ -2,72 +2,70 @@
 FROM ghcr.io/linuxserver/baseimage-kasmvnc:ubuntunoble-ffa21aaf-ls56 AS base
 
 # Environment
-ENV TITLE="MetaTrader"
-ENV WINEARCH=win64
-ENV WINEPREFIX="/config/.wine"
-ENV DISPLAY=:0
-ENV WINEDEBUG="-all,err-toolbar,fixme-all"
+ENV TITLE="MetaTrader" \
+    WINEARCH=win64 \
+    WINEPREFIX="/config/.wine" \
+    DISPLAY=:0 \
+    WINEDEBUG="-all,err-toolbar,fixme-all" \
+    DEBIAN_FRONTEND=noninteractive
 
-# Ensure the directory exists with correct permissions
+# Ensure the directory exists with correct permissions (will be a volume at runtime)
 RUN mkdir -p /config/.wine && \
     chown -R abc:abc /config/.wine && \
     chmod -R 755 /config/.wine
 
-
-# Update package lists and upgrade packages
-RUN apt-get update && apt-get upgrade -y
-
-# Install required packages
-RUN apt-get install -y \
-    dos2unix \
-    python3-pip \
-    wget \
-    python3-pyxdg \
-    netcat-openbsd \
-    ca-certificates \
-    lsb-release \
-    cabextract \
-    unzip \
-    p7zip-full \
-    gnupg
+# Base packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        dos2unix \
+        python3-pip \
+        wget \
+        python3-pyxdg \
+        netcat-openbsd \
+        ca-certificates \
+        lsb-release \
+        cabextract \
+        unzip \
+        p7zip-full \
+        gnupg && \
+    rm -rf /var/lib/apt/lists/*
 
 # Add WineHQ repository key and APT source
 RUN mkdir -pm755 /etc/apt/keyrings && \
     wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
-    echo "deb [arch=amd64,i386 signed-by=/etc/apt/keyrings/winehq-archive.key] https://dl.winehq.org/wine-builds/ubuntu/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/winehq.list
+    echo "deb [arch=amd64,i386 signed-by=/etc/apt/keyrings/winehq-archive.key] https://dl.winehq.org/wine-builds/ubuntu/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/winehq.list
 
-# Add i386 architecture and update package lists
+# Add i386 architecture and install Wine stable
 RUN dpkg --add-architecture i386 && \
-    apt-get update
-
-# Install WineHQ stable package and dependencies
-RUN apt-get install --install-recommends -y winehq-stable
+    apt-get update && \
+    apt-get install -y --install-recommends winehq-stable && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Winetricks
-RUN wget -O /tmp/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && \
-    chmod +x /tmp/winetricks && \
-    mv /tmp/winetricks /usr/local/bin/winetricks && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN wget -O /usr/local/bin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && \
+    chmod +x /usr/local/bin/winetricks
 
 # Stage 2: Final image
 FROM base
 
-# Copy the scripts directory and convert start.sh to Unix format
-WORKDIR /
-COPY scripts /scripts
-COPY main.py .
-COPY requirements.txt .
+# App and scripts
+WORKDIR /app
+COPY app/ /app/
+COPY app/scripts /scripts
 
-RUN dos2unix /scripts/*.sh && \
-    chmod +x /scripts/*.sh
+# Normalize and make scripts executable
+RUN dos2unix /scripts/*.sh && chmod +x /scripts/*.sh
 
-COPY /root /
+# s6 cont-init hook to start our setup
+COPY root/ /
+RUN chmod +x /etc/cont-init.d/01-start
+
+# Log file for setup
 RUN touch /var/log/mt5_setup.log && \
     chown abc:abc /var/log/mt5_setup.log && \
     chmod 644 /var/log/mt5_setup.log
 
 # Expose KasmVNC UI and FastAPI
-EXPOSE 3000 5000 5001 8001 18812
+EXPOSE 3000 8000 18812
 
 VOLUME /config
