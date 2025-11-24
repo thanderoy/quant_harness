@@ -6,8 +6,7 @@ ENV TITLE="MetaTrader" \
     WINEARCH=win64 \
     WINEPREFIX="/config/.wine" \
     DISPLAY=:0 \
-    WINEDEBUG="-all,err-toolbar,fixme-all" \
-    DEBIAN_FRONTEND=noninteractive
+    WINEDEBUG="-all,err-toolbar,fixme-all" 
 
 # Ensure the directory exists with correct permissions (will be a volume at runtime)
 RUN mkdir -p /config/.wine && \
@@ -50,7 +49,7 @@ FROM base
 
 # App and scripts
 COPY app /app
-COPY scripts /scripts
+COPY app/scripts /scripts
 
 # Normalize and make scripts executable
 RUN dos2unix /scripts/*.sh && chmod +x /scripts/*.sh
