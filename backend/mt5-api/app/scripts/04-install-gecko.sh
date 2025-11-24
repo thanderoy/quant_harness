@@ -20,7 +20,7 @@ if [ ! -e "/config/.wine/drive_c/windows/gecko" ]; then
     if [ -f "$TMP_DIR/gecko64.msi" ]; then
         $wine_executable msiexec /i "$TMP_DIR/gecko64.msi" /qn
         if [ $? -eq 0 ]; then
-            log_message "INFO" "Gecko installed successfully."
+            log_message "INFO" "Gecko x86_64 installed successfully."
         else
             log_message "ERROR" "Failed to install Gecko."
         fi
@@ -30,12 +30,12 @@ if [ ! -e "/config/.wine/drive_c/windows/gecko" ]; then
     if [ -f "$TMP_DIR/gecko32.msi" ]; then
         $wine_executable msiexec /i "$TMP_DIR/gecko32.msi" /qn
         if [ $? -eq 0 ]; then
-            log_message "INFO" "Gecko installed successfully."
+            log_message "INFO" "Gecko x64 installed successfully."
         else
             log_message "ERROR" "Failed to install Gecko."
         fi
     else
-        log_message "ERROR" "Failed to download Geckox86_64 & Geckox86 Intallers.
+        log_message "ERROR" "Failed to download Geckox86_64 & Geckox86 Installers."
     fi
     rm -rf "$TMP_DIR"
 else
