@@ -18,6 +18,8 @@ services:
       - 80:80 # HTTP port
       - 443:443 # HTTPS port
     restart: always
+    environment:
+      - TRAEFIK_HASHED_PASSWORD=${TRAEFIK_HASHED_PASSWORD?Variable not set}
     labels:
       # Traefik configuration
       <<: *default-labels
@@ -78,35 +80,35 @@ services:
       context: backend/mt5-api
       dockerfile: Dockerfile
     container_name: mt5
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=${TZ:-UTC}
+      - MT5_API_PORT=5001
+      - MT5_API_HOST=0.0.0.0
+      - WINEPREFIX=/config/.wine
+      - WINEARCH=win64
     volumes:
       - ./config:/config
     networks:
       - traefik-public
       - default
-    env_file:
-      - .env
-    environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-UTC}
-    restart: unless-stopped
+    ports:
+      - 5001:5001  # MT5 FastAPI
+      - 3000:3000  # KasmVNC
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/ >/dev/null 2>&1 || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s
       timeout: 10s
-      retries: 20
+      retries: 3
       start_period: 15m
     labels:
       <<: *default-labels
-      # Enable Traefik for this service
       traefik.enable: true
       traefik.docker.network: traefik-public
 
       # Router for vnc.mt5.${domain} (Port 3000)
-      traefik.http.routers.vnc-mt5-http.rule: Host(`${VNC_DOMAIN}`)
-      traefik.http.routers.vnc-mt5-http.entrypoints: http
-      traefik.http.routers.vnc-mt5-http.middlewares: https-redirect
-
       traefik.http.routers.vnc-mt5-https.rule: Host(`${VNC_DOMAIN}`)
       traefik.http.routers.vnc-mt5-https.entrypoints: https
       traefik.http.routers.vnc-mt5-https.tls: true
@@ -115,7 +117,7 @@ services:
 
       traefik.http.services.vnc-mt5-service.loadbalancer.server.port: 3000
 
-      # Router for api.mt5.${domain} (Port 8000)
+      # Router for api.mt5.${domain} (Port 5001)
       traefik.http.routers.api-mt5-http.rule: Host(`${API_DOMAIN}`)
       traefik.http.routers.api-mt5-http.entrypoints: http
       traefik.http.routers.api-mt5-http.middlewares: https-redirect
@@ -126,7 +128,7 @@ services:
       traefik.http.routers.api-mt5-https.tls.certresolver: le
       traefik.http.routers.api-mt5-https.service: api-mt5-service
 
-      traefik.http.services.api-mt5-service.loadbalancer.server.port: 8000
+      traefik.http.services.api-mt5-service.loadbalancer.server.port: 5001
     logging: *default-logging
     depends_on:
       - traefik
@@ -139,32 +141,32 @@ services:
       - .env
     volumes:
       - postgres-storage:/var/lib/postgresql/data
+    networks:
+      - default
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - default
     labels:
       <<: *default-labels
     logging: *default-logging
 
-  django:
+  trading:
     build:
       context: backend/trading
       dockerfile: Dockerfile
-    container_name: django
-    volumes:
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
+    container_name: trading
     restart: unless-stopped
-    ports:
-      - 8000:8000
     env_file:
       - .env
     environment:
       - START_FOREXERO_ON_START=true
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - 8000:8000
     command: ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application"]
     depends_on:
       postgres:
@@ -181,10 +183,6 @@ services:
       traefik.enable: true
       traefik.docker.network: traefik-public
 
-      traefik.http.routers.django-http.rule: Host(`${DJANGO_SERVICE_DOMAIN}`)
-      traefik.http.routers.django-http.entrypoints: http
-      traefik.http.routers.django-http.middlewares: https-redirect
-      traefik.http.routers.django-http.service: django-service
 
       traefik.http.routers.django-https.rule: Host(`${DJANGO_SERVICE_DOMAIN}`)
       traefik.http.routers.django-https.entrypoints: https
@@ -203,17 +201,23 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
+    restart: unless-stopped
     ports:
       - 6379:6379
-    cpus: 0.5
-    mem_limit: 512m
     depends_on:
       - traefik
     networks:
       - default
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     labels:
       <<: *default-labels
     logging: *default-logging
+    cpus: 0.5
+    mem_limit: 512m
 
   celery:
     build:

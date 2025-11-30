@@ -9,7 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update -y && apt-get upgrade -y && \
+RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev && \
@@ -17,7 +17,7 @@ RUN apt-get update -y && apt-get upgrade -y && \
 
 # Install Python dependencies
 COPY requirements.txt /app/
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy project
 COPY . /app/

@@ -1,4 +1,4 @@
-# backend/django/app/celery.py
+# backend/trading/app/celery.py
 
 from __future__ import absolute_import, unicode_literals
 import os
