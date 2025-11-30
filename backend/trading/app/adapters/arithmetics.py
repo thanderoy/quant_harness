@@ -2,7 +2,7 @@ import traceback
 import logging
 import pandas as pd
 
-from backend.trading.app.quant.common.constants import MT5Timeframe, METALS, OILS, CURRENCY_PAIRS, CRYPTOCURRENCIES
+from app.quant.common.constants import MT5Timeframe, METALS, OILS, CURRENCY_PAIRS, CRYPTOCURRENCIES
 
 logger = logging.getLogger(__name__)
 

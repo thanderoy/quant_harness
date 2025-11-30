@@ -14,6 +14,6 @@ winetricks -q settings win10
 
 # Common components: vcrun2019, corefonts
 # Note: --q to avoid prompts
-winetricks -q ucrtbase2019 vcrun2019 corefonts 
+winetricks -q ucrtbase2019 vcrun2019 corefonts
 
 log_message "INFO" "Winetricks components installation complete."
