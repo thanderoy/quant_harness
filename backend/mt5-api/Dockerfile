@@ -17,18 +17,20 @@ RUN mkdir -p /config/.wine && \
 # Combined into a single layer for optimization
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        dos2unix \
-        python3-pip \
-        wget \
-        python3-pyxdg \
-        netcat-openbsd \
-        cabextract
+    dos2unix \
+    python3-pip \
+    wget \
+    python3-pyxdg \
+    netcat-openbsd \
+    ca-certificates \
+    lsb-release \
+    cabextract \
+    unzip \
+    p7zip-full \
+    gnupg && \
+    rm -rf /var/lib/apt/lists/*
 
-# Enable 32-bit architecture (must be BEFORE wine repo)
-RUN dpkg --add-architecture i386 && \
-    apt-get update -y
-
-# Add WineHQ key
+# Add WineHQ repository key and APT source
 RUN mkdir -pm755 /etc/apt/keyrings && \
     wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key - && \
     wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources && \
@@ -44,8 +46,10 @@ RUN mkdir -pm755 /etc/apt/keyrings && \
     rm -rf /var/lib/apt/lists/*
 
 
-# Application Setup
-COPY app /app
+# App and scripts
+WORKDIR /app
+
+COPY app/ /app/
 COPY app/scripts /scripts
 
 # Handle permissions and scripts
@@ -60,6 +64,6 @@ RUN dos2unix /scripts/*.sh && \
 COPY /root /
 
 # Expose KasmVNC UI and FastAPI
-EXPOSE 3000 8000 5001 8001 18812
+EXPOSE 3000 5001 18812
 
 VOLUME /config

@@ -27,7 +27,6 @@ services:
       traefik.docker.network: traefik-public
       traefik.http.services.traefik-dashboard.loadbalancer.server.port: 8080
 
-
       # HTTP router configuration
       traefik.http.routers.traefik-dashboard-http.entrypoints: http
       traefik.http.routers.traefik-dashboard-http.rule: Host(`${TRAEFIK_SERVICE_DOMAIN?Variable not set}`)
@@ -98,7 +97,11 @@ services:
       - 5001:5001  # MT5 FastAPI
       - 3000:3000  # KasmVNC
     healthcheck:
+<<<<<<< HEAD
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+=======
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:5001/ >/dev/null 2>&1 || exit 1" ]
+>>>>>>> ec559f5 (feat: Refactor MT5 API, improving MT5 installation robustness and Wine prefix management.)
       interval: 30s
       timeout: 10s
       retries: 3
@@ -144,7 +147,7 @@ services:
     networks:
       - default
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -162,12 +165,16 @@ services:
       - .env
     environment:
       - START_FOREXERO_ON_START=true
+<<<<<<< HEAD
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
       - 8000:8000
     command: ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application"]
+=======
+    command: [ "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application" ]
+>>>>>>> ec559f5 (feat: Refactor MT5 API, improving MT5 installation robustness and Wine prefix management.)
     depends_on:
       postgres:
         condition: service_healthy
@@ -464,6 +471,7 @@ volumes:
   static_volume: {}
   promtail-positions: {}
   media_volume: {}
+  ibkr-config: {}
 
 networks:
   default:
