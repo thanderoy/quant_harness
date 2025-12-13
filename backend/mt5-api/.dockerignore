@@ -7,3 +7,19 @@ LICENSE.md
 .env.example
 .env
 config
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+
+# Lock files (use requirements.txt)
+uv.lock
+pyproject.toml

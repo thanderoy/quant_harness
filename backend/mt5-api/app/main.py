@@ -123,6 +123,7 @@ class MarketRatesRequest(BaseModel):
     start_pos: int = Field(
         0, ge=0, description="Start position for data retrieval")
 
+    @field_validator("timeframe")
     def validate_timeframe(cls, v):
         """Validate timeframe string and convert to MT5 constant."""
         valid_timeframes = {
@@ -187,7 +188,7 @@ class TradeRequest(BaseModel):
                 f"Invalid action. Choices: {', '.join(valid_actions)}")
         return v.upper()
 
-    @field_validator("oder_type")
+    @field_validator("order_type")
     def validate_order_type(cls, v):
         """Validate order type."""
         valid_types = ['MARKET', 'LIMIT', 'STOP']
@@ -401,6 +402,8 @@ class MT5Service:
         Raises:
             HTTPException: If rates cannot be retrieved
         """
+        self._ensure_connection()
+
         try:
             timeframe = TIMEFRAME_MAP[request.timeframe]
 
@@ -423,7 +426,7 @@ class MT5Service:
 
             # Convert to DataFrame and then to list of dicts
             df = pd.DataFrame(rates)
-            df["time"] = df.to_datetime(df["time"], unit="s")
+            df["time"] = pd.to_datetime(df["time"], unit="s")
 
             rates_list = [
                 MarketRatesData(
@@ -815,7 +818,7 @@ async def send_order(
         TradeResponse with execution results
     """
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(executor, service.send_order, request)
+    result = await loop.run_in_executor(executor, service.send_market_order, request)
     return result
 
 
@@ -823,4 +826,4 @@ async def send_order(
 
 if __name__ == "__main__":
     # Note: Use 'python -m uvicorn main:app --reload' for development
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=5001)
