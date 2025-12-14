@@ -94,14 +94,10 @@ services:
       - traefik-public
       - default
     ports:
-      - 5001:5001  # MT5 FastAPI
-      - 3000:3000  # KasmVNC
+      - 5001:5001 # MT5 FastAPI
+      - 3000:3000 # KasmVNC
     healthcheck:
-<<<<<<< HEAD
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
-=======
       test: [ "CMD-SHELL", "wget -qO- http://localhost:5001/ >/dev/null 2>&1 || exit 1" ]
->>>>>>> ec559f5 (feat: Refactor MT5 API, improving MT5 installation robustness and Wine prefix management.)
       interval: 30s
       timeout: 10s
       retries: 3
@@ -165,16 +161,12 @@ services:
       - .env
     environment:
       - START_FOREXERO_ON_START=true
-<<<<<<< HEAD
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
       - 8000:8000
-    command: ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application"]
-=======
     command: [ "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application" ]
->>>>>>> ec559f5 (feat: Refactor MT5 API, improving MT5 installation robustness and Wine prefix management.)
     depends_on:
       postgres:
         condition: service_healthy
@@ -189,7 +181,6 @@ services:
       <<: *default-labels
       traefik.enable: true
       traefik.docker.network: traefik-public
-
 
       traefik.http.routers.django-https.rule: Host(`${DJANGO_SERVICE_DOMAIN}`)
       traefik.http.routers.django-https.entrypoints: https
@@ -216,7 +207,7 @@ services:
     networks:
       - default
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -237,7 +228,7 @@ services:
     env_file:
       - .env
     depends_on:
-      - django
+      - trading
       - redis
     networks:
       - default
@@ -291,7 +282,7 @@ services:
       - prometheus
       - traefik
     ports:
-      - 3000:3000
+      - 3200:3000
     cpus: 0.5
     mem_limit: 512m
     networks:

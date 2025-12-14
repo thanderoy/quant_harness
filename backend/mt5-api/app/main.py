@@ -84,18 +84,18 @@ class AccountInfo(BaseModel):
         json_schema_extra = {
             "example": {
                 "login": 12345678,
-                "balance": 10000.00,
-                "equity": 10250.50,
-                "margin": 500.00,
-                "margin_free": 9750.50,
-                "margin_level": 2050.10,
-                "profit": 250.50,
-                "currency": "USD",
+                "balance": 10000,
+                "equity": 10000,
+                "margin": 0,
+                "margin_free": 10000,
+                "margin_level": 0,
+                "profit": 0,
+                "currency": "EUR",
                 "leverage": 100,
                 "name": "John Doe",
                 "server": "BrokerServer-Demo",
                 "trade_mode": 0
-            }
+                }
         }
 
 
@@ -518,7 +518,7 @@ class MT5Service:
                 "magic": request.magic,
                 "comment": request.comment,
                 "type_time": mt5.ORDER_TIME_GTC,
-                "type_filling": mt5.ORDER_FILLING_IOC,
+                "type_filling": symbol_info.filling_mode,
             }
 
             # Add SL/TP if provided
@@ -692,7 +692,7 @@ async def connect_mt5(
     "/api/v1/disconnect",
     response_model=ConnectionResponse,
     status_code=status.HTTP_200_OK,
-    tags=["Connection"],
+    tags=["Health & Connection"],
     summary="Disconnect from MT5 Terminal",
     description="Shut down the connection to the MetaTrader5 terminal"
 )
@@ -712,6 +712,38 @@ async def disconnect_mt5(service: MT5Service = Depends(get_mt5_service)):
     loop = asyncio.get_event_loop()
     response = await loop.run_in_executor(executor, service.disconnect)
     return response
+
+
+# Account Info Endpoint
+@app.get(
+    "/api/v1/account",
+    response_model=AccountInfo,
+    status_code=status.HTTP_200_OK,
+    tags=["Account"],
+    summary="Get Account Information",
+    description="Retrieve current account information including balance, equity, and margin"    # noqa: E501
+)
+async def get_account_info(service: MT5Service = Depends(get_mt5_service)):
+    """
+    Get current MT5 account information.
+
+    This endpoint retrieves comprehensive account information including:
+    - Balance and equity
+    - Margin usage and free margin
+    - Current profit/loss
+    - Account leverage and currency
+    - Server information
+
+    Args:
+        service: Injected MT5Service instance
+
+    Returns:
+        AccountInfo with current account data
+    """
+    loop = asyncio.get_event_loop()
+    account_info = await loop.run_in_executor(
+        executor, service.get_account_info)
+    return account_info
 
 
 # Data Endpoints
@@ -754,44 +786,12 @@ async def get_market_rates(
     return rates
 
 
-# Account Info Endpoint
-@app.get(
-    "/api/v1/account",
-    response_model=AccountInfo,
-    status_code=status.HTTP_200_OK,
-    tags=["Account"],
-    summary="Get Account Information",
-    description="Retrieve current account information including balance, equity, and margin"    # noqa: E501
-)
-async def get_account_info(service: MT5Service = Depends(get_mt5_service)):
-    """
-    Get current MT5 account information.
-
-    This endpoint retrieves comprehensive account information including:
-    - Balance and equity
-    - Margin usage and free margin
-    - Current profit/loss
-    - Account leverage and currency
-    - Server information
-
-    Args:
-        service: Injected MT5Service instance
-
-    Returns:
-        AccountInfo with current account data
-    """
-    loop = asyncio.get_event_loop()
-    account_info = await loop.run_in_executor(
-        executor, service.get_account_info)
-    return account_info
-
-
 # Orders Endpoint
 @app.post(
     "/api/v1/order/send",
     response_model=TradeResponse,
     status_code=status.HTTP_200_OK,
-    tags=["Trading"],
+    tags=["Trades Execution"],
     summary="Send Trade Order",
     description="Execute a trade order (buy/sell) on the MT5 terminal"
 )
