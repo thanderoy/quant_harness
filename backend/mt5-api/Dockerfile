@@ -6,7 +6,8 @@ ENV TITLE="MetaTrader" \
     WINEARCH=win64 \
     WINEPREFIX="/config/.wine" \
     DISPLAY=:0 \
-    WINEDEBUG="-all,err-toolbar,fixme-all"
+    WINEDEBUG="-all,err-toolbar,fixme-all" \
+    WINEDLLOVERRIDES="mscoree,mshtml="
 
 # Ensure the directory exists with correct permissions
 RUN mkdir -p /config/.wine && \
@@ -34,6 +35,7 @@ RUN apt-get update && \
 RUN mkdir -pm755 /etc/apt/keyrings && \
     wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key - && \
     wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources && \
+    dpkg --add-architecture i386 && \
     apt-get update && \
     apt-get install -y --install-recommends winehq-stable && \
     # Winetricks Setup
