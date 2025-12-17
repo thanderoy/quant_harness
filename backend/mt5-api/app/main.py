@@ -201,11 +201,12 @@ class TradeRequest(BaseModel):
         json_schema_extra = {
             "example": {
                 "action": "BUY",
-                "symbol": "EURUSD",
+                "symbol": "XAUUSD",
                 "volume": 0.1,
-                "order_type": "MARKET",
-                "sl": 1.0850,
-                "tp": 1.0950,
+                "order_type": "LIMIT",
+                "price": 4315.0,
+                "sl": 4350.0,
+                "tp": 4310.0,
                 "deviation": 20,
                 "magic": 123456,
                 "comment": "API Trade"
@@ -461,7 +462,7 @@ class MT5Service:
                 detail=f"Unexpected error: {str(e)}"
             )
 
-    def send_market_order(self, request: TradeRequest) -> TradeResponse:
+    def send_order(self, request: TradeRequest) -> TradeResponse:
         """
         Send a trade order to MT5.
 
@@ -509,7 +510,7 @@ class MT5Service:
 
             # Build trade request dictionary
             trade_request = {
-                "action": mt5.TRADE_ACTION_DEAL,
+                "action": mt5.TRADE_ACTION_PENDING,
                 "symbol": request.symbol,
                 "volume": request.volume,
                 "type": order_type,
@@ -518,7 +519,7 @@ class MT5Service:
                 "magic": request.magic,
                 "comment": request.comment,
                 "type_time": mt5.ORDER_TIME_GTC,
-                "type_filling": symbol_info.filling_mode,
+                "type_filling": mt5.ORDER_FILLING_RETURN,
             }
 
             # Add SL/TP if provided
@@ -818,7 +819,7 @@ async def send_order(
         TradeResponse with execution results
     """
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(executor, service.send_market_order, request)
+    result = await loop.run_in_executor(executor, service.send_order, request)
     return result
 
 
