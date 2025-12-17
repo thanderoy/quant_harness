@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "fastapi-swagger-dark>=0.0.9",
     "fastapi[standard]>=0.103.2",
     "MetaTrader5; platform_system == 'Windows' and platform_machine == 'AMD64'",
 ]
