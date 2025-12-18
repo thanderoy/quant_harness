@@ -85,6 +85,10 @@ class TelegramAPIClient:
 
         :returns (dict): Signals data.
         """
+        # Set up a new event loop for this thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
         self.client.add_event_handler(
             self._queue_new_signal, events.NewMessage(chats=self.TARGET_CHANNEL))  # noqa: E501
 

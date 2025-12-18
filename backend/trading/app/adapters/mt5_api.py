@@ -59,7 +59,7 @@ class MT5APIClient:
         resp = self.session.get(self._url("/"), timeout=self.timeout, verify=self.verify)
         return self._handle(resp)
 
-    def connect(self, *, path: Optional[str] = None, login: Optional[int] = None,
+    def connect(self, path: Optional[str] = None, login: Optional[int] = None,
                 password: Optional[str] = None, server: Optional[str] = None,
                 timeout: Optional[int] = None) -> Dict[str, Any]:
         """
