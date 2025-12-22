@@ -9,7 +9,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # External services / integrations (centralized)
-MT5_API_URL = os.getenv('MT5_API_URL', 'http://mt5:8000')
+MT5_API_URL = os.getenv('MT5_API_URL', 'http://mt5:5001')
 REQUEST_TIMEOUT = float(os.getenv('REQUEST_TIMEOUT', '10'))
 
 

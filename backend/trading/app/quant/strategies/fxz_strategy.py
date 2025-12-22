@@ -28,7 +28,7 @@ class ForexeroStrategy(BaseStrategy):
 
         # Try to connect MT5 once, ignore errors (we'll retry on send)
         try:
-            self.MT5_API_CLIENT.connect({})
+            self.MT5_API_CLIENT.connect()
         except Exception as e:
             LOGGER.warning(f"Could not connect MT5 at init: {e}")
 
@@ -90,8 +90,8 @@ class ForexeroStrategy(BaseStrategy):
             return None
 
     async def enter_trade(self):
-        volume_per_order = 0.01
-        order_type = "MARKET"
+        volume_per_order = 0.1
+        order_type = "LIMIT"
         deviation = 20
 
         while True:
@@ -110,6 +110,8 @@ class ForexeroStrategy(BaseStrategy):
 
                 symbol = data.get("Symbol")
                 action = (data.get("Direction") or "").strip().upper()
+                entry_price = self._parse_float(data.get("Entry Price"))
+
                 # Prefer TP1/TP2; fall back to a single TP if provided
                 tps = [self._parse_float(data.get(f"TP{i}")) for i in range(1, self.max_positions + 1)]
                 tps = [tp for tp in tps if tp is not None]
@@ -144,11 +146,11 @@ class ForexeroStrategy(BaseStrategy):
                             symbol=symbol,
                             volume=volume_per_order,
                             order_type=order_type,
-                            price=None,
+                            price=entry_price,
                             sl=sl,
                             tp=tp,
                             deviation=deviation,
-                            magic=0,
+                            magic=2460000,
                             comment=f"FXZ TP{idx}" if tp is not None else "FXZ"
                         )
 
@@ -174,10 +176,10 @@ class ForexeroStrategy(BaseStrategy):
                                     leverage=float(self.account_leverage),
                                     commission=0.0,
                                     type=action,
-                                    broker='Alpari',
-                                    market='FOREX',
+                                    broker='MetaQuotes-Demo',
+                                    market='GOLD',
                                     strategy=self.__class__.__name__,
-                                    timeframe='1M',
+                                    timeframe='1H',
                                     order_volume=float(executed_volume),
                                     sl=sl if sl is not None else 0.0,
                                     tp=tp,
