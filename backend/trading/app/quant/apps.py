@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from django.conf import settings
 import logging
 import os
 
@@ -16,7 +17,7 @@ class QuantConfig(AppConfig):
             return
         try:
             from app.quant.forexero_runner import start_forexero_background
-            start_forexero_background()
+            start_forexero_background(mt5_base_url=settings.MT5_API_URL)
             LOGGER.info("Forexero auto-start kicked off from AppConfig.ready()")
         except Exception:
             LOGGER.exception("Failed to auto-start Forexero strategy")
