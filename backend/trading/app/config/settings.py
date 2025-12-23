@@ -30,6 +30,8 @@ ALLOWED_HOSTS = list(filter(None, [
     DJANGO_SERVICE_DOMAIN,
 ]))
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # CSRF trusted origins must include scheme://host
 CSRF_TRUSTED_ORIGINS = []
 if DJANGO_SERVICE_DOMAIN:
