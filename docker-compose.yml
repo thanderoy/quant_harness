@@ -56,6 +56,9 @@ services:
 
       # Entrypoints configuration
       - --entrypoints.http.address=:80
+      - --entrypoints.http.http.redirections.entryPoint.to=https
+      - --entrypoints.http.http.redirections.entryPoint.scheme=https
+      - --entrypoints.http.http.redirections.entryPoint.permanent=true
       - --entrypoints.https.address=:443
 
       # Let's Encrypt configuration
@@ -93,9 +96,6 @@ services:
     networks:
       - traefik-public
       - default
-    ports:
-      - 5001:5001 # MT5 FastAPI
-      - 3000:3000 # KasmVNC
     healthcheck:
       test: [ "CMD-SHELL", "wget -qO- http://localhost:5001/ >/dev/null 2>&1 || exit 1" ]
       interval: 30s
@@ -107,27 +107,21 @@ services:
       traefik.enable: true
       traefik.docker.network: traefik-public
 
-      # Router for vnc.mt5.${domain} (Port 3000)
-      traefik.http.routers.vnc-mt5-https.rule: Host(`${VNC_DOMAIN}`)
-      traefik.http.routers.vnc-mt5-https.entrypoints: https
-      traefik.http.routers.vnc-mt5-https.tls: true
-      traefik.http.routers.vnc-mt5-https.tls.certresolver: le
-      traefik.http.routers.vnc-mt5-https.service: vnc-mt5-service
+      # Router for mt5.${domain} (Port 3000)
+      traefik.http.routers.mt5-https.rule: Host(`${VNC_DOMAIN}`)
+      traefik.http.routers.mt5-https.entrypoints: https
+      traefik.http.routers.mt5-https.tls: true
+      traefik.http.routers.mt5-https.tls.certresolver: le
+      traefik.http.routers.mt5-https.service: mt5-service
+      traefik.http.services.mt5-service.loadbalancer.server.port: 3000
 
-      traefik.http.services.vnc-mt5-service.loadbalancer.server.port: 3000
-
-      # Router for api.mt5.${domain} (Port 5001)
-      traefik.http.routers.api-mt5-http.rule: Host(`${API_DOMAIN}`)
-      traefik.http.routers.api-mt5-http.entrypoints: http
-      traefik.http.routers.api-mt5-http.middlewares: https-redirect
-
-      traefik.http.routers.api-mt5-https.rule: Host(`${API_DOMAIN}`)
-      traefik.http.routers.api-mt5-https.entrypoints: https
-      traefik.http.routers.api-mt5-https.tls: true
-      traefik.http.routers.api-mt5-https.tls.certresolver: le
-      traefik.http.routers.api-mt5-https.service: api-mt5-service
-
-      traefik.http.services.api-mt5-service.loadbalancer.server.port: 5001
+      # Router for api.${domain} (Port 5001)
+      traefik.http.routers.mt5-api-https.rule: Host(`${API_DOMAIN}`)
+      traefik.http.routers.mt5-api-https.entrypoints: https
+      traefik.http.routers.mt5-api-https.tls: true
+      traefik.http.routers.mt5-api-https.tls.certresolver: le
+      traefik.http.routers.mt5-api-https.service: mt5-api-service
+      traefik.http.services.mt5-api-service.loadbalancer.server.port: 5001
     logging: *default-logging
     depends_on:
       - traefik
@@ -164,8 +158,6 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
-    ports:
-      - 8000:8000
     command: [ "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application" ]
     depends_on:
       postgres:
@@ -182,26 +174,26 @@ services:
       traefik.enable: true
       traefik.docker.network: traefik-public
 
-      traefik.http.routers.django-https.rule: Host(`${DJANGO_SERVICE_DOMAIN}`)
-      traefik.http.routers.django-https.entrypoints: https
-      traefik.http.routers.django-https.tls: true
-      traefik.http.routers.django-https.tls.certresolver: le
-      traefik.http.routers.django-https.service: django-service
+      # HTTPS Router
+      traefik.http.routers.trading-https.rule: Host(`${DJANGO_SERVICE_DOMAIN}`)
+      traefik.http.routers.trading-https.entrypoints: https
+      traefik.http.routers.trading-https.tls: true
+      traefik.http.routers.trading-https.tls.certresolver: le
+      traefik.http.routers.trading-https.service: trading-service
+      traefik.http.services.trading-service.loadbalancer.server.port: 8000
 
-      traefik.http.services.django-service.loadbalancer.server.port: 8000
-
-      traefik.http.routers.django-static.rule: Host(`${DJANGO_SERVICE_DOMAIN}`) && PathPrefix(`/static/`)
-      traefik.http.routers.django-static.service: django-service
+      # Static Files Router
+      traefik.http.routers.trading-static.rule: Host(`${DJANGO_SERVICE_DOMAIN}`) && PathPrefix(`/static/`)
+      traefik.http.routers.trading-static.entrypoints: https
+      traefik.http.routers.trading-static.tls: true
       traefik.http.middlewares.static-stripprefix.stripprefix.prefixes: /static
-      traefik.http.routers.django-static.middlewares: static-stripprefix@docker
+      traefik.http.routers.trading-static.middlewares: static-stripprefix@docker
     logging: *default-logging
 
   redis:
     image: redis:7-alpine
     container_name: redis
     restart: unless-stopped
-    ports:
-      - 6379:6379
     depends_on:
       - traefik
     networks:
@@ -281,10 +273,8 @@ services:
     depends_on:
       - prometheus
       - traefik
-    ports:
-      - 3200:3000
     cpus: 0.5
-    mem_limit: 512m
+    mem_limit: 1024m
     networks:
       - default
       - traefik-public
@@ -320,8 +310,6 @@ services:
     depends_on:
       - alertmanager
       - traefik
-    ports:
-      - 9090:9090
     cpus: 0.5
     mem_limit: 512m
     networks:
@@ -385,8 +373,7 @@ services:
       - "--web.external-url=http://localhost:9093"
     volumes:
       - ./monitoring/configs/alertmanager/alertmanager-fallback-config.yml:/etc/alertmanager/config.yml
-    ports:
-      - 9093:9093
+
     cpus: 0.5
     mem_limit: 512m
     networks:
@@ -401,8 +388,6 @@ services:
   uncomplicated-alert-receiver:
     image: ghcr.io/jamesread/uncomplicated-alert-receiver
     container_name: uncomplicated-alert-receiver
-    ports:
-      - 9094:8080
     cpus: 0.5
     mem_limit: 512m
     networks:
@@ -417,8 +402,7 @@ services:
     image: grafana/loki:3.5.5
     container_name: loki
     user: root
-    ports:
-      - 3100:3100
+
     command: -config.file=/etc/loki/loki.yaml
     volumes:
       - ./monitoring/configs/loki/loki.yaml:/etc/loki/loki.yaml
