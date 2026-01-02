@@ -93,3 +93,4 @@ logs
 
 # Database
 *.sqlite3
+backend/trading/app/session

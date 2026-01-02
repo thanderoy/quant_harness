@@ -186,8 +186,7 @@ services:
       traefik.http.routers.trading-static.rule: Host(`${DJANGO_SERVICE_DOMAIN}`) && PathPrefix(`/static/`)
       traefik.http.routers.trading-static.entrypoints: https
       traefik.http.routers.trading-static.tls: true
-      traefik.http.middlewares.static-stripprefix.stripprefix.prefixes: /static
-      traefik.http.routers.trading-static.middlewares: static-stripprefix@docker
+      traefik.http.routers.trading-static.service: trading-service
     logging: *default-logging
 
   redis:
