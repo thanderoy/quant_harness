@@ -1,5 +1,6 @@
 import logging
 import re
+import asyncio
 from typing import Dict, Optional
 
 from app.quant.strategies.base import BaseStrategy
@@ -40,14 +41,12 @@ class ForexeroStrategy(BaseStrategy):
         except Exception as e:
             LOGGER.warning(f"Failed to get MT5 account info: {e}")
 
-    @staticmethod
-    def _normalize_symbol(symbol: str) -> str:
+    def _normalize_symbol(self, symbol: str) -> str:
         # Remove emojis, slashes and spaces e.g. "🔔XAU/USD🔔" -> "XAUUSD"
         s = symbol.replace('🔔', '').replace('/', '').replace(' ', '')
         return s.upper()
 
-    @staticmethod
-    def _extract_signal_data(signal: dict) -> Optional[Dict[str, str]]:
+    def _extract_signal_data(self, signal: dict) -> Optional[Dict[str, str]]:
         content = signal.get("content")
         if not content:
             return None
@@ -58,7 +57,7 @@ class ForexeroStrategy(BaseStrategy):
             return None
 
         # First non-empty line is the symbol line
-        data['Symbol'] = ForexeroStrategy._normalize_symbol(lines[0])
+        data['Symbol'] = self._normalize_symbol(lines[0])
 
         # Remaining lines are key/value pairs like "Direction: BUY" or "TP1 1970.00"
         kv_pattern = re.compile(r"^(?P<key>[A-Za-z0-9]+)\s*:?[\s\t]*(?P<val>.+?)\s*$")
@@ -89,23 +88,31 @@ class ForexeroStrategy(BaseStrategy):
         except Exception:
             return None
 
+    async def _send_order_async(self, **kwargs):
+        """Execute MT5 order in a thread executor to avoid blocking the loop."""
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, lambda: self.MT5_API_CLIENT.send_order(**kwargs))
+
     async def enter_trade(self):
         volume_per_order = 0.1
         order_type = "LIMIT"
         deviation = 20
 
+        # Ensure the queue exists
+        queue = await self.TELEGRAM_API_CLIENT.get_queue()
+
         while True:
             try:
-                signal = await self.TELEGRAM_API_CLIENT.message_queue.get()
+                signal = await queue.get()
                 if not signal:
                     LOGGER.info("FXZ: Empty signal object, skipping")
-                    self.TELEGRAM_API_CLIENT.message_queue.task_done()
+                    queue.task_done()
                     continue
 
                 data = self._extract_signal_data(signal)
                 if not data:
                     LOGGER.info("FXZ: Could not parse signal content, skipping")
-                    self.TELEGRAM_API_CLIENT.message_queue.task_done()
+                    queue.task_done()
                     continue
 
                 symbol = data.get("Symbol")
@@ -126,12 +133,12 @@ class ForexeroStrategy(BaseStrategy):
                         "error": "Invalid or missing Direction in signal",
                         "signal": signal,
                     })
-                    self.TELEGRAM_API_CLIENT.message_queue.task_done()
+                    queue.task_done()
                     continue
 
                 if not symbol:
                     LOGGER.error({"error": "Missing symbol in signal", "signal": signal})
-                    self.TELEGRAM_API_CLIENT.message_queue.task_done()
+                    queue.task_done()
                     continue
 
                 # If no TP given, still place a single order without TP
@@ -141,7 +148,8 @@ class ForexeroStrategy(BaseStrategy):
                 # Place up to max_positions orders using TP1..TPn
                 for idx, tp in enumerate(tps[: self.max_positions], start=1):
                     try:
-                        order = self.MT5_API_CLIENT.send_order(
+                        # Use async wrapper for blocking call
+                        order = await self._send_order_async(
                             action=action,
                             symbol=symbol,
                             volume=volume_per_order,
@@ -195,7 +203,7 @@ class ForexeroStrategy(BaseStrategy):
                         LOGGER.error(
                             {"error": f"Order placement error: {e}", "data": data})
 
-                self.TELEGRAM_API_CLIENT.message_queue.task_done()
+                queue.task_done()
 
             except Exception as e:
                 LOGGER.error(

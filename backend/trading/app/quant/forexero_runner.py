@@ -1,11 +1,9 @@
-import os
 import threading
 import asyncio
 import logging
 from typing import Optional
 
 from app.quant.strategies.fxz_strategy import ForexeroStrategy
-from app.adapters.telegram import TelegramAPIClient
 
 LOGGER = logging.getLogger(__name__)
 
@@ -20,29 +18,36 @@ def start_forexero_background(mt5_base_url: Optional[str] = None) -> None:
 
     _started = True
 
-    strategy = ForexeroStrategy(mt5_base_url=mt5_base_url)
+    def _run_loop():
+        # Create a new event loop for this thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
-    # Start Telegram streaming in a background thread
-    tg_client: TelegramAPIClient = strategy.TELEGRAM_API_CLIENT
-    t_stream = threading.Thread(
-        target=tg_client.stream_signals,
-        name="TelegramStream",
-        daemon=True,
-    )
-    t_stream.start()
-    LOGGER.info("[FXZ] Telegram stream thread started")
+        strategy = ForexeroStrategy(mt5_base_url=mt5_base_url)
+        tg_client = strategy.TELEGRAM_API_CLIENT
 
-    # Run the consumer loop in another background thread
-    def _consumer_loop():
+        async def main():
+            # Wait for queue initialization if needed (though get_queue() handles it)
+            # but we want to ensure everything is ready.
+            # get_queue is async, so we can await it here to ensure it's bound to THIS loop.
+            await tg_client.get_queue()
+
+            await asyncio.gather(
+                tg_client.stream_signals(),
+                strategy.enter_trade(),
+            )
+
         try:
-            asyncio.run(strategy.enter_trade())
+            loop.run_until_complete(main())
         except Exception as e:
-            LOGGER.exception(f"[FXZ] Consumer loop crashed: {e}")
+            LOGGER.exception(f"[FXZ] Async loop crashed: {e}")
+        finally:
+            loop.close()
 
-    t_consumer = threading.Thread(
-        target=_consumer_loop,
-        name="ForexeroConsumer",
+    t = threading.Thread(
+        target=_run_loop,
+        name="ForexeroAsyncLoop",
         daemon=True,
     )
-    t_consumer.start()
-    LOGGER.info("[FXZ] Forexero consumer thread started")
+    t.start()
+    LOGGER.info("[FXZ] Forexero background thread started")
