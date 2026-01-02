@@ -20,3 +20,15 @@ Row 4: Network RX | Network TX | Network Errors Graph
 Row 5: Disk I/O | Disk Read Graph | Disk Write Graph
 Row 6: Container Info & Health
 ```
+
+## Log Search
+
+**Panel Layout**
+```
+Row 1: Overview (Total Logs, Error Count, Warning Count, Active Containers)
+Row 2: Log Level Analytics | Error & Warning Rate Graph
+Row 3: Log Rate Rate Analysis | Log Volume
+Row 4: Log Metrics
+Row 5: Error Analysis
+Row 6: Log Search & Viewer
+```
