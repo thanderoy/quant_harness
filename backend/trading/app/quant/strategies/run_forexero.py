@@ -2,7 +2,6 @@
 import os
 import asyncio
 import logging
-import threading
 
 # Ensure Django settings are loaded when running as a standalone script
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.config.settings")
@@ -22,17 +21,20 @@ LOGGER = logging.getLogger("FXZRunner")
 
 def main():
     strategy = ForexeroStrategy()
-
-    # Start Telegram streaming in a background thread
     tg_client: TelegramAPIClient = strategy.TELEGRAM_API_CLIENT
-    t = threading.Thread(
-        target=tg_client.stream_signals, name="TelegramStream", daemon=True)
-    t.start()
-    LOGGER.info("Started Telegram stream thread")
 
-    # Run the consumer loop
+    async def async_main():
+        # Ensure queue is created on this loop
+        await tg_client.get_queue()
+
+        LOGGER.info("Starting Telegram stream and Strategy consumer...")
+        await asyncio.gather(
+            tg_client.stream_signals(),
+            strategy.enter_trade()
+        )
+
     try:
-        asyncio.run(strategy.enter_trade())
+        asyncio.run(async_main())
     except KeyboardInterrupt:
         LOGGER.info("Shutting down FXZ runner...")
 

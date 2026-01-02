@@ -1,39 +1,35 @@
-"""Telegram API Interactions."""
 import asyncio
 import logging
-from typing import AsyncIterator
 from app.config import settings
 from telethon import TelegramClient, events
 
-
 class TelegramAPIClient:
-
     def __init__(self):
-        """Initialize Client"""
+        self.logger = logging.getLogger(self.__class__.__name__)
+        # Use a persistent path for the session file. Avoid re-login prompts on container restarts.
+        # Ensure this path matches the volume mounted or directory created in Dockerfile
+        self.API_SESSION_NAME = '/app/session/telegram_session'
 
-        self.logger: logging.Logger = self._create_logger()
-        self.API_ID: int = settings.TELEGRAM_API_ID
-        self.API_HASH: str = settings.TELEGRAM_API_HASH     # noqa: E501
-        self.API_SESSION_NAME: str = '/tmp/telegram_client_logs'
-        self.TARGET_CHANNEL: str = settings.TELEGRAM_API_TARGET_CHANNEL  # noqa: E501
-
+        # Initialize client but DON'T start it yet
         self.client = TelegramClient(
-            self.API_SESSION_NAME, self.API_ID, self.API_HASH)
+            self.API_SESSION_NAME,
+            settings.TELEGRAM_API_ID,
+            settings.TELEGRAM_API_HASH
+        )
 
-        self.message_queue: asyncio.Queue = asyncio.Queue()
+        # We initialize the queue as None and create it inside the loop
+        self.message_queue: asyncio.Queue = None
+        self.TARGET_CHANNEL = settings.TELEGRAM_API_TARGET_CHANNEL
 
-    def _create_logger(self) -> logging.Logger:
-        """Create a logger object to capture output."""
-        logging.basicConfig(
-            level=logging.INFO, format='%(asctime)s [%(levelname)s] > %(message)s')     # noqa: E501
-
-        return logging.getLogger(self.__class__.__name__)
+    async def get_queue(self) -> asyncio.Queue:
+        """Ensure the queue is created on the correct running loop."""
+        if self.message_queue is None:
+            self.message_queue = asyncio.Queue()
+        return self.message_queue
 
     def _serialize_message(self, message: object) -> dict:
-        """Serialize message object"""
-        if not message.text:
+        if not message or not message.text:
             return {}
-
         return {
             "message_id": message.id,
             "chat_id": str(message.chat_id),
@@ -42,58 +38,34 @@ class TelegramAPIClient:
             "timestamp": message.date.isoformat(),
         }
 
-    async def _queue_new_signal(self, event: object):
-        """Add new messages to the asyncio.Queue object for consumer."""
-        message = event.message
+    async def _queue_new_signal(self, event: events.NewMessage.Event):
+        """Event handler for new messages."""
+        serialized = self._serialize_message(event.message)
+        if serialized:
+            queue = await self.get_queue()
+            await queue.put(serialized)
+            self.logger.info("New signal queued.")
 
-        serialized_message = self._serialize_message(message)
+    async def start_client(self):
+        """Standardized way to ensure client is connected."""
+        if not self.client.is_connected():
+            await self.client.start()
 
-        if not serialized_message:
-            self.logger.warning("Skipping non-text message.")
-            return
-
-        await self.message_queue.put(serialized_message)
-        self.logger.info("New signal received. Added to queue.")
-        self.logger.debug(f"Current queue size: {self.message_queue.qsize()}")
-
-    async def fetch_signals(self, limit: int = 3) -> AsyncIterator:
+    async def stream_signals(self):
         """
-        Fetch historical messages ordered in descending order.
-
-        :param limit (int): How far back to fetch messages.
-        :returns (AsyncIterator): Signals data.
+        The proper async way to stream.
+        Run this with: asyncio.run(client.stream_signals())
         """
-        self.logger.debug(
-            f"Fetching last {limit} messages from {self.TARGET_CHANNEL}...")
+        await self.start_client()
 
-        async with self.client:
-            async for message in self.client.iter_messages(
-                    self.TARGET_CHANNEL, limit=limit):
-
-                # Check if message is empty
-                if not message.text:
-                    continue
-
-                yield self._serialize_message(message)
-
-        self.logger.debug(
-            f"Fetched {limit} messages from {self.TARGET_CHANNEL}.")
-
-    def stream_signals(self):
-        """
-        Stream realtime messages from TARGET CHANNEL.
-
-        :returns (dict): Signals data.
-        """
-        # Set up a new event loop for this thread
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
+        # Register the handler
         self.client.add_event_handler(
-            self._queue_new_signal, events.NewMessage(chats=self.TARGET_CHANNEL))  # noqa: E501
+            self._queue_new_signal,
+            events.NewMessage(chats=self.TARGET_CHANNEL)
+        )
 
-        with self.client:
-            self.logger.info(
-                f"Streaming messages from {self.TARGET_CHANNEL}...")
-            self.client.run_until_disconnected()    # Runs forever
-            self.logger.info("Streaming paused. Client Disconnected.")
+        self.logger.info(f"Streaming from {self.TARGET_CHANNEL}...")
+        try:
+            await self.client.run_until_disconnected()
+        finally:
+            await self.client.disconnect()

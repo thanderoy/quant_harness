@@ -24,7 +24,9 @@ COPY . /app/
 
 RUN mkdir -p /app/logs && \
     mkdir -p /app/static && \
-    chmod 777 /app/logs
+    mkdir -p /app/session && \
+    chmod 777 /app/logs && \
+    chmod 777 /app/session
 
 RUN chmod +x /app/entrypoint.sh
 
