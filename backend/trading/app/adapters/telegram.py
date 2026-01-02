@@ -28,7 +28,7 @@ class TelegramAPIClient:
         return self.message_queue
 
     def _serialize_message(self, message: object) -> dict:
-        if not message or not message.text:
+        if not message:
             return {}
         return {
             "message_id": message.id,
@@ -40,31 +40,47 @@ class TelegramAPIClient:
 
     async def _queue_new_signal(self, event: events.NewMessage.Event):
         """Event handler for new messages."""
+        self.logger.info(f"Received message: \n{event.message}")
         serialized = self._serialize_message(event.message)
         if serialized:
             queue = await self.get_queue()
             await queue.put(serialized)
-            self.logger.info("New signal queued.")
+            self.logger.info("New message queued.")
 
     async def start_client(self):
         """Standardized way to ensure client is connected."""
         if not self.client.is_connected():
             await self.client.start()
 
-    async def stream_signals(self):
+    async def send_message(self, message: str, channel: str = None):
+        """
+        Send a message to a telegram channel.
+        Falls back to TELEGRAM_API_RESULTS_CHANNEL if channel is not provided.
+        """
+        await self.start_client()
+        target_channel = channel or settings.TELEGRAM_API_RESULTS_CHANNEL
+
+        try:
+            await self.client.send_message(target_channel, message)
+            self.logger.info(f"Message sent to {target_channel}")
+        except Exception as e:
+            self.logger.error(f"Failed to send message to {target_channel}: {e}")
+
+    async def stream_signals(self, channel=None):
         """
         The proper async way to stream.
         Run this with: asyncio.run(client.stream_signals())
         """
         await self.start_client()
+        channel = channel or self.TARGET_CHANNEL
 
         # Register the handler
         self.client.add_event_handler(
             self._queue_new_signal,
-            events.NewMessage(chats=self.TARGET_CHANNEL)
+            events.NewMessage(chats=channel)
         )
 
-        self.logger.info(f"Streaming from {self.TARGET_CHANNEL}...")
+        self.logger.info(f"Streaming from {channel}...")
         try:
             await self.client.run_until_disconnected()
         finally:
