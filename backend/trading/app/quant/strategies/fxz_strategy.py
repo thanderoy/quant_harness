@@ -1,10 +1,8 @@
 import logging
 import re
-import asyncio
 from typing import Dict, Optional
 
 from app.quant.strategies.base import BaseStrategy
-from app.adapters.telegram import TelegramAPIClient
 from app.adapters.mt5_api import MT5APIClient
 from app.adapters.db.create import create_trade as create_trade_record
 from app.config import settings
@@ -23,7 +21,6 @@ class ForexeroStrategy(BaseStrategy):
     def __init__(self, *, mt5_base_url: Optional[str] = None):
         super().__init__()
         self.max_positions = 2  # Only work with TP1 and TP2 signals
-        self.TELEGRAM_API_CLIENT = TelegramAPIClient()
         base_url = mt5_base_url or settings.MT5_API_URL
         self.MT5_API_CLIENT = MT5APIClient(base_url=base_url)
 
@@ -88,123 +85,106 @@ class ForexeroStrategy(BaseStrategy):
         except Exception:
             return None
 
-    async def _send_order_async(self, **kwargs):
-        """Execute MT5 order in a thread executor to avoid blocking the loop."""
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, lambda: self.MT5_API_CLIENT.send_order(**kwargs))
+    def process_signal(self, signal: dict):
+        """
+        Synchronously process a signal: parse, validate, and execute trades.
+        """
+        if not signal:
+            LOGGER.info("FXZ: Empty signal object, skipping")
+            return
 
-    async def enter_trade(self):
+        data = self._extract_signal_data(signal)
+        if not data:
+            LOGGER.info("FXZ: Could not parse signal content, skipping")
+            return
+
+        symbol = data.get("Symbol")
+        action = (data.get("Direction") or "").strip().upper()
+        entry_price = self._parse_float(data.get("Entry Price"))
+
+        # Prefer TP1/TP2; fall back to a single TP if provided
+        tps = [self._parse_float(data.get(f"TP{i}")) for i in range(1, self.max_positions + 1)]
+        tps = [tp for tp in tps if tp is not None]
+        if not tps and data.get("TP"):
+            tp_val = self._parse_float(data.get("TP"))
+            if tp_val is not None:
+                tps = [tp_val]
+        sl = self._parse_float(data.get("SL"))
+
+        if action not in {"BUY", "SELL"}:
+            LOGGER.error({
+                "error": "Invalid or missing Direction in signal",
+                "signal": signal,
+            })
+            return
+
+        if not symbol:
+            LOGGER.error({"error": "Missing symbol in signal", "signal": signal})
+            return
+
+        # If no TP given, still place a single order without TP
+        if not tps:
+            tps = [None]
+
         volume_per_order = 0.1
         order_type = "LIMIT"
         deviation = 20
 
-        # Ensure the queue exists
-        queue = await self.TELEGRAM_API_CLIENT.get_queue()
-
-        while True:
+        # Place up to max_positions orders using TP1..TPn
+        for idx, tp in enumerate(tps[: self.max_positions], start=1):
             try:
-                signal = await queue.get()
-                if not signal:
-                    LOGGER.info("FXZ: Empty signal object, skipping")
-                    queue.task_done()
-                    continue
+                # Synchronous call
+                order = self.MT5_API_CLIENT.send_order(
+                    action=action,
+                    symbol=symbol,
+                    volume=volume_per_order,
+                    order_type=order_type,
+                    price=entry_price,
+                    sl=sl,
+                    tp=tp,
+                    deviation=deviation,
+                    magic=2460000,
+                    comment=f"FXZ TP{idx}" if tp is not None else "FXZ"
+                )
 
-                data = self._extract_signal_data(signal)
-                if not data:
-                    LOGGER.info("FXZ: Could not parse signal content, skipping")
-                    queue.task_done()
-                    continue
-
-                symbol = data.get("Symbol")
-                action = (data.get("Direction") or "").strip().upper()
-                entry_price = self._parse_float(data.get("Entry Price"))
-
-                # Prefer TP1/TP2; fall back to a single TP if provided
-                tps = [self._parse_float(data.get(f"TP{i}")) for i in range(1, self.max_positions + 1)]
-                tps = [tp for tp in tps if tp is not None]
-                if not tps and data.get("TP"):
-                    tp_val = self._parse_float(data.get("TP"))
-                    if tp_val is not None:
-                        tps = [tp_val]
-                sl = self._parse_float(data.get("SL"))
-
-                if action not in {"BUY", "SELL"}:
-                    LOGGER.error({
-                        "error": "Invalid or missing Direction in signal",
-                        "signal": signal,
-                    })
-                    queue.task_done()
-                    continue
-
-                if not symbol:
-                    LOGGER.error({"error": "Missing symbol in signal", "signal": signal})
-                    queue.task_done()
-                    continue
-
-                # If no TP given, still place a single order without TP
-                if not tps:
-                    tps = [None]
-
-                # Place up to max_positions orders using TP1..TPn
-                for idx, tp in enumerate(tps[: self.max_positions], start=1):
+                # Create Trade object in DB
+                if order and order.get("success", True) is not False:
+                    executed_price = order.get("price")
+                    executed_volume = order.get("volume", volume_per_order)
+                    # Basic notional and capital approximation (fallback contract size)
+                    contract_size = 100000
                     try:
-                        # Use async wrapper for blocking call
-                        order = await self._send_order_async(
-                            action=action,
+                        order_size_usd = float(executed_volume) * contract_size * float(executed_price)
+                        capital_used = order_size_usd / float(self.account_leverage)
+                    except Exception:
+                        order_size_usd = 0.0
+                        capital_used = 0.0
+
+                    try:
+                        create_trade_record(
+                            order,
                             symbol=symbol,
-                            volume=volume_per_order,
-                            order_type=order_type,
-                            price=entry_price,
-                            sl=sl,
+                            capital=capital_used,
+                            position_size_usd=order_size_usd,
+                            leverage=float(self.account_leverage),
+                            commission=0.0,
+                            type=action,
+                            broker='MetaQuotes-Demo',
+                            market='GOLD',
+                            strategy=self.__class__.__name__,
+                            timeframe='1H',
+                            order_volume=float(executed_volume),
+                            sl=sl if sl is not None else 0.0,
                             tp=tp,
-                            deviation=deviation,
-                            magic=2460000,
-                            comment=f"FXZ TP{idx}" if tp is not None else "FXZ"
                         )
-
-                        # Create Trade object in DB
-                        if order and order.get("success", True) is not False:
-                            executed_price = order.get("price")
-                            executed_volume = order.get("volume", volume_per_order)
-                            # Basic notional and capital approximation (fallback contract size)
-                            contract_size = 100000
-                            try:
-                                order_size_usd = float(executed_volume) * contract_size * float(executed_price)
-                                capital_used = order_size_usd / float(self.account_leverage)
-                            except Exception:
-                                order_size_usd = 0.0
-                                capital_used = 0.0
-
-                            try:
-                                create_trade_record(
-                                    order,
-                                    symbol=symbol,
-                                    capital=capital_used,
-                                    position_size_usd=order_size_usd,
-                                    leverage=float(self.account_leverage),
-                                    commission=0.0,
-                                    type=action,
-                                    broker='MetaQuotes-Demo',
-                                    market='GOLD',
-                                    strategy=self.__class__.__name__,
-                                    timeframe='1H',
-                                    order_volume=float(executed_volume),
-                                    sl=sl if sl is not None else 0.0,
-                                    tp=tp,
-                                )
-                            except Exception as e:
-                                LOGGER.error(
-                                    {"error": f"Failed to create trade record: {e}", "order": order})
-                        else:
-                            LOGGER.error(
-                                {"error": "Order failed", "order": order})
-
                     except Exception as e:
                         LOGGER.error(
-                            {"error": f"Order placement error: {e}", "data": data})
-
-                queue.task_done()
+                            {"error": f"Failed to create trade record: {e}", "order": order})
+                else:
+                    LOGGER.error(
+                        {"error": "Order failed", "order": order})
 
             except Exception as e:
                 LOGGER.error(
-                    f"Unexpected error occurred when entering trade: {str(e)}")
+                    {"error": f"Order placement error: {e}", "data": data})
+
