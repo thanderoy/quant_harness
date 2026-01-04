@@ -17,17 +17,9 @@ class TelegramAPIClient:
             settings.TELEGRAM_API_HASH
         )
 
-        # We initialize the queue as None and create it inside the loop
-        self.message_queue: asyncio.Queue = None
         self.TARGET_CHANNEL = settings.TELEGRAM_API_TARGET_CHANNEL
 
-    async def get_queue(self) -> asyncio.Queue:
-        """Ensure the queue is created on the correct running loop."""
-        if self.message_queue is None:
-            self.message_queue = asyncio.Queue()
-        return self.message_queue
-
-    def _serialize_message(self, message: object) -> dict:
+    def serialize_message(self, message: object) -> dict:
         if not message:
             return {}
         return {
@@ -37,15 +29,6 @@ class TelegramAPIClient:
             "sender_id": str(message.sender_id),
             "timestamp": message.date.isoformat(),
         }
-
-    async def _queue_new_signal(self, event: events.NewMessage.Event):
-        """Event handler for new messages."""
-        self.logger.info(f"Received message: \n{event.message}")
-        serialized = self._serialize_message(event.message)
-        if serialized:
-            queue = await self.get_queue()
-            await queue.put(serialized)
-            self.logger.info("New message queued.")
 
     async def start_client(self):
         """Standardized way to ensure client is connected."""
@@ -66,17 +49,21 @@ class TelegramAPIClient:
         except Exception as e:
             self.logger.error(f"Failed to send message to {target_channel}: {e}")
 
-    async def stream_signals(self, channel=None):
+    async def stream_signals(self, channel=None, event_handler=None):
         """
         The proper async way to stream.
-        Run this with: asyncio.run(client.stream_signals())
+        Run this with: asyncio.run(client.stream_signals(event_handler=...))
         """
+        if not event_handler:
+            self.logger.warning("No event_handler provided for stream_signals; messages will be ignored.")
+            return
+
         await self.start_client()
         channel = channel or self.TARGET_CHANNEL
 
         # Register the handler
         self.client.add_event_handler(
-            self._queue_new_signal,
+            event_handler,
             events.NewMessage(chats=channel)
         )
 
