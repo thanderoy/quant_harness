@@ -25,8 +25,8 @@ def create_trade(order, symbol: str, capital: float, position_size_usd: float,
             leverage=leverage,  # Adjust based on your data
             order_volume=order_volume,
             order_commission=commission,
-            break_even_price=get_price_at_pnl(0, entry_price, position_size_usd, leverage, type, commission)[0],
-            liquidity_price=get_price_at_pnl(-capital, entry_price, position_size_usd, leverage, type, commission)[0],
+            break_even_price=0,
+            liquidity_price=0,
             broker=broker,
             market_type=market,
             strategy=strategy,
@@ -39,8 +39,8 @@ def create_trade(order, symbol: str, capital: float, position_size_usd: float,
             mutation_price=entry_price,  # Example: using SL price
             new_tp_price=tp if tp else None,
             new_sl_price=sl,
-            pnl_at_new_tp_price=get_pnl_at_price(tp, entry_price, position_size_usd, leverage, type, commission)[0] if tp else None,
-            pnl_at_new_sl_price=get_pnl_at_price(sl, entry_price, position_size_usd, leverage, type, commission)[0],
+            pnl_at_new_tp_price=None,
+            pnl_at_new_sl_price=None,
         )
 
         logger.info({'trade': trade, 'mutation': mutation})

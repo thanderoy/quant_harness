@@ -57,17 +57,27 @@ class ForexeroStrategy(BaseStrategy):
         data['Symbol'] = self._normalize_symbol(lines[0])
 
         # Remaining lines are key/value pairs like "Direction: BUY" or "TP1 1970.00"
-        kv_pattern = re.compile(r"^(?P<key>[A-Za-z0-9]+)\s*:?[\s\t]*(?P<val>.+?)\s*$")
+        # Allow spaces in keys (e.g. "Entry Price")
+        kv_pattern = re.compile(r"^(?P<key>[A-Za-z0-9 ]+?)\s*[:]\s*(?P<val>.+?)\s*$|^(?P<key_nc>[A-Za-z0-9]+)\s+(?P<val_nc>.+?)\s*$")
+
         for line in lines[1:]:
+            # Try matching with colon first
             m = kv_pattern.match(line)
             if not m:
                 continue
-            key = m['key'].upper()
-            val = m['val'].replace('\xa0', ' ').strip()
+
+            if m.group('key'):
+                key_raw = m.group('key')
+                val_raw = m.group('val')
+            else:
+                key_raw = m.group('key_nc')
+                val_raw = m.group('val_nc')
+
+            key = key_raw.strip().upper()
+            val = val_raw.replace('\xa0', ' ').strip()
             # Normalize common keys
             key = {
                 'DIRECTION': 'Direction',
-                'ENTRY': 'Entry Price',
                 'ENTRYPRICE': 'Entry Price',
                 'SL': 'SL',
                 'TP': 'TP',
@@ -127,12 +137,37 @@ class ForexeroStrategy(BaseStrategy):
             tps = [None]
 
         volume_per_order = 0.1
-        order_type = "LIMIT"
         deviation = 20
 
         # Place up to max_positions orders using TP1..TPn
+        current_bid = 0.0
+        current_ask = 0.0
+        try:
+            tick = self.MT5_API_CLIENT.get_tick(symbol)
+            current_bid = float(tick['bid'])
+            current_ask = float(tick['ask'])
+        except Exception as e:
+            LOGGER.warning(f"Failed to get tick for {symbol}, defaulting to LIMIT: {e}")
+
         for idx, tp in enumerate(tps[: self.max_positions], start=1):
+            # Determine order type dynamically based on price relation
+            if entry_price and current_bid > 0 and current_ask > 0:
+                if action == "BUY":
+                    # Buy Stop if entry is above current Ask
+                    order_type = "STOP" if entry_price > current_ask else "LIMIT"
+                elif action == "SELL":
+                    # Sell Stop if entry is below current Bid
+                    order_type = "STOP" if entry_price < current_bid else "LIMIT"
+            else:
+                order_type = "LIMIT"
+
             try:
+                order_data = {
+                    'entry_price': entry_price,
+                    'tp': tp,
+                    'sl': sl
+                }
+                LOGGER.info(f"Data: {order_data}")
                 # Synchronous call
                 order = self.MT5_API_CLIENT.send_order(
                     action=action,
@@ -187,4 +222,3 @@ class ForexeroStrategy(BaseStrategy):
             except Exception as e:
                 LOGGER.error(
                     {"error": f"Order placement error: {e}", "data": data})
-
