@@ -39,7 +39,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Total number of log lines generated in the selected time range",
       "fieldConfig": {
@@ -95,7 +95,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"}[$__range]))",
@@ -109,7 +109,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Number of ERROR level log entries detected",
       "fieldConfig": {
@@ -169,7 +169,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"} |~ \"(?i)error\" [$__range]))",
@@ -183,7 +183,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Number of WARNING level log entries detected",
       "fieldConfig": {
@@ -239,7 +239,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"} |~ \"(?i)warn\" [$__range]))",
@@ -253,7 +253,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Number of containers currently generating logs",
       "fieldConfig": {
@@ -309,10 +309,10 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "count(count_over_time({job=\"$job\"}[5m]))",
+          "expr": "count(count_over_time({job=\"$job\", container=~\"$container\"}[5m]))",
           "queryType": "range",
           "refId": "A"
         }
@@ -321,7 +321,7 @@
       "type": "stat"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -336,7 +336,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Distribution of log levels across all containers",
       "fieldConfig": {
@@ -456,7 +456,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"} |~ \"(?i)error\" [$__range]))",
@@ -467,7 +467,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"} |~ \"(?i)warn\" [$__range]))",
@@ -479,7 +479,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"} |~ \"(?i)info\" [$__range]))",
@@ -491,7 +491,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"} |~ \"(?i)debug\" [$__range]))",
@@ -507,7 +507,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Error and warning rates over time to identify spikes and patterns",
       "fieldConfig": {
@@ -621,7 +621,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(rate({job=\"$job\", container=~\"$container\"} |~ \"(?i)error\" [$__interval])) by (container)",
@@ -632,7 +632,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(rate({job=\"$job\", container=~\"$container\"} |~ \"(?i)warn\" [$__interval])) by (container)",
@@ -646,7 +646,7 @@
       "type": "timeseries"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -661,7 +661,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Log rate per container showing which containers are most verbose",
       "fieldConfig": {
@@ -725,7 +725,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(rate({job=\"$job\", container=~\"$container\"}[$__interval])) by (container)",
@@ -740,7 +740,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Total log volume over time showing logging activity patterns",
       "fieldConfig": {
@@ -822,7 +822,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"}[$__interval])) by (container)",
@@ -835,7 +835,7 @@
       "type": "timeseries"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -850,7 +850,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Proportional distribution of log counts across all containers",
       "fieldConfig": {
@@ -903,14 +903,15 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "12.3.0",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"}[$__interval])) by (container)",
+          "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"}[$__range])) by (container)",
           "legendFormat": "{{container}}",
           "queryType": "range",
           "refId": "A"
@@ -922,7 +923,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Time series view of log generation rate per container",
       "fieldConfig": {
@@ -1006,7 +1007,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(count_over_time({job=\"$job\", container=~\"$container\"}[$__interval])) by (container)",
@@ -1026,164 +1027,6 @@
         "x": 0,
         "y": 35
       },
-      "id": 21,
-      "panels": [],
-      "title": "Error Analysis",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "description": "Most frequently occurring error messages to help identify patterns and recurring issues",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 5
-              },
-              {
-                "color": "red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Count"
-            },
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "custom.width",
-                "value": 100
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Container"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 200
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Time"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 180
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
-        "y": 36
-      },
-      "id": 22,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Count"
-          }
-        ]
-      },
-      "pluginVersion": "12.3.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "editorMode": "code",
-          "expr": "topk(20, sum by (container) (count_over_time({job=\"$job\", container=~\"$container\"} |~ \"(?i)error\" [$__range])))",
-          "format": "table",
-          "legendFormat": "__auto",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Top Containers by Error Count",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": false
-            },
-            "indexByName": {
-              "Time": 0,
-              "Value": 2,
-              "container": 1
-            },
-            "renameByName": {
-              "Time": "Last Seen",
-              "Value": "Count",
-              "container": "Container"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 46
-      },
       "id": 4,
       "panels": [],
       "title": "Log Search & Viewer",
@@ -1192,14 +1035,14 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "${datasource}"
       },
       "description": "Search and view container logs with filtering by container, log level, and custom search patterns. Use the variables above to filter results.",
       "gridPos": {
         "h": 24,
         "w": 24,
         "x": 0,
-        "y": 47
+        "y": 36
       },
       "id": 2,
       "options": {
@@ -1212,17 +1055,18 @@
         "sortOrder": "Descending",
         "wrapLogMessage": true
       },
+      "pluginVersion": "12.3.0",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "{job=\"$job\", container=~\"$container\"} |~ \"(?i)$log_level\" |~ \"(?i)$searchable_pattern\" != \"$exclude_pattern\"",
+          "expr": "{job=\"$job\", container=~\"$container\"} ${log_level:raw} |~ \"$searchable_pattern\"",
           "hide": false,
           "queryType": "range",
-          "refId": "B"
+          "refId": "A"
         }
       ],
       "title": "Log Search Results",
@@ -1239,6 +1083,24 @@
   "templating": {
     "list": [
       {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "Loki"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
         "allValue": ".*",
         "current": {
           "selected": false,
@@ -1247,7 +1109,7 @@
         },
         "datasource": {
           "type": "loki",
-          "uid": "P8E80F9AEF21F6940"
+          "uid": "${datasource}"
         },
         "definition": "",
         "hide": 0,
@@ -1269,7 +1131,11 @@
         "tagValuesQuery": "",
         "tagsQuery": "",
         "type": "query",
-        "useTags": false
+        "useTags": false,
+        "datasource": {
+          "type": "loki",
+          "uid": "${datasource}"
+        }
       },
       {
         "allValue": ".*",
@@ -1280,7 +1146,7 @@
         },
         "datasource": {
           "type": "loki",
-          "uid": "P8E80F9AEF21F6940"
+          "uid": "${datasource}"
         },
         "definition": "",
         "hide": 0,
@@ -1302,7 +1168,11 @@
         "tagValuesQuery": "",
         "tagsQuery": "",
         "type": "query",
-        "useTags": false
+        "useTags": false,
+        "datasource": {
+          "type": "loki",
+          "uid": "${datasource}"
+        }
       },
       {
         "current": {
@@ -1316,31 +1186,31 @@
         "options": [
           {
             "selected": true,
-            "text": ".*",
-            "value": ".*"
+            "text": "All",
+            "value": ""
           },
           {
             "selected": false,
             "text": "ERROR",
-            "value": "error"
+            "value": "|~ \"(?i)error\""
           },
           {
             "selected": false,
             "text": "WARN",
-            "value": "warn"
+            "value": "|~ \"(?i)warn\""
           },
           {
             "selected": false,
             "text": "INFO",
-            "value": "info"
+            "value": "|~ \"(?i)info\""
           },
           {
             "selected": false,
             "text": "DEBUG",
-            "value": "debug"
+            "value": "|~ \"(?i)debug\""
           }
         ],
-        "query": ".*,error,warn,info,debug",
+        "query": "All : ,ERROR : |~ \"(?i)error\",WARN : |~ \"(?i)warn\",INFO : |~ \"(?i)info\",DEBUG : |~ \"(?i)debug\"",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
@@ -1354,26 +1224,6 @@
         "hide": 0,
         "label": "Search Pattern (case insensitive)",
         "name": "searchable_pattern",
-        "options": [
-          {
-            "selected": true,
-            "text": "",
-            "value": ""
-          }
-        ],
-        "query": "",
-        "skipUrlSync": false,
-        "type": "textbox"
-      },
-      {
-        "current": {
-          "selected": true,
-          "text": "",
-          "value": ""
-        },
-        "hide": 0,
-        "label": "Exclude Pattern",
-        "name": "exclude_pattern",
         "options": [
           {
             "selected": true,
