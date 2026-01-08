@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from app.quant.strategies.base import BaseStrategy
 from app.adapters.mt5_api import MT5APIClient
@@ -18,9 +18,20 @@ class ForexeroStrategy(BaseStrategy):
     them in the DB as Trade entries.
     """
 
-    def __init__(self, *, mt5_base_url: Optional[str] = None):
+    def __init__(self, *, 
+                 mt5_base_url: Optional[str] = None,
+                 volume_per_order: float = 0.1,
+                 deviation: int = 20,
+                 magic_number: int = 2460000,
+                 trades_per_tp: int = 1,
+                 use_tps: Optional[List[int]] = None):
         super().__init__()
-        self.max_positions = 2  # Only work with TP1 and TP2 signals
+        self.volume_per_order = volume_per_order
+        self.deviation = deviation
+        self.magic_number = magic_number
+        self.trades_per_tp = trades_per_tp
+        self.use_tps = use_tps if use_tps is not None else [1, 2]
+
         base_url = mt5_base_url or settings.MT5_API_URL
         self.MT5_API_CLIENT = MT5APIClient(base_url=base_url)
 
@@ -54,7 +65,8 @@ class ForexeroStrategy(BaseStrategy):
             return None
 
         # First non-empty line is the symbol line
-        data['Symbol'] = self._normalize_symbol(lines[0])
+        symbol= self._normalize_symbol(lines[0])
+        data['Symbol'] = symbol if symbol in ['XAUUSD'] else None
 
         # Remaining lines are key/value pairs like "Direction: BUY" or "TP1 1970.00"
         # Allow spaces in keys (e.g. "Entry Price")
@@ -111,114 +123,98 @@ class ForexeroStrategy(BaseStrategy):
         symbol = data.get("Symbol")
         action = (data.get("Direction") or "").strip().upper()
         entry_price = self._parse_float(data.get("Entry Price"))
-
-        # Prefer TP1/TP2; fall back to a single TP if provided
-        tps = [self._parse_float(data.get(f"TP{i}")) for i in range(1, self.max_positions + 1)]
-        tps = [tp for tp in tps if tp is not None]
-        if not tps and data.get("TP"):
-            tp_val = self._parse_float(data.get("TP"))
-            if tp_val is not None:
-                tps = [tp_val]
         sl = self._parse_float(data.get("SL"))
 
-        if action not in {"BUY", "SELL"}:
-            LOGGER.error({
-                "error": "Invalid or missing Direction in signal",
-                "signal": signal,
-            })
-            return
+        # Prepare list of (tp_index, tp_value) to execute
+        valid_tps: List[tuple[int, Optional[float]]] = []
+        
+        # 1. Try to extract specific values for requested TPs
+        for i in self.use_tps:
+            val = self._parse_float(data.get(f"TP{i}"))
+            if val is not None:
+                valid_tps.append((i, val))
+        
+        # 2. If no specific keys found, try generic "TP"
+        if not valid_tps:
+            val = self._parse_float(data.get("TP"))
+            if val is not None:
+                # Assign generic TP to the first requested TP index
+                if self.use_tps:
+                    valid_tps.append((self.use_tps[0], val))
 
-        if not symbol:
-            LOGGER.error({"error": "Missing symbol in signal", "signal": signal})
-            return
+        # 3. If still nothing, place one order without TP if use_tps is configured
+        if not valid_tps and self.use_tps:
+             valid_tps.append((self.use_tps[0], None))
 
-        # If no TP given, still place a single order without TP
-        if not tps:
-            tps = [None]
-
-        volume_per_order = 0.1
-        deviation = 20
-
-        # Place up to max_positions orders using TP1..TPn
-        current_bid = 0.0
-        current_ask = 0.0
-        try:
-            tick = self.MT5_API_CLIENT.get_tick(symbol)
-            current_bid = float(tick['bid'])
-            current_ask = float(tick['ask'])
-        except Exception as e:
-            LOGGER.warning(f"Failed to get tick for {symbol}, defaulting to LIMIT: {e}")
-
-        for idx, tp in enumerate(tps[: self.max_positions], start=1):
-            # Determine order type dynamically based on price relation
-            if entry_price and current_bid > 0 and current_ask > 0:
-                if action == "BUY":
-                    # Buy Stop if entry is above current Ask
-                    order_type = "STOP" if entry_price > current_ask else "LIMIT"
-                elif action == "SELL":
-                    # Sell Stop if entry is below current Bid
-                    order_type = "STOP" if entry_price < current_bid else "LIMIT"
-            else:
-                order_type = "LIMIT"
-
-            try:
-                order_data = {
-                    'entry_price': entry_price,
-                    'tp': tp,
-                    'sl': sl
-                }
-                LOGGER.info(f"Data: {order_data}")
-                # Synchronous call
-                order = self.MT5_API_CLIENT.send_order(
-                    action=action,
-                    symbol=symbol,
-                    volume=volume_per_order,
-                    order_type=order_type,
-                    price=entry_price,
-                    sl=sl,
-                    tp=tp,
-                    deviation=deviation,
-                    magic=2460000,
-                    comment=f"FXZ TP{idx}" if tp is not None else "FXZ"
-                )
-
-                # Create Trade object in DB
-                if order and order.get("success", True) is not False:
-                    executed_price = order.get("price")
-                    executed_volume = order.get("volume", volume_per_order)
-                    # Basic notional and capital approximation (fallback contract size)
-                    contract_size = 100000
-                    try:
-                        order_size_usd = float(executed_volume) * contract_size * float(executed_price)
-                        capital_used = order_size_usd / float(self.account_leverage)
-                    except Exception:
-                        order_size_usd = 0.0
-                        capital_used = 0.0
-
-                    try:
-                        create_trade_record(
-                            order,
-                            symbol=symbol,
-                            capital=capital_used,
-                            position_size_usd=order_size_usd,
-                            leverage=float(self.account_leverage),
-                            commission=0.0,
-                            type=action,
-                            broker='MetaQuotes-Demo',
-                            market='GOLD',
-                            strategy=self.__class__.__name__,
-                            timeframe='1H',
-                            order_volume=float(executed_volume),
-                            sl=sl if sl is not None else 0.0,
-                            tp=tp,
-                        )
-                    except Exception as e:
-                        LOGGER.error(
-                            {"error": f"Failed to create trade record: {e}", "order": order})
+        # Place orders
+        # Place orders
+        for tp_idx, tp in valid_tps:
+            for _ in range(self.trades_per_tp):
+                # Determine order type: LIMIT if entry price is set, else MARKET
+                # User requested to remove tick checks and only use limit or market.
+                if entry_price:
+                    order_type = "LIMIT"
                 else:
-                    LOGGER.error(
-                        {"error": "Order failed", "order": order})
+                    order_type = "MARKET"
 
-            except Exception as e:
-                LOGGER.error(
-                    {"error": f"Order placement error: {e}", "data": data})
+                try:
+                    order_data = {
+                        'entry_price': entry_price,
+                        'tp': tp,
+                        'sl': sl
+                    }
+                    LOGGER.info(f"Data: {order_data}")
+                    # Synchronous call
+                    order = self.MT5_API_CLIENT.send_order(
+                        action=action,
+                        symbol=symbol,
+                        volume=self.volume_per_order,
+                        order_type=order_type,
+                        price=entry_price,
+                        sl=sl,
+                        tp=tp,
+                        deviation=self.deviation,
+                        magic=self.magic_number,
+                        comment=f"FXZ TP{tp_idx}" if tp is not None else "FXZ"
+                    )
+
+                    # Create Trade object in DB
+                    if order and order.get("success", True) is not False:
+                        executed_price = order.get("price")
+                        executed_volume = order.get("volume", self.volume_per_order)
+                        # Basic notional and capital approximation (fallback contract size)
+                        contract_size = 100000
+                        try:
+                            order_size_usd = float(executed_volume) * contract_size * float(executed_price)
+                            capital_used = order_size_usd / float(self.account_leverage)
+                        except Exception:
+                            order_size_usd = 0.0
+                            capital_used = 0.0
+
+                        try:
+                            create_trade_record(
+                                order,
+                                symbol=symbol,
+                                capital=capital_used,
+                                position_size_usd=order_size_usd,
+                                leverage=float(self.account_leverage),
+                                commission=0.0,
+                                type=action,
+                                broker='MetaQuotes-Demo',
+                                market='GOLD',
+                                strategy=self.__class__.__name__,
+                                timeframe='1H',
+                                order_volume=float(executed_volume),
+                                sl=sl if sl is not None else 0.0,
+                                tp=tp,
+                            )
+                        except Exception as e:
+                            LOGGER.error(
+                                {"error": f"Failed to create trade record: {e}", "order": order})
+                    else:
+                        LOGGER.error(
+                            {"error": "Order failed", "order": order})
+
+                except Exception as e:
+                    LOGGER.error(
+                        {"error": f"Order placement error: {e}", "data": data})
