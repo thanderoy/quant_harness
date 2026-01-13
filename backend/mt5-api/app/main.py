@@ -15,8 +15,7 @@ import uvicorn
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 LOGGER = logging.getLogger("MT5 API Service")
 
@@ -28,6 +27,7 @@ class TimeframeEnum(str, Enum):
     Supported timeframes.
     Mapped to MetaTrader5 constants used by mt5.copy_rates_from.
     """
+
     M1 = "M1"
     M5 = "M5"
     M15 = "M15"
@@ -56,12 +56,11 @@ TIMEFRAME_MAP: Dict[TimeframeEnum, int] = {
 class ConnectionResponse(BaseModel):
     """Response model for connection operations."""
 
-    success: bool = Field(
-        ..., description="Whether the operation succeeded")
-    message: str = Field(
-        ..., description="Human-readable status message")
+    success: bool = Field(..., description="Whether the operation succeeded")
+    message: str = Field(..., description="Human-readable status message")
     terminal_info: Optional[Dict[str, Any]] = Field(
-        None, description="MT5 terminal information")
+        None, description="MT5 terminal information"
+    )
 
 
 class AccountInfo(BaseModel):
@@ -94,8 +93,8 @@ class AccountInfo(BaseModel):
                 "leverage": 100,
                 "name": "John Doe",
                 "server": "BrokerServer-Demo",
-                "trade_mode": 0
-                }
+                "trade_mode": 0,
+            }
         }
 
 
@@ -117,29 +116,29 @@ class MarketRatesRequest(BaseModel):
 
     symbol: str = Field(..., description="Trading symbol (e.g., EURUSD)")
     timeframe: str = Field(
-        ..., description="Timeframe (M1, M5, M15, M30, H1, H4, D1, W1, MN1)")
-    count: int = Field(
-        100, ge=1, le=99999, description="Number of bars to retrieve")
-    start_pos: int = Field(
-        0, ge=0, description="Start position for data retrieval")
+        ..., description="Timeframe (M1, M5, M15, M30, H1, H4, D1, W1, MN1)"
+    )
+    count: int = Field(100, ge=1, le=99999, description="Number of bars to retrieve")
+    start_pos: int = Field(0, ge=0, description="Start position for data retrieval")
 
     @field_validator("timeframe")
     def validate_timeframe(cls, v):
         """Validate timeframe string and convert to MT5 constant."""
         valid_timeframes = {
-            'M1': mt5.TIMEFRAME_M1,
-            'M5': mt5.TIMEFRAME_M5,
-            'M15': mt5.TIMEFRAME_M15,
-            'M30': mt5.TIMEFRAME_M30,
-            'H1': mt5.TIMEFRAME_H1,
-            'H4': mt5.TIMEFRAME_H4,
-            'D1': mt5.TIMEFRAME_D1,
-            'W1': mt5.TIMEFRAME_W1,
-            'MN1': mt5.TIMEFRAME_MN1
+            "M1": mt5.TIMEFRAME_M1,
+            "M5": mt5.TIMEFRAME_M5,
+            "M15": mt5.TIMEFRAME_M15,
+            "M30": mt5.TIMEFRAME_M30,
+            "H1": mt5.TIMEFRAME_H1,
+            "H4": mt5.TIMEFRAME_H4,
+            "D1": mt5.TIMEFRAME_D1,
+            "W1": mt5.TIMEFRAME_W1,
+            "MN1": mt5.TIMEFRAME_MN1,
         }
         if v.upper() not in valid_timeframes:
             raise ValueError(
-                f"Invalid timeframe. Must be one of: {', '.join(valid_timeframes.keys())}")     # noqa: E501
+                f"Invalid timeframe. Must be one of: {', '.join(valid_timeframes.keys())}"
+            )  # noqa: E501
         return v.upper()
 
     class Config:
@@ -148,7 +147,7 @@ class MarketRatesRequest(BaseModel):
                 "symbol": "EURUSD",
                 "timeframe": "H1",
                 "count": 100,
-                "start_pos": 0
+                "start_pos": 0,
             }
         }
 
@@ -162,39 +161,59 @@ class MarketRatesResponse(BaseModel):
     rates: List[MarketRatesData] = Field(..., description="List of rate data")
 
 
+class TickInfo(BaseModel):
+    """Response model for tick information."""
+
+    symbol: str = Field(..., description="Trading symbol")
+    bid: float = Field(..., description="Current bid price")
+    ask: float = Field(..., description="Current ask price")
+    last: float = Field(..., description="Last trade price")
+    volume: float = Field(..., description="Volume of last trade")
+    time: datetime = Field(..., description="Time of the tick")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "XAUUSD",
+                "bid": 2650.50,
+                "ask": 2650.75,
+                "last": 2650.60,
+                "volume": 100,
+                "time": "2026-01-13T12:00:00",
+            }
+        }
+
+
 class TradeRequest(BaseModel):
     """Request model for sending trade orders."""
 
     action: str = Field(..., description="Trade action: BUY or SELL")
     symbol: str = Field(..., description="Trading symbol (e.g., EURUSD)")
     volume: float = Field(..., gt=0, description="Trading volume in lots")
-    order_type: str = Field(
-        "MARKET", description="Order type: MARKET, LIMIT, STOP")
+    order_type: str = Field("MARKET", description="Order type: MARKET, LIMIT, STOP")
     price: Optional[float] = Field(
-        None, description="Order price (required for LIMIT/STOP orders)")
+        None, description="Order price (required for LIMIT/STOP orders)"
+    )
     sl: Optional[float] = Field(None, description="Stop Loss price")
     tp: Optional[float] = Field(None, description="Take Profit price")
-    deviation: int = Field(
-        20, ge=0, description="Maximum price deviation in points")
+    deviation: int = Field(20, ge=0, description="Maximum price deviation in points")
     magic: int = Field(0, description="Expert Advisor ID")
     comment: str = Field("", max_length=31, description="Order comment")
 
     @field_validator("action")
     def validate_action(cls, v):
         """Validate trade action."""
-        valid_actions = ['BUY', 'SELL']
+        valid_actions = ["BUY", "SELL"]
         if v.upper() not in valid_actions:
-            raise ValueError(
-                f"Invalid action. Choices: {', '.join(valid_actions)}")
+            raise ValueError(f"Invalid action. Choices: {', '.join(valid_actions)}")
         return v.upper()
 
     @field_validator("order_type")
     def validate_order_type(cls, v):
         """Validate order type."""
-        valid_types = ['MARKET', 'LIMIT', 'STOP']
+        valid_types = ["MARKET", "LIMIT", "STOP"]
         if v.upper() not in valid_types:
-            raise ValueError(
-                f"Invalid order type. Choices: {', '.join(valid_types)}")
+            raise ValueError(f"Invalid order type. Choices: {', '.join(valid_types)}")
         return v.upper()
 
     class Config:
@@ -209,7 +228,7 @@ class TradeRequest(BaseModel):
                 "tp": 4310.0,
                 "deviation": 20,
                 "magic": 123456,
-                "comment": "API Trade"
+                "comment": "API Trade",
             }
         }
 
@@ -227,7 +246,8 @@ class TradeResponse(BaseModel):
     request_id: Optional[int] = Field(None, description="Request ID")
     retcode: int = Field(..., description="Return code")
     retcode_description: str = Field(
-        ..., description="Human-readable return code description")
+        ..., description="Human-readable return code description"
+    )
 
     class Config:
         json_schema_extra = {
@@ -241,7 +261,7 @@ class TradeResponse(BaseModel):
                 "comment": "Request executed",
                 "request_id": 123456,
                 "retcode": 10009,
-                "retcode_description": "TRADE_RETCODE_DONE"
+                "retcode_description": "TRADE_RETCODE_DONE",
             }
         }
 
@@ -274,7 +294,7 @@ class MT5Service:
             LOGGER.error("MT5 Terminal is not connected.")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="MT5 terminal not connected. To trigger a connection, use /api/v1/connect"   # noqa: E501
+                detail="MT5 terminal not connected. To trigger a connection, use /api/v1/connect",  # noqa: E501
             )
 
     def connect(self, params: dict) -> ConnectionResponse:
@@ -290,17 +310,15 @@ class MT5Service:
         Raises:
             HTTPException: If connection fails (500 Internal Server Error)
         """
-        initialized = mt5.initialize(**params) if params else \
-            mt5.initialize()
+        initialized = mt5.initialize(**params) if params else mt5.initialize()
         try:
             # Initialize MT5 connection at app start
             if not initialized:
                 error_code, error_msg = mt5.last_error()
-                LOGGER.error(
-                    f"MT5 initialization failed.\n{error_code} - {error_msg}")
+                LOGGER.error(f"MT5 initialization failed.\n{error_code} - {error_msg}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Faled to initialize connection to MT5: {error_msg} (code: {error_code})"   # noqa: E501
+                    detail=f"Faled to initialize connection to MT5: {error_msg} (code: {error_code})",  # noqa: E501
                 )
 
             self._initialized = True
@@ -312,16 +330,15 @@ class MT5Service:
             return ConnectionResponse(
                 success=True,
                 message="Successfully connected to MT5 terminal",
-                terminal_info=terminal_data
+                terminal_info=terminal_data,
             )
         except HTTPException:
             raise
         except Exception as e:
-            LOGGER.exception(
-                "Unexpected error when connecting to MT5 terminal.")
+            LOGGER.exception("Unexpected error when connecting to MT5 terminal.")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Unexpected error: {str(e)}"
+                detail=f"Unexpected error: {str(e)}",
             )
 
     def disconnect(self) -> ConnectionResponse:
@@ -339,17 +356,16 @@ class MT5Service:
             return ConnectionResponse(
                 success=True,
                 message="Successfully disconnected from MT5 terminal",
-                terminal_info=None
+                terminal_info=None,
             )
 
         except Exception as e:
-            LOGGER.exception(
-                "Unexpected error when disconnecting with MT5 terminal.")
+            LOGGER.exception("Unexpected error when disconnecting with MT5 terminal.")
             # Even if shutdown fails, mark as not initialized
             self._initialized = False
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error during disconnection: {str(e)}"
+                detail=f"Error during disconnection: {str(e)}",
             )
 
     def get_account_info(self) -> AccountInfo:
@@ -369,11 +385,10 @@ class MT5Service:
 
             if account_info is None:
                 error_code, error_msg = mt5.last_error()
-                LOGGER.error(
-                    f"Failed to get account info: {error_code} - {error_msg}")
+                LOGGER.error(f"Failed to get account info: {error_code} - {error_msg}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Failed to retrieve account info: {error_msg}"
+                    detail=f"Failed to retrieve account info: {error_msg}",
                 )
 
             # Convert namedtuple to dict and create AccountInfo model
@@ -387,10 +402,12 @@ class MT5Service:
             LOGGER.exception("Unexpected error retrieving account info")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Unexpected error: {str(e)}"
+                detail=f"Unexpected error: {str(e)}",
             )
 
-    def get_market_prices(self, request: MarketRatesRequest) -> MarketRatesResponse:    # noqa: E501
+    def get_market_prices(
+        self, request: MarketRatesRequest
+    ) -> MarketRatesResponse:  # noqa: E501
         """
         Retrieve historical market rates.
 
@@ -410,19 +427,15 @@ class MT5Service:
 
             # Get market rates from MT5
             rates = mt5.copy_rates_from_pos(
-                request.symbol,
-                timeframe,
-                request.start_pos,
-                request.count
+                request.symbol, timeframe, request.start_pos, request.count
             )
 
             if rates is None or len(rates) == 0:
                 error_code, error_msg = mt5.last_error()
-                LOGGER.error(
-                    f"Failed to get market rates: {error_code} - {error_msg}")
+                LOGGER.error(f"Failed to get market rates: {error_code} - {error_msg}")
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"No market rates found for {request.symbol}: {error_msg}"   # noqa: E501
+                    detail=f"No market rates found for {request.symbol}: {error_msg}",  # noqa: E501
                 )
 
             # Convert to DataFrame and then to list of dicts
@@ -431,26 +444,27 @@ class MT5Service:
 
             rates_list = [
                 MarketRatesData(
-                    time=row['time'],
-                    open=row['open'],
-                    high=row['high'],
-                    low=row['low'],
-                    close=row['close'],
-                    tick_volume=int(row['tick_volume']),
-                    spread=int(row['spread']),
-                    real_volume=int(row['real_volume'])
+                    time=row["time"],
+                    open=row["open"],
+                    high=row["high"],
+                    low=row["low"],
+                    close=row["close"],
+                    tick_volume=int(row["tick_volume"]),
+                    spread=int(row["spread"]),
+                    real_volume=int(row["real_volume"]),
                 )
                 for _, row in df.iterrows()
             ]
 
             LOGGER.info(
-                f"Retrived {len(rates_list)} rates for {request.symbol} {request.timeframe}")   # noqa: E501
+                f"Retrived {len(rates_list)} rates for {request.symbol} {request.timeframe}"
+            )  # noqa: E501
 
             return MarketRatesResponse(
                 symbol=request.symbol,
                 timeframe=request.timeframe,
                 count=len(rates_list),
-                rates=rates_list
+                rates=rates_list,
             )
 
         except HTTPException:
@@ -459,7 +473,65 @@ class MT5Service:
             LOGGER.exception("Unexpected error retrieving market rates")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Unexpected error: {str(e)}"
+                detail=f"Unexpected error: {str(e)}",
+            )
+
+    def get_tick(self, symbol: str) -> TickInfo:
+        """
+        Retrieve current tick information for a symbol.
+
+        Args:
+            symbol: Trading symbol (e.g., XAUUSD)
+
+        Returns:
+            TickInfo with current bid/ask/last prices
+
+        Raises:
+            HTTPException: If tick cannot be retrieved
+        """
+        self._ensure_connection()
+
+        try:
+            symbol_info = mt5.symbol_info(symbol)
+            if symbol_info is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Symbol {symbol} not found",
+                )
+
+            # Ensure symbol is visible in Market Watch
+            if not symbol_info.visible:
+                if not mt5.symbol_select(symbol, True):
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Failed to enable symbol {symbol}",
+                    )
+
+            tick = mt5.symbol_info_tick(symbol)
+            if tick is None:
+                error_code, error_msg = mt5.last_error()
+                LOGGER.error(f"Failed to get tick: {error_code} - {error_msg}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to retrieve tick for {symbol}: {error_msg}",
+                )
+
+            return TickInfo(
+                symbol=symbol,
+                bid=tick.bid,
+                ask=tick.ask,
+                last=tick.last,
+                volume=tick.volume,
+                time=datetime.fromtimestamp(tick.time),
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            LOGGER.exception("Unexpected error retrieving tick")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Unexpected error: {str(e)}",
             )
 
     def send_order(self, request: TradeRequest) -> TradeResponse:
@@ -483,7 +555,7 @@ class MT5Service:
             if symbol_info is None:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Symbol {request.symbol} not found"
+                    detail=f"Symbol {request.symbol} not found",
                 )
 
             # Check if available to trade,
@@ -491,26 +563,48 @@ class MT5Service:
                 if not mt5.symbol_select(request.symbol, True):
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Failed to enable symbol {request.symbol}"
+                        detail=f"Failed to enable symbol {request.symbol}",
                     )
 
-            # Determine order type
+            # Get current tick for price reference
+            tick = mt5.symbol_info_tick(request.symbol)
+            if tick is None:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to get tick for {request.symbol}",
+                )
+
+            # Determine order type and price based on action and order_type
             if request.action == "BUY":
-                order_type = mt5.ORDER_TYPE_BUY if \
-                    request.order_type == "MARKET" else \
-                    mt5.ORDER_TYPE_BUY_LIMIT
-                price = mt5.symbol_info_tick(request.symbol).ask if \
-                    request.price is None else request.price
+                if request.order_type == "MARKET":
+                    order_type = mt5.ORDER_TYPE_BUY
+                    price = tick.ask
+                    trade_action = mt5.TRADE_ACTION_DEAL
+                elif request.order_type == "LIMIT":
+                    order_type = mt5.ORDER_TYPE_BUY_LIMIT
+                    price = request.price if request.price else tick.ask
+                    trade_action = mt5.TRADE_ACTION_PENDING
+                else:  # STOP
+                    order_type = mt5.ORDER_TYPE_BUY_STOP
+                    price = request.price if request.price else tick.ask
+                    trade_action = mt5.TRADE_ACTION_PENDING
             else:  # SELL
-                order_type = mt5.ORDER_TYPE_SELL if \
-                    request.order_type == "MARKET" else \
-                    mt5.ORDER_TYPE_SELL_LIMIT
-                price = mt5.symbol_info_tick(request.symbol).bid if \
-                    request.price is None else request.price
+                if request.order_type == "MARKET":
+                    order_type = mt5.ORDER_TYPE_SELL
+                    price = tick.bid
+                    trade_action = mt5.TRADE_ACTION_DEAL
+                elif request.order_type == "LIMIT":
+                    order_type = mt5.ORDER_TYPE_SELL_LIMIT
+                    price = request.price if request.price else tick.bid
+                    trade_action = mt5.TRADE_ACTION_PENDING
+                else:  # STOP
+                    order_type = mt5.ORDER_TYPE_SELL_STOP
+                    price = request.price if request.price else tick.bid
+                    trade_action = mt5.TRADE_ACTION_PENDING
 
             # Build trade request dictionary
             trade_request = {
-                "action": mt5.TRADE_ACTION_PENDING,
+                "action": trade_action,
                 "symbol": request.symbol,
                 "volume": request.volume,
                 "type": order_type,
@@ -535,7 +629,7 @@ class MT5Service:
                 LOGGER.error(f"Order send failed: {error_code} - {error_msg}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Failed to send order: {error_msg}"
+                    detail=f"Failed to send order: {error_msg}",
                 )
             result_dict = result._asdict()
 
@@ -563,29 +657,28 @@ class MT5Service:
                 10024: "TRADE_RETCODE_TOO_MANY_REQUESTS",
             }
 
-            retcode = result_dict.get('retcode', 0)
-            retcode_description = retcode_map.get(
-                retcode, f"UNKNOWN_CODE_{retcode}")
+            retcode = result_dict.get("retcode", 0)
+            retcode_description = retcode_map.get(retcode, f"UNKNOWN_CODE_{retcode}")
 
             success = retcode == 10009  # Success return code
             if success:
-                LOGGER.info(
-                    f"Order executed successfully: {result_dict.get('order')}")
+                LOGGER.info(f"Order executed successfully: {result_dict.get('order')}")
             else:
                 LOGGER.warning(
-                    f"Order execution failed: {retcode_description} - {result_dict.get('comment')}")    # noqa: E501
+                    f"Order execution failed: {retcode_description} - {result_dict.get('comment')}"
+                )  # noqa: E501
 
             return TradeResponse(
                 success=success,
-                order=result_dict.get('order'),
-                volume=result_dict.get('volume'),
-                price=result_dict.get('price'),
-                bid=result_dict.get('bid'),
-                ask=result_dict.get('ask'),
-                comment=result_dict.get('comment'),
-                request_id=result_dict.get('request_id'),
+                order=result_dict.get("order"),
+                volume=result_dict.get("volume"),
+                price=result_dict.get("price"),
+                bid=result_dict.get("bid"),
+                ask=result_dict.get("ask"),
+                comment=result_dict.get("comment"),
+                request_id=result_dict.get("request_id"),
                 retcode=retcode,
-                retcode_description=retcode_description
+                retcode_description=retcode_description,
             )
         except HTTPException:
             raise
@@ -593,7 +686,7 @@ class MT5Service:
             LOGGER.exception("Unexpected error sending order")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Unexpected error: {str(e)}"
+                detail=f"Unexpected error: {str(e)}",
             )
 
 
@@ -615,11 +708,13 @@ async def lifespan(app: FastAPI):
     if mt5_service.is_connected:
         mt5_service.disconnect()
 
+
 app = FastAPI(
     title="MT5 Terminal API Service.",
     description="MetaTrader5 terminal API service with async HTTP endpoints.",
     lifespan=lifespan,
-    docs_url="/docs", redoc_url="/redoc"
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 
@@ -639,7 +734,7 @@ def get_mt5_service() -> MT5Service:
     status_code=status.HTTP_200_OK,
     tags=["Health & Connection"],
     summary="Checks that the MT5 API Service is Running",
-    description="Return MT5 API service status, version and, MT5 terminal connection status"    # noqa: E501
+    description="Return MT5 API service status, version and, MT5 terminal connection status",  # noqa: E501
 )
 async def root():
     """
@@ -652,8 +747,8 @@ async def root():
             "message": "MT5 Terminal API Service.",
             "version": "1.0.0",
             "status": "running",
-            "mt5_connected": str(mt5_service.is_connected)
-        }
+            "mt5_connected": str(mt5_service.is_connected),
+        },
     }
 
 
@@ -663,12 +758,9 @@ async def root():
     status_code=status.HTTP_200_OK,
     tags=["Health & Connection"],
     summary="Connect to MT5 Terminal",
-    description="Initialize and establish connection to the MetaTrader5 terminal"   # noqa: E501
+    description="Initialize and establish connection to the MetaTrader5 terminal",  # noqa: E501
 )
-async def connect_mt5(
-    params: dict,
-    service: MT5Service = Depends(get_mt5_service)
-):
+async def connect_mt5(params: dict, service: MT5Service = Depends(get_mt5_service)):
     """
     Connect to MT5 terminal with optional credentials.
 
@@ -695,7 +787,7 @@ async def connect_mt5(
     status_code=status.HTTP_200_OK,
     tags=["Health & Connection"],
     summary="Disconnect from MT5 Terminal",
-    description="Shut down the connection to the MetaTrader5 terminal"
+    description="Shut down the connection to the MetaTrader5 terminal",
 )
 async def disconnect_mt5(service: MT5Service = Depends(get_mt5_service)):
     """
@@ -722,7 +814,7 @@ async def disconnect_mt5(service: MT5Service = Depends(get_mt5_service)):
     status_code=status.HTTP_200_OK,
     tags=["Account"],
     summary="Get Account Information",
-    description="Retrieve current account information including balance, equity, and margin"    # noqa: E501
+    description="Retrieve current account information including balance, equity, and margin",  # noqa: E501
 )
 async def get_account_info(service: MT5Service = Depends(get_mt5_service)):
     """
@@ -742,8 +834,7 @@ async def get_account_info(service: MT5Service = Depends(get_mt5_service)):
         AccountInfo with current account data
     """
     loop = asyncio.get_event_loop()
-    account_info = await loop.run_in_executor(
-        executor, service.get_account_info)
+    account_info = await loop.run_in_executor(executor, service.get_account_info)
     return account_info
 
 
@@ -754,11 +845,13 @@ async def get_account_info(service: MT5Service = Depends(get_mt5_service)):
     status_code=status.HTTP_200_OK,
     tags=["Market Rates/Data"],
     summary="Get Historical Market Rates",
-    description="Retrieve historical OHLCV data for a specified symbol and timeframe"   # noqa: E501
+    description="Retrieve historical OHLCV data for a specified symbol and timeframe",  # noqa: E501
 )
 async def get_market_rates(
-        symbol: str = "XAUUSD", timeframe: str = "M30",
-        service: MT5Service = Depends(get_mt5_service)):
+    symbol: str = "XAUUSD",
+    timeframe: str = "M30",
+    service: MT5Service = Depends(get_mt5_service),
+):
     """
     Get historical market rates (OHLCV data).
 
@@ -777,14 +870,46 @@ async def get_market_rates(
     Returns:
         RateResponse with historical rate data
     """
-    rate_request = MarketRatesRequest(
-        symbol=symbol, timeframe=timeframe)
+    rate_request = MarketRatesRequest(symbol=symbol, timeframe=timeframe)
 
     loop = asyncio.get_event_loop()
     rates = await loop.run_in_executor(
-        executor,  service.get_market_prices, rate_request
+        executor, service.get_market_prices, rate_request
     )
     return rates
+
+
+# Tick Data Endpoint
+@app.get(
+    "/api/v1/tick",
+    response_model=TickInfo,
+    status_code=status.HTTP_200_OK,
+    tags=["Market Rates/Data"],
+    summary="Get Current Tick Data",
+    description="Retrieve current bid/ask/last prices for a symbol",
+)
+async def get_tick(
+    symbol: str = "XAUUSD",
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """
+    Get current tick information for a symbol.
+
+    This endpoint retrieves the latest tick data including:
+    - Current bid and ask prices
+    - Last trade price
+    - Volume and timestamp
+
+    Args:
+        symbol: Trading symbol (e.g., XAUUSD, EURUSD)
+        service: Injected MT5Service instance
+
+    Returns:
+        TickInfo with current tick data
+    """
+    loop = asyncio.get_event_loop()
+    tick = await loop.run_in_executor(executor, service.get_tick, symbol)
+    return tick
 
 
 # Orders Endpoint
@@ -794,11 +919,10 @@ async def get_market_rates(
     status_code=status.HTTP_200_OK,
     tags=["Trades Execution"],
     summary="Send Trade Order",
-    description="Execute a trade order (buy/sell) on the MT5 terminal"
+    description="Execute a trade order (buy/sell) on the MT5 terminal",
 )
 async def send_order(
-    request: TradeRequest,
-    service: MT5Service = Depends(get_mt5_service)
+    request: TradeRequest, service: MT5Service = Depends(get_mt5_service)
 ):
     """
     Send a trade order to the MT5 terminal.

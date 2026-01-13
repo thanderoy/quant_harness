@@ -18,19 +18,22 @@ class ForexeroStrategy(BaseStrategy):
     them in the DB as Trade entries.
     """
 
-    def __init__(self, *, 
-                 mt5_base_url: Optional[str] = None,
-                 volume_per_order: float = 0.1,
-                 deviation: int = 20,
-                 magic_number: int = 2460000,
-                 trades_per_tp: int = 1,
-                 use_tps: Optional[List[int]] = None):
+    def __init__(
+        self,
+        *,
+        mt5_base_url: Optional[str] = None,
+        volume_per_order: float = 0.01,
+        deviation: int = 20,
+        magic_number: int = 2460000,
+        trades_per_tp: int = 2,
+        use_tps: Optional[List[int]] = None,
+    ):
         super().__init__()
         self.volume_per_order = volume_per_order
         self.deviation = deviation
         self.magic_number = magic_number
         self.trades_per_tp = trades_per_tp
-        self.use_tps = use_tps if use_tps is not None else [1, 2]
+        self.use_tps = use_tps if use_tps is not None else [1]
 
         base_url = mt5_base_url or settings.MT5_API_URL
         self.MT5_API_CLIENT = MT5APIClient(base_url=base_url)
@@ -51,7 +54,7 @@ class ForexeroStrategy(BaseStrategy):
 
     def _normalize_symbol(self, symbol: str) -> str:
         # Remove emojis, slashes and spaces e.g. "🔔XAU/USD🔔" -> "XAUUSD"
-        s = symbol.replace('🔔', '').replace('/', '').replace(' ', '')
+        s = symbol.replace("🔔", "").replace("/", "").replace(" ", "")
         return s.upper()
 
     def _extract_signal_data(self, signal: dict) -> Optional[Dict[str, str]]:
@@ -60,17 +63,19 @@ class ForexeroStrategy(BaseStrategy):
             return None
 
         data: Dict[str, str] = {}
-        lines = [ln.strip() for ln in content.split('\n') if ln.strip()]
+        lines = [ln.strip() for ln in content.split("\n") if ln.strip()]
         if not lines:
             return None
 
         # First non-empty line is the symbol line
-        symbol= self._normalize_symbol(lines[0])
-        data['Symbol'] = symbol if symbol in ['XAUUSD'] else None
+        symbol = self._normalize_symbol(lines[0])
+        data["Symbol"] = symbol if symbol in ["XAUUSD"] else None
 
         # Remaining lines are key/value pairs like "Direction: BUY" or "TP1 1970.00"
         # Allow spaces in keys (e.g. "Entry Price")
-        kv_pattern = re.compile(r"^(?P<key>[A-Za-z0-9 ]+?)\s*[:]\s*(?P<val>.+?)\s*$|^(?P<key_nc>[A-Za-z0-9]+)\s+(?P<val_nc>.+?)\s*$")
+        kv_pattern = re.compile(
+            r"^(?P<key>[A-Za-z0-9 ]+?)\s*[:]\s*(?P<val>.+?)\s*$|^(?P<key_nc>[A-Za-z0-9]+)\s+(?P<val_nc>.+?)\s*$"
+        )
 
         for line in lines[1:]:
             # Try matching with colon first
@@ -78,24 +83,24 @@ class ForexeroStrategy(BaseStrategy):
             if not m:
                 continue
 
-            if m.group('key'):
-                key_raw = m.group('key')
-                val_raw = m.group('val')
+            if m.group("key"):
+                key_raw = m.group("key")
+                val_raw = m.group("val")
             else:
-                key_raw = m.group('key_nc')
-                val_raw = m.group('val_nc')
+                key_raw = m.group("key_nc")
+                val_raw = m.group("val_nc")
 
             key = key_raw.strip().upper()
-            val = val_raw.replace('\xa0', ' ').strip()
+            val = val_raw.replace("\xa0", " ").strip()
             # Normalize common keys
             key = {
-                'DIRECTION': 'Direction',
-                'ENTRYPRICE': 'Entry Price',
-                'SL': 'SL',
-                'TP': 'TP',
-                'TP1': 'TP1',
-                'TP2': 'TP2',
-                'TP3': 'TP3',
+                "DIRECTION": "Direction",
+                "ENTRYPRICE": "Entry Price",
+                "SL": "SL",
+                "TP": "TP",
+                "TP1": "TP1",
+                "TP2": "TP2",
+                "TP3": "TP3",
             }.get(key, key.title())
             data[key] = val
 
@@ -125,15 +130,26 @@ class ForexeroStrategy(BaseStrategy):
         entry_price = self._parse_float(data.get("Entry Price"))
         sl = self._parse_float(data.get("SL"))
 
+        # Validate required fields before proceeding
+        if not symbol:
+            LOGGER.warning("FXZ: Missing or invalid symbol, skipping signal")
+            return
+
+        if action not in ("BUY", "SELL"):
+            LOGGER.warning(
+                f"FXZ: Invalid action '{action}', must be BUY or SELL, skipping signal"
+            )
+            return
+
         # Prepare list of (tp_index, tp_value) to execute
         valid_tps: List[tuple[int, Optional[float]]] = []
-        
+
         # 1. Try to extract specific values for requested TPs
         for i in self.use_tps:
             val = self._parse_float(data.get(f"TP{i}"))
             if val is not None:
                 valid_tps.append((i, val))
-        
+
         # 2. If no specific keys found, try generic "TP"
         if not valid_tps:
             val = self._parse_float(data.get("TP"))
@@ -144,24 +160,61 @@ class ForexeroStrategy(BaseStrategy):
 
         # 3. If still nothing, place one order without TP if use_tps is configured
         if not valid_tps and self.use_tps:
-             valid_tps.append((self.use_tps[0], None))
+            valid_tps.append((self.use_tps[0], None))
 
-        # Place orders
+        # Fetch tick data once before placing orders (for order type determination)
+        tick_data = None
+        if entry_price:
+            try:
+                tick_data = self.MT5_API_CLIENT.get_tick(symbol)
+                LOGGER.info(
+                    f"Fetched tick for {symbol}: bid={tick_data.get('bid')}, ask={tick_data.get('ask')}"
+                )
+            except Exception as e:
+                LOGGER.warning(f"Failed to get tick for {symbol}: {e}")
+
         # Place orders
         for tp_idx, tp in valid_tps:
             for _ in range(self.trades_per_tp):
-                # Determine order type: LIMIT if entry price is set, else MARKET
-                # User requested to remove tick checks and only use limit or market.
+                # Determine order type dynamically based on current tick price
+                order_type = "MARKET"  # Default to market if no entry price
+
                 if entry_price:
-                    order_type = "LIMIT"
-                else:
-                    order_type = "MARKET"
+                    if tick_data:
+                        bid = tick_data.get("bid")
+                        ask = tick_data.get("ask")
+
+                        if action == "BUY":
+                            # BUY_LIMIT: entry below current ask (waiting for price to come down)
+                            # BUY_STOP: entry at or above current ask (waiting for price to break up)
+                            if entry_price < ask:
+                                order_type = "LIMIT"
+                            else:
+                                order_type = "STOP"
+                            LOGGER.info(
+                                f"BUY: entry={entry_price}, ask={ask}, order_type={order_type}"
+                            )
+                        else:  # SELL
+                            # SELL_LIMIT: entry above current bid (waiting for price to rise)
+                            # SELL_STOP: entry at or below current bid (waiting for price to break down)
+                            if entry_price > bid:
+                                order_type = "LIMIT"
+                            else:
+                                order_type = "STOP"
+                            LOGGER.info(
+                                f"SELL: entry={entry_price}, bid={bid}, order_type={order_type}"
+                            )
+                    else:
+                        # Fallback to LIMIT if tick fetch failed
+                        order_type = "LIMIT"
+                        LOGGER.warning("Using LIMIT order type (tick data unavailable)")
 
                 try:
                     order_data = {
-                        'entry_price': entry_price,
-                        'tp': tp,
-                        'sl': sl
+                        "entry_price": entry_price,
+                        "tp": tp,
+                        "sl": sl,
+                        "order_type": order_type,
                     }
                     LOGGER.info(f"Data: {order_data}")
                     # Synchronous call
@@ -175,17 +228,21 @@ class ForexeroStrategy(BaseStrategy):
                         tp=tp,
                         deviation=self.deviation,
                         magic=self.magic_number,
-                        comment=f"FXZ TP{tp_idx}" if tp is not None else "FXZ"
+                        comment=f"FXZ TP{tp_idx}" if tp is not None else "FXZ",
                     )
 
-                    # Create Trade object in DB
-                    if order and order.get("success", True) is not False:
+                    # Create Trade object in DB if order succeeded
+                    if order and order.get("success") is True:
                         executed_price = order.get("price")
                         executed_volume = order.get("volume", self.volume_per_order)
                         # Basic notional and capital approximation (fallback contract size)
                         contract_size = 100000
                         try:
-                            order_size_usd = float(executed_volume) * contract_size * float(executed_price)
+                            order_size_usd = (
+                                float(executed_volume)
+                                * contract_size
+                                * float(executed_price)
+                            )
                             capital_used = order_size_usd / float(self.account_leverage)
                         except Exception:
                             order_size_usd = 0.0
@@ -200,21 +257,34 @@ class ForexeroStrategy(BaseStrategy):
                                 leverage=float(self.account_leverage),
                                 commission=0.0,
                                 type=action,
-                                broker='MetaQuotes-Demo',
-                                market='GOLD',
+                                broker="MetaQuotes-Demo",
+                                market="GOLD",
                                 strategy=self.__class__.__name__,
-                                timeframe='1H',
+                                timeframe="1H",
                                 order_volume=float(executed_volume),
                                 sl=sl if sl is not None else 0.0,
                                 tp=tp,
                             )
                         except Exception as e:
                             LOGGER.error(
-                                {"error": f"Failed to create trade record: {e}", "order": order})
+                                {
+                                    "error": f"Failed to create trade record: {e}",
+                                    "order": order,
+                                }
+                            )
                     else:
+                        retcode = (
+                            order.get("retcode", "unknown") if order else "no response"
+                        )
+                        retcode_desc = (
+                            order.get("retcode_description", "") if order else ""
+                        )
                         LOGGER.error(
-                            {"error": "Order failed", "order": order})
+                            {
+                                "error": f"Order failed: {retcode} - {retcode_desc}",
+                                "order": order,
+                            }
+                        )
 
                 except Exception as e:
-                    LOGGER.error(
-                        {"error": f"Order placement error: {e}", "data": data})
+                    LOGGER.error({"error": f"Order placement error: {e}", "data": data})
