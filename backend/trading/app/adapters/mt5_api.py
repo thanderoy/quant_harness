@@ -26,8 +26,7 @@ class MT5APIClient:
       - POST   /api/v1/order/send          -> send trade order
     """
 
-    def __init__(
-            self, base_url: str, timeout: float = 30.0, verify: bool = True):
+    def __init__(self, base_url: str, timeout: float = 30.0, verify: bool = True):
         if not base_url.startswith("http"):
             raise ValueError("base_url must start with http:// or https://")
         self.base_url = base_url if base_url.endswith("/") else f"{base_url}/"
@@ -48,7 +47,9 @@ class MT5APIClient:
                 payload = resp.json()
             except Exception:
                 payload = {"detail": resp.text}
-            raise APIError(f"HTTP {resp.status_code}: {json.dumps(payload, ensure_ascii=False)}")
+            raise APIError(
+                f"HTTP {resp.status_code}: {json.dumps(payload, ensure_ascii=False)}"
+            )
         if resp.headers.get("content-type", "").startswith("application/json"):
             return resp.json()
         return resp.text
@@ -56,12 +57,19 @@ class MT5APIClient:
     # --- Public API methods ---
 
     def health(self) -> Dict[str, Any]:
-        resp = self.session.get(self._url("/"), timeout=self.timeout, verify=self.verify)
+        resp = self.session.get(
+            self._url("/"), timeout=self.timeout, verify=self.verify
+        )
         return self._handle(resp)
 
-    def connect(self, path: Optional[str] = None, login: Optional[int] = None,
-                password: Optional[str] = None, server: Optional[str] = None,
-                timeout: Optional[int] = None) -> Dict[str, Any]:
+    def connect(
+        self,
+        path: Optional[str] = None,
+        login: Optional[int] = None,
+        password: Optional[str] = None,
+        server: Optional[str] = None,
+        timeout: Optional[int] = None,
+    ) -> Dict[str, Any]:
         """
         Parameters map directly to MetaTrader5.initialize(...).
         Include only what you need; missing values are omitted.
@@ -78,17 +86,23 @@ class MT5APIClient:
         if timeout is not None:
             payload["timeout"] = timeout
         resp = self.session.post(
-            self._url("/api/v1/connect"), json=payload, timeout=self.timeout, verify=self.verify)
+            self._url("/api/v1/connect"),
+            json=payload,
+            timeout=self.timeout,
+            verify=self.verify,
+        )
         return self._handle(resp)
 
     def disconnect(self) -> Dict[str, Any]:
         resp = self.session.post(
-            self._url("/api/v1/disconnect"), timeout=self.timeout, verify=self.verify)
+            self._url("/api/v1/disconnect"), timeout=self.timeout, verify=self.verify
+        )
         return self._handle(resp)
 
     def get_account_info(self) -> Dict[str, Any]:
         resp = self.session.get(
-            self._url("/api/v1/account"), timeout=self.timeout, verify=self.verify)
+            self._url("/api/v1/account"), timeout=self.timeout, verify=self.verify
+        )
         return self._handle(resp)
 
     def get_market_rates(self, symbol: str, timeframe: str) -> Dict[str, Any]:
@@ -99,13 +113,27 @@ class MT5APIClient:
         tf = self._normalize_timeframe(timeframe)
         params = {"symbol": symbol, "timeframe": tf}
         resp = self.session.get(
-            self._url("/api/v1/rates"), params=params, timeout=self.timeout, verify=self.verify)
+            self._url("/api/v1/rates"),
+            params=params,
+            timeout=self.timeout,
+            verify=self.verify,
+        )
         return self._handle(resp)
 
-    def send_order(self, *, action: str, symbol: str, volume: float,
-                   order_type: str = "MARKET", price: Optional[float] = None,
-                   sl: Optional[float] = None, tp: Optional[float] = None,
-                   deviation: int = 20, magic: int = 0, comment: str = "") -> Dict[str, Any]:
+    def send_order(
+        self,
+        *,
+        action: str,
+        symbol: str,
+        volume: float,
+        order_type: str = "MARKET",
+        price: Optional[float] = None,
+        sl: Optional[float] = None,
+        tp: Optional[float] = None,
+        deviation: int = 20,
+        magic: int = 0,
+        comment: str = "",
+    ) -> Dict[str, Any]:
         payload = {
             "action": self._normalize_action(action),
             "symbol": symbol,
@@ -121,7 +149,69 @@ class MT5APIClient:
             payload["sl"] = float(sl)
         if tp is not None:
             payload["tp"] = float(tp)
-        resp = self.session.post(self._url("/api/v1/order/send"), json=payload, timeout=self.timeout, verify=self.verify)
+        resp = self.session.post(
+            self._url("/api/v1/order/send"),
+            json=payload,
+            timeout=self.timeout,
+            verify=self.verify,
+        )
+        return self._handle(resp)
+
+    def get_tick(self, symbol: str) -> Dict[str, Any]:
+        """
+        Retrieve current tick information for a symbol.
+
+        Args:
+            symbol: Trading symbol (e.g., XAUUSD)
+
+        Returns:
+            Dict with bid, ask, last, volume, time
+        """
+        params = {"symbol": symbol}
+        resp = self.session.get(
+            self._url("/api/v1/tick"),
+            params=params,
+            timeout=self.timeout,
+            verify=self.verify,
+        )
+        return self._handle(resp)
+
+    def get_position(self, ticket: int) -> Optional[Dict[str, Any]]:
+        """
+        Get an open position by its ticket number.
+
+        Args:
+            ticket: Position ticket number
+
+        Returns:
+            Dict with position details, or None if not found (closed)
+        """
+        resp = self.session.get(
+            self._url(f"/api/v1/position/{ticket}"),
+            timeout=self.timeout,
+            verify=self.verify,
+        )
+        if resp.status_code == 404:
+            return None
+        return self._handle(resp)
+
+    def get_order(self, ticket: int) -> Optional[Dict[str, Any]]:
+        """
+        Get a historical order by its ticket number.
+
+        Args:
+            ticket: Order ticket number
+
+        Returns:
+            Dict with order details, or None if not found
+        """
+        resp = self.session.get(
+            self._url(f"/api/v1/order/{ticket}"),
+            timeout=self.timeout,
+            verify=self.verify,
+        )
+        if resp.status_code == 404:
+            return None
         return self._handle(resp)
 
     # --- helpers ---
@@ -132,7 +222,8 @@ class MT5APIClient:
         t = tf.upper()
         if t not in allowed:
             raise ValueError(
-                f"Invalid timeframe '{tf}'. Allowed: {', '.join(sorted(allowed))}")
+                f"Invalid timeframe '{tf}'. Allowed: {', '.join(sorted(allowed))}"
+            )
         return t
 
     @staticmethod

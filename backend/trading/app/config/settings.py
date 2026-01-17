@@ -225,7 +225,12 @@ CELERY_BROKER_URL = os.getenv(
     'CELERY_BROKER_URL', 'redis://redis:6379/0')
 CELERY_RESULT_BACKEND = os.getenv(
     'CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
-CELERY_BEAT_SCHEDULE = {}
+CELERY_BEAT_SCHEDULE = {
+    'sync-trades-hourly': {
+        'task': 'app.quant.tasks.sync_trades',
+        'schedule': 3600.0,  # Every hour (in seconds)
+    },
+}
 
 # Telegram API Credentials
 TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID")

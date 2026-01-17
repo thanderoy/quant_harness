@@ -3,7 +3,7 @@ from django.db import models
 
 
 class Trade(models.Model):
-    TRADE_TYPE_CHOICES = [
+    TRADE_DIRECTION_CHOICES = [
         ('BUY', 'Buy'),
         ('SELL', 'Sell'),
     ]
@@ -32,37 +32,33 @@ class Trade(models.Model):
     ]
 
     # Core trade fields
-    transaction_broker_id = models.CharField(max_length=100)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    broker_id = models.CharField(max_length=100)  # Identifier on Broker System
+    direction = models.CharField(max_length=4, choices=TRADE_DIRECTION_CHOICES)
     symbol = models.CharField(max_length=10)
-    entry_time = models.DateTimeField(db_index=True, default=timezone.now)
+    entry_time = models.DateTimeField(db_index=True, default=timezone.now, editable=False)
     entry_price = models.FloatField()
-    type = models.CharField(max_length=4, choices=TRADE_TYPE_CHOICES)
-    position_size_usd = models.FloatField()
-    capital = models.FloatField()
-    leverage = models.FloatField(default=500)
-    order_volume = models.FloatField(null=True, blank=True)
-    liquidity_price = models.FloatField()
-    break_even_price = models.FloatField()
-    order_commission = models.FloatField()
-
-    # Closing details
-    close_time = models.DateTimeField(null=True, blank=True)
-    close_price = models.FloatField(null=True, blank=True)
-    pnl = models.FloatField(null=True, blank=True)
-    pnl_excluding_commission = models.FloatField(null=True, blank=True)
-    max_drawdown = models.FloatField(null=True, blank=True)
-    max_profit = models.FloatField(null=True, blank=True)
-    closing_reason = models.CharField(
+    exit_time = models.DateTimeField(null=True, blank=True)
+    exit_price = models.FloatField(null=True, blank=True)
+    exit_reason = models.CharField(
         max_length=50, null=True, blank=True, choices=CLOSING_REASON_CHOICES)
+    order_volume = models.FloatField(null=True, blank=True)
+    sl = models.FloatField(null=True, blank=True)
+    tp = models.FloatField(null=True, blank=True)
+    session = models.CharField(max_length=50)
+    pnl = models.FloatField(null=True, blank=True)
 
     # Additional Info
+    capital = models.FloatField()
+    leverage = models.FloatField(default=500)
     strategy = models.CharField(max_length=50)
     broker = models.CharField(max_length=50)
     market_type = models.CharField(max_length=50, choices=MARKET_TYPE_CHOICES)
     timeframe = models.CharField(max_length=50, choices=TIMEFRAME_CHOICES)
+    synched = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.type} {self.symbol} at {self.entry_price}"
+        return f"{self.direction} {self.symbol} at {self.entry_price}"
 
 
 class TradeClosePricesMutation(models.Model):

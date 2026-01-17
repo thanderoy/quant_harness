@@ -1131,11 +1131,7 @@
         "tagValuesQuery": "",
         "tagsQuery": "",
         "type": "query",
-        "useTags": false,
-        "datasource": {
-          "type": "loki",
-          "uid": "${datasource}"
-        }
+        "useTags": false
       },
       {
         "allValue": ".*",
@@ -1168,11 +1164,7 @@
         "tagValuesQuery": "",
         "tagsQuery": "",
         "type": "query",
-        "useTags": false,
-        "datasource": {
-          "type": "loki",
-          "uid": "${datasource}"
-        }
+        "useTags": false
       },
       {
         "current": {
