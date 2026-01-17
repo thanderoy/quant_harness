@@ -176,6 +176,44 @@ class MT5APIClient:
         )
         return self._handle(resp)
 
+    def get_position(self, ticket: int) -> Optional[Dict[str, Any]]:
+        """
+        Get an open position by its ticket number.
+
+        Args:
+            ticket: Position ticket number
+
+        Returns:
+            Dict with position details, or None if not found (closed)
+        """
+        resp = self.session.get(
+            self._url(f"/api/v1/position/{ticket}"),
+            timeout=self.timeout,
+            verify=self.verify,
+        )
+        if resp.status_code == 404:
+            return None
+        return self._handle(resp)
+
+    def get_order(self, ticket: int) -> Optional[Dict[str, Any]]:
+        """
+        Get a historical order by its ticket number.
+
+        Args:
+            ticket: Order ticket number
+
+        Returns:
+            Dict with order details, or None if not found
+        """
+        resp = self.session.get(
+            self._url(f"/api/v1/order/{ticket}"),
+            timeout=self.timeout,
+            verify=self.verify,
+        )
+        if resp.status_code == 404:
+            return None
+        return self._handle(resp)
+
     # --- helpers ---
 
     @staticmethod

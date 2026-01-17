@@ -1,51 +1,95 @@
 import logging
 from datetime import datetime
 
-from app.trades.models import Trade, TradeClosePricesMutation  # Import models
-from app.adapters.arithmetics import get_price_at_pnl, get_pnl_at_price
+from app.trades.models import Trade, TradeClosePricesMutation
 
 logger = logging.getLogger(__name__)
 
-def create_trade(order, symbol: str, capital: float, position_size_usd: float,
-                 leverage: float, commission: float, type: str, broker: str,
-                 market: str, strategy: str, timeframe: str, order_volume: float,
-                 sl: float, tp: float = None):
+
+def get_trading_session() -> str:
+    """Determine current trading session based on UTC time."""
+    hour = datetime.utcnow().hour
+    if 0 <= hour < 8:
+        return "ASIA"
+    elif 8 <= hour < 16:
+        return "LONDON"
+    else:
+        return "NEW_YORK"
+
+
+def create_trade(
+    order: dict,
+    symbol: str,
+    direction: str,
+    entry_price: float,
+    order_volume: float,
+    capital: float,
+    leverage: float,
+    broker: str,
+    market_type: str,
+    strategy: str,
+    timeframe: str,
+    sl: float = None,
+    tp: float = None,
+):
+    """
+    Create a Trade record from an executed order.
+    
+    Args:
+        order: The order response from MT5 API containing 'order' ticket
+        symbol: Trading symbol (e.g., XAUUSD)
+        direction: Trade direction ('BUY' or 'SELL')
+        entry_price: Entry price of the trade
+        order_volume: Volume in lots
+        capital: Capital used for the trade
+        leverage: Account leverage
+        broker: Broker name
+        market_type: Market type (FOREX, CRYPTO, OTHER)
+        strategy: Strategy name
+        timeframe: Timeframe (1M, 5M, 15M, 1H, 4H, 1D)
+        sl: Stop loss price (optional)
+        tp: Take profit price (optional)
+    
+    Returns:
+        Tuple of (Trade, TradeClosePricesMutation) or None on error
+    """
     try:
-        entry_price = order.get('price')
+        broker_id = str(order.get("order", ""))
+        
+        if not broker_id:
+            logger.error("Order missing 'order' field (broker_id)")
+            return None
 
         # Create Trade instance
         trade = Trade.objects.create(
-            transaction_broker_id=order.get('order'),
+            broker_id=broker_id,
             symbol=symbol,
-            entry_time=datetime.now(),  # Modify as needed based on actual data
+            direction=direction.upper(),
             entry_price=entry_price,
-            type=type.upper(),  # Ensure matching choices
-            position_size_usd=position_size_usd,  # Example calculation
-            capital=capital,  # Set appropriately
-            leverage=leverage,  # Adjust based on your data
             order_volume=order_volume,
-            order_commission=commission,
-            break_even_price=0,
-            liquidity_price=0,
+            capital=capital,
+            leverage=leverage,
             broker=broker,
-            market_type=market,
+            market_type=market_type,
             strategy=strategy,
             timeframe=timeframe,
+            session=get_trading_session(),
+            sl=sl,
+            tp=tp,
+            synched=False,
         )
 
-        # Create TradeClosePricesMutation instance
+        # Create initial TradeClosePricesMutation
         mutation = TradeClosePricesMutation.objects.create(
             trade=trade,
-            mutation_price=entry_price,  # Example: using SL price
-            new_tp_price=tp if tp else None,
+            mutation_price=entry_price,
+            new_tp_price=tp,
             new_sl_price=sl,
-            pnl_at_new_tp_price=None,
-            pnl_at_new_sl_price=None,
         )
 
-        logger.info({'trade': trade, 'mutation': mutation})
-
+        logger.info(f"Created trade {trade.id} with broker_id {broker_id}")
         return trade, mutation
-    except Exception as e:
-        logger.error(f"Error creating trade: {e}")
 
+    except Exception as e:
+        logger.exception(f"Error creating trade: {e}")
+        return None

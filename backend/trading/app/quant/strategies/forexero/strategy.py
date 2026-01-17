@@ -235,8 +235,8 @@ class ForexeroStrategy(BaseStrategy):
                     if order and order.get("success") is True:
                         executed_price = order.get("price")
                         executed_volume = order.get("volume", self.volume_per_order)
-                        # Basic notional and capital approximation (fallback contract size)
-                        contract_size = 100000
+                        # Basic capital approximation (contract size for gold = 100)
+                        contract_size = 100
                         try:
                             order_size_usd = (
                                 float(executed_volume)
@@ -245,24 +245,22 @@ class ForexeroStrategy(BaseStrategy):
                             )
                             capital_used = order_size_usd / float(self.account_leverage)
                         except Exception:
-                            order_size_usd = 0.0
                             capital_used = 0.0
 
                         try:
                             create_trade_record(
                                 order,
                                 symbol=symbol,
+                                direction=action,
+                                entry_price=float(executed_price),
+                                order_volume=float(executed_volume),
                                 capital=capital_used,
-                                position_size_usd=order_size_usd,
                                 leverage=float(self.account_leverage),
-                                commission=0.0,
-                                type=action,
                                 broker="MetaQuotes-Demo",
-                                market="GOLD",
+                                market_type="FOREX",
                                 strategy=self.__class__.__name__,
                                 timeframe="1H",
-                                order_volume=float(executed_volume),
-                                sl=sl if sl is not None else 0.0,
+                                sl=sl,
                                 tp=tp,
                             )
                         except Exception as e:

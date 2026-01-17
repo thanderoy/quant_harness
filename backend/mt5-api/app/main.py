@@ -249,6 +249,88 @@ class TradeResponse(BaseModel):
         ..., description="Human-readable return code description"
     )
 
+
+class DealInfo(BaseModel):
+    """Response model for deal/trade history information."""
+
+    ticket: int = Field(..., description="Deal ticket number")
+    order: int = Field(..., description="Associated order ticket")
+    symbol: str = Field(..., description="Trading symbol")
+    type: int = Field(..., description="Deal type (0=BUY, 1=SELL)")
+    type_description: str = Field(..., description="Human-readable deal type")
+    volume: float = Field(..., description="Deal volume")
+    price: float = Field(..., description="Deal execution price")
+    profit: float = Field(..., description="Deal profit/loss")
+    commission: float = Field(..., description="Commission charged")
+    swap: float = Field(..., description="Swap charged")
+    time: datetime = Field(..., description="Deal execution time")
+    magic: int = Field(..., description="Expert Advisor ID")
+    comment: str = Field(..., description="Deal comment")
+    reason: int = Field(..., description="Deal execution reason")
+    position_id: int = Field(..., description="Position ID")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "ticket": 123456789,
+                "order": 123456788,
+                "symbol": "XAUUSD",
+                "type": 1,
+                "type_description": "DEAL_TYPE_SELL",
+                "volume": 0.1,
+                "price": 2650.50,
+                "profit": 150.25,
+                "commission": -0.50,
+                "swap": -0.10,
+                "time": "2026-01-17T12:00:00",
+                "magic": 2460000,
+                "comment": "FXZ TP1",
+                "reason": 3,
+                "position_id": 123456787,
+            }
+        }
+
+
+class PositionInfo(BaseModel):
+    """Response model for open position information."""
+
+    ticket: int = Field(..., description="Position ticket number")
+    symbol: str = Field(..., description="Trading symbol")
+    type: int = Field(..., description="Position type (0=BUY, 1=SELL)")
+    type_description: str = Field(..., description="Human-readable position type")
+    volume: float = Field(..., description="Position volume")
+    price_open: float = Field(..., description="Position open price")
+    price_current: float = Field(..., description="Current price")
+    profit: float = Field(..., description="Current unrealized profit/loss")
+    sl: float = Field(..., description="Stop Loss level")
+    tp: float = Field(..., description="Take Profit level")
+    time: datetime = Field(..., description="Position open time")
+    magic: int = Field(..., description="Expert Advisor ID")
+    comment: str = Field(..., description="Position comment")
+    swap: float = Field(..., description="Accumulated swap")
+    commission: float = Field(0.0, description="Commission (if available)")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "ticket": 123456789,
+                "symbol": "XAUUSD",
+                "type": 0,
+                "type_description": "POSITION_TYPE_BUY",
+                "volume": 0.1,
+                "price_open": 2640.00,
+                "price_current": 2650.50,
+                "profit": 105.00,
+                "sl": 2630.00,
+                "tp": 2670.00,
+                "time": "2026-01-17T10:00:00",
+                "magic": 2460000,
+                "comment": "FXZ TP1",
+                "swap": -0.50,
+                "commission": -0.25,
+            }
+        }
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -689,6 +771,140 @@ class MT5Service:
                 detail=f"Unexpected error: {str(e)}",
             )
 
+    def get_position_info(self, ticket: int) -> Optional[PositionInfo]:
+        """
+        Get an open position by its ticket number.
+
+        Args:
+            ticket: Position ticket number
+
+        Returns:
+            PositionInfo if position is open, None if not found
+
+        Raises:
+            HTTPException: If MT5 is not connected
+        """
+        self._ensure_connection()
+
+        try:
+            positions = mt5.positions_get(ticket=ticket)
+
+            if positions is None or len(positions) == 0:
+                # Position not found - might be closed
+                return None
+
+            pos = positions[0]
+            pos_dict = pos._asdict()
+
+            type_map = {0: "POSITION_TYPE_BUY", 1: "POSITION_TYPE_SELL"}
+
+            return PositionInfo(
+                ticket=pos_dict["ticket"],
+                symbol=pos_dict["symbol"],
+                type=pos_dict["type"],
+                type_description=type_map.get(pos_dict["type"], f"UNKNOWN_{pos_dict['type']}"),
+                volume=pos_dict["volume"],
+                price_open=pos_dict["price_open"],
+                price_current=pos_dict["price_current"],
+                profit=pos_dict["profit"],
+                sl=pos_dict.get("sl", 0.0),
+                tp=pos_dict.get("tp", 0.0),
+                time=datetime.fromtimestamp(pos_dict["time"]),
+                magic=pos_dict.get("magic", 0),
+                comment=pos_dict.get("comment", ""),
+                swap=pos_dict.get("swap", 0.0),
+                commission=pos_dict.get("commission", 0.0),
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            LOGGER.exception("Unexpected error getting position")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Unexpected error: {str(e)}",
+            )
+
+    def get_order_info(self, ticket: int) -> Optional[Dict[str, Any]]:
+        """
+        Get a historical order by its ticket number.
+
+        Args:
+            ticket: Order ticket number
+
+        Returns:
+            Dict with order details, or None if not found
+
+        Raises:
+            HTTPException: If MT5 is not connected
+        """
+        self._ensure_connection()
+
+        try:
+            orders = mt5.history_orders_get(ticket=ticket)
+
+            if orders is None or len(orders) == 0:
+                return None
+
+            order = orders[0]
+            order_dict = order._asdict()
+
+            order_type_map = {
+                0: "ORDER_TYPE_BUY",
+                1: "ORDER_TYPE_SELL",
+                2: "ORDER_TYPE_BUY_LIMIT",
+                3: "ORDER_TYPE_SELL_LIMIT",
+                4: "ORDER_TYPE_BUY_STOP",
+                5: "ORDER_TYPE_SELL_STOP",
+                6: "ORDER_TYPE_BUY_STOP_LIMIT",
+                7: "ORDER_TYPE_SELL_STOP_LIMIT",
+                8: "ORDER_TYPE_CLOSE_BY",
+            }
+
+            order_state_map = {
+                0: "ORDER_STATE_STARTED",
+                1: "ORDER_STATE_PLACED",
+                2: "ORDER_STATE_CANCELED",
+                3: "ORDER_STATE_PARTIAL",
+                4: "ORDER_STATE_FILLED",
+                5: "ORDER_STATE_REJECTED",
+                6: "ORDER_STATE_EXPIRED",
+                7: "ORDER_STATE_REQUEST_ADD",
+                8: "ORDER_STATE_REQUEST_MODIFY",
+                9: "ORDER_STATE_REQUEST_CANCEL",
+            }
+
+            return {
+                "ticket": order_dict["ticket"],
+                "symbol": order_dict["symbol"],
+                "type": order_dict["type"],
+                "type_description": order_type_map.get(order_dict["type"], f"UNKNOWN_{order_dict['type']}"),
+                "state": order_dict.get("state", 0),
+                "state_description": order_state_map.get(order_dict.get("state", 0), "UNKNOWN"),
+                "volume_initial": order_dict.get("volume_initial", 0.0),
+                "volume_current": order_dict.get("volume_current", 0.0),
+                "price_open": order_dict.get("price_open", 0.0),
+                "price_current": order_dict.get("price_current", 0.0),
+                "price_stoplimit": order_dict.get("price_stoplimit", 0.0),
+                "sl": order_dict.get("sl", 0.0),
+                "tp": order_dict.get("tp", 0.0),
+                "time_setup": datetime.fromtimestamp(order_dict["time_setup"]).isoformat() if order_dict.get("time_setup") else None,
+                "time_done": datetime.fromtimestamp(order_dict["time_done"]).isoformat() if order_dict.get("time_done") else None,
+                "magic": order_dict.get("magic", 0),
+                "comment": order_dict.get("comment", ""),
+                "position_id": order_dict.get("position_id", 0),
+                "reason": order_dict.get("reason", 0),
+            }
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            LOGGER.exception("Unexpected error getting order")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Unexpected error: {str(e)}",
+            )
+
 
 # FastAPI Lifespan - Connection management
 mt5_service = MT5Service()
@@ -947,8 +1163,84 @@ async def send_order(
     return result
 
 
+# Position Endpoint
+@app.get(
+    "/api/v1/position/{ticket}",
+    response_model=PositionInfo,
+    status_code=status.HTTP_200_OK,
+    tags=["Positions"],
+    summary="Get Open Position Info",
+    description="Retrieve an open position by its ticket number",
+)
+async def get_position(
+    ticket: int,
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """
+    Get an open position by ticket number.
+
+    Returns position details including current profit/loss, entry price,
+    and SL/TP levels. Returns 404 if position is not found (may be closed).
+
+    Args:
+        ticket: Position ticket number
+        service: Injected MT5Service instance
+
+    Returns:
+        PositionInfo with position details
+    """
+    loop = asyncio.get_event_loop()
+    position = await loop.run_in_executor(
+        executor, service.get_position_info, ticket
+    )
+    if position is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Position {ticket} not found (may be closed)",
+        )
+    return position
+
+
+# Order History Endpoint
+@app.get(
+    "/api/v1/order/{ticket}",
+    status_code=status.HTTP_200_OK,
+    tags=["Orders"],
+    summary="Get Historical Order Info",
+    description="Retrieve a historical order by its ticket number",
+)
+async def get_order(
+    ticket: int,
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """
+    Get a historical order by ticket number.
+
+    Returns order details including state, execution time, and position info.
+    Returns 404 if order is not found in history.
+
+    Args:
+        ticket: Order ticket number
+        service: Injected MT5Service instance
+
+    Returns:
+        Dict with order details
+    """
+    loop = asyncio.get_event_loop()
+    order = await loop.run_in_executor(
+        executor, service.get_order_info, ticket
+    )
+    if order is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Order {ticket} not found in history",
+        )
+    return order
+
+
 # --- Running the API ---
 
 if __name__ == "__main__":
     # Note: Use 'python -m uvicorn main:app --reload' for development
     uvicorn.run(app, host="0.0.0.0", port=5001)
+
