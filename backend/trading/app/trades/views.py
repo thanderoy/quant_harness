@@ -9,7 +9,7 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Trade.objects.all()
     serializer_class = TradeSerializer
     filterset_class = TradeFilter
-    ordering_fields = ['entry_time', 'close_time', 'pnl', 'symbol']
+    ordering_fields = ['entry_time', 'exit_time', 'pnl', 'symbol']
     ordering = ['-entry_time']  # default ordering
 
     def get_queryset(self):
