@@ -1,3 +1,4 @@
+import uuid
 from django.utils import timezone
 from django.db import models
 
@@ -45,7 +46,7 @@ class Trade(models.Model):
     order_volume = models.FloatField(null=True, blank=True)
     sl = models.FloatField(null=True, blank=True)
     tp = models.FloatField(null=True, blank=True)
-    session = models.CharField(max_length=50)
+    session = models.CharField(max_length=50, null=True, blank=True)
     pnl = models.FloatField(null=True, blank=True)
 
     # Additional Info

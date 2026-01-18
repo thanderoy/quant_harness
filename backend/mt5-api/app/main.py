@@ -1133,7 +1133,7 @@ async def get_tick(
     "/api/v1/order/send",
     response_model=TradeResponse,
     status_code=status.HTTP_200_OK,
-    tags=["Trades Execution"],
+    tags=["Orders & Positions"],
     summary="Send Trade Order",
     description="Execute a trade order (buy/sell) on the MT5 terminal",
 )
@@ -1168,7 +1168,7 @@ async def send_order(
     "/api/v1/position/{ticket}",
     response_model=PositionInfo,
     status_code=status.HTTP_200_OK,
-    tags=["Positions"],
+    tags=["Orders & Positions"],
     summary="Get Open Position Info",
     description="Retrieve an open position by its ticket number",
 )
@@ -1205,7 +1205,7 @@ async def get_position(
 @app.get(
     "/api/v1/order/{ticket}",
     status_code=status.HTTP_200_OK,
-    tags=["Orders"],
+    tags=["Orders & Positions"],
     summary="Get Historical Order Info",
     description="Retrieve a historical order by its ticket number",
 )

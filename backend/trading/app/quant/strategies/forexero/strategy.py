@@ -4,7 +4,7 @@ from typing import Dict, Optional, List
 
 from app.quant.strategies.base import BaseStrategy
 from app.adapters.mt5_api import MT5APIClient
-from app.adapters.db.create import create_trade as create_trade_record
+from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
 
 
