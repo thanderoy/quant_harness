@@ -8,6 +8,7 @@ from app.quant.strategies.forexero.tasks import (
     execute_forexero_trade,
     run_forexero_listener,
 )
+from app.quant.strategies.london_breakout.tasks import run_london_breakout
 from app.adapters.mt5_api import MT5APIClient
 from app.config import settings
 from app.trades.models import Trade
@@ -17,6 +18,7 @@ LOGGER = logging.getLogger(__name__)
 __all__ = [
     "execute_forexero_trade",
     "run_forexero_listener",
+    "run_london_breakout",
     "sync_unsynched_trades",
 ]
 
