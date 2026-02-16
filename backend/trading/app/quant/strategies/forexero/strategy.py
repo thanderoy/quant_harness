@@ -27,6 +27,7 @@ class ForexeroStrategy(BaseStrategy):
         magic_number: int = 2460000,
         trades_per_tp: int = 2,
         use_tps: Optional[List[int]] = None,
+        ignore_high_risk_trades: bool = True,
     ):
         super().__init__()
         self.volume_per_order = volume_per_order
@@ -34,6 +35,7 @@ class ForexeroStrategy(BaseStrategy):
         self.magic_number = magic_number
         self.trades_per_tp = trades_per_tp
         self.use_tps = use_tps if use_tps is not None else [1]
+        self.ignore_high_risk_trades = ignore_high_risk_trades
 
         base_url = mt5_base_url or settings.MT5_API_URL
         self.MT5_API_CLIENT = MT5APIClient(base_url=base_url)
@@ -69,7 +71,7 @@ class ForexeroStrategy(BaseStrategy):
 
         # First non-empty line is the symbol line
         symbol = self._normalize_symbol(lines[0])
-        data["Symbol"] = symbol if symbol in ["XAUUSD"] else None
+        data["Symbol"] = symbol if symbol in ["XAUUSD", "EURUSD", "GBPUSD", "NZDUSD", "AUDUSD"] else None
 
         # Remaining lines are key/value pairs like "Direction: BUY" or "TP1 1970.00"
         # Allow spaces in keys (e.g. "Entry Price")
@@ -119,6 +121,13 @@ class ForexeroStrategy(BaseStrategy):
         if not signal:
             LOGGER.info("FXZ: Empty signal object, skipping")
             return
+
+        # Check whether to ignore 'HIGH RISK' trades
+        if self.ignore_high_risk_trades:
+            content = signal.get("content", "").upper()
+            if content and "HIGH RISK" in content:
+                LOGGER.info("FXZ: Skipping HIGH RISK signal")
+                return
 
         data = self._extract_signal_data(signal)
         if not data:

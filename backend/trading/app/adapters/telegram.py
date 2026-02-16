@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from app.config import settings
 from telethon import TelegramClient, events
@@ -17,7 +16,8 @@ class TelegramAPIClient:
             settings.TELEGRAM_API_HASH
         )
 
-        self.TARGET_CHANNEL = settings.TELEGRAM_API_TARGET_CHANNEL
+        # Telegram's channel ID i.e. -1001234567890
+        self.TARGET_CHANNEL = int(settings.TELEGRAM_API_TARGET_CHANNEL)
 
     def serialize_message(self, message: object) -> dict:
         if not message:
