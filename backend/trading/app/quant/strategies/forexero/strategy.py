@@ -25,7 +25,7 @@ class ForexeroStrategy(BaseStrategy):
         volume_per_order: float = 0.01,
         deviation: int = 20,
         magic_number: int = 2460000,
-        trades_per_tp: int = 2,
+        trades_per_tp: int = 1,
         use_tps: Optional[List[int]] = None,
         ignore_high_risk_trades: bool = True,
     ):
@@ -71,7 +71,11 @@ class ForexeroStrategy(BaseStrategy):
 
         # First non-empty line is the symbol line
         symbol = self._normalize_symbol(lines[0])
-        data["Symbol"] = symbol if symbol in ["XAUUSD", "EURUSD", "GBPUSD", "NZDUSD", "AUDUSD"] else None
+        if symbol not in ["XAUUSD", "EURUSD", "GBPUSD", "NZDUSD", "AUDUSD"]:
+            LOGGER.warning(f"FXZ: Invalid symbol {symbol}, skipping signal")
+            return None
+
+        data["Symbol"] = symbol
 
         # Remaining lines are key/value pairs like "Direction: BUY" or "TP1 1970.00"
         # Allow spaces in keys (e.g. "Entry Price")
@@ -242,7 +246,7 @@ class ForexeroStrategy(BaseStrategy):
 
                     # Create Trade object in DB if order succeeded
                     if order and order.get("success") is True:
-                        executed_price = order.get("price")
+                        executed_price = order.get("price", entry_price)
                         executed_volume = order.get("volume", self.volume_per_order)
                         # Basic capital approximation (contract size for gold = 100)
                         contract_size = 100
