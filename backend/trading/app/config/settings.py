@@ -97,6 +97,10 @@ LOGGING = {
 
 # Application definition
 INSTALLED_APPS = [
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'unfold.contrib.inlines',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -143,7 +147,7 @@ ROOT_URLCONF = 'app.config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -237,3 +241,11 @@ TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID")
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
 TELEGRAM_API_TARGET_CHANNEL = os.getenv("TELEGRAM_API_TARGET_CHANNEL")
 TELEGRAM_API_RESULTS_CHANNEL = os.getenv("TELEGRAM_API_RESULTS_CHANNEL")
+
+UNFOLD = {
+    "SITE_TITLE": "Trading App Admin",
+    "SITE_HEADER": "Trading Dashboard",
+    "DASHBOARD_CALLBACK": "app.config.dashboard.dashboard_callback",
+    "SHOW_VIEW_ON_SITE": False,
+}
+

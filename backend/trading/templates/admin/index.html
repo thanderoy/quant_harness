@@ -1,0 +1,70 @@
+{% extends 'unfold/layouts/base.html' %}
+{% load i18n unfold %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block title %}
+    {% trans 'Dashboard' %} | {{ site_title|default:_('Django site admin') }}
+{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name">{% trans 'Dashboard' %}</h1>
+{% endblock %}
+
+{% block content %}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <!-- KPI Cards -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total PnL</h3>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">${{ total_pnl|floatformat:2 }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Win Rate</h3>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ win_rate }}%</p>
+            <p class="text-xs text-gray-400 mt-1">From {{ closed_trades_count }} closed trades</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Active Trades</h3>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ active_trades_count }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Capital Deployed</h3>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">${{ total_capital|floatformat:2 }}</p>
+        </div>
+    </div>
+
+    <!-- PnL by Symbol -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <h2 class="text-lg font-medium text-gray-900 dark:text-white">PnL by Symbol</h2>
+        </div>
+        <div class="p-6">
+            {% if pnl_by_symbol %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Symbol</th>
+                            <th scope="col" class="px-6 py-3 text-right">Total PnL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in pnl_by_symbol %}
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {{ item.symbol }}
+                            </td>
+                            <td class="px-6 py-4 text-right font-medium {% if item.total > 0 %}text-green-600{% elif item.total < 0 %}text-red-600{% endif %}">
+                                ${{ item.total|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-gray-500 dark:text-gray-400">No closed trades yet.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
