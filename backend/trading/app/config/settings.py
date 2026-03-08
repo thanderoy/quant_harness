@@ -47,7 +47,6 @@ CSRF_TRUSTED_ORIGINS.extend([
     "https://127.0.0.1",
 ])
 
-# If you need to debug CSRF issues, you can temporarily add:
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_DOMAIN = DJANGO_SERVICE_DOMAIN
 SESSION_COOKIE_SECURE = True

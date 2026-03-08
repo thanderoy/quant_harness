@@ -22,12 +22,12 @@ class ForexeroStrategy(BaseStrategy):
         self,
         *,
         mt5_base_url: Optional[str] = None,
-        volume_per_order: float = 0.01,
+        volume_per_order: float = 0.02,
         deviation: int = 20,
         magic_number: int = 2460000,
         trades_per_tp: int = 1,
         use_tps: Optional[List[int]] = None,
-        ignore_high_risk_trades: bool = True,
+        ignore_high_risk_trades: bool = False,
     ):
         super().__init__()
         self.volume_per_order = volume_per_order
@@ -47,7 +47,7 @@ class ForexeroStrategy(BaseStrategy):
             LOGGER.warning(f"Could not connect MT5 at init: {e}")
 
         # Cache leverage for capital calculations
-        self.account_leverage: float = 500.0
+        self.account_leverage: float = 400.0
         try:
             info = self.MT5_API_CLIENT.get_account_info()
             self.account_leverage = float(info.get("leverage", self.account_leverage))
