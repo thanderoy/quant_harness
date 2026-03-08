@@ -81,24 +81,58 @@ def sync_trades(self):
             order_state = order.get("state", 0)
 
             if order_state == 4:  # ORDER_STATE_FILLED
-                trade.exit_price = order.get("price_current") or order.get("price_open")
-                time_done = order.get("time_done")
-                if time_done:
-                    if isinstance(time_done, str):
-                        trade.exit_time = datetime.fromisoformat(time_done.replace("Z", "+00:00"))
-                    else:
-                        trade.exit_time = time_done
+                # Get deals to calculate actual PnL
+                deals = mt5_client.get_deals(ticket)  # ticket is position ID in this context
 
-                # Calculate PnL for closed trade
-                if trade.exit_price and trade.entry_price and trade.order_volume:
-                    price_diff = trade.exit_price - trade.entry_price
-                    if trade.direction == "SELL":
-                        price_diff = -price_diff  # Reverse for sell orders
+                if not deals:
+                    LOGGER.warning(f"No deals found for filled trade {trade.id} (position {ticket})")
+                    failed_count += 1
+                    continue
 
-                    # For forex/gold, PnL = price_diff * volume * contract_size
-                    # Contract size for XAUUSD is typically 100 (1 lot = 100 oz)
-                    contract_size = 100  # TODO: make this configurable per symbol
-                    trade.pnl = round(price_diff * trade.order_volume * contract_size, 2)
+                # Sum up PnL, commission, swap, and fee from all deals
+                total_pnl = 0.0
+                total_commission = 0.0
+                total_swap = 0.0
+                total_fee = 0.0
+                exit_price = 0.0
+                exit_time = None
+                entry_price_actual = trade.entry_price or 0.0
+                
+                # In deals represent entries.
+                in_deals = [d for d in deals if d.get("entry") in (0, 2)]  # 0=IN, 2=INOUT
+                if in_deals:
+                    # Use the first in deal for entry price
+                    first_in_deal = sorted(in_deals, key=lambda x: x.get("time_msc", 0))[0]
+                    entry_price_actual = first_in_deal.get("price", 0.0)
+
+                # Out deals represent closures.
+                out_deals = [d for d in deals if d.get("entry") in (1, 3)] # 1=OUT, 3=OUT_BY
+                
+                if out_deals:
+                    # Use the last out deal for exit time/price
+                    last_out_deal = sorted(out_deals, key=lambda x: x.get("time_msc", 0))[-1]
+                    exit_price = last_out_deal.get("price", 0.0)
+                    
+                    time_raw = last_out_deal.get("time")
+                    if time_raw:
+                        if isinstance(time_raw, str):
+                            exit_time = datetime.fromisoformat(time_raw.replace("Z", "+00:00"))
+                        else:
+                            exit_time = time_raw
+
+                for deal in deals:
+                    total_pnl += deal.get("profit", 0.0)
+                    total_commission += deal.get("commission", 0.0)
+                    total_swap += deal.get("swap", 0.0)
+                    total_fee += deal.get("fee", 0.0)
+
+                if entry_price_actual:
+                    trade.entry_price = entry_price_actual
+                trade.exit_price = exit_price
+                trade.exit_time = exit_time
+                
+                # Net PnL is profit + commission + swap + fee
+                trade.pnl = round(total_pnl + total_commission + total_swap + total_fee, 2)
 
                 # Determine exit reason based on exit price vs TP/SL
                 if trade.tp and trade.exit_price:
@@ -117,7 +151,7 @@ def sync_trades(self):
 
                 trade.synched = True
                 trade.save(update_fields=[
-                    "exit_price", "exit_time", "exit_reason", "pnl", "synched"
+                    "entry_price", "exit_price", "exit_time", "exit_reason", "pnl", "synched"
                 ])
                 synched_count += 1
                 LOGGER.info(

@@ -5,7 +5,8 @@ from app.trades.models import Trade, TradeClosePricesMutation
 @admin.register(Trade)
 class TradeAdmin(ModelAdmin):
     list_display = [field.name for field in Trade._meta.fields]
-    list_filter = [field.name for field in Trade._meta.fields]
+    list_filter = [
+        "direction", "symbol", "entry_time", "exit_time", "synched", "session", "strategy"]
     search_fields = [field.name for field in Trade._meta.fields]
 
     ordering = ('-entry_time',)

@@ -250,6 +250,55 @@ class TradeResponse(BaseModel):
     )
 
 
+class OrderInfo(BaseModel):
+    """Response model for historical order information."""
+
+    ticket: int = Field(..., description="Order ticket number")
+    symbol: str = Field(..., description="Trading symbol")
+    type: int = Field(..., description="Order type")
+    type_description: str = Field(..., description="Human-readable order type")
+    state: int = Field(..., description="Order state")
+    state_description: str = Field(..., description="Human-readable order state")
+    volume_initial: float = Field(..., description="Initial volume requested")
+    volume_current: float = Field(..., description="Unfilled volume")
+    price_open: float = Field(..., description="Order price")
+    price_current: float = Field(..., description="Current price")
+    price_stoplimit: float = Field(..., description="StopLimit limit price")
+    sl: float = Field(..., description="Stop Loss level")
+    tp: float = Field(..., description="Take Profit level")
+    time_setup: Optional[datetime] = Field(None, description="Order setup time")
+    time_done: Optional[datetime] = Field(None, description="Order execution/cancel time")
+    magic: int = Field(..., description="Expert Advisor ID")
+    comment: str = Field(..., description="Order comment")
+    position_id: int = Field(..., description="Position ID")
+    reason: int = Field(..., description="Order placement reason")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "ticket": 123456788,
+                "symbol": "XAUUSD",
+                "type": 0,
+                "type_description": "ORDER_TYPE_BUY",
+                "state": 4,
+                "state_description": "ORDER_STATE_FILLED",
+                "volume_initial": 0.1,
+                "volume_current": 0.0,
+                "price_open": 2650.50,
+                "price_current": 2650.50,
+                "price_stoplimit": 0.0,
+                "sl": 0.0,
+                "tp": 0.0,
+                "time_setup": "2026-01-17T11:59:00",
+                "time_done": "2026-01-17T12:00:00",
+                "magic": 2460000,
+                "comment": "FXZ TP1",
+                "position_id": 123456787,
+                "reason": 3,
+            }
+        }
+
+
 class DealInfo(BaseModel):
     """Response model for deal/trade history information."""
 
@@ -258,14 +307,19 @@ class DealInfo(BaseModel):
     symbol: str = Field(..., description="Trading symbol")
     type: int = Field(..., description="Deal type (0=BUY, 1=SELL)")
     type_description: str = Field(..., description="Human-readable deal type")
+    entry: int = Field(..., description="Deal entry (0=IN, 1=OUT, 2=INOUT, 3=OUT_BY)")
+    entry_description: str = Field(..., description="Human-readable deal entry")
     volume: float = Field(..., description="Deal volume")
     price: float = Field(..., description="Deal execution price")
     profit: float = Field(..., description="Deal profit/loss")
     commission: float = Field(..., description="Commission charged")
     swap: float = Field(..., description="Swap charged")
+    fee: float = Field(0.0, description="Deal fee")
     time: datetime = Field(..., description="Deal execution time")
+    time_msc: int = Field(..., description="Deal execution time in milliseconds")
     magic: int = Field(..., description="Expert Advisor ID")
     comment: str = Field(..., description="Deal comment")
+    external_id: str = Field("", description="Deal external ID")
     reason: int = Field(..., description="Deal execution reason")
     position_id: int = Field(..., description="Position ID")
 
@@ -277,14 +331,19 @@ class DealInfo(BaseModel):
                 "symbol": "XAUUSD",
                 "type": 1,
                 "type_description": "DEAL_TYPE_SELL",
+                "entry": 1,
+                "entry_description": "DEAL_ENTRY_OUT",
                 "volume": 0.1,
                 "price": 2650.50,
                 "profit": 150.25,
                 "commission": -0.50,
                 "swap": -0.10,
+                "fee": 0.0,
                 "time": "2026-01-17T12:00:00",
+                "time_msc": 1705492800000,
                 "magic": 2460000,
                 "comment": "FXZ TP1",
+                "external_id": "",
                 "reason": 3,
                 "position_id": 123456787,
             }
@@ -328,22 +387,6 @@ class PositionInfo(BaseModel):
                 "comment": "FXZ TP1",
                 "swap": -0.50,
                 "commission": -0.25,
-            }
-        }
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "success": True,
-                "order": 123456789,
-                "volume": 0.1,
-                "price": 1.0900,
-                "bid": 1.0899,
-                "ask": 1.0901,
-                "comment": "Request executed",
-                "request_id": 123456,
-                "retcode": 10009,
-                "retcode_description": "TRADE_RETCODE_DONE",
             }
         }
 
@@ -825,7 +868,7 @@ class MT5Service:
                 detail=f"Unexpected error: {str(e)}",
             )
 
-    def get_order_info(self, ticket: int) -> Optional[Dict[str, Any]]:
+    def get_order_info(self, ticket: int) -> Optional[OrderInfo]:
         """
         Get a historical order by its ticket number.
 
@@ -833,7 +876,7 @@ class MT5Service:
             ticket: Order ticket number
 
         Returns:
-            Dict with order details, or None if not found
+            OrderInfo with order details, or None if not found
 
         Raises:
             HTTPException: If MT5 is not connected
@@ -874,32 +917,126 @@ class MT5Service:
                 9: "ORDER_STATE_REQUEST_CANCEL",
             }
 
-            return {
-                "ticket": order_dict["ticket"],
-                "symbol": order_dict["symbol"],
-                "type": order_dict["type"],
-                "type_description": order_type_map.get(order_dict["type"], f"UNKNOWN_{order_dict['type']}"),
-                "state": order_dict.get("state", 0),
-                "state_description": order_state_map.get(order_dict.get("state", 0), "UNKNOWN"),
-                "volume_initial": order_dict.get("volume_initial", 0.0),
-                "volume_current": order_dict.get("volume_current", 0.0),
-                "price_open": order_dict.get("price_open", 0.0),
-                "price_current": order_dict.get("price_current", 0.0),
-                "price_stoplimit": order_dict.get("price_stoplimit", 0.0),
-                "sl": order_dict.get("sl", 0.0),
-                "tp": order_dict.get("tp", 0.0),
-                "time_setup": datetime.fromtimestamp(order_dict["time_setup"]).isoformat() if order_dict.get("time_setup") else None,
-                "time_done": datetime.fromtimestamp(order_dict["time_done"]).isoformat() if order_dict.get("time_done") else None,
-                "magic": order_dict.get("magic", 0),
-                "comment": order_dict.get("comment", ""),
-                "position_id": order_dict.get("position_id", 0),
-                "reason": order_dict.get("reason", 0),
-            }
+            return OrderInfo(
+                ticket=order_dict["ticket"],
+                symbol=order_dict["symbol"],
+                type=order_dict["type"],
+                type_description=order_type_map.get(order_dict["type"], f"UNKNOWN_{order_dict['type']}"),
+                state=order_dict.get("state", 0),
+                state_description=order_state_map.get(order_dict.get("state", 0), "UNKNOWN"),
+                volume_initial=order_dict.get("volume_initial", 0.0),
+                volume_current=order_dict.get("volume_current", 0.0),
+                price_open=order_dict.get("price_open", 0.0),
+                price_current=order_dict.get("price_current", 0.0),
+                price_stoplimit=order_dict.get("price_stoplimit", 0.0),
+                sl=order_dict.get("sl", 0.0),
+                tp=order_dict.get("tp", 0.0),
+                time_setup=datetime.fromtimestamp(order_dict["time_setup"]) if order_dict.get("time_setup") else None,
+                time_done=datetime.fromtimestamp(order_dict["time_done"]) if order_dict.get("time_done") else None,
+                magic=order_dict.get("magic", 0),
+                comment=order_dict.get("comment", ""),
+                position_id=order_dict.get("position_id", 0),
+                reason=order_dict.get("reason", 0),
+            )
 
         except HTTPException:
             raise
         except Exception as e:
             LOGGER.exception("Unexpected error getting order")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Unexpected error: {str(e)}",
+            )
+
+    def get_deals(
+        self, position: Optional[int] = None, *, ticket: Optional[int] = None
+    ) -> List[DealInfo]:
+        """
+        Get historical deals by their position id or order ticket.
+
+        Args:
+            position: Position ticket number (primary method)
+            ticket: Order ticket number
+
+        Returns:
+            List of DealInfo. Empty list if none found.
+
+        Raises:
+            HTTPException: If MT5 is not connected
+        """
+        self._ensure_connection()
+
+        if ticket is None and position is None:
+            raise ValueError("Must provide either ticket or position")
+
+        try:
+            if ticket is not None:
+                deals = mt5.history_deals_get(ticket=ticket)
+            else:
+                deals = mt5.history_deals_get(position=position)
+
+            if deals is None or len(deals) == 0:
+                return []
+
+            type_map = {
+                0: "DEAL_TYPE_BUY",
+                1: "DEAL_TYPE_SELL",
+                2: "DEAL_TYPE_BALANCE",
+                3: "DEAL_TYPE_CREDIT",
+                4: "DEAL_TYPE_CHARGE",
+                5: "DEAL_TYPE_CORRECTION",
+                6: "DEAL_TYPE_BONUS",
+                7: "DEAL_TYPE_COMMISSION",
+                8: "DEAL_TYPE_COMMISSION_DAILY",
+                9: "DEAL_TYPE_COMMISSION_MONTHLY",
+                10: "DEAL_TYPE_COMMISSION_AGENT_DAILY",
+                11: "DEAL_TYPE_COMMISSION_AGENT_MONTHLY",
+                12: "DEAL_TYPE_INTEREST",
+                13: "DEAL_TYPE_BUY_CANCELED",
+                14: "DEAL_TYPE_SELL_CANCELED",
+            }
+            
+            entry_map = {
+                0: "DEAL_ENTRY_IN",
+                1: "DEAL_ENTRY_OUT",
+                2: "DEAL_ENTRY_INOUT",
+                3: "DEAL_ENTRY_OUT_BY",
+            }
+
+            result_deals = []
+            for deal in deals:
+                deal_dict = deal._asdict()
+                result_deals.append(
+                    DealInfo(
+                        ticket=deal_dict["ticket"],
+                        order=deal_dict["order"],
+                        symbol=deal_dict["symbol"],
+                        type=deal_dict["type"],
+                        type_description=type_map.get(deal_dict["type"], f"UNKNOWN_{deal_dict['type']}"),
+                        entry=deal_dict.get("entry", 0),
+                        entry_description=entry_map.get(deal_dict.get("entry", 0), f"UNKNOWN_{deal_dict.get('entry')}"),
+                        volume=deal_dict["volume"],
+                        price=deal_dict["price"],
+                        profit=deal_dict["profit"],
+                        commission=deal_dict.get("commission", 0.0),
+                        swap=deal_dict.get("swap", 0.0),
+                        fee=deal_dict.get("fee", 0.0),
+                        time=datetime.fromtimestamp(deal_dict["time"]),
+                        time_msc=deal_dict.get("time_msc", 0),
+                        magic=deal_dict.get("magic", 0),
+                        comment=deal_dict.get("comment", ""),
+                        external_id=deal_dict.get("external_id", ""),
+                        reason=deal_dict.get("reason", 0),
+                        position_id=deal_dict.get("position_id", 0),
+                    )
+                )
+
+            return result_deals
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            LOGGER.exception("Unexpected error getting deal")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Unexpected error: {str(e)}",
@@ -1204,6 +1341,7 @@ async def get_position(
 # Order History Endpoint
 @app.get(
     "/api/v1/order/{ticket}",
+    response_model=OrderInfo,
     status_code=status.HTTP_200_OK,
     tags=["Orders & Positions"],
     summary="Get Historical Order Info",
@@ -1224,7 +1362,7 @@ async def get_order(
         service: Injected MT5Service instance
 
     Returns:
-        Dict with order details
+        OrderInfo with order details
     """
     loop = asyncio.get_event_loop()
     order = await loop.run_in_executor(
@@ -1236,6 +1374,54 @@ async def get_order(
             detail=f"Order {ticket} not found in history",
         )
     return order
+
+
+# Deal History Endpoint
+@app.get(
+    "/api/v1/deals",
+    response_model=List[DealInfo],
+    status_code=status.HTTP_200_OK,
+    tags=["Orders & Positions"],
+    summary="Get Historical Deals Info",
+    description="Retrieve historical deals by an order ticket or position ID",
+)
+async def get_deals(
+    position: Optional[int] = None,
+    ticket: Optional[int] = None,
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """
+    Get historical deals by position number or order ticket.
+    Must provide either 'position' or 'ticket' query parameter.
+
+    Returns deal details including profit, commission, and swap.
+    Returns 404 if no deals are found in history matching the criteria.
+
+    Args:
+        position: Position ticket number (optional, primary)
+        ticket: Order ticket number (optional)
+        service: Injected MT5Service instance
+
+    Returns:
+        List of DealInfo with deal details
+    """
+    if position is None and ticket is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Must provide either 'position' or 'ticket' parameter",
+        )
+
+    loop = asyncio.get_event_loop()
+    deals = await loop.run_in_executor(
+        executor, service.get_deals, position, ticket
+    )
+    if not deals:
+        criteria = f"ticket {ticket}" if ticket else f"position {position}"
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Deals for {criteria} not found in history",
+        )
+    return deals
 
 
 # --- Running the API ---

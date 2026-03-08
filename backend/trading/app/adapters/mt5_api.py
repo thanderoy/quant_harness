@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
 import requests
@@ -212,6 +212,33 @@ class MT5APIClient:
         )
         if resp.status_code == 404:
             return None
+        return self._handle(resp)
+
+    def get_deals(self, position: Optional[int] = None, *, ticket: Optional[int] = None) -> List[Dict[str, Any]]:
+        """
+        Get historical deals by their position number or order ticket.
+
+        Args:
+            position: Position ticket number (primary method)
+            ticket: Order ticket number
+
+        Returns:
+            List of Dicts with deal details (empty list if not found)
+        """
+        params = {}
+        if position is not None:
+            params["position"] = position
+        if ticket is not None:
+            params["ticket"] = ticket
+
+        resp = self.session.get(
+            self._url("/api/v1/deals"),
+            params=params,
+            timeout=self.timeout,
+            verify=self.verify,
+        )
+        if resp.status_code == 404:
+            return []
         return self._handle(resp)
 
     # --- helpers ---
