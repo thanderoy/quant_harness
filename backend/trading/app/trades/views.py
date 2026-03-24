@@ -1,5 +1,4 @@
 from rest_framework import viewsets
-from rest_framework.response import Response
 from app.trades.models import Trade
 from app.trades.serializers import TradeSerializer
 from app.trades.filters import TradeFilter

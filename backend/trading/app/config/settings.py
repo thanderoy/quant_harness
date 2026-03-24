@@ -246,5 +246,7 @@ UNFOLD = {
     "SITE_HEADER": "Trading Dashboard",
     "DASHBOARD_CALLBACK": "app.config.dashboard.dashboard_callback",
     "SHOW_VIEW_ON_SITE": False,
+    "ENVIRONMENT": "app.config.dashboard.environment_callback",
+    "THEME": "dark",
 }
 

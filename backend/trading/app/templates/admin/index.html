@@ -10,19 +10,19 @@
 {% block content %}
     <style>
         .dashboard-card {
-            background: var(--body-bg, #fff);
-            border: 1px solid var(--hairline-color, #e0e0e0);
+            background: #1e293b;
+            border: 1px solid #334155;
             border-radius: 0.75rem;
             padding: 1.5rem;
             transition: box-shadow 0.2s ease;
         }
         .dashboard-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
         .dashboard-card h3 {
             font-size: 0.8rem;
             font-weight: 500;
-            color: var(--body-quiet-color, #888);
+            color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin: 0 0 0.5rem 0;
@@ -30,12 +30,12 @@
         .dashboard-card .kpi-value {
             font-size: 1.75rem;
             font-weight: 700;
-            color: var(--body-fg, #111);
+            color: #f1f5f9;
             margin: 0;
         }
         .dashboard-card .kpi-sub {
             font-size: 0.75rem;
-            color: var(--body-quiet-color, #999);
+            color: #64748b;
             margin-top: 0.25rem;
         }
         .dashboard-grid {
@@ -45,20 +45,20 @@
             margin-bottom: 2rem;
         }
         .dashboard-table-wrapper {
-            background: var(--body-bg, #fff);
-            border: 1px solid var(--hairline-color, #e0e0e0);
+            background: #1e293b;
+            border: 1px solid #334155;
             border-radius: 0.75rem;
             overflow: hidden;
             margin-bottom: 2rem;
         }
         .dashboard-table-header {
             padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--hairline-color, #e0e0e0);
+            border-bottom: 1px solid #334155;
         }
         .dashboard-table-header h2 {
             font-size: 1rem;
             font-weight: 600;
-            color: var(--body-fg, #111);
+            color: #f1f5f9;
             margin: 0;
         }
         .dashboard-table {
@@ -71,8 +71,8 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: var(--body-quiet-color, #888);
-            background: var(--darkened-bg, #f8f8f8);
+            color: #94a3b8;
+            background: #0f172a;
             text-align: left;
         }
         .dashboard-table th.text-right {
@@ -81,8 +81,8 @@
         .dashboard-table td {
             padding: 0.75rem 1.5rem;
             font-size: 0.875rem;
-            color: var(--body-fg, #111);
-            border-bottom: 1px solid var(--hairline-color, #e0e0e0);
+            color: #e2e8f0;
+            border-bottom: 1px solid #334155;
         }
         .dashboard-table td.text-right {
             text-align: right;
@@ -90,13 +90,13 @@
         .dashboard-table tr:last-child td {
             border-bottom: none;
         }
-        .pnl-positive { color: #16a34a; font-weight: 600; }
-        .pnl-negative { color: #dc2626; font-weight: 600; }
-        .pnl-neutral  { color: var(--body-quiet-color, #888); font-weight: 600; }
+        .pnl-positive { color: #4ade80; font-weight: 600; }
+        .pnl-negative { color: #f87171; font-weight: 600; }
+        .pnl-neutral  { color: #94a3b8; font-weight: 600; }
         .empty-state {
             padding: 2rem 1.5rem;
             text-align: center;
-            color: var(--body-quiet-color, #999);
+            color: #64748b;
         }
     </style>
 

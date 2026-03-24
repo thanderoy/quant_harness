@@ -92,7 +92,7 @@ services:
       - WINEPREFIX=/config/.wine
       - WINEARCH=win64
     volumes:
-      - ./config:/config
+      - /opt/mt5/config:/config
     networks:
       - traefik-public
       - default
