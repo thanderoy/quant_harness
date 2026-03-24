@@ -1,5 +1,13 @@
 from django.db.models import Sum
 from app.trades.models import Trade
+import os
+
+
+def environment_callback(request):
+    """Return the environment name for the Unfold admin header badge."""
+    if os.getenv('DJANGO_DEBUG', 'False').lower() == 'true':
+        return ["Development", "warning"]
+    return ["Production", "danger"]
 
 def dashboard_callback(request, context):
     trades = Trade.objects.all()
