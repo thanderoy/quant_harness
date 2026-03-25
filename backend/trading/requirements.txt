@@ -67,7 +67,6 @@ django==5.2
     #   django-cors-headers
     #   django-extensions
     #   django-filter
-    #   django-unfold
     #   djangorestframework
     #   trading
 django-cors-headers==4.3.1
@@ -75,8 +74,6 @@ django-cors-headers==4.3.1
 django-extensions==3.2.3
     # via trading
 django-filter==24.1
-    # via trading
-django-unfold==0.81.0
     # via trading
 djangorestframework==3.14.0
     # via trading

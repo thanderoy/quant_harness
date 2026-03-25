@@ -437,6 +437,44 @@ services:
       <<: *default-labels
     logging: *default-logging
 
+  superset:
+    image: apache/superset:4.1.2
+    container_name: superset
+    restart: unless-stopped
+    user: root
+    env_file:
+      - .env
+    environment:
+      - SUPERSET_CONFIG_PATH=/app/superset_config.py
+    volumes:
+      - ./monitoring/superset/superset_config.py:/app/superset_config.py:ro
+      - ./monitoring/superset/bootstrap.sh:/app/bootstrap.sh:ro
+      - superset_home:/app/superset_home
+    command: ["/bin/bash", "/app/bootstrap.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      traefik:
+        condition: service_started
+    cpus: 1
+    mem_limit: 2048m
+    networks:
+      - default
+      - traefik-public
+    labels:
+      <<: *default-labels
+      traefik.enable: true
+      traefik.docker.network: traefik-public
+      traefik.http.routers.superset-https.rule: Host(`${SUPERSET_SERVICE_DOMAIN?Variable not set}`)
+      traefik.http.routers.superset-https.entrypoints: https
+      traefik.http.routers.superset-https.tls: true
+      traefik.http.routers.superset-https.tls.certresolver: le
+      traefik.http.routers.superset-https.service: superset-service
+      traefik.http.services.superset-service.loadbalancer.server.port: 8088
+    logging: *default-logging
+
 volumes:
   traefik-public-certificates: # Persistent volume for certificates
   grafana-storage: {}
@@ -445,6 +483,7 @@ volumes:
   static_volume: {}
   promtail-positions: {}
   media_volume: {}
+  superset_home: {}
   ibkr-config: {}
 
 networks:

@@ -1,10 +1,9 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
 from app.trades.models import Trade, TradeClosePricesMutation
 
 
 @admin.register(Trade)
-class TradeAdmin(ModelAdmin):
+class TradeAdmin(admin.ModelAdmin):
     list_display = [
         "symbol", "direction", "entry_price", "entry_time",
         "exit_price", "exit_time", "pnl", "strategy", "synched",
@@ -21,7 +20,7 @@ class TradeAdmin(ModelAdmin):
 
 
 @admin.register(TradeClosePricesMutation)
-class TradeClosePricesMutationAdmin(ModelAdmin):
+class TradeClosePricesMutationAdmin(admin.ModelAdmin):
     list_display = [
         "trade", "mutation_time", "mutation_price",
         "new_tp_price", "new_sl_price",
