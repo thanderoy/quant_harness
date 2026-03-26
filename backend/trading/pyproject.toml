@@ -21,7 +21,6 @@ dependencies = [
     "django-cors-headers==4.3.1",
     "django-extensions==3.2.3",
     "django-filter==24.1",
-    "django-unfold>=0.81.0",
     "djangorestframework>=3.14.0",
     "fastapi[standard]>=0.115.14",
     "gunicorn>=21.2.0",
