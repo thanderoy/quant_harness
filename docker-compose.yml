@@ -435,7 +435,7 @@ services:
     logging: *default-logging
 
   superset:
-    image: apache/superset:4.1.2
+    image: apache/superset:6.0.0
     container_name: superset
     restart: unless-stopped
     user: root

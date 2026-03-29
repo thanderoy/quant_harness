@@ -25,7 +25,8 @@ done
 echo "==> Postgres is ready!"
 
 echo "==> Installing psycopg2-binary (PostgreSQL driver)..."
-pip install psycopg2-binary --quiet
+
+python -m pip install psycopg2-binary --quiet
 
 echo "==> Ensuring 'superset' database exists..."
 python -c "
