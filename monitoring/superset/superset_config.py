@@ -47,6 +47,9 @@ FEATURE_FLAGS = {
     "ENABLE_TEMPLATE_PROCESSING": True,
 }
 
+# Required for Superset 6.0+ (security views moved to frontend)
+FAB_ADD_SECURITY_API = True
+
 # Allow embedding in iframes (if needed behind reverse proxy)
 HTTP_HEADERS = {"X-Frame-Options": "ALLOWALL"}
 

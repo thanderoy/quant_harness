@@ -15,6 +15,10 @@ until PGPASSWORD="${POSTGRES_PASSWORD}" psql \
     -c '\q' 2>/dev/null; do
   sleep 2
 done
+echo "==> Postgres is ready!"
+
+echo "==> Installing psycopg2-binary (PostgreSQL driver)..."
+python -m pip install psycopg2-binary --quiet
 
 echo "==> Ensuring 'superset' database exists..."
 PGPASSWORD="${POSTGRES_PASSWORD}" psql \
