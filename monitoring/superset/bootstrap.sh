@@ -26,7 +26,8 @@ echo "==> Postgres is ready!"
 
 echo "==> Installing psycopg2-binary (PostgreSQL driver)..."
 
-python -m pip install psycopg2-binary --quiet
+TARGET_DIR=$(python -c "import site; print(site.getsitepackages()[0])")
+/usr/local/bin/pip install psycopg2-binary --target "$TARGET_DIR" --quiet
 
 echo "==> Ensuring 'superset' database exists..."
 python -c "
