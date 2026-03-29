@@ -158,6 +158,7 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+      - /opt/telegram/session:/app/session
     command: [ "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application" ]
     depends_on:
       - postgres
@@ -213,6 +214,7 @@ services:
     command: celery -A app worker --loglevel=info --concurrency=3
     volumes:
       - static_volume:/app/staticfiles
+      - /opt/telegram/session:/app/session
     env_file:
       - .env
     depends_on:
@@ -232,6 +234,7 @@ services:
     command: celery -A app beat --loglevel=info
     volumes:
       - static_volume:/app/staticfiles
+      - /opt/telegram/session:/app/session
     env_file:
       - .env
     depends_on:
