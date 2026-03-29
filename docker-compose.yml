@@ -12,7 +12,7 @@ x-common-labels: &default-labels
 
 services:
   traefik:
-    image: traefik:v3.5.2
+    image: traefik:latest
     container_name: traefik
     ports:
       - 80:80 # HTTP port
@@ -160,12 +160,9 @@ services:
       - media_volume:/app/media
     command: [ "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application" ]
     depends_on:
-      postgres:
-        condition: service_healthy
-      traefik:
-        condition: service_started
-      redis:
-        condition: service_started
+      - postgres
+      - traefik
+      - redis
     networks:
       - default
       - traefik-public
