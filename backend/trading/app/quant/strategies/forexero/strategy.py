@@ -34,7 +34,7 @@ class ForexeroStrategy(BaseStrategy):
         self.deviation = deviation
         self.magic_number = magic_number
         self.trades_per_tp = trades_per_tp
-        self.use_tps = use_tps if use_tps is not None else [1]
+        self.use_tps = use_tps if use_tps is not None else [1, 2]
         self.ignore_high_risk_trades = ignore_high_risk_trades
 
         base_url = mt5_base_url or settings.MT5_API_URL
@@ -48,9 +48,11 @@ class ForexeroStrategy(BaseStrategy):
 
         # Cache leverage for capital calculations
         self.account_leverage: float = 400.0
+        self.account_login = None
         try:
             info = self.MT5_API_CLIENT.get_account_info()
             self.account_leverage = float(info.get("leverage", self.account_leverage))
+            self.account_login = int(info.get("login")) if info.get("login") else None
         except Exception as e:
             LOGGER.warning(f"Failed to get MT5 account info: {e}")
 
@@ -71,7 +73,7 @@ class ForexeroStrategy(BaseStrategy):
 
         # First non-empty line is the symbol line
         symbol = self._normalize_symbol(lines[0])
-        if symbol not in ["XAUUSD", "EURUSD", "GBPUSD", "NZDUSD", "AUDUSD"]:
+        if symbol not in ["XAUUSD"]:
             LOGGER.warning(f"FXZ: Invalid symbol {symbol}, skipping signal")
             return None
 
@@ -248,17 +250,11 @@ class ForexeroStrategy(BaseStrategy):
                     if order and order.get("success") is True:
                         executed_price = order.get("price", entry_price)
                         executed_volume = order.get("volume", self.volume_per_order)
-                        # Basic capital approximation (contract size for gold = 100)
-                        contract_size = 100
-                        try:
-                            order_size_usd = (
-                                float(executed_volume)
-                                * contract_size
-                                * float(executed_price)
-                            )
-                            capital_used = order_size_usd / float(self.account_leverage)
-                        except Exception:
-                            capital_used = 0.0
+
+                        account_instance = None
+                        if getattr(self, "account_login", None):
+                            from app.trades.models import Account
+                            account_instance = Account.objects.filter(login=self.account_login).first()
 
                         try:
                             create_trade_record(
@@ -267,9 +263,7 @@ class ForexeroStrategy(BaseStrategy):
                                 direction=action,
                                 entry_price=float(executed_price),
                                 order_volume=float(executed_volume),
-                                capital=capital_used,
-                                leverage=float(self.account_leverage),
-                                broker="MetaQuotes-Demo",
+                                account=account_instance,
                                 market_type="FOREX",
                                 strategy=self.__class__.__name__,
                                 timeframe="1H",

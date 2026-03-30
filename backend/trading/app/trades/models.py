@@ -3,6 +3,41 @@ from django.utils import timezone
 from django.db import models
 
 
+class Account(models.Model):
+    login = models.BigIntegerField(primary_key=True)
+    name = models.CharField(max_length=255)
+    server = models.CharField(max_length=255)
+    currency = models.CharField(max_length=10)
+    trade_mode = models.IntegerField()
+
+    @property
+    def latest_snapshot(self):
+        return self.snapshots.order_by('-date').first()
+
+    def __str__(self):
+        return f"{self.login} - {self.name}"
+
+
+class AccountSnapshot(models.Model):
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='snapshots')
+    date = models.DateField()
+    balance = models.FloatField()
+    equity = models.FloatField()
+    margin = models.FloatField()
+    margin_free = models.FloatField()
+    margin_level = models.FloatField()
+    leverage = models.IntegerField()
+    profit = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('account', 'date')
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"Snapshot {self.account.login} on {self.date}"
+
+
 class Trade(models.Model):
     TRADE_DIRECTION_CHOICES = [
         ('BUY', 'Buy'),
@@ -50,10 +85,8 @@ class Trade(models.Model):
     pnl = models.FloatField(null=True, blank=True)
 
     # Additional Info
-    capital = models.FloatField()
-    leverage = models.FloatField(default=500)
+    account = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, blank=True, related_name='trades')
     strategy = models.CharField(max_length=50)
-    broker = models.CharField(max_length=50)
     market_type = models.CharField(max_length=50, choices=MARKET_TYPE_CHOICES)
     timeframe = models.CharField(max_length=50, choices=TIMEFRAME_CHOICES)
     synched = models.BooleanField(default=False)

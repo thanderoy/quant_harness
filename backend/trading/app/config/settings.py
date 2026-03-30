@@ -1,6 +1,7 @@
 from pathlib import Path
 import os  # Added for environment variables
 from dotenv import load_dotenv  # Optional: If using a .env file
+from celery.schedules import crontab
 
 # Load environment variables from .env file if present
 load_dotenv()
@@ -227,7 +228,11 @@ CELERY_RESULT_BACKEND = os.getenv(
 CELERY_BEAT_SCHEDULE = {
     'sync-trades-hourly': {
         'task': 'app.quant.tasks.sync_trades',
-        'schedule': 3600.0,  # Every hour (in seconds)
+        'schedule': crontab(minute=0, day_of_week='mon-fri'),
+    },
+    'sync-account-daily': {
+        'task': 'app.quant.tasks.sync_account_status',
+        'schedule': crontab(minute=0, hour=0, day_of_week='mon-fri'),
     },
 }
 

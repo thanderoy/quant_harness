@@ -995,7 +995,7 @@ class MT5Service:
                 13: "DEAL_TYPE_BUY_CANCELED",
                 14: "DEAL_TYPE_SELL_CANCELED",
             }
-            
+
             entry_map = {
                 0: "DEAL_ENTRY_IN",
                 1: "DEAL_ENTRY_OUT",
@@ -1413,7 +1413,7 @@ async def get_deals(
 
     loop = asyncio.get_event_loop()
     deals = await loop.run_in_executor(
-        executor, service.get_deals, position, ticket
+        executor, service.get_deals, position or ticket
     )
     if not deals:
         criteria = f"ticket {ticket}" if ticket else f"position {position}"
