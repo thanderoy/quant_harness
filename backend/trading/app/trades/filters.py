@@ -11,8 +11,6 @@ class TradeFilter(filters.FilterSet):
     # Numeric range filters
     pnl_min = filters.NumberFilter(field_name='pnl', lookup_expr='gte')
     pnl_max = filters.NumberFilter(field_name='pnl', lookup_expr='lte')
-    capital_min = filters.NumberFilter(field_name='capital', lookup_expr='gte')
-    capital_max = filters.NumberFilter(field_name='capital', lookup_expr='lte')
     
     # Symbol filters
     symbol = filters.CharFilter(lookup_expr='iexact')
@@ -27,7 +25,6 @@ class TradeFilter(filters.FilterSet):
     class Meta:
         model = Trade
         fields = {
-            'leverage': ['exact', 'gte', 'lte'],
             'synched': ['exact'],
             'market_type': ['exact'],
             'exit_reason': ['exact', 'icontains'],

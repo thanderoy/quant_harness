@@ -111,11 +111,12 @@ class LondonBreakoutStrategy(BaseStrategy):
         except Exception as e:
             LOGGER.warning(f"Could not connect MT5 at init: {e}")
         
-        # Cache account leverage
         self.account_leverage: float = 500.0
+        self.account_login = None
         try:
             info = self.mt5_client.get_account_info()
             self.account_leverage = float(info.get("leverage", self.account_leverage))
+            self.account_login = int(info.get("login")) if info.get("login") else None
         except Exception as e:
             LOGGER.warning(f"Failed to get MT5 account info: {e}")
 
@@ -366,14 +367,10 @@ class LondonBreakoutStrategy(BaseStrategy):
                 self.daily_trade_taken = True
                 executed_price = order.get("price", entry)
                 executed_volume = order.get("volume", self.volume_per_order)
-                
-                # Calculate capital used
-                contract_size = 100 if "XAU" in self.symbol.upper() else 100000
-                try:
-                    order_size_usd = float(executed_volume) * contract_size * float(executed_price)
-                    capital_used = order_size_usd / float(self.account_leverage)
-                except Exception:
-                    capital_used = 0.0
+                account_instance = None
+                if getattr(self, "account_login", None):
+                    from app.trades.models import Account
+                    account_instance = Account.objects.filter(login=self.account_login).first()
                 
                 try:
                     create_trade_record(
@@ -382,9 +379,7 @@ class LondonBreakoutStrategy(BaseStrategy):
                         direction=action,
                         entry_price=float(executed_price),
                         order_volume=float(executed_volume),
-                        capital=capital_used,
-                        leverage=float(self.account_leverage),
-                        broker="MetaQuotes-Demo",
+                        account=account_instance,
                         market_type="FOREX" if "XAU" not in self.symbol.upper() else "COMMODITIES",
                         strategy=self.__class__.__name__,
                         timeframe=self.timeframe,

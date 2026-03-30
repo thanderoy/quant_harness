@@ -23,14 +23,12 @@ def create_trade(
     direction: str,
     entry_price: float,
     order_volume: float,
-    capital: float,
-    leverage: float,
-    broker: str,
     market_type: str,
     strategy: str,
     timeframe: str,
     sl: float = None,
     tp: float = None,
+    account=None,
 ):
     """
     Create a Trade record from an executed order.
@@ -41,14 +39,12 @@ def create_trade(
         direction: Trade direction ('BUY' or 'SELL')
         entry_price: Entry price of the trade
         order_volume: Volume in lots
-        capital: Capital used for the trade
-        leverage: Account leverage
-        broker: Broker name
         market_type: Market type (FOREX, CRYPTO, OTHER)
         strategy: Strategy name
         timeframe: Timeframe (1M, 5M, 15M, 1H, 4H, 1D)
         sl: Stop loss price (optional)
         tp: Take profit price (optional)
+        account: Account model instance (optional)
     
     Returns:
         Tuple of (Trade, TradeClosePricesMutation) or None on error
@@ -67,9 +63,7 @@ def create_trade(
             direction=direction.upper(),
             entry_price=entry_price,
             order_volume=order_volume,
-            capital=capital,
-            leverage=leverage,
-            broker=broker,
+            account=account,
             market_type=market_type,
             strategy=strategy,
             timeframe=timeframe,

@@ -17,6 +17,7 @@ __all__ = [
     "execute_forexero_trade",
     "run_forexero_listener",
     "sync_trades",
+    "sync_account_status",
 ]
 
 
@@ -184,3 +185,88 @@ def sync_trades(self):
     }
     LOGGER.info(f"Trade sync completed: {result}")
     return result
+
+
+@shared_task(bind=True, name="app.quant.tasks.sync_account_status")
+def sync_account_status(self):
+    """
+    Celery task to sync the MT5 account status and take a daily snapshot.
+    """
+    LOGGER.info("Starting account sync task...")
+    from app.trades.models import Account, AccountSnapshot
+    from django.utils import timezone
+
+    mt5_client = MT5APIClient(base_url=settings.MT5_API_URL)
+
+    try:
+        mt5_client.connect()
+        # For simplicity dict conversion handles Pydantic model response
+        account_info = dict(mt5_client.get_account_info())
+    except Exception as e:
+        LOGGER.error(f"Failed to connect or get account info from MT5: {e}")
+        raise self.retry(exc=e, countdown=300)
+    finally:
+        mt5_client.close()
+
+    try:
+        login = account_info.get("login")
+        if not login:
+            LOGGER.error("Account info returned no login, aborting sync.")
+            return {"error": "no login"}
+
+        # Update or create the immutable Account
+        account, created = Account.objects.update_or_create(
+            login=login,
+            defaults={
+                "name": account_info.get("name", ""),
+                "server": account_info.get("server", ""),
+                "currency": account_info.get("currency", ""),
+                "trade_mode": account_info.get("trade_mode", 0),
+            }
+        )
+
+        today = timezone.now().date()
+        
+        current_balance = float(account_info.get("balance", 0.0))
+        current_equity = float(account_info.get("equity", 0.0))
+        current_margin = float(account_info.get("margin", 0.0))
+        current_margin_free = float(account_info.get("margin_free", 0.0))
+        current_margin_level = float(account_info.get("margin_level", 0.0))
+        current_leverage = int(account_info.get("leverage", 0))
+        current_profit = float(account_info.get("profit", 0.0))
+
+        latest_snapshot = account.snapshots.order_by("-date").first()
+        if latest_snapshot:
+            # Check if all relevant metrics are unchanged
+            if (
+                latest_snapshot.balance == current_balance
+                and latest_snapshot.equity == current_equity
+                and latest_snapshot.margin == current_margin
+                and latest_snapshot.margin_free == current_margin_free
+                and latest_snapshot.margin_level == current_margin_level
+                and latest_snapshot.leverage == current_leverage
+                and latest_snapshot.profit == current_profit
+            ):
+                LOGGER.info(f"Account {login} sync completed. No changes from previous snapshot.")
+                return {"login": login, "snapshot_updated": False, "created": False, "reason": "unchanged"}
+
+        # Create or update today's snapshot
+        snapshot, s_created = AccountSnapshot.objects.update_or_create(
+            account=account,
+            date=today,
+            defaults={
+                "balance": current_balance,
+                "equity": current_equity,
+                "margin": current_margin,
+                "margin_free": current_margin_free,
+                "margin_level": current_margin_level,
+                "leverage": current_leverage,
+                "profit": current_profit,
+            }
+        )
+
+        LOGGER.info(f"Account {login} sync completed. Snapshot created: {s_created}")
+        return {"login": login, "snapshot_updated": True, "created": s_created}
+    except Exception as e:
+        LOGGER.exception(f"Error saving account sync details: {e}")
+        raise self.retry(exc=e, countdown=300)

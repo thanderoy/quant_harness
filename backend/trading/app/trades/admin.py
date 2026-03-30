@@ -13,7 +13,7 @@ class TradeAdmin(admin.ModelAdmin):
         "market_type", "exit_reason", "session",
     ]
     search_fields = [
-        "broker_id", "symbol", "direction", "strategy", "broker", "session",
+        "broker_id", "symbol", "direction", "strategy", "session",
     ]
 
     ordering = ('-entry_time',)
