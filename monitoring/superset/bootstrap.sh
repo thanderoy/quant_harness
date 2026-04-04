@@ -24,10 +24,10 @@ except Exception:
 done
 echo "==> Postgres is ready!"
 
-echo "==> Installing psycopg2-binary (PostgreSQL driver)..."
+echo "==> Installing Python dependencies..."
 
 TARGET_DIR=$(python -c "import site; print(site.getsitepackages()[0])")
-/usr/local/bin/pip install psycopg2-binary --target "$TARGET_DIR" --quiet
+/usr/local/bin/pip install psycopg2-binary prophet plotly --target "$TARGET_DIR" --quiet
 
 echo "==> Ensuring 'superset' database exists..."
 python -c "

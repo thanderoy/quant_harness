@@ -214,13 +214,22 @@ class MT5APIClient:
             return None
         return self._handle(resp)
 
-    def get_deals(self, position: Optional[int] = None, *, ticket: Optional[int] = None) -> List[Dict[str, Any]]:
+    def get_deals(
+        self,
+        position: Optional[int] = None,
+        *,
+        ticket: Optional[int] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
-        Get historical deals by their position number or order ticket.
+        Get historical deals filtered by position/ticket or date range.
 
         Args:
-            position: Position ticket number (primary method)
+            position: Position ticket number
             ticket: Order ticket number
+            date_from: Start date in ISO format (e.g. 2024-01-01)
+            date_to: End date in ISO format (e.g. 2024-01-31)
 
         Returns:
             List of Dicts with deal details (empty list if not found)
@@ -230,6 +239,10 @@ class MT5APIClient:
             params["position"] = position
         if ticket is not None:
             params["ticket"] = ticket
+        if date_from is not None:
+            params["date_from"] = date_from
+        if date_to is not None:
+            params["date_to"] = date_to
 
         resp = self.session.get(
             self._url("/api/v1/deals"),

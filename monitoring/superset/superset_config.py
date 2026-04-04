@@ -18,6 +18,7 @@ SQLALCHEMY_DATABASE_URI = (
 # Redis for caching & Celery results
 REDIS_HOST = os.environ.get("REDIS_HOST", "redis")
 REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", "")
 REDIS_CELERY_DB = os.environ.get("REDIS_CELERY_DB", "4")
 REDIS_RESULTS_DB = os.environ.get("REDIS_RESULTS_DB", "5")
 
@@ -28,15 +29,16 @@ CACHE_CONFIG = {
     "CACHE_REDIS_HOST": REDIS_HOST,
     "CACHE_REDIS_PORT": REDIS_PORT,
     "CACHE_REDIS_DB": REDIS_RESULTS_DB,
+    "CACHE_REDIS_PASSWORD": REDIS_PASSWORD,
 }
 
 DATA_CACHE_CONFIG = CACHE_CONFIG
 
 # Celery (async queries, reports, thumbnails)
 class CeleryConfig:
-    broker_url = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
+    broker_url = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
     imports = ("superset.sql_lab",)
-    result_backend = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_RESULTS_DB}"
+    result_backend = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_RESULTS_DB}"
     worker_prefetch_multiplier = 10
     task_acks_late = True
 
@@ -44,14 +46,14 @@ CELERY_CONFIG = CeleryConfig
 
 # Feature flags
 FEATURE_FLAGS = {
-    "ENABLE_TEMPLATE_PROCESSING": True,
+    "ENABLE_TEMPLATE_PROCESSING": False,
 }
 
 # Required for Superset 6.0+ (security views moved to frontend)
 FAB_ADD_SECURITY_API = True
 
 # Allow embedding in iframes (if needed behind reverse proxy)
-HTTP_HEADERS = {"X-Frame-Options": "ALLOWALL"}
+HTTP_HEADERS = {"X-Frame-Options": "SAMEORIGIN"}
 
 # Webserver
 ENABLE_PROXY_FIX = True

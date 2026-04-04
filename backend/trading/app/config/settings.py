@@ -134,7 +134,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = list(filter(None, [
+    f"https://{DJANGO_SERVICE_DOMAIN}" if DJANGO_SERVICE_DOMAIN else None,
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]))
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
