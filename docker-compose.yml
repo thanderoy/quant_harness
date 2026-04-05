@@ -12,7 +12,7 @@ x-common-labels: &default-labels
 
 services:
   traefik:
-    image: traefik:latest
+    image: traefik:v3.6
     container_name: traefik
     ports:
       - 80:80 # HTTP port
@@ -83,10 +83,10 @@ services:
       dockerfile: Dockerfile
     container_name: mt5
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       - TZ=${TZ:-UTC}
+      - CUSTOM_USER=${CUSTOM_USER}
+      - PASSWORD=${PASSWORD}
       - MT5_API_PORT=5001
       - MT5_API_HOST=0.0.0.0
       - WINEPREFIX=/config/.wine
@@ -121,6 +121,8 @@ services:
       traefik.http.routers.mt5-api-https.tls: true
       traefik.http.routers.mt5-api-https.tls.certresolver: le
       traefik.http.routers.mt5-api-https.service: mt5-api-service
+      traefik.http.routers.mt5-api-https.middlewares: mt5-api-auth
+      traefik.http.middlewares.mt5-api-auth.basicauth.users: ${TRAEFIK_USERNAME?Variable not set}:${TRAEFIK_HASHED_PASSWORD?Variable not set}
       traefik.http.services.mt5-api-service.loadbalancer.server.port: 5001
     logging: *default-logging
     depends_on:
@@ -191,12 +193,13 @@ services:
     image: redis:7-alpine
     container_name: redis
     restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     depends_on:
       - traefik
     networks:
       - default
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -251,8 +254,9 @@ services:
     container_name: grafana
     restart: unless-stopped
     environment:
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
       - GF_USERS_DEFAULT_THEME=dark
       - GF_LOG_MODE=console
       - GF_LOG_LEVEL=critical
@@ -322,7 +326,8 @@ services:
     image: gcr.io/cadvisor/cadvisor:v0.52.0
     container_name: cadvisor
     restart: unless-stopped
-    privileged: true
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       - traefik
     volumes:
@@ -400,7 +405,6 @@ services:
   loki:
     image: grafana/loki:3.5.5
     container_name: loki
-    user: root
 
     command: -config.file=/etc/loki/loki.yaml
     volumes:
@@ -441,7 +445,6 @@ services:
     image: apache/superset:6.0.0
     container_name: superset
     restart: unless-stopped
-    user: root
     env_file:
       - .env
     environment:
@@ -484,7 +487,6 @@ volumes:
   promtail-positions: {}
   media_volume: {}
   superset_home: {}
-  ibkr-config: {}
 
 networks:
   default:

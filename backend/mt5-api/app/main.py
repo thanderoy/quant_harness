@@ -948,29 +948,94 @@ class MT5Service:
                 detail=f"Unexpected error: {str(e)}",
             )
 
+    DEAL_TYPE_MAP = {
+        0: "DEAL_TYPE_BUY",
+        1: "DEAL_TYPE_SELL",
+        2: "DEAL_TYPE_BALANCE",
+        3: "DEAL_TYPE_CREDIT",
+        4: "DEAL_TYPE_CHARGE",
+        5: "DEAL_TYPE_CORRECTION",
+        6: "DEAL_TYPE_BONUS",
+        7: "DEAL_TYPE_COMMISSION",
+        8: "DEAL_TYPE_COMMISSION_DAILY",
+        9: "DEAL_TYPE_COMMISSION_MONTHLY",
+        10: "DEAL_TYPE_COMMISSION_AGENT_DAILY",
+        11: "DEAL_TYPE_COMMISSION_AGENT_MONTHLY",
+        12: "DEAL_TYPE_INTEREST",
+        13: "DEAL_TYPE_BUY_CANCELED",
+        14: "DEAL_TYPE_SELL_CANCELED",
+    }
+
+    DEAL_ENTRY_MAP = {
+        0: "DEAL_ENTRY_IN",
+        1: "DEAL_ENTRY_OUT",
+        2: "DEAL_ENTRY_INOUT",
+        3: "DEAL_ENTRY_OUT_BY",
+    }
+
+    def _map_deals(self, deals) -> List[DealInfo]:
+        """Convert raw MT5 deal tuples to DealInfo models."""
+        result = []
+        for deal in deals:
+            d = deal._asdict()
+            result.append(
+                DealInfo(
+                    ticket=d["ticket"],
+                    order=d["order"],
+                    symbol=d["symbol"],
+                    type=d["type"],
+                    type_description=self.DEAL_TYPE_MAP.get(d["type"], f"UNKNOWN_{d['type']}"),
+                    entry=d.get("entry", 0),
+                    entry_description=self.DEAL_ENTRY_MAP.get(d.get("entry", 0), f"UNKNOWN_{d.get('entry')}"),
+                    volume=d["volume"],
+                    price=d["price"],
+                    profit=d["profit"],
+                    commission=d.get("commission", 0.0),
+                    swap=d.get("swap", 0.0),
+                    fee=d.get("fee", 0.0),
+                    time=datetime.fromtimestamp(d["time"]),
+                    time_msc=d.get("time_msc", 0),
+                    magic=d.get("magic", 0),
+                    comment=d.get("comment", ""),
+                    external_id=d.get("external_id", ""),
+                    reason=d.get("reason", 0),
+                    position_id=d.get("position_id", 0),
+                )
+            )
+        return result
+
     def get_deals(
-        self, position: Optional[int] = None, *, ticket: Optional[int] = None
+        self,
+        position: Optional[int] = None,
+        *,
+        ticket: Optional[int] = None,
+        date_from: Optional[datetime] = None,
+        date_to: Optional[datetime] = None,
     ) -> List[DealInfo]:
         """
-        Get historical deals by their position id or order ticket.
+        Get historical deals filtered by position/ticket or date range.
 
         Args:
-            position: Position ticket number (primary method)
+            position: Position ticket number
             ticket: Order ticket number
+            date_from: Start of date range (inclusive)
+            date_to: End of date range (inclusive)
 
         Returns:
             List of DealInfo. Empty list if none found.
-
-        Raises:
-            HTTPException: If MT5 is not connected
         """
         self._ensure_connection()
 
-        if ticket is None and position is None:
-            raise ValueError("Must provide either ticket or position")
+        has_id_filter = ticket is not None or position is not None
+        has_date_filter = date_from is not None and date_to is not None
+
+        if not has_id_filter and not has_date_filter:
+            raise ValueError("Must provide either ticket/position or date_from+date_to")
 
         try:
-            if ticket is not None:
+            if has_date_filter:
+                deals = mt5.history_deals_get(date_from, date_to)
+            elif ticket is not None:
                 deals = mt5.history_deals_get(ticket=ticket)
             else:
                 deals = mt5.history_deals_get(position=position)
@@ -978,65 +1043,12 @@ class MT5Service:
             if deals is None or len(deals) == 0:
                 return []
 
-            type_map = {
-                0: "DEAL_TYPE_BUY",
-                1: "DEAL_TYPE_SELL",
-                2: "DEAL_TYPE_BALANCE",
-                3: "DEAL_TYPE_CREDIT",
-                4: "DEAL_TYPE_CHARGE",
-                5: "DEAL_TYPE_CORRECTION",
-                6: "DEAL_TYPE_BONUS",
-                7: "DEAL_TYPE_COMMISSION",
-                8: "DEAL_TYPE_COMMISSION_DAILY",
-                9: "DEAL_TYPE_COMMISSION_MONTHLY",
-                10: "DEAL_TYPE_COMMISSION_AGENT_DAILY",
-                11: "DEAL_TYPE_COMMISSION_AGENT_MONTHLY",
-                12: "DEAL_TYPE_INTEREST",
-                13: "DEAL_TYPE_BUY_CANCELED",
-                14: "DEAL_TYPE_SELL_CANCELED",
-            }
-
-            entry_map = {
-                0: "DEAL_ENTRY_IN",
-                1: "DEAL_ENTRY_OUT",
-                2: "DEAL_ENTRY_INOUT",
-                3: "DEAL_ENTRY_OUT_BY",
-            }
-
-            result_deals = []
-            for deal in deals:
-                deal_dict = deal._asdict()
-                result_deals.append(
-                    DealInfo(
-                        ticket=deal_dict["ticket"],
-                        order=deal_dict["order"],
-                        symbol=deal_dict["symbol"],
-                        type=deal_dict["type"],
-                        type_description=type_map.get(deal_dict["type"], f"UNKNOWN_{deal_dict['type']}"),
-                        entry=deal_dict.get("entry", 0),
-                        entry_description=entry_map.get(deal_dict.get("entry", 0), f"UNKNOWN_{deal_dict.get('entry')}"),
-                        volume=deal_dict["volume"],
-                        price=deal_dict["price"],
-                        profit=deal_dict["profit"],
-                        commission=deal_dict.get("commission", 0.0),
-                        swap=deal_dict.get("swap", 0.0),
-                        fee=deal_dict.get("fee", 0.0),
-                        time=datetime.fromtimestamp(deal_dict["time"]),
-                        time_msc=deal_dict.get("time_msc", 0),
-                        magic=deal_dict.get("magic", 0),
-                        comment=deal_dict.get("comment", ""),
-                        external_id=deal_dict.get("external_id", ""),
-                        reason=deal_dict.get("reason", 0),
-                        position_id=deal_dict.get("position_id", 0),
-                    )
-                )
-
-            return result_deals
+            return self._map_deals(deals)
 
         except HTTPException:
             raise
         except Exception as e:
-            LOGGER.exception("Unexpected error getting deal")
+            LOGGER.exception("Unexpected error getting deals")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Unexpected error: {str(e)}",
@@ -1383,39 +1395,56 @@ async def get_order(
     status_code=status.HTTP_200_OK,
     tags=["Orders & Positions"],
     summary="Get Historical Deals Info",
-    description="Retrieve historical deals by an order ticket or position ID",
+    description="Retrieve historical deals by position/ticket or date range",
 )
 async def get_deals(
     position: Optional[int] = None,
     ticket: Optional[int] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     service: MT5Service = Depends(get_mt5_service),
 ):
     """
-    Get historical deals by position number or order ticket.
-    Must provide either 'position' or 'ticket' query parameter.
+    Get historical deals filtered by position/ticket or date range.
+
+    Provide either position/ticket for a specific trade's deals,
+    or date_from+date_to for all deals in a period.
 
     Returns deal details including profit, commission, and swap.
-    Returns 404 if no deals are found in history matching the criteria.
-
-    Args:
-        position: Position ticket number (optional, primary)
-        ticket: Order ticket number (optional)
-        service: Injected MT5Service instance
-
-    Returns:
-        List of DealInfo with deal details
+    Returns 404 if no deals are found matching the criteria.
     """
-    if position is None and ticket is None:
+    has_id_filter = position is not None or ticket is not None
+    has_date_filter = date_from is not None and date_to is not None
+
+    if not has_id_filter and not has_date_filter:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Must provide either 'position' or 'ticket' parameter",
+            detail="Must provide either 'position'/'ticket' or 'date_from'+'date_to' parameters",
         )
+
+    dt_from = None
+    dt_to = None
+    if has_date_filter:
+        try:
+            dt_from = datetime.fromisoformat(date_from)
+            dt_to = datetime.fromisoformat(date_to)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid date format. Use ISO format (e.g. 2024-01-01)",
+            )
 
     loop = asyncio.get_event_loop()
     deals = await loop.run_in_executor(
-        executor, service.get_deals, position or ticket
+        executor,
+        lambda: service.get_deals(
+            position=position,
+            ticket=ticket,
+            date_from=dt_from,
+            date_to=dt_to,
+        ),
     )
-    if not deals:
+    if not deals and has_id_filter:
         criteria = f"ticket {ticket}" if ticket else f"position {position}"
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

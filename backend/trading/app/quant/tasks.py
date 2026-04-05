@@ -10,6 +10,7 @@ from app.quant.strategies.forexero.tasks import (
 from app.adapters.mt5_api import MT5APIClient
 from app.config import settings
 from app.trades.models import Trade
+from app.trades.utils import calculate_realized_profit
 
 LOGGER = logging.getLogger(__name__)
 
@@ -200,13 +201,11 @@ def sync_account_status(self):
 
     try:
         mt5_client.connect()
-        # For simplicity dict conversion handles Pydantic model response
         account_info = dict(mt5_client.get_account_info())
     except Exception as e:
         LOGGER.error(f"Failed to connect or get account info from MT5: {e}")
-        raise self.retry(exc=e, countdown=300)
-    finally:
         mt5_client.close()
+        raise self.retry(exc=e, countdown=300)
 
     try:
         login = account_info.get("login")
@@ -226,16 +225,26 @@ def sync_account_status(self):
         )
 
         today = timezone.now().date()
-        
+
         current_balance = float(account_info.get("balance", 0.0))
         current_equity = float(account_info.get("equity", 0.0))
         current_margin = float(account_info.get("margin", 0.0))
         current_margin_free = float(account_info.get("margin_free", 0.0))
         current_margin_level = float(account_info.get("margin_level", 0.0))
         current_leverage = int(account_info.get("leverage", 0))
-        current_profit = float(account_info.get("profit", 0.0))
-
         latest_snapshot = account.snapshots.order_by("-date").first()
+
+        # Calculate realized profit from deal history since last snapshot
+        if latest_snapshot:
+            current_profit = calculate_realized_profit(
+                mt5_client,
+                date_from=latest_snapshot.date.isoformat(),
+                date_to=today.isoformat(),
+                fallback_balance_diff=current_balance - latest_snapshot.balance,
+            )
+        else:
+            current_profit = 0.0
+
         if latest_snapshot:
             # Check if all relevant metrics are unchanged
             if (
@@ -270,3 +279,5 @@ def sync_account_status(self):
     except Exception as e:
         LOGGER.exception(f"Error saving account sync details: {e}")
         raise self.retry(exc=e, countdown=300)
+    finally:
+        mt5_client.close()

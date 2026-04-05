@@ -22,7 +22,7 @@ class ForexeroStrategy(BaseStrategy):
         self,
         *,
         mt5_base_url: Optional[str] = None,
-        volume_per_order: float = 0.02,
+        volume_per_order: float = 0.03,
         deviation: int = 20,
         magic_number: int = 2460000,
         trades_per_tp: int = 1,
