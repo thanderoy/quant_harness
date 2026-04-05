@@ -96,3 +96,6 @@ logs
 backend/trading/app/session
 
 backend/trading/backtesting/
+CLAUDE.md
+.claude/*
+docs/*

@@ -25,9 +25,9 @@ done
 echo "==> Postgres is ready!"
 
 echo "==> Installing Python dependencies..."
-
-TARGET_DIR=$(python -c "import site; print(site.getsitepackages()[0])")
-/usr/local/bin/pip install psycopg2-binary prophet plotly --target "$TARGET_DIR" --quiet
+export PYTHONUSERBASE=/app/superset_home/.local
+pip install psycopg2-binary prophet plotly "numpy<2" --user --quiet
+export PYTHONPATH="${PYTHONUSERBASE}/lib/python3.10/site-packages:${PYTHONPATH:-}"
 
 echo "==> Ensuring 'superset' database exists..."
 python -c "
