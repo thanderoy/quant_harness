@@ -10,6 +10,32 @@ from app.config import settings
 
 LOGGER = logging.getLogger(__name__)
 
+# (min_balance, volume) — highest matching tier wins
+# Allows for auto scaling based on precalculated thresholds
+VOLUME_TIERS = [
+    (50.00, 0.01),
+    (102.50, 0.02),
+    (207.50, 0.03),
+    (365.00, 0.04),
+    (575.00, 0.05),
+    (837.50, 0.06),
+    (1152.50, 0.07),
+    (1520.00, 0.08),
+    (1940.00, 0.09),
+    (2412.50, 0.10),
+]
+
+
+def get_volume_for_balance(balance: float) -> float:
+    """Return the largest volume tier the account balance qualifies for."""
+    volume = VOLUME_TIERS[0][1]  # default to smallest tier
+    for min_balance, tier_volume in VOLUME_TIERS:
+        if balance >= min_balance:
+            volume = tier_volume
+        else:
+            break
+    return volume
+
 
 class ForexeroStrategy(BaseStrategy):
     """
@@ -22,7 +48,6 @@ class ForexeroStrategy(BaseStrategy):
         self,
         *,
         mt5_base_url: Optional[str] = None,
-        volume_per_order: float = 0.03,
         deviation: int = 20,
         magic_number: int = 2460000,
         trades_per_tp: int = 1,
@@ -30,7 +55,6 @@ class ForexeroStrategy(BaseStrategy):
         ignore_high_risk_trades: bool = False,
     ):
         super().__init__()
-        self.volume_per_order = volume_per_order
         self.deviation = deviation
         self.magic_number = magic_number
         self.trades_per_tp = trades_per_tp
@@ -55,6 +79,18 @@ class ForexeroStrategy(BaseStrategy):
             self.account_login = int(info.get("login")) if info.get("login") else None
         except Exception as e:
             LOGGER.warning(f"Failed to get MT5 account info: {e}")
+
+    def _get_volume(self) -> float:
+        """Resolve order volume dynamically from current account balance."""
+        try:
+            info = self.MT5_API_CLIENT.get_account_info()
+            balance = float(info.get("balance", 0.0))
+            volume = get_volume_for_balance(balance)
+            LOGGER.info(f"Account balance: {balance}, volume: {volume}")
+            return volume
+        except Exception as e:
+            LOGGER.warning(f"Failed to get balance for volume sizing: {e}. Using minimum 0.01.")
+            return VOLUME_TIERS[0][1]
 
     def _normalize_symbol(self, symbol: str) -> str:
         # Remove emojis, slashes and spaces e.g. "🔔XAU/USD🔔" -> "XAUUSD"
@@ -188,6 +224,9 @@ class ForexeroStrategy(BaseStrategy):
             except Exception as e:
                 LOGGER.warning(f"Failed to get tick for {symbol}: {e}")
 
+        # Resolve volume once per signal based on current balance
+        volume = self._get_volume()
+
         # Place orders
         for tp_idx, tp in valid_tps:
             for _ in range(self.trades_per_tp):
@@ -236,7 +275,7 @@ class ForexeroStrategy(BaseStrategy):
                     order = self.MT5_API_CLIENT.send_order(
                         action=action,
                         symbol=symbol,
-                        volume=self.volume_per_order,
+                        volume=volume,
                         order_type=order_type,
                         price=entry_price,
                         sl=sl,
@@ -249,7 +288,7 @@ class ForexeroStrategy(BaseStrategy):
                     # Create Trade object in DB if order succeeded
                     if order and order.get("success") is True:
                         executed_price = order.get("price", entry_price)
-                        executed_volume = order.get("volume", self.volume_per_order)
+                        executed_volume = order.get("volume", volume)
 
                         account_instance = None
                         if getattr(self, "account_login", None):
