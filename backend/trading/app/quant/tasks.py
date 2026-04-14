@@ -53,6 +53,7 @@ def sync_trades(self):
     synched_count = 0
     failed_count = 0
     still_open_count = 0
+    rejected_count = 0
 
     for trade in unsynched_trades:
         try:
@@ -77,7 +78,7 @@ def sync_trades(self):
                 failed_count += 1
                 continue
 
-            # Check order state - 4 = FILLED, 2 = CANCELED, 6 = EXPIRED
+            # Check order state - 4 = FILLED, 2 = CANCELED, 6 = EXPIRED, 5 = REJECTED
             order_state = order.get("state", 0)
 
             if order_state == 4:  # ORDER_STATE_FILLED
@@ -150,20 +151,32 @@ def sync_trades(self):
                     trade.exit_reason = "OTHER"
 
                 trade.synched = True
+                trade.status = "FILLED"
                 trade.save(update_fields=[
-                    "entry_price", "exit_price", "exit_time", "exit_reason", "pnl", "synched"
+                    "entry_price", "exit_price", "exit_time", "exit_reason",
+                    "pnl", "status", "synched",
                 ])
                 synched_count += 1
                 LOGGER.info(
                     f"Trade {trade.id}: CLOSED, exit_price: {trade.exit_price}, pnl: {trade.pnl}"
                 )
 
-            elif order_state in (2, 6):  # CANCELED or EXPIRED
-                trade.exit_reason = "OTHER"
+            elif order_state in (2, 5, 6):  # CANCELED, REJECTED or EXPIRED
+                # Map MT5 order state to our status
+                state_to_status = {2: "CANCELED", 5: "REJECTED", 6: "EXPIRED"}
+                state_to_reason = {2: "CANCELED", 5: "REJECTED", 6: "EXPIRED"}
+
+                trade.status = state_to_status.get(order_state, "REJECTED")
+                trade.exit_reason = state_to_reason.get(order_state, "OTHER")
+                trade.pnl = 0.0
                 trade.synched = True
-                trade.save(update_fields=["exit_reason", "synched"])
-                synched_count += 1
-                LOGGER.info(f"Trade {trade.id}: {order.get('state_description')}")
+                trade.save(update_fields=["status", "exit_reason", "pnl", "synched"])
+                rejected_count += 1
+                LOGGER.info(
+                    f"Trade {trade.id}: {trade.status} - "
+                    f"{order.get('comment', '')} "
+                    f"(state: {order.get('state_description', order_state)})"
+                )
 
             else:
                 # Order still pending or other state
@@ -180,6 +193,7 @@ def sync_trades(self):
         "synched": synched_count,
         "failed": failed_count,
         "still_open": still_open_count,
+        "rejected": rejected_count,
         "total": total_count,
     }
     LOGGER.info(f"Trade sync completed: {result}")

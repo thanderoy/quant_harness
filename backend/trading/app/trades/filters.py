@@ -26,6 +26,7 @@ class TradeFilter(filters.FilterSet):
         model = Trade
         fields = {
             'synched': ['exact'],
+            'status': ['exact', 'in'],
             'market_type': ['exact'],
             'exit_reason': ['exact', 'icontains'],
         }
