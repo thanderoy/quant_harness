@@ -49,7 +49,18 @@ class Trade(models.Model):
         ('SL', 'Stop Loss'),
         ('MANUAL', 'Manual'),
         ('LIQUIDATION', 'Liquidation'),
+        ('REJECTED', 'Rejected'),
+        ('CANCELED', 'Canceled'),
+        ('EXPIRED', 'Expired'),
         ('OTHER', 'Other'),
+    ]
+
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('FILLED', 'Filled'),
+        ('REJECTED', 'Rejected'),
+        ('CANCELED', 'Canceled'),
+        ('EXPIRED', 'Expired'),
     ]
 
     MARKET_TYPE_CHOICES = [
@@ -89,6 +100,9 @@ class Trade(models.Model):
     strategy = models.CharField(max_length=50)
     market_type = models.CharField(max_length=50, choices=MARKET_TYPE_CHOICES)
     timeframe = models.CharField(max_length=50, choices=TIMEFRAME_CHOICES)
+    status = models.CharField(
+        max_length=10, choices=STATUS_CHOICES, default='PENDING',
+    )
     synched = models.BooleanField(default=False)
 
     def __str__(self):

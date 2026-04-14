@@ -52,14 +52,14 @@ class ForexeroStrategy(BaseStrategy):
         magic_number: int = 2460000,
         trades_per_tp: int = 1,
         use_tps: Optional[List[int]] = None,
-        ignore_high_risk_trades: bool = False,
+        adjust_for_high_risk_trades: bool = True,
     ):
         super().__init__()
         self.deviation = deviation
         self.magic_number = magic_number
         self.trades_per_tp = trades_per_tp
         self.use_tps = use_tps if use_tps is not None else [1, 2]
-        self.ignore_high_risk_trades = ignore_high_risk_trades
+        self.adjust_for_high_risk_trades = adjust_for_high_risk_trades
 
         base_url = mt5_base_url or settings.MT5_API_URL
         self.MT5_API_CLIENT = MT5APIClient(base_url=base_url)
@@ -165,7 +165,7 @@ class ForexeroStrategy(BaseStrategy):
             return
 
         # Check whether to ignore 'HIGH RISK' trades
-        if self.ignore_high_risk_trades:
+        if self.adjust_for_high_risk_trades:
             content = signal.get("content", "").upper()
             if content and "HIGH RISK" in content:
                 LOGGER.info("FXZ: Reduced TPs for HIGH RISK signal")
