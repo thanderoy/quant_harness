@@ -41,8 +41,6 @@ def sync_trades(self):
         LOGGER.info("No unsynched trades found")
         return {"synched": 0, "failed": 0, "still_open": 0}
 
-    LOGGER.info(f"Found {total_count} unsynched trades to process")
-
     # Initialize MT5 client
     mt5_client = MT5APIClient(base_url=settings.MT5_API_URL)
 
@@ -99,7 +97,7 @@ def sync_trades(self):
                 exit_price = 0.0
                 exit_time = None
                 entry_price_actual = trade.entry_price or 0.0
-                
+
                 # In deals represent entries.
                 in_deals = [d for d in deals if d.get("entry") in (0, 2)]  # 0=IN, 2=INOUT
                 if in_deals:
@@ -109,12 +107,12 @@ def sync_trades(self):
 
                 # Out deals represent closures.
                 out_deals = [d for d in deals if d.get("entry") in (1, 3)] # 1=OUT, 3=OUT_BY
-                
+
                 if out_deals:
                     # Use the last out deal for exit time/price
                     last_out_deal = sorted(out_deals, key=lambda x: x.get("time_msc", 0))[-1]
                     exit_price = last_out_deal.get("price", 0.0)
-                    
+
                     time_raw = last_out_deal.get("time")
                     if time_raw:
                         if isinstance(time_raw, str):
@@ -132,7 +130,7 @@ def sync_trades(self):
                     trade.entry_price = entry_price_actual
                 trade.exit_price = exit_price
                 trade.exit_time = exit_time
-                
+
                 # Net PnL is profit + commission + swap + fee
                 trade.pnl = round(total_pnl + total_commission + total_swap + total_fee, 2)
 
