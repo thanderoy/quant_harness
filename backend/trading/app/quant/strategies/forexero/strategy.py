@@ -168,8 +168,8 @@ class ForexeroStrategy(BaseStrategy):
         if self.ignore_high_risk_trades:
             content = signal.get("content", "").upper()
             if content and "HIGH RISK" in content:
-                LOGGER.info("FXZ: Skipping HIGH RISK signal")
-                return
+                LOGGER.info("FXZ: Reduced TPs for HIGH RISK signal")
+                self.use_tps = [1]
 
         data = self._extract_signal_data(signal)
         if not data:
