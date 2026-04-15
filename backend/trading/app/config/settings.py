@@ -11,7 +11,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # External services / integrations (centralized)
 MT5_API_URL = os.getenv('MT5_API_URL', 'http://mt5:5001')
+MT5_TEST_API_URL = os.getenv('MT5_TEST_API_URL', 'http://mt5-test:5001')
 REQUEST_TIMEOUT = float(os.getenv('REQUEST_TIMEOUT', '10'))
+
+# MT5 environment routing: maps environment name -> MT5 API URL
+MT5_ENVIRONMENTS = {
+    'prod': MT5_API_URL,
+    'test': MT5_TEST_API_URL,
+}
+
+
+def get_mt5_url(environment: str) -> str:
+    """Resolve MT5 API URL from environment name."""
+    url = MT5_ENVIRONMENTS.get(environment.lower())
+    if not url:
+        raise ValueError(
+            f"Unknown MT5 environment: '{environment}'. "
+            f"Valid: {list(MT5_ENVIRONMENTS.keys())}"
+        )
+    return url
 
 
 # Quick-start development settings - unsuitable for production

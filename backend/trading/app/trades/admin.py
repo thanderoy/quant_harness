@@ -6,11 +6,11 @@ from app.trades.models import Trade, TradeClosePricesMutation
 class TradeAdmin(admin.ModelAdmin):
     list_display = [
         "symbol", "direction", "entry_price", "entry_time",
-        "exit_price", "exit_time", "pnl", "strategy", "status", "synched",
+        "exit_price", "exit_time", "pnl", "strategy", "status", "synched", "environment",
     ]
     list_filter = [
         "direction", "symbol", "strategy", "status", "synched",
-        "market_type", "exit_reason", "session",
+        "market_type", "exit_reason", "session", "environment",
     ]
     search_fields = [
         "broker_id", "symbol", "direction", "strategy", "session",

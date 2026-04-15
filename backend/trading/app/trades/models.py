@@ -3,12 +3,25 @@ from django.utils import timezone
 from django.db import models
 
 
+ENVIRONMENT_CHOICES = [
+    ('PROD', 'Production'),
+    ('TEST', 'Test'),
+]
+
+
 class Account(models.Model):
-    login = models.BigIntegerField(primary_key=True)
+    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    login = models.BigIntegerField(db_index=True)
     name = models.CharField(max_length=255)
     server = models.CharField(max_length=255)
     currency = models.CharField(max_length=10)
     trade_mode = models.IntegerField()
+    environment = models.CharField(
+        max_length=4, choices=ENVIRONMENT_CHOICES, default='PROD',
+    )
+
+    class Meta:
+        unique_together = ('login', 'environment')
 
     @property
     def latest_snapshot(self):
@@ -102,6 +115,10 @@ class Trade(models.Model):
     timeframe = models.CharField(max_length=50, choices=TIMEFRAME_CHOICES)
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default='PENDING',
+    )
+    environment = models.CharField(
+        max_length=4, choices=ENVIRONMENT_CHOICES, default='PROD',
+        db_index=True,
     )
     synched = models.BooleanField(default=False)
 

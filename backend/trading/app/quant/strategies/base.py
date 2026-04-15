@@ -3,9 +3,10 @@ import logging
 
 class BaseStrategy:
 
-    def __init__(self):
+    def __init__(self, environment: str = "prod"):
         """Initialize with required args and inputs."""
 
+        self.environment: str = environment.lower()
         self.logger: object = self._create_logger()
         self.max_positions: int = 1
         self.open_positions: int = 0

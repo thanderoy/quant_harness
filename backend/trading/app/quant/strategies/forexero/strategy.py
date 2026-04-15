@@ -47,6 +47,7 @@ class ForexeroStrategy(BaseStrategy):
     def __init__(
         self,
         *,
+        environment: str = "prod",
         mt5_base_url: Optional[str] = None,
         deviation: int = 20,
         magic_number: int = 2460000,
@@ -54,14 +55,14 @@ class ForexeroStrategy(BaseStrategy):
         use_tps: Optional[List[int]] = None,
         adjust_for_high_risk_trades: bool = True,
     ):
-        super().__init__()
+        super().__init__(environment=environment)
         self.deviation = deviation
         self.magic_number = magic_number
         self.trades_per_tp = trades_per_tp
         self.use_tps = use_tps if use_tps is not None else [1, 2]
         self.adjust_for_high_risk_trades = adjust_for_high_risk_trades
 
-        base_url = mt5_base_url or settings.MT5_API_URL
+        base_url = mt5_base_url or settings.get_mt5_url(self.environment)
         self.MT5_API_CLIENT = MT5APIClient(base_url=base_url)
 
         # Try to connect MT5 once, ignore errors (we'll retry on send)
@@ -308,6 +309,7 @@ class ForexeroStrategy(BaseStrategy):
                                 timeframe="1H",
                                 sl=sl,
                                 tp=tp,
+                                environment=self.environment,
                             )
                         except Exception as e:
                             LOGGER.error(

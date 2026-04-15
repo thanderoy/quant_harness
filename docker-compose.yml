@@ -128,6 +128,57 @@ services:
     depends_on:
       - traefik
 
+  mt5-test:
+    build:
+      context: backend/mt5-api
+      dockerfile: Dockerfile
+    container_name: mt5-test
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-UTC}
+      - CUSTOM_USER=${CUSTOM_USER}
+      - PASSWORD=${PASSWORD}
+      - MT5_API_PORT=5001
+      - MT5_API_HOST=0.0.0.0
+      - WINEPREFIX=/config/.wine
+      - WINEARCH=win64
+    volumes:
+      - /opt/mt5-test/config:/config
+    networks:
+      - traefik-public
+      - default
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:5001/ >/dev/null 2>&1 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15m
+    labels:
+      <<: *default-labels
+      traefik.enable: true
+      traefik.docker.network: traefik-public
+
+      # Router for VNC test (Port 3000)
+      traefik.http.routers.mt5-test-https.rule: Host(`${VNC_TEST_DOMAIN}`)
+      traefik.http.routers.mt5-test-https.entrypoints: https
+      traefik.http.routers.mt5-test-https.tls: true
+      traefik.http.routers.mt5-test-https.tls.certresolver: le
+      traefik.http.routers.mt5-test-https.service: mt5-test-service
+      traefik.http.services.mt5-test-service.loadbalancer.server.port: 3000
+
+      # Router for API test (Port 5001)
+      traefik.http.routers.mt5-test-api-https.rule: Host(`${API_TEST_DOMAIN}`)
+      traefik.http.routers.mt5-test-api-https.entrypoints: https
+      traefik.http.routers.mt5-test-api-https.tls: true
+      traefik.http.routers.mt5-test-api-https.tls.certresolver: le
+      traefik.http.routers.mt5-test-api-https.service: mt5-test-api-service
+      traefik.http.routers.mt5-test-api-https.middlewares: mt5-test-api-auth
+      traefik.http.middlewares.mt5-test-api-auth.basicauth.users: ${TRAEFIK_USERNAME?Variable not set}:${TRAEFIK_HASHED_PASSWORD?Variable not set}
+      traefik.http.services.mt5-test-api-service.loadbalancer.server.port: 5001
+    logging: *default-logging
+    depends_on:
+      - traefik
+
   postgres:
     image: postgres:17-alpine
     container_name: postgres
