@@ -29,6 +29,7 @@ def create_trade(
     sl: float = None,
     tp: float = None,
     account=None,
+    environment: str = "prod",
 ):
     """
     Create a Trade record from an executed order.
@@ -71,6 +72,7 @@ def create_trade(
             sl=sl,
             tp=tp,
             synched=False,
+            environment=environment.upper(),
         )
 
         # Create initial TradeClosePricesMutation

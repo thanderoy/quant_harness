@@ -45,6 +45,7 @@ class LondonBreakoutStrategy(BaseStrategy):
     def __init__(
         self,
         *,
+        environment: str = "prod",
         symbol: str = "XAUUSD",
         timeframe: str = "M15",
         mt5_base_url: Optional[str] = None,
@@ -63,8 +64,8 @@ class LondonBreakoutStrategy(BaseStrategy):
         trade_window_start: Optional[time] = None,
         trade_window_end: Optional[time] = None,
     ):
-        super().__init__()
-        
+        super().__init__(environment=environment)
+
         # Symbol and timeframe
         self.symbol = symbol
         self.timeframe = timeframe
@@ -102,7 +103,7 @@ class LondonBreakoutStrategy(BaseStrategy):
         self._last_reset_date: Optional[datetime] = None
         
         # MT5 client
-        base_url = mt5_base_url or settings.MT5_API_URL
+        base_url = mt5_base_url or settings.get_mt5_url(self.environment)
         self.mt5_client = MT5APIClient(base_url=base_url)
         
         # Try to connect
@@ -385,6 +386,7 @@ class LondonBreakoutStrategy(BaseStrategy):
                         timeframe=self.timeframe,
                         sl=sl,
                         tp=tp,
+                        environment=self.environment,
                     )
                     LOGGER.info(f"Trade record created for order {order.get('order')}")
                 except Exception as e:

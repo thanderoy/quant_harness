@@ -18,6 +18,7 @@ def run_london_breakout(
     atr_period: int = 14,
     min_breakout_pips: float = 2.0,
     risk_reward_ratio: float = 3.0,
+    environment: str = "prod",
 ):
     """
     Celery task to run London Breakout strategy.
@@ -38,6 +39,7 @@ def run_london_breakout(
         LOGGER.info(f"Running London Breakout: symbol={symbol}, volume={volume}")
         
         strategy = LondonBreakoutStrategy(
+            environment=environment,
             symbol=symbol,
             volume_per_order=volume,
             ema_period=ema_period,

@@ -22,75 +22,54 @@ __all__ = [
 ]
 
 
-@shared_task(bind=True, name="app.quant.tasks.sync_trades")
-def sync_trades(self):
-    """
-    Celery task to sync unsynched trades with broker.
-
-    Runs hourly to check all trades where synched=False.
-    For each trade, fetches position/order data from broker using broker_id
-    and updates: pnl, exit_price, exit_time, exit_reason.
-    """
-    LOGGER.info("Starting trade sync task...")
-
-    # Get all unsynched trades
-    unsynched_trades = Trade.objects.filter(synched=False)
-    total_count = unsynched_trades.count()
+def _sync_trades_for_environment(env_name: str, mt5_url: str) -> dict:
+    """Sync unsynched trades for a single MT5 environment."""
+    trades = Trade.objects.filter(synched=False, environment=env_name.upper())
+    total_count = trades.count()
 
     if total_count == 0:
-        LOGGER.info("No unsynched trades found")
-        return {"synched": 0, "failed": 0, "still_open": 0}
+        LOGGER.info(f"[{env_name}] No unsynched trades found")
+        return {"synched": 0, "failed": 0, "still_open": 0, "rejected": 0, "total": 0}
 
-    # Initialize MT5 client
-    mt5_client = MT5APIClient(base_url=settings.MT5_API_URL)
-
+    mt5_client = MT5APIClient(base_url=mt5_url)
     try:
         mt5_client.connect()
     except Exception as e:
-        LOGGER.error(f"Failed to connect to MT5: {e}")
-        raise self.retry(exc=e, countdown=300)  # Retry in 5 minutes
+        LOGGER.error(f"[{env_name}] Failed to connect to MT5: {e}")
+        raise
 
     synched_count = 0
     failed_count = 0
     still_open_count = 0
     rejected_count = 0
 
-    for trade in unsynched_trades:
+    for trade in trades:
         try:
             ticket = int(trade.broker_id)
 
-            # First, check if position is still open
             position = mt5_client.get_position(ticket)
-
             if position is not None:
-                # Position is still open - update current PnL but don't mark as synched
                 trade.pnl = position.get("profit", 0.0)
                 trade.save(update_fields=["pnl"])
                 still_open_count += 1
-                LOGGER.debug(f"Trade {trade.id}: OPEN, Updated PnL: {trade.pnl}")
+                LOGGER.debug(f"[{env_name}] Trade {trade.id}: OPEN, Updated PnL: {trade.pnl}")
                 continue
 
-            # Position is closed - get order history
             order = mt5_client.get_order(ticket)
-
             if not order:
-                LOGGER.warning(f"No order found for trade {trade.id} (ticket {ticket})")
+                LOGGER.warning(f"[{env_name}] No order found for trade {trade.id} (ticket {ticket})")
                 failed_count += 1
                 continue
 
-            # Check order state - 4 = FILLED, 2 = CANCELED, 6 = EXPIRED, 5 = REJECTED
             order_state = order.get("state", 0)
 
             if order_state == 4:  # ORDER_STATE_FILLED
-                # Get deals to calculate actual PnL
-                deals = mt5_client.get_deals(ticket)  # ticket is position ID in this context
-
+                deals = mt5_client.get_deals(ticket)
                 if not deals:
-                    LOGGER.warning(f"No deals found for filled trade {trade.id} (position {ticket})")
+                    LOGGER.warning(f"[{env_name}] No deals found for filled trade {trade.id}")
                     failed_count += 1
                     continue
 
-                # Sum up PnL, commission, swap, and fee from all deals
                 total_pnl = 0.0
                 total_commission = 0.0
                 total_swap = 0.0
@@ -99,21 +78,15 @@ def sync_trades(self):
                 exit_time = None
                 entry_price_actual = trade.entry_price or 0.0
 
-                # In deals represent entries.
-                in_deals = [d for d in deals if d.get("entry") in (0, 2)]  # 0=IN, 2=INOUT
+                in_deals = [d for d in deals if d.get("entry") in (0, 2)]
                 if in_deals:
-                    # Use the first in deal for entry price
                     first_in_deal = sorted(in_deals, key=lambda x: x.get("time_msc", 0))[0]
                     entry_price_actual = first_in_deal.get("price", 0.0)
 
-                # Out deals represent closures.
-                out_deals = [d for d in deals if d.get("entry") in (1, 3)] # 1=OUT, 3=OUT_BY
-
+                out_deals = [d for d in deals if d.get("entry") in (1, 3)]
                 if out_deals:
-                    # Use the last out deal for exit time/price
                     last_out_deal = sorted(out_deals, key=lambda x: x.get("time_msc", 0))[-1]
                     exit_price = last_out_deal.get("price", 0.0)
-
                     time_raw = last_out_deal.get("time")
                     if time_raw:
                         if isinstance(time_raw, str):
@@ -131,11 +104,8 @@ def sync_trades(self):
                     trade.entry_price = entry_price_actual
                 trade.exit_price = exit_price
                 trade.exit_time = exit_time
-
-                # Net PnL is profit + commission + swap + fee
                 trade.pnl = round(total_pnl + total_commission + total_swap + total_fee, 2)
 
-                # Determine exit reason based on exit price vs TP/SL
                 if trade.tp and trade.exit_price:
                     if trade.direction == "BUY" and trade.exit_price >= trade.tp:
                         trade.exit_reason = "TP"
@@ -158,11 +128,10 @@ def sync_trades(self):
                 ])
                 synched_count += 1
                 LOGGER.info(
-                    f"Trade {trade.id}: CLOSED, exit_price: {trade.exit_price}, pnl: {trade.pnl}"
+                    f"[{env_name}] Trade {trade.id}: CLOSED, exit_price: {trade.exit_price}, pnl: {trade.pnl}"
                 )
 
             elif order_state in (2, 5, 6):  # CANCELED, REJECTED or EXPIRED
-                # Map MT5 order state to our status
                 state_to_status = {2: "CANCELED", 5: "REJECTED", 6: "EXPIRED"}
                 state_to_reason = {2: "CANCELED", 5: "REJECTED", 6: "EXPIRED"}
 
@@ -173,61 +142,76 @@ def sync_trades(self):
                 trade.save(update_fields=["status", "exit_reason", "pnl", "synched"])
                 rejected_count += 1
                 LOGGER.info(
-                    f"Trade {trade.id}: {trade.status} - "
+                    f"[{env_name}] Trade {trade.id}: {trade.status} - "
                     f"{order.get('comment', '')} "
                     f"(state: {order.get('state_description', order_state)})"
                 )
 
             else:
-                # Order still pending or other state
-                LOGGER.debug(f"Trade {trade.id}: {order.get('state_description')}")
+                LOGGER.debug(f"[{env_name}] Trade {trade.id}: {order.get('state_description')}")
                 still_open_count += 1
 
         except Exception as e:
-            LOGGER.exception(f"Error syncing trade {trade.id}: {e}")
+            LOGGER.exception(f"[{env_name}] Error syncing trade {trade.id}: {e}")
             failed_count += 1
 
     mt5_client.close()
-
-    result = {
+    return {
         "synched": synched_count,
         "failed": failed_count,
         "still_open": still_open_count,
         "rejected": rejected_count,
         "total": total_count,
     }
-    LOGGER.info(f"Trade sync completed: {result}")
-    return result
 
 
-@shared_task(bind=True, name="app.quant.tasks.sync_account_status")
-def sync_account_status(self):
+@shared_task(bind=True, name="app.quant.tasks.sync_trades")
+def sync_trades(self):
     """
-    Celery task to sync the MT5 account status and take a daily snapshot.
+    Celery task to sync unsynched trades with broker.
+
+    Runs hourly. Iterates over all MT5 environments and syncs trades tagged
+    to each environment against its corresponding MT5 instance.
     """
-    LOGGER.info("Starting account sync task...")
+    LOGGER.info("Starting trade sync task...")
+
+    aggregated = {"synched": 0, "failed": 0, "still_open": 0, "rejected": 0, "total": 0}
+
+    for env_name, mt5_url in settings.MT5_ENVIRONMENTS.items():
+        try:
+            result = _sync_trades_for_environment(env_name, mt5_url)
+            for key in aggregated:
+                aggregated[key] += result[key]
+        except Exception as e:
+            LOGGER.error(f"[{env_name}] Sync failed, skipping: {e}")
+
+    LOGGER.info(f"Trade sync completed: {aggregated}")
+    return aggregated
+
+
+def _sync_account_for_environment(env_name: str, mt5_url: str) -> dict:
+    """Sync account status and snapshot for a single MT5 environment."""
     from app.trades.models import Account, AccountSnapshot
     from django.utils import timezone
 
-    mt5_client = MT5APIClient(base_url=settings.MT5_API_URL)
-
+    mt5_client = MT5APIClient(base_url=mt5_url)
     try:
         mt5_client.connect()
         account_info = dict(mt5_client.get_account_info())
     except Exception as e:
-        LOGGER.error(f"Failed to connect or get account info from MT5: {e}")
+        LOGGER.error(f"[{env_name}] Failed to connect or get account info: {e}")
         mt5_client.close()
-        raise self.retry(exc=e, countdown=300)
+        raise
 
     try:
         login = account_info.get("login")
         if not login:
-            LOGGER.error("Account info returned no login, aborting sync.")
+            LOGGER.error(f"[{env_name}] Account info returned no login, aborting sync.")
             return {"error": "no login"}
 
-        # Update or create the immutable Account
         account, created = Account.objects.update_or_create(
             login=login,
+            environment=env_name.upper(),
             defaults={
                 "name": account_info.get("name", ""),
                 "server": account_info.get("server", ""),
@@ -246,7 +230,6 @@ def sync_account_status(self):
         current_leverage = int(account_info.get("leverage", 0))
         latest_snapshot = account.snapshots.order_by("-date").first()
 
-        # Calculate realized profit from deal history since last snapshot
         if latest_snapshot:
             current_profit = calculate_realized_profit(
                 mt5_client,
@@ -257,21 +240,18 @@ def sync_account_status(self):
         else:
             current_profit = 0.0
 
-        if latest_snapshot:
-            # Check if all relevant metrics are unchanged
-            if (
-                latest_snapshot.balance == current_balance
-                and latest_snapshot.equity == current_equity
-                and latest_snapshot.margin == current_margin
-                and latest_snapshot.margin_free == current_margin_free
-                and latest_snapshot.margin_level == current_margin_level
-                and latest_snapshot.leverage == current_leverage
-                and latest_snapshot.profit == current_profit
-            ):
-                LOGGER.info(f"Account {login} sync completed. No changes from previous snapshot.")
-                return {"login": login, "snapshot_updated": False, "created": False, "reason": "unchanged"}
+        if latest_snapshot and (
+            latest_snapshot.balance == current_balance
+            and latest_snapshot.equity == current_equity
+            and latest_snapshot.margin == current_margin
+            and latest_snapshot.margin_free == current_margin_free
+            and latest_snapshot.margin_level == current_margin_level
+            and latest_snapshot.leverage == current_leverage
+            and latest_snapshot.profit == current_profit
+        ):
+            LOGGER.info(f"[{env_name}] Account {login} unchanged, skipping snapshot.")
+            return {"login": login, "snapshot_updated": False, "created": False, "reason": "unchanged"}
 
-        # Create or update today's snapshot
         snapshot, s_created = AccountSnapshot.objects.update_or_create(
             account=account,
             date=today,
@@ -286,10 +266,31 @@ def sync_account_status(self):
             }
         )
 
-        LOGGER.info(f"Account {login} sync completed. Snapshot created: {s_created}")
+        LOGGER.info(f"[{env_name}] Account {login} sync completed. Snapshot created: {s_created}")
         return {"login": login, "snapshot_updated": True, "created": s_created}
     except Exception as e:
-        LOGGER.exception(f"Error saving account sync details: {e}")
-        raise self.retry(exc=e, countdown=300)
+        LOGGER.exception(f"[{env_name}] Error saving account sync details: {e}")
+        raise
     finally:
         mt5_client.close()
+
+
+@shared_task(bind=True, name="app.quant.tasks.sync_account_status")
+def sync_account_status(self):
+    """
+    Celery task to sync MT5 account status and take daily snapshots.
+
+    Iterates over all MT5 environments so both prod and test accounts
+    are snapshotted in a single task run.
+    """
+    LOGGER.info("Starting account sync task...")
+
+    results = {}
+    for env_name, mt5_url in settings.MT5_ENVIRONMENTS.items():
+        try:
+            results[env_name] = _sync_account_for_environment(env_name, mt5_url)
+        except Exception as e:
+            LOGGER.error(f"[{env_name}] Account sync failed, skipping: {e}")
+            results[env_name] = {"error": str(e)}
+
+    return results

@@ -22,6 +22,9 @@ class TradeFilter(filters.FilterSet):
     # Status filters
     is_open = filters.BooleanFilter(field_name='exit_time', lookup_expr='isnull')
 
+    # Environment filter
+    environment = filters.CharFilter(lookup_expr='iexact')
+
     class Meta:
         model = Trade
         fields = {
@@ -29,4 +32,5 @@ class TradeFilter(filters.FilterSet):
             'status': ['exact', 'in'],
             'market_type': ['exact'],
             'exit_reason': ['exact', 'icontains'],
+            'environment': ['exact'],
         }
