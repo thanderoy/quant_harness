@@ -250,6 +250,42 @@ class TradeResponse(BaseModel):
     )
 
 
+class ModifyPositionRequest(BaseModel):
+    """Request model for modifying an open position's SL/TP."""
+
+    sl: Optional[float] = Field(None, description="New Stop Loss price (0 to remove)")
+    tp: Optional[float] = Field(None, description="New Take Profit price (0 to remove)")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "sl": 2630.00,
+                "tp": 2680.00,
+            }
+        }
+
+
+class ClosePositionRequest(BaseModel):
+    """Request model for closing an open position."""
+
+    volume: Optional[float] = Field(
+        None, gt=0, description="Volume to close (defaults to full position volume)"
+    )
+    deviation: int = Field(20, ge=0, description="Maximum price deviation in points")
+    magic: int = Field(0, description="Expert Advisor ID")
+    comment: str = Field("", max_length=31, description="Order comment")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "volume": None,
+                "deviation": 20,
+                "magic": 0,
+                "comment": "Manual close",
+            }
+        }
+
+
 class OrderInfo(BaseModel):
     """Response model for historical order information."""
 
@@ -727,6 +763,15 @@ class MT5Service:
                     price = request.price if request.price else tick.bid
                     trade_action = mt5.TRADE_ACTION_PENDING
 
+            # Resolve dynamic filling mode (avoids silent rejections on some brokers)
+            filling_mode = symbol_info.filling_mode
+            if filling_mode & mt5.SYMBOL_FILLING_IOC:
+                type_filling = mt5.ORDER_FILLING_IOC
+            elif filling_mode & mt5.SYMBOL_FILLING_FOK:
+                type_filling = mt5.ORDER_FILLING_FOK
+            else:
+                type_filling = mt5.ORDER_FILLING_RETURN
+
             # Build trade request dictionary
             trade_request = {
                 "action": trade_action,
@@ -738,7 +783,7 @@ class MT5Service:
                 "magic": request.magic,
                 "comment": request.comment,
                 "type_time": mt5.ORDER_TIME_GTC,
-                "type_filling": mt5.ORDER_FILLING_RETURN,
+                "type_filling": type_filling,
             }
 
             # Add SL/TP if provided
@@ -756,59 +801,205 @@ class MT5Service:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail=f"Failed to send order: {error_msg}",
                 )
-            result_dict = result._asdict()
-
-            # Map return codes to descriptions
-            retcode_map = {
-                10009: "TRADE_RETCODE_DONE",
-                10008: "TRADE_RETCODE_PLACED",
-                10004: "TRADE_RETCODE_REQUOTE",
-                10006: "TRADE_RETCODE_REJECT",
-                10007: "TRADE_RETCODE_CANCEL",
-                10010: "TRADE_RETCODE_PARTIAL",
-                10011: "TRADE_RETCODE_ERROR",
-                10012: "TRADE_RETCODE_TIMEOUT",
-                10013: "TRADE_RETCODE_INVALID",
-                10014: "TRADE_RETCODE_INVALID_VOLUME",
-                10015: "TRADE_RETCODE_INVALID_PRICE",
-                10016: "TRADE_RETCODE_INVALID_STOPS",
-                10017: "TRADE_RETCODE_TRADE_DISABLED",
-                10018: "TRADE_RETCODE_MARKET_CLOSED",
-                10019: "TRADE_RETCODE_NO_MONEY",
-                10020: "TRADE_RETCODE_PRICE_CHANGED",
-                10021: "TRADE_RETCODE_PRICE_OFF",
-                10022: "TRADE_RETCODE_INVALID_EXPIRATION",
-                10023: "TRADE_RETCODE_ORDER_CHANGED",
-                10024: "TRADE_RETCODE_TOO_MANY_REQUESTS",
-            }
-
-            retcode = result_dict.get("retcode", 0)
-            retcode_description = retcode_map.get(retcode, f"UNKNOWN_CODE_{retcode}")
-
-            success = retcode == 10009  # Success return code
-            if success:
-                LOGGER.info(f"Order executed successfully: {result_dict.get('order')}")
+            response = self._build_trade_response(result)
+            if response.success:
+                LOGGER.info(f"Order executed successfully: {response.order}")
             else:
                 LOGGER.warning(
-                    f"Order execution failed: {retcode_description} - {result_dict.get('comment')}"
-                )  # noqa: E501
-
-            return TradeResponse(
-                success=success,
-                order=result_dict.get("order"),
-                volume=result_dict.get("volume"),
-                price=result_dict.get("price"),
-                bid=result_dict.get("bid"),
-                ask=result_dict.get("ask"),
-                comment=result_dict.get("comment"),
-                request_id=result_dict.get("request_id"),
-                retcode=retcode,
-                retcode_description=retcode_description,
-            )
+                    f"Order execution failed: {response.retcode_description} - {response.comment}"
+                )
+            return response
         except HTTPException:
             raise
         except Exception as e:
             LOGGER.exception("Unexpected error sending order")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Unexpected error: {str(e)}",
+            )
+
+    RETCODE_MAP = {
+        10009: "TRADE_RETCODE_DONE",
+        10008: "TRADE_RETCODE_PLACED",
+        10004: "TRADE_RETCODE_REQUOTE",
+        10006: "TRADE_RETCODE_REJECT",
+        10007: "TRADE_RETCODE_CANCEL",
+        10010: "TRADE_RETCODE_PARTIAL",
+        10011: "TRADE_RETCODE_ERROR",
+        10012: "TRADE_RETCODE_TIMEOUT",
+        10013: "TRADE_RETCODE_INVALID",
+        10014: "TRADE_RETCODE_INVALID_VOLUME",
+        10015: "TRADE_RETCODE_INVALID_PRICE",
+        10016: "TRADE_RETCODE_INVALID_STOPS",
+        10017: "TRADE_RETCODE_TRADE_DISABLED",
+        10018: "TRADE_RETCODE_MARKET_CLOSED",
+        10019: "TRADE_RETCODE_NO_MONEY",
+        10020: "TRADE_RETCODE_PRICE_CHANGED",
+        10021: "TRADE_RETCODE_PRICE_OFF",
+        10022: "TRADE_RETCODE_INVALID_EXPIRATION",
+        10023: "TRADE_RETCODE_ORDER_CHANGED",
+        10024: "TRADE_RETCODE_TOO_MANY_REQUESTS",
+    }
+
+    def _build_trade_response(self, result) -> TradeResponse:
+        """Convert an mt5.order_send result into a TradeResponse."""
+        result_dict = result._asdict()
+        retcode = result_dict.get("retcode", 0)
+        return TradeResponse(
+            success=retcode == 10009,
+            order=result_dict.get("order"),
+            volume=result_dict.get("volume"),
+            price=result_dict.get("price"),
+            bid=result_dict.get("bid"),
+            ask=result_dict.get("ask"),
+            comment=result_dict.get("comment"),
+            request_id=result_dict.get("request_id"),
+            retcode=retcode,
+            retcode_description=self.RETCODE_MAP.get(retcode, f"UNKNOWN_CODE_{retcode}"),
+        )
+
+    def modify_position(self, ticket: int, request: ModifyPositionRequest) -> TradeResponse:
+        """
+        Modify the SL and/or TP of an open position.
+
+        Args:
+            ticket: Position ticket number
+            request: New sl/tp values
+
+        Returns:
+            TradeResponse with modification result
+
+        Raises:
+            HTTPException: 404 if position not found, 500 on MT5 error
+        """
+        self._ensure_connection()
+
+        try:
+            positions = mt5.positions_get(ticket=ticket)
+            if not positions:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Position {ticket} not found",
+                )
+            pos = positions[0]
+
+            trade_request = {
+                "action": mt5.TRADE_ACTION_SLTP,
+                "symbol": pos.symbol,
+                "position": ticket,
+                "sl": request.sl if request.sl is not None else pos.sl,
+                "tp": request.tp if request.tp is not None else pos.tp,
+            }
+
+            result = mt5.order_send(trade_request)
+            if result is None:
+                error_code, error_msg = mt5.last_error()
+                LOGGER.error(f"Modify position failed: {error_code} - {error_msg}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to modify position: {error_msg}",
+                )
+
+            response = self._build_trade_response(result)
+            if response.success:
+                LOGGER.info(f"Position {ticket} modified: sl={trade_request['sl']} tp={trade_request['tp']}")
+            else:
+                LOGGER.warning(f"Position {ticket} modify failed: {response.retcode_description} - {response.comment}")
+            return response
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            LOGGER.exception("Unexpected error modifying position")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Unexpected error: {str(e)}",
+            )
+
+    def close_position(self, ticket: int, request: ClosePositionRequest) -> TradeResponse:
+        """
+        Close an open position fully or partially.
+
+        Args:
+            ticket: Position ticket number
+            request: Close parameters (volume, deviation, magic, comment)
+
+        Returns:
+            TradeResponse with close result
+
+        Raises:
+            HTTPException: 404 if position not found, 500 on MT5 error
+        """
+        self._ensure_connection()
+
+        try:
+            positions = mt5.positions_get(ticket=ticket)
+            if not positions:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Position {ticket} not found",
+                )
+            pos = positions[0]
+
+            volume = request.volume if request.volume is not None else pos.volume
+
+            tick = mt5.symbol_info_tick(pos.symbol)
+            if tick is None:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to get tick for {pos.symbol}",
+                )
+
+            if pos.type == 0:  # BUY position -> sell to close
+                close_type = mt5.ORDER_TYPE_SELL
+                price = tick.bid
+            else:  # SELL position -> buy to close
+                close_type = mt5.ORDER_TYPE_BUY
+                price = tick.ask
+
+            symbol_info = mt5.symbol_info(pos.symbol)
+            filling_mode = symbol_info.filling_mode if symbol_info else 0
+            if filling_mode & mt5.SYMBOL_FILLING_IOC:
+                type_filling = mt5.ORDER_FILLING_IOC
+            elif filling_mode & mt5.SYMBOL_FILLING_FOK:
+                type_filling = mt5.ORDER_FILLING_FOK
+            else:
+                type_filling = mt5.ORDER_FILLING_RETURN
+
+            trade_request = {
+                "action": mt5.TRADE_ACTION_DEAL,
+                "position": ticket,
+                "symbol": pos.symbol,
+                "volume": volume,
+                "type": close_type,
+                "price": price,
+                "deviation": request.deviation,
+                "magic": request.magic,
+                "comment": request.comment,
+                "type_time": mt5.ORDER_TIME_GTC,
+                "type_filling": type_filling,
+            }
+
+            result = mt5.order_send(trade_request)
+            if result is None:
+                error_code, error_msg = mt5.last_error()
+                LOGGER.error(f"Close position failed: {error_code} - {error_msg}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to close position: {error_msg}",
+                )
+
+            response = self._build_trade_response(result)
+            if response.success:
+                LOGGER.info(f"Position {ticket} closed: volume={volume} price={response.price}")
+            else:
+                LOGGER.warning(f"Position {ticket} close failed: {response.retcode_description} - {response.comment}")
+            return response
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            LOGGER.exception("Unexpected error closing position")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Unexpected error: {str(e)}",
@@ -1055,6 +1246,93 @@ class MT5Service:
             )
 
 
+    def get_open_positions(
+        self,
+        magic: Optional[int] = None,
+        symbol: Optional[str] = None,
+    ) -> List[PositionInfo]:
+        """
+        List open positions, optionally filtered by magic number and/or symbol.
+
+        Returns an empty list (not 404) when no positions are found.
+        """
+        self._ensure_connection()
+
+        try:
+            if symbol:
+                positions = mt5.positions_get(symbol=symbol)
+            else:
+                positions = mt5.positions_get()
+
+            if positions is None or len(positions) == 0:
+                return []
+
+            type_map = {0: "POSITION_TYPE_BUY", 1: "POSITION_TYPE_SELL"}
+            result = []
+            for pos in positions:
+                if magic is not None and pos.magic != magic:
+                    continue
+                d = pos._asdict()
+                result.append(
+                    PositionInfo(
+                        ticket=d["ticket"],
+                        symbol=d["symbol"],
+                        type=d["type"],
+                        type_description=type_map.get(d["type"], f"UNKNOWN_{d['type']}"),
+                        volume=d["volume"],
+                        price_open=d["price_open"],
+                        price_current=d["price_current"],
+                        profit=d["profit"],
+                        sl=d.get("sl", 0.0),
+                        tp=d.get("tp", 0.0),
+                        time=datetime.fromtimestamp(d["time"]),
+                        magic=d.get("magic", 0),
+                        comment=d.get("comment", ""),
+                        swap=d.get("swap", 0.0),
+                        commission=d.get("commission", 0.0),
+                    )
+                )
+            return result
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            LOGGER.exception("Unexpected error listing positions")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Unexpected error: {str(e)}",
+            )
+
+    def order_modify(self, ticket: int, sl: Optional[float], tp: Optional[float]) -> TradeResponse:
+        """Modify SL/TP of an open position. Thin wrapper around modify_position."""
+        req = ModifyPositionRequest(sl=sl, tp=tp)
+        return self.modify_position(ticket, req)
+
+    def order_close(self, ticket: int, volume: Optional[float], deviation: int) -> TradeResponse:
+        """Close an open position. Thin wrapper around close_position."""
+        req = ClosePositionRequest(volume=volume, deviation=deviation)
+        return self.close_position(ticket, req)
+
+
+# Request models for flat-URL order endpoints
+class OrderModifyRequest(BaseModel):
+    """Request model for POST /api/v1/order/modify (ticket in body)."""
+
+    ticket: int = Field(..., description="Position ticket to modify")
+    sl: Optional[float] = Field(None, description="New Stop Loss price")
+    tp: Optional[float] = Field(None, description="New Take Profit price")
+
+
+class OrderCloseRequest(BaseModel):
+    """Request model for POST /api/v1/order/close (ticket in body)."""
+
+    ticket: int = Field(..., description="Position ticket to close")
+    volume: Optional[float] = Field(
+        None, gt=0, description="Volume to close (defaults to full position)"
+    )
+    deviation: int = Field(20, ge=0, description="Maximum price deviation in points")
+
+
 # FastAPI Lifespan - Connection management
 mt5_service = MT5Service()
 
@@ -1215,6 +1493,7 @@ async def get_account_info(service: MT5Service = Depends(get_mt5_service)):
 async def get_market_rates(
     symbol: str = "XAUUSD",
     timeframe: str = "M30",
+    count: int = 200,
     service: MT5Service = Depends(get_mt5_service),
 ):
     """
@@ -1230,12 +1509,13 @@ async def get_market_rates(
     Args:
         symbol: Trading symbol (e.g., EURUSD, GBPUSD)
         timeframe: Chart timeframe (M1, M5, M15, M30, H1, H4, D1, W1, MN1)
+        count: Number of bars to return (default 200)
         service: Injected MT5Service instance
 
     Returns:
         RateResponse with historical rate data
     """
-    rate_request = MarketRatesRequest(symbol=symbol, timeframe=timeframe)
+    rate_request = MarketRatesRequest(symbol=symbol, timeframe=timeframe, count=count)
 
     loop = asyncio.get_event_loop()
     rates = await loop.run_in_executor(
@@ -1309,6 +1589,60 @@ async def send_order(
     """
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(executor, service.send_order, request)
+    return result
+
+
+# Modify Position Endpoint
+@app.post(
+    "/api/v1/position/{ticket}/modify",
+    response_model=TradeResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Orders & Positions"],
+    summary="Modify Position SL/TP",
+    description="Modify the Stop Loss and/or Take Profit of an open position",
+)
+async def modify_position(
+    ticket: int,
+    request: ModifyPositionRequest,
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """
+    Modify SL/TP on an open position.
+
+    Provide sl, tp, or both. Omitted fields keep their current value.
+    Returns 404 if the position is not found.
+    """
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        executor, lambda: service.modify_position(ticket, request)
+    )
+    return result
+
+
+# Close Position Endpoint
+@app.post(
+    "/api/v1/position/{ticket}/close",
+    response_model=TradeResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Orders & Positions"],
+    summary="Close Open Position",
+    description="Close an open position fully or partially at market price",
+)
+async def close_position(
+    ticket: int,
+    request: ClosePositionRequest,
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """
+    Close an open position at market price.
+
+    Omit volume for a full close, or provide a partial volume.
+    Returns 404 if the position is not found.
+    """
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        executor, lambda: service.close_position(ticket, request)
+    )
     return result
 
 
@@ -1451,6 +1785,82 @@ async def get_deals(
             detail=f"Deals for {criteria} not found in history",
         )
     return deals
+
+
+# List Open Positions Endpoint
+@app.get(
+    "/api/v1/positions",
+    response_model=List[PositionInfo],
+    status_code=status.HTTP_200_OK,
+    tags=["Orders & Positions"],
+    summary="List Open Positions",
+    description="Retrieve all open positions, optionally filtered by magic number and/or symbol",
+)
+async def get_positions(
+    magic: Optional[int] = None,
+    symbol: Optional[str] = None,
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """
+    List open positions filtered by magic number and/or symbol.
+    Returns an empty list when no positions are found.
+    """
+    loop = asyncio.get_event_loop()
+    positions = await loop.run_in_executor(
+        executor, lambda: service.get_open_positions(magic=magic, symbol=symbol)
+    )
+    return positions
+
+
+# Modify Order (flat URL) Endpoint
+@app.post(
+    "/api/v1/order/modify",
+    response_model=TradeResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Orders & Positions"],
+    summary="Modify Order SL/TP",
+    description="Modify the Stop Loss and/or Take Profit of an open position (ticket in body)",
+)
+async def order_modify(
+    request: OrderModifyRequest,
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """
+    Modify SL/TP of an open position. Provide sl, tp, or both.
+    Returns 404 if the position is not found.
+    """
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        executor,
+        lambda: service.order_modify(request.ticket, request.sl, request.tp),
+    )
+    return result
+
+
+# Close Order (flat URL) Endpoint
+@app.post(
+    "/api/v1/order/close",
+    response_model=TradeResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Orders & Positions"],
+    summary="Close Open Position",
+    description="Close an open position fully or partially at market price (ticket in body)",
+)
+async def order_close(
+    request: OrderCloseRequest,
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """
+    Close an open position at market price.
+    Omit volume for a full close, or provide a partial volume.
+    Returns 404 if the position is not found.
+    """
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        executor,
+        lambda: service.order_close(request.ticket, request.volume, request.deviation),
+    )
+    return result
 
 
 # --- Running the API ---

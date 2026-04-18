@@ -79,6 +79,7 @@ class Trade(models.Model):
     MARKET_TYPE_CHOICES = [
         ('FOREX', 'Forex'),
         ('CRYPTO', 'Crypto'),
+        ('COMMODITIES', 'Commodities'),
         ('OTHER', 'Other'),
     ]
 
