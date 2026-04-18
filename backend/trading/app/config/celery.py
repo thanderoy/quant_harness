@@ -16,5 +16,11 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
 
+# Explicitly include strategy task modules (not at app root, not auto-discovered).
+app.conf.include = [
+    "app.quant.strategies.hma_stoch_1h.tasks",
+    "app.quant.strategies.hma_stoch_m15.tasks",
+]
+
 # Optional: Set a rate limit if necessary
 # app.conf.worker_prefetch_multiplier = 1

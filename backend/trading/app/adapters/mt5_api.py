@@ -105,13 +105,15 @@ class MT5APIClient:
         )
         return self._handle(resp)
 
-    def get_market_rates(self, symbol: str, timeframe: str) -> Dict[str, Any]:
+    def get_market_rates(
+        self, symbol: str, timeframe: str, count: int = 200
+    ) -> Dict[str, Any]:
         """
         timeframe must be one of: M1, M5, M15, M30, H1, H4, D1, W1, MN1.
-        Note: server currently uses defaults count=100, start_pos=0.
+        count: number of bars to retrieve (default 200 for indicator warmup).
         """
         tf = self._normalize_timeframe(timeframe)
-        params = {"symbol": symbol, "timeframe": tf}
+        params = {"symbol": symbol, "timeframe": tf, "count": int(count)}
         resp = self.session.get(
             self._url("/api/v1/rates"),
             params=params,
@@ -151,6 +153,40 @@ class MT5APIClient:
             payload["tp"] = float(tp)
         resp = self.session.post(
             self._url("/api/v1/order/send"),
+            json=payload,
+            timeout=self.timeout,
+            verify=self.verify,
+        )
+        return self._handle(resp)
+
+    def get_open_positions(
+        self, magic: Optional[int] = None, symbol: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """GET /api/v1/positions — list open positions, optionally filtered by magic and/or symbol."""
+        params: Dict[str, Any] = {}
+        if magic is not None:
+            params["magic"] = magic
+        if symbol is not None:
+            params["symbol"] = symbol
+        resp = self.session.get(
+            self._url("/api/v1/positions"),
+            params=params,
+            timeout=self.timeout,
+            verify=self.verify,
+        )
+        return self._handle(resp)
+
+    def modify_order(
+        self, ticket: int, sl: Optional[float], tp: Optional[float]
+    ) -> Dict[str, Any]:
+        """POST /api/v1/order/modify — modify SL/TP of an open position by ticket."""
+        payload: Dict[str, Any] = {"ticket": ticket}
+        if sl is not None:
+            payload["sl"] = float(sl)
+        if tp is not None:
+            payload["tp"] = float(tp)
+        resp = self.session.post(
+            self._url("/api/v1/order/modify"),
             json=payload,
             timeout=self.timeout,
             verify=self.verify,
@@ -252,6 +288,74 @@ class MT5APIClient:
         )
         if resp.status_code == 404:
             return []
+        return self._handle(resp)
+
+    def modify_position(
+        self,
+        ticket: int,
+        *,
+        sl: Optional[float] = None,
+        tp: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """
+        Modify the SL and/or TP of an open position.
+
+        Args:
+            ticket: Position ticket number
+            sl: New Stop Loss price (omit to keep current)
+            tp: New Take Profit price (omit to keep current)
+
+        Returns:
+            TradeResponse dict
+        """
+        payload: Dict[str, Any] = {}
+        if sl is not None:
+            payload["sl"] = float(sl)
+        if tp is not None:
+            payload["tp"] = float(tp)
+        resp = self.session.post(
+            self._url(f"/api/v1/position/{ticket}/modify"),
+            json=payload,
+            timeout=self.timeout,
+            verify=self.verify,
+        )
+        return self._handle(resp)
+
+    def close_position(
+        self,
+        ticket: int,
+        *,
+        volume: Optional[float] = None,
+        deviation: int = 20,
+        magic: int = 0,
+        comment: str = "",
+    ) -> Dict[str, Any]:
+        """
+        Close an open position at market price (fully or partially).
+
+        Args:
+            ticket: Position ticket number
+            volume: Volume to close (defaults to full position volume)
+            deviation: Maximum price deviation in points
+            magic: Expert Advisor ID
+            comment: Order comment
+
+        Returns:
+            TradeResponse dict
+        """
+        payload: Dict[str, Any] = {
+            "deviation": int(deviation),
+            "magic": int(magic),
+            "comment": str(comment)[:31],
+        }
+        if volume is not None:
+            payload["volume"] = float(volume)
+        resp = self.session.post(
+            self._url(f"/api/v1/position/{ticket}/close"),
+            json=payload,
+            timeout=self.timeout,
+            verify=self.verify,
+        )
         return self._handle(resp)
 
     # --- helpers ---
