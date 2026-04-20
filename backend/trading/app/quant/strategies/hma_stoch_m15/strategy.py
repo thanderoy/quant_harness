@@ -30,7 +30,7 @@ class HMAStochM15Strategy(BaseStrategy):
     def __init__(
         self,
         *,
-        environment: str = "demo",
+        environment: str = "test",
         hma_period: int = 21,
         stoch_k_period: int = 14,
         stoch_d_period: int = 3,
