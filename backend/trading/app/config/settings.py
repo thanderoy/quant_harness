@@ -265,6 +265,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'quant.hma_stoch_m15.run',
         'schedule': crontab(minute='1,16,31,46', day_of_week='mon-fri'),
     },
+    'asqs': {
+        'task': 'quant.asqs.run',
+        'schedule': crontab(minute='1,6,11,16,21,26,31,36,41,46,51,56', day_of_week='mon-fri'),
+    },
 }
 
 # Telegram API Credentials
