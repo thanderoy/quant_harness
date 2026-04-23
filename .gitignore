@@ -99,3 +99,4 @@ backend/trading/backtesting/
 CLAUDE.md
 .claude/*
 docs/*
+backend/trading/app/quant/strategies/asqs/_resources/*
