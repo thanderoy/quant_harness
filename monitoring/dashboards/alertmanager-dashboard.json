@@ -34,6 +34,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -60,7 +61,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "count(ALERTS{alertstate=\"firing\"}) or vector(0)",
+          "expr": "sum(alertmanager_alerts{state=\"active\", instance=~\"$instance\"})",
           "refId": "A"
         }
       ],
@@ -69,11 +70,12 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "description": "Number of alerts in pending state (condition met but not yet for the full duration)",
+      "description": "Number of alerts currently suppressed (silenced) in Alertmanager",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -99,11 +101,11 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "count(ALERTS{alertstate=\"pending\"}) or vector(0)",
+          "expr": "sum(alertmanager_alerts{state=\"suppressed\", instance=~\"$instance\"})",
           "refId": "A"
         }
       ],
-      "title": "Pending Alerts",
+      "title": "Suppressed Alerts",
       "type": "stat"
     },
     {
@@ -113,6 +115,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [{ "color": "blue", "value": null }]
@@ -135,7 +138,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(alertmanager_notifications_total{instance=~\"$instance\"}) or vector(0)",
+          "expr": "sum(alertmanager_notifications_total{instance=~\"$instance\"})",
           "refId": "A"
         }
       ],
@@ -149,6 +152,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -174,7 +178,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(alertmanager_notifications_failed_total{instance=~\"$instance\"}) or vector(0)",
+          "expr": "sum(alertmanager_notifications_failed_total{instance=~\"$instance\"})",
           "refId": "A"
         }
       ],
