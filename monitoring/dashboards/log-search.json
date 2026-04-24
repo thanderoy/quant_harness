@@ -440,7 +440,7 @@
         "pieType": "pie",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ],
           "fields": "",
           "values": false
@@ -841,7 +841,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 23
       },
       "id": 4,
       "panels": [],
@@ -858,7 +858,7 @@
         "h": 24,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 24
       },
       "id": 2,
       "options": {
