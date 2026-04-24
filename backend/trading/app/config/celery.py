@@ -20,6 +20,7 @@ app.autodiscover_tasks()
 app.conf.include = [
     "app.quant.strategies.hma_stoch_1h.tasks",
     "app.quant.strategies.hma_stoch_m15.tasks",
+    "app.quant.strategies.asqs.tasks",
 ]
 
 # Optional: Set a rate limit if necessary
