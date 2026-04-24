@@ -602,7 +602,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Cached memory per container. This memory can be reclaimed by the system if needed and doesn't indicate memory pressure.",
+      "description": "Working set memory per container (RSS + unreclaimable cache). This is the memory the kernel cannot reclaim under pressure — a more accurate indicator of actual memory use than raw usage.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -687,14 +687,14 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(container_memory_cache{instance=~\"$host\",name=~\"$container\",name=~\".+\"}) by (name)",
+          "expr": "sum(container_memory_working_set_bytes{instance=~\"$host\",name=~\"$container\",name=~\".+\"}) by (name)",
           "hide": false,
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
         }
       ],
-      "title": "Memory Cached",
+      "title": "Memory Working Set",
       "type": "timeseries"
     },
     {
