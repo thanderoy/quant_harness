@@ -1,8 +1,8 @@
 x-logging: &default-logging
   driver: "json-file"
   options:
-    max-size: "1m"
-    max-file: "1"
+    max-size: "10m"
+    max-file: "3"
     tag: "{{.Name}}"
 
 x-common-labels: &default-labels
@@ -301,7 +301,7 @@ services:
     logging: *default-logging
 
   grafana:
-    image: grafana/grafana:main
+    image: grafana/grafana:12.3.0
     container_name: grafana
     restart: unless-stopped
     environment:
@@ -310,10 +310,10 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
       - GF_USERS_DEFAULT_THEME=dark
       - GF_LOG_MODE=console
-      - GF_LOG_LEVEL=critical
+      - GF_LOG_LEVEL=warn
       - GF_PANELS_ENABLE_ALPHA=true
-      - GF_FEATURE_TOGGLES_ENABLE=accessControlOnCall lokiLogsDataplane
-      - GF_PLUGINS_PREINSTALL=grafana-polystat-panel,https://storage.googleapis.com/integration-artifacts/grafana-lokiexplore-app/grafana-lokiexplore-app-latest.zip;grafana-lokiexplore-app
+      - GF_FEATURE_TOGGLES_ENABLE=accessControlOnCall
+      - GF_PLUGINS_PREINSTALL=grafana-polystat-panel
     volumes:
       - ./monitoring/configs/grafana/provisioning/dashboards.yml:/etc/grafana/provisioning/dashboards/provisioning-dashboards.yaml:ro
       - ./monitoring/configs/grafana/provisioning/datasources.yml:/etc/grafana/provisioning/datasources/provisioning-datasources.yaml:ro
@@ -354,7 +354,6 @@ services:
       - "--storage.tsdb.retention.time=7d"
       - "--web.console.libraries=/usr/share/prometheus/console_libraries"
       - "--web.console.templates=/usr/share/prometheus/consoles"
-      - "--web.external-url=http://localhost:9090"
 
     volumes:
       - ./monitoring/configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -425,7 +424,6 @@ services:
       - "--config.file=/etc/alertmanager/config.yml"
       - "--log.level=error"
       - "--storage.path=/alertmanager"
-      - "--web.external-url=http://localhost:9093"
     volumes:
       - ./monitoring/configs/alertmanager/alertmanager-fallback-config.yml:/etc/alertmanager/config.yml
 
@@ -472,7 +470,7 @@ services:
     logging: *default-logging
 
   promtail:
-    image: grafana/promtail:3.5
+    image: grafana/promtail:3.5.5
 
     container_name: promtail
     volumes:
