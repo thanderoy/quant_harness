@@ -1,0 +1,1 @@
+from .asq_scalping_adapter import ASQScalpingM5, ASQScalpingM5_Optimised
