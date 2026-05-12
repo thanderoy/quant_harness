@@ -45,8 +45,7 @@ class HMAStoch1HStrategy(BaseStrategy):
         magic_number: int = MAGIC_NUMBER,
         candle_count: int = 200,
         mt5_base_url: Optional[str] = None,
-        # v1.1 additions:
-        min_atr_for_signal: float = 1.0,  # H1: skip signals when ATR < $1/oz
+        min_atr_for_signal: float = 1.0,
         max_drawdown_pct: float = 0.20,
         peak_store_path: str = "/var/lib/qhf/peak_equity_HMA1H.json",
     ):
@@ -255,7 +254,6 @@ class HMAStoch1HStrategy(BaseStrategy):
             return None
         balance, equity, login = account_info
 
-        # NEW: persistent drawdown guard
         if self.drawdown_guard.is_tripped(equity=equity):
             LOGGER.warning(
                 f"Drawdown guard tripped: {self.drawdown_guard.diagnostics()}, "
@@ -276,8 +274,6 @@ class HMAStoch1HStrategy(BaseStrategy):
             LOGGER.info(f"No signal. Duration={_time.monotonic() - start:.2f}s")
             return None
 
-        # NEW: explicit, configurable signal-level ATR filter
-        # (was implicitly absent in v1.0; M15 had this in v1.0 already)
         if atr_value < self.min_atr_for_signal:
             LOGGER.info(
                 f"Signal rejected: ATR {atr_value:.4f} < min_atr_for_signal "
@@ -290,7 +286,6 @@ class HMAStoch1HStrategy(BaseStrategy):
 
         entry_price = float(df.iloc[-2]["close"])
 
-        # NEW: sizer returns (lots, effective_atr); use the latter for SL/TP
         lot_size, effective_atr = calculate_lot_size(
             account_balance=balance,
             atr_value=atr_value,
