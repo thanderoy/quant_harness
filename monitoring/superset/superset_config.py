@@ -34,13 +34,19 @@ CACHE_CONFIG = {
 
 DATA_CACHE_CONFIG = CACHE_CONFIG
 
+
 # Celery (async queries, reports, thumbnails)
 class CeleryConfig:
-    broker_url = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
+    broker_url = (
+        f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
+    )
     imports = ("superset.sql_lab",)
-    result_backend = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_RESULTS_DB}"
+    result_backend = (
+        f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_RESULTS_DB}"
+    )
     worker_prefetch_multiplier = 10
     task_acks_late = True
+
 
 CELERY_CONFIG = CeleryConfig
 

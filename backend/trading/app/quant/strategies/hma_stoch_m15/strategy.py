@@ -11,7 +11,8 @@ from app.adapters.mt5_api import MT5APIClient
 from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
 from app.quant.strategies.drawdown_guard import (
-    DrawdownGuard, JsonPeakStore,
+    DrawdownGuard,
+    JsonPeakStore,
 )
 
 
@@ -45,7 +46,7 @@ class HMAStochM15Strategy(BaseStrategy):
         magic_number: int = MAGIC_NUMBER,
         candle_count: int = 200,
         mt5_base_url: Optional[str] = None,
-        min_atr_for_signal: float = 5.0,   # M15: same regime filter as v1.0 had
+        min_atr_for_signal: float = 5.0,  # M15: same regime filter as v1.0 had
         max_drawdown_pct: float = 0.20,
         peak_store_path: str = "/var/lib/qhf/peak_equity_HMAM15.json",
     ):
@@ -60,9 +61,9 @@ class HMAStochM15Strategy(BaseStrategy):
         self.risk_pct = risk_pct
         self.magic_number = magic_number
         self.candle_count = candle_count
-        self.min_atr_for_signal = min_atr_for_signal   # NEW
+        self.min_atr_for_signal = min_atr_for_signal
 
-        self.drawdown_guard = DrawdownGuard(   # NEW
+        self.drawdown_guard = DrawdownGuard(
             store=JsonPeakStore(peak_store_path),
             max_drawdown_pct=max_drawdown_pct,
         )

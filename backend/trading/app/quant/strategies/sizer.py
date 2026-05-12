@@ -40,7 +40,7 @@ calling this. See strategy_patch_*_v1_1_revised.txt.
 import math
 from typing import Tuple
 
-XAUUSD_POINT_VALUE_PER_LOT = 100.0   # 1 lot = 100 oz
+XAUUSD_POINT_VALUE_PER_LOT = 100.0  # 1 lot = 100 oz
 XAUUSD_MIN_LOT = 0.01
 XAUUSD_MAX_LOT = 0.10
 XAUUSD_LOT_STEP = 0.01
@@ -82,13 +82,9 @@ def calculate_lot_size(
     if risk_pct <= 0:
         raise ValueError(f"risk_pct must be > 0, got {risk_pct}")
     if min_lot <= 0 or max_lot < min_lot:
-        raise ValueError(
-            f"invalid lot bounds: min={min_lot}, max={max_lot}"
-        )
+        raise ValueError(f"invalid lot bounds: min={min_lot}, max={max_lot}")
     if safety_floor_atr <= 0:
-        raise ValueError(
-            f"safety_floor_atr must be > 0, got {safety_floor_atr}"
-        )
+        raise ValueError(f"safety_floor_atr must be > 0, got {safety_floor_atr}")
 
     effective_atr = max(atr_value, safety_floor_atr)
     risk_amount = account_balance * risk_pct
