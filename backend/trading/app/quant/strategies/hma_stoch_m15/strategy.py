@@ -10,6 +10,9 @@ from app.quant.strategies.sizer import calculate_lot_size, XAUUSD_MIN_ATR
 from app.adapters.mt5_api import MT5APIClient
 from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
+from app.quant.strategies.drawdown_guard import (
+    DrawdownGuard, JsonPeakStore,
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -42,6 +45,9 @@ class HMAStochM15Strategy(BaseStrategy):
         magic_number: int = MAGIC_NUMBER,
         candle_count: int = 200,
         mt5_base_url: Optional[str] = None,
+        min_atr_for_signal: float = 5.0,   # M15: same regime filter as v1.0 had
+        max_drawdown_pct: float = 0.20,
+        peak_store_path: str = "/var/lib/qhf/peak_equity_HMAM15.json",
     ):
         super().__init__(environment=environment)
         self.hma_period = hma_period
@@ -54,6 +60,12 @@ class HMAStochM15Strategy(BaseStrategy):
         self.risk_pct = risk_pct
         self.magic_number = magic_number
         self.candle_count = candle_count
+        self.min_atr_for_signal = min_atr_for_signal   # NEW
+
+        self.drawdown_guard = DrawdownGuard(   # NEW
+            store=JsonPeakStore(peak_store_path),
+            max_drawdown_pct=max_drawdown_pct,
+        )
 
         base_url = mt5_base_url or settings.get_mt5_url(self.environment)
         self.mt5_client = MT5APIClient(base_url=base_url)
@@ -170,10 +182,10 @@ class HMAStochM15Strategy(BaseStrategy):
             return True  # conservative: block order if check fails
 
     def _compute_sl_tp(
-        self, signal: str, entry_price: float, atr_value: float
+        self, signal: str, entry_price: float, effective_atr: float
     ) -> tuple[float, float]:
-        sl_distance = atr_value * self.sl_atr_mult
-        tp_distance = atr_value * self.tp_atr_mult
+        sl_distance = effective_atr * self.sl_atr_mult
+        tp_distance = effective_atr * self.tp_atr_mult
         if signal == "BUY":
             return entry_price - sl_distance, entry_price + tp_distance
         return entry_price + sl_distance, entry_price - tp_distance
@@ -229,24 +241,22 @@ class HMAStochM15Strategy(BaseStrategy):
             LOGGER.error(f"Order execution error: {e}")
 
     def evaluate(self) -> Optional[str]:
-        """
-        Main entry point. Fetches data, evaluates signal, places order if conditions met.
-        M15-specific: rejects signals when raw ATR < XAUUSD_MIN_ATR (5.0).
-        Returns signal string or None.
-        """
         start = _time.monotonic()
-        LOGGER.info("HMAStochM15 evaluation started")
+        LOGGER.info("HMAStoch1H v1.1 evaluation started")
 
         account_info = self._get_account_info()
         if account_info is None:
             return None
         balance, equity, login = account_info
 
-        if balance > 0 and equity < balance * 0.90:
+        # NEW: persistent drawdown guard
+        if self.drawdown_guard.is_tripped(equity=equity):
             LOGGER.warning(
-                f"Equity safety check failed: equity={equity:.2f}, balance={balance:.2f}"
+                f"Drawdown guard tripped: {self.drawdown_guard.diagnostics()}, "
+                f"current_equity={equity:.2f}"
             )
             return None
+        self.drawdown_guard.update(equity=equity)
 
         df = self._fetch_candles()
         if df is None or len(df) < self.hma_period + 10:
@@ -260,10 +270,12 @@ class HMAStochM15Strategy(BaseStrategy):
             LOGGER.info(f"No signal. Duration={_time.monotonic() - start:.2f}s")
             return None
 
-        # M15-specific: reject low-volatility signals before deduplication check
-        if atr_value < XAUUSD_MIN_ATR:
-            LOGGER.warning(
-                f"ATR {atr_value:.4f} below minimum floor {XAUUSD_MIN_ATR}, rejecting signal"
+        # NEW: explicit, configurable signal-level ATR filter
+        # (was implicitly absent in v1.0; M15 had this in v1.0 already)
+        if atr_value < self.min_atr_for_signal:
+            LOGGER.info(
+                f"Signal rejected: ATR {atr_value:.4f} < min_atr_for_signal "
+                f"{self.min_atr_for_signal} (regime filter)"
             )
             return None
 
@@ -271,21 +283,25 @@ class HMAStochM15Strategy(BaseStrategy):
             return None
 
         entry_price = float(df.iloc[-2]["close"])
-        lot_size = calculate_lot_size(
+
+        # NEW: sizer returns (lots, effective_atr); use the latter for SL/TP
+        lot_size, effective_atr = calculate_lot_size(
             account_balance=balance,
             atr_value=atr_value,
             risk_pct=self.risk_pct,
             sl_atr_multiplier=self.sl_atr_mult,
         )
-        sl, tp = self._compute_sl_tp(signal, entry_price, atr_value)
+        sl, tp = self._compute_sl_tp(signal, entry_price, effective_atr)
 
         LOGGER.info(
             f"Placing {signal}: symbol={SYMBOL} lots={lot_size} sl={sl:.2f} "
-            f"tp={tp:.2f} atr={atr_value:.4f} balance={balance:.2f}"
+            f"tp={tp:.2f} raw_atr={atr_value:.4f} eff_atr={effective_atr:.4f} "
+            f"balance={balance:.2f} peak={self.drawdown_guard.peak_equity}"
         )
         self._place_order(signal, lot_size, sl, tp, login)
 
         LOGGER.info(
-            f"Evaluation complete. Signal={signal} Duration={_time.monotonic() - start:.2f}s"
+            f"Evaluation complete. Signal={signal} "
+            f"Duration={_time.monotonic() - start:.2f}s"
         )
         return signal
