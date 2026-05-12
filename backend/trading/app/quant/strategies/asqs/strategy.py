@@ -45,23 +45,23 @@ SYMBOL = "XAUUSD"
 MAGIC_NUMBER = 1500020
 
 # Pepperstone XAUUSD instrument constants
-XAUUSD_POINT = 0.01          # 1 point = $0.01/oz (SYMBOL_DIGITS=2)
-XAUUSD_CONTRACT = 100.0      # oz per standard lot
+XAUUSD_POINT = 0.01  # 1 point = $0.01/oz (SYMBOL_DIGITS=2)
+XAUUSD_CONTRACT = 100.0  # oz per standard lot
 XAUUSD_MIN_LOT = 0.01
 XAUUSD_MAX_LOT = 0.10
 XAUUSD_LOT_STEP = 0.01
 
 # Phase 1 preset — fixed SL/TP in points
-SL_POINTS = 300              # $3.00/oz
-TP_POINTS = 450              # $4.50/oz
+SL_POINTS = 300  # $3.00/oz
+TP_POINTS = 450  # $4.50/oz
 
 # Exit management thresholds
-BREAKEVEN_START = 150        # points profit → move SL to BE
-BREAKEVEN_OFFSET = 20        # SL = entry + 20pt (long) or entry - 20pt (short)
-TRAIL_START = 200            # points profit → activate trailing
-TRAIL_STEP = 100             # trailing SL distance in points
-TP1_POINTS = 200             # points profit → partial close trigger
-TP1_PCT = 0.50               # fraction to close at TP1
+BREAKEVEN_START = 150  # points profit → move SL to BE
+BREAKEVEN_OFFSET = 20  # SL = entry + 20pt (long) or entry - 20pt (short)
+TRAIL_START = 200  # points profit → activate trailing
+TRAIL_STEP = 100  # trailing SL distance in points
+TP1_POINTS = 200  # points profit → partial close trigger
+TP1_PCT = 0.50  # fraction to close at TP1
 
 
 def _ema(series: pd.Series, period: int) -> pd.Series:
@@ -267,7 +267,7 @@ class ASQSafeScalpingStrategy(BaseStrategy):
 
     def _check_session(self, now: datetime) -> bool:
         """False on weekend, outside 08:00–16:59 UTC."""
-        dow = now.weekday()   # Mon=0, Fri=4, Sat=5, Sun=6
+        dow = now.weekday()  # Mon=0, Fri=4, Sat=5, Sun=6
         if dow >= 5:
             return False
         return self.session_start_hour <= now.hour < self.session_end_hour
@@ -283,6 +283,7 @@ class ASQSafeScalpingStrategy(BaseStrategy):
         """Count today's entries for this strategy from the DB."""
         from django.utils import timezone as dj_tz
         from app.trades.models import Trade
+
         today = dj_tz.now().date()
         return Trade.objects.filter(
             strategy=self.__class__.__name__,
@@ -293,7 +294,9 @@ class ASQSafeScalpingStrategy(BaseStrategy):
     def _has_open_position(self, positions: list) -> bool:
         """True if there is already an open position for this magic number."""
         if positions:
-            LOGGER.info(f"Open position exists: magic={self.magic_number}, skipping entry")
+            LOGGER.info(
+                f"Open position exists: magic={self.magic_number}, skipping entry"
+            )
             return True
         return False
 
@@ -461,13 +464,15 @@ class ASQSafeScalpingStrategy(BaseStrategy):
 
         for pos in positions:
             ticket = int(pos["ticket"])
-            is_long = pos.get("type", 0) == 0   # 0=BUY, 1=SELL
+            is_long = pos.get("type", 0) == 0  # 0=BUY, 1=SELL
             entry = float(pos["price_open"])
             current_sl = pos.get("sl")
             volume = float(pos["volume"])
 
             cur_price = bid if is_long else ask
-            profit_pts = ((cur_price - entry) if is_long else (entry - cur_price)) / XAUUSD_POINT
+            profit_pts = (
+                (cur_price - entry) if is_long else (entry - cur_price)
+            ) / XAUUSD_POINT
 
             new_sl = current_sl
 
@@ -475,7 +480,9 @@ class ASQSafeScalpingStrategy(BaseStrategy):
             if self.use_partial and not self.partial_tracker.has_partial(ticket):
                 if profit_pts >= self.tp1_points:
                     close_vol = round(
-                        math.floor(volume * self.tp1_pct / XAUUSD_LOT_STEP) * XAUUSD_LOT_STEP, 2
+                        math.floor(volume * self.tp1_pct / XAUUSD_LOT_STEP)
+                        * XAUUSD_LOT_STEP,
+                        2,
                     )
                     if close_vol >= XAUUSD_MIN_LOT:
                         try:
@@ -557,6 +564,7 @@ class ASQSafeScalpingStrategy(BaseStrategy):
                 account_instance = None
                 if login:
                     from app.trades.models import Account
+
                     account_instance = Account.objects.filter(login=login).first()
                 create_trade_record(
                     order,
