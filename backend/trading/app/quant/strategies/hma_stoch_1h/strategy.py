@@ -94,7 +94,9 @@ class HMAStoch1HStrategy(BaseStrategy):
     def _fetch_candles(self) -> Optional[pd.DataFrame]:
         """Fetch OHLCV from MT5 and return as sorted DataFrame."""
         try:
-            data = self.mt5_client.get_market_rates(SYMBOL, "H1", count=self.candle_count)
+            data = self.mt5_client.get_market_rates(
+                SYMBOL, "H1", count=self.candle_count
+            )
             if not data or "rates" not in data:
                 LOGGER.warning(f"No rate data for {SYMBOL} H1")
                 return None
@@ -138,7 +140,9 @@ class HMAStoch1HStrategy(BaseStrategy):
         atr_cur = float(atr_series.iloc[-2])
         close_cur = float(df.iloc[-2]["close"])
 
-        if any(pd.isna(v) for v in [hma_cur, hma_prev, k_cur, d_cur, k_prev, d_prev]) or pd.isna(atr_cur):
+        if any(
+            pd.isna(v) for v in [hma_cur, hma_prev, k_cur, d_cur, k_prev, d_prev]
+        ) or pd.isna(atr_cur):
             LOGGER.warning("NaN in indicators — insufficient data for signal")
             return None, 0.0
 
@@ -220,6 +224,7 @@ class HMAStoch1HStrategy(BaseStrategy):
                 account_instance = None
                 if login:
                     from app.trades.models import Account
+
                     account_instance = Account.objects.filter(login=login).first()
                 create_trade_record(
                     order,

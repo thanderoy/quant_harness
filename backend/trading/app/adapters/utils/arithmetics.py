@@ -2,11 +2,25 @@ import traceback
 import logging
 import pandas as pd
 
-from app.quant.common.constants import MT5Timeframe, METALS, OILS, CURRENCY_PAIRS, CRYPTOCURRENCIES
+from app.quant.common.constants import (
+    MT5Timeframe,
+    METALS,
+    OILS,
+    CURRENCY_PAIRS,
+    CRYPTOCURRENCIES,
+)
 
 logger = logging.getLogger(__name__)
 
-def get_price_at_pnl(desired_pnl: float, entry_price: float, order_size_usd: float, leverage: float, type: str, commission: float) -> tuple:
+
+def get_price_at_pnl(
+    desired_pnl: float,
+    entry_price: float,
+    order_size_usd: float,
+    leverage: float,
+    type: str,
+    commission: float,
+) -> tuple:
     """
     Calculate the price at which the desired PnL is achieved, with and without commission.
 
@@ -21,21 +35,33 @@ def get_price_at_pnl(desired_pnl: float, entry_price: float, order_size_usd: flo
              - Price without commission
     :raises ValueError: If an unknown trade type is provided.
     """
-    if type == 'BUY':
-        price_including_commission = entry_price * (1 + (desired_pnl + commission) / order_size_usd)
+    if type == "BUY":
+        price_including_commission = entry_price * (
+            1 + (desired_pnl + commission) / order_size_usd
+        )
         price_excluding_commission = entry_price * (1 + desired_pnl / order_size_usd)
-    elif type == 'SELL':
-        price_including_commission = entry_price * (1 - (desired_pnl + commission) / order_size_usd)
+    elif type == "SELL":
+        price_including_commission = entry_price * (
+            1 - (desired_pnl + commission) / order_size_usd
+        )
         price_excluding_commission = entry_price * (1 - desired_pnl / order_size_usd)
     else:
         raise ValueError(f"Unknown trade type: {type}")
 
     return price_including_commission, price_excluding_commission
 
-def get_pnl_at_price(current_price: float, entry_price: float, order_size_usd: float, leverage: float, type: str, commission: float) -> tuple:
-    if type == 'BUY':
+
+def get_pnl_at_price(
+    current_price: float,
+    entry_price: float,
+    order_size_usd: float,
+    leverage: float,
+    type: str,
+    commission: float,
+) -> tuple:
+    if type == "BUY":
         price_change = (current_price - entry_price) / entry_price
-    elif type == 'SELL':
+    elif type == "SELL":
         price_change = (entry_price - current_price) / entry_price
     else:
         raise ValueError(f"Unknown trade type: {type}")
@@ -47,19 +73,26 @@ def get_pnl_at_price(current_price: float, entry_price: float, order_size_usd: f
     pnl_excluding_commission = pnl_including_commission - commission
     return pnl_including_commission, pnl_excluding_commission
 
+
 def calculate_order_size_usd(capital: float, leverage: float) -> float:
     return capital * leverage
 
-def calculate_price_with_spread(price: float, spread_multiplier: float, increase: bool) -> float:
+
+def calculate_price_with_spread(
+    price: float, spread_multiplier: float, increase: bool
+) -> float:
     if increase:
         return price * (1 + spread_multiplier)
     else:
         return price * (1 - spread_multiplier)
 
-def calculate_liquidation_price(entry_price: float, leverage: float, type: str) -> float:
-    if type == 'BUY':
+
+def calculate_liquidation_price(
+    entry_price: float, leverage: float, type: str
+) -> float:
+    if type == "BUY":
         liq_p = entry_price * (1 - (1 / leverage))
-    elif type == 'SELL':
+    elif type == "SELL":
         liq_p = entry_price * (1 + (1 / leverage))
     else:
         raise ValueError(f"Unknown position type: {type}")
@@ -67,7 +100,9 @@ def calculate_liquidation_price(entry_price: float, leverage: float, type: str) 
     return liq_p
 
 
-def calculate_trade_volume(open_price: float, current_price: float, current_pnl: float, leverage: float) -> float:
+def calculate_trade_volume(
+    open_price: float, current_price: float, current_pnl: float, leverage: float
+) -> float:
     """
     Calculate the trade volume given the open price, current price, current PNL, and leverage.
 
@@ -81,10 +116,12 @@ def calculate_trade_volume(open_price: float, current_price: float, current_pnl:
     trade_volume = abs(current_pnl / (price_change * leverage))
     return trade_volume
 
+
 def calculate_order_capital(symbol, volume_lots, leverage, price_open):
     order_size_usd = convert_lots_to_usd(symbol, volume_lots, price_open)
     capital_used = order_size_usd / leverage
     return capital_used
+
 
 def convert_lots_to_usd(symbol, lots, price_open):
     """
@@ -96,7 +133,9 @@ def convert_lots_to_usd(symbol, lots, price_open):
     """
     # Get the contract size for the symbol
     try:
-        from app.adapters.api.data import symbol_info  # lazy import to avoid hard dependency
+        from app.adapters.api.data import (
+            symbol_info,
+        )  # lazy import to avoid hard dependency
     except Exception:
         symbol_info = None
 
@@ -105,7 +144,7 @@ def convert_lots_to_usd(symbol, lots, price_open):
     contract_size = 100000
     try:
         if symbol_info_data is not None:
-            contract_size = symbol_info_data.get('trade_contract_size', contract_size)
+            contract_size = symbol_info_data.get("trade_contract_size", contract_size)
     except Exception:
         pass
 
@@ -113,6 +152,7 @@ def convert_lots_to_usd(symbol, lots, price_open):
     usd_amount = lots * contract_size * price_open
 
     return usd_amount
+
 
 def convert_usd_to_lots(symbol: str, usd_amount: float, type: str) -> float:
     """
@@ -137,45 +177,53 @@ def convert_usd_to_lots(symbol: str, usd_amount: float, type: str) -> float:
             raise RuntimeError("symbol_info unavailable")
 
         # Ensure that 'ask' and 'bid' are scalar values
-        ask_price = symbol_info_data.ask.iloc[0] if isinstance(symbol_info_data.ask, pd.Series) else symbol_info_data.ask
-        bid_price = symbol_info_data.bid.iloc[0] if isinstance(symbol_info_data.bid, pd.Series) else symbol_info_data.bid
+        ask_price = (
+            symbol_info_data.ask.iloc[0]
+            if isinstance(symbol_info_data.ask, pd.Series)
+            else symbol_info_data.ask
+        )
+        bid_price = (
+            symbol_info_data.bid.iloc[0]
+            if isinstance(symbol_info_data.bid, pd.Series)
+            else symbol_info_data.bid
+        )
 
-        price_dict = {
-            'BUY': ask_price,
-            'SELL': bid_price
-        }
+        price_dict = {"BUY": ask_price, "SELL": bid_price}
 
         # Get the contract size and calculate lots
-        contract_size = symbol_info_data.get('trade_contract_size', 100000)
+        contract_size = symbol_info_data.get("trade_contract_size", 100000)
         lots = usd_amount / (contract_size * price_dict[type])
 
         # Round to the nearest lot step
-        lot_step = symbol_info_data.get('volume_step', 0.01)
+        lot_step = symbol_info_data.get("volume_step", 0.01)
         lots = round(lots / lot_step) * lot_step
 
         symbol_info_dict = {
-            'ask': float(symbol_info_data.ask),
-            'bid': float(symbol_info_data.bid),
-            'spread': float(symbol_info_data.spread),
-            'volume': float(symbol_info_data.volume),
-            'trade_contract_size': contract_size,
-            'volume_step': lot_step
+            "ask": float(symbol_info_data.ask),
+            "bid": float(symbol_info_data.bid),
+            "spread": float(symbol_info_data.spread),
+            "volume": float(symbol_info_data.volume),
+            "trade_contract_size": contract_size,
+            "volume_step": lot_step,
         }
 
-        logger.info({
-            'message': 'Lots converted from USD to lots',
-            'symbol': symbol,
-            'symbol_info': symbol_info_dict,
-            'usd_amount': usd_amount,
-            'type': type,
-            'lots': float(lots)  # Convert to float for proper JSON serialization
-        })
+        logger.info(
+            {
+                "message": "Lots converted from USD to lots",
+                "symbol": symbol,
+                "symbol_info": symbol_info_dict,
+                "usd_amount": usd_amount,
+                "type": type,
+                "lots": float(lots),  # Convert to float for proper JSON serialization
+            }
+        )
 
         return lots
     except Exception as e:
         error_msg = f"Exception in convert_usd_to_lots: {e}\n{traceback.format_exc()}"
         logger.error(error_msg)
         return 0.0  # Return a default value or handle accordingly
+
 
 def calculate_commission(order_size_usd: float, pair: str) -> float:
     """
@@ -185,7 +233,7 @@ def calculate_commission(order_size_usd: float, pair: str) -> float:
     """
     try:
         if pair in CRYPTOCURRENCIES:
-            commission_rate = 0.0005 # 0.05%
+            commission_rate = 0.0005  # 0.05%
         elif pair in OILS:
             commission_rate = 0.00025
         elif pair in METALS:
@@ -196,7 +244,9 @@ def calculate_commission(order_size_usd: float, pair: str) -> float:
             # Throw exception
             raise ValueError(f"Could not calculate commission for unknown pair: {pair}")
 
-        commission = order_size_usd * commission_rate # Total commission for both open and close
+        commission = (
+            order_size_usd * commission_rate
+        )  # Total commission for both open and close
         return commission
     except Exception as e:
         error_msg = f"Exception in calculate_commission: {e}\n{traceback.format_exc()}"

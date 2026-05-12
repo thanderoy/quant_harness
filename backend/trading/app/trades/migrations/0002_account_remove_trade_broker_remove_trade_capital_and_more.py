@@ -5,57 +5,77 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('trades', '0001_initial'),
+        ("trades", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Account',
+            name="Account",
             fields=[
-                ('login', models.BigIntegerField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=255)),
-                ('server', models.CharField(max_length=255)),
-                ('currency', models.CharField(max_length=10)),
-                ('trade_mode', models.IntegerField()),
+                ("login", models.BigIntegerField(primary_key=True, serialize=False)),
+                ("name", models.CharField(max_length=255)),
+                ("server", models.CharField(max_length=255)),
+                ("currency", models.CharField(max_length=10)),
+                ("trade_mode", models.IntegerField()),
             ],
         ),
         migrations.RemoveField(
-            model_name='trade',
-            name='broker',
+            model_name="trade",
+            name="broker",
         ),
         migrations.RemoveField(
-            model_name='trade',
-            name='capital',
+            model_name="trade",
+            name="capital",
         ),
         migrations.RemoveField(
-            model_name='trade',
-            name='leverage',
+            model_name="trade",
+            name="leverage",
         ),
         migrations.AddField(
-            model_name='trade',
-            name='account',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='trades', to='trades.account'),
+            model_name="trade",
+            name="account",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="trades",
+                to="trades.account",
+            ),
         ),
         migrations.CreateModel(
-            name='AccountSnapshot',
+            name="AccountSnapshot",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField()),
-                ('balance', models.FloatField()),
-                ('equity', models.FloatField()),
-                ('margin', models.FloatField()),
-                ('margin_free', models.FloatField()),
-                ('margin_level', models.FloatField()),
-                ('leverage', models.IntegerField()),
-                ('profit', models.FloatField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='snapshots', to='trades.account')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("date", models.DateField()),
+                ("balance", models.FloatField()),
+                ("equity", models.FloatField()),
+                ("margin", models.FloatField()),
+                ("margin_free", models.FloatField()),
+                ("margin_level", models.FloatField()),
+                ("leverage", models.IntegerField()),
+                ("profit", models.FloatField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "account",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="snapshots",
+                        to="trades.account",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-date'],
-                'unique_together': {('account', 'date')},
+                "ordering": ["-date"],
+                "unique_together": {("account", "date")},
             },
         ),
     ]

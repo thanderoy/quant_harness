@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from app.trades.views import TradeViewSet
 
 router = DefaultRouter()
-router.register(r'trades', TradeViewSet)
+router.register(r"trades", TradeViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

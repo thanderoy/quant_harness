@@ -16,14 +16,12 @@ def populate_account_uuids(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("trades", "0003_add_trade_status_field"),
     ]
 
     operations = [
         # ── Simple field additions ────────────────────────────────────────────
-
         migrations.AddField(
             model_name="trade",
             name="environment",
@@ -43,26 +41,21 @@ class Migration(migrations.Migration):
                 max_length=4,
             ),
         ),
-
         # ── Account PK swap: login (BigInt) → id (UUID) ───────────────────────
         # All database work is done via raw SQL; Django's model state is updated
         # at the end via SeparateDatabaseAndState(database_operations=[]).
-
         # Step 1: add a temporary UUID column to Account
         migrations.RunSQL(
             sql='ALTER TABLE "trades_account" ADD COLUMN "new_id" uuid',
             reverse_sql='ALTER TABLE "trades_account" DROP COLUMN IF EXISTS "new_id"',
         ),
-
         # Step 2: populate it
         migrations.RunPython(populate_account_uuids, migrations.RunPython.noop),
-
         # Step 3: make it non-nullable
         migrations.RunSQL(
             sql='ALTER TABLE "trades_account" ALTER COLUMN "new_id" SET NOT NULL',
             reverse_sql='ALTER TABLE "trades_account" ALTER COLUMN "new_id" DROP NOT NULL',
         ),
-
         # Step 4: add temporary UUID FK columns to Trade and AccountSnapshot
         migrations.RunSQL(
             sql=[
@@ -74,7 +67,6 @@ class Migration(migrations.Migration):
                 'ALTER TABLE "trades_accountsnapshot" DROP COLUMN IF EXISTS "account_id_new"',
             ],
         ),
-
         # Step 5: populate new FK columns
         migrations.RunSQL(
             sql=[
@@ -94,7 +86,6 @@ class Migration(migrations.Migration):
             ],
             reverse_sql=migrations.RunSQL.noop,
         ),
-
         # Step 6: drop FK constraints that reference trades_account.login
         migrations.RunSQL(
             sql="""
@@ -121,7 +112,6 @@ class Migration(migrations.Migration):
             """,
             reverse_sql=migrations.RunSQL.noop,
         ),
-
         # Step 7: drop old account_id columns and rename the new UUID ones
         migrations.RunSQL(
             sql=[
@@ -132,7 +122,6 @@ class Migration(migrations.Migration):
             ],
             reverse_sql=migrations.RunSQL.noop,
         ),
-
         # Step 8: swap Account PK (login → new_id) and rename the column
         migrations.RunSQL(
             sql=[
@@ -142,13 +131,11 @@ class Migration(migrations.Migration):
             ],
             reverse_sql=migrations.RunSQL.noop,
         ),
-
         # Step 9: index on Account.login (was PK, now a plain column)
         migrations.RunSQL(
             sql='CREATE INDEX "trades_account_login_3a5fc49e" ON "trades_account" ("login")',
             reverse_sql='DROP INDEX IF EXISTS "trades_account_login_3a5fc49e"',
         ),
-
         # Step 10: restore FK constraints and add indexes for the UUID columns
         migrations.RunSQL(
             sql=[
@@ -173,7 +160,6 @@ class Migration(migrations.Migration):
             ],
             reverse_sql=migrations.RunSQL.noop,
         ),
-
         # Step 11: unique constraint on (login, environment)
         migrations.RunSQL(
             sql="""
@@ -183,12 +169,10 @@ class Migration(migrations.Migration):
             """,
             reverse_sql='ALTER TABLE "trades_account" DROP CONSTRAINT IF EXISTS "trades_account_login_environment_uniq"',
         ),
-
         # ── Sync Django's internal migration state ────────────────────────────
         # database_operations=[] means "don't touch the DB" — the SQL above
         # has already done everything.  state_operations updates the model state
         # so subsequent migrations see the correct schema.
-
         migrations.SeparateDatabaseAndState(
             database_operations=[],
             state_operations=[

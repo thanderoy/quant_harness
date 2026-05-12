@@ -33,7 +33,7 @@ def create_trade(
 ):
     """
     Create a Trade record from an executed order.
-    
+
     Args:
         order: The order response from MT5 API containing 'order' ticket
         symbol: Trading symbol (e.g., XAUUSD)
@@ -46,13 +46,13 @@ def create_trade(
         sl: Stop loss price (optional)
         tp: Take profit price (optional)
         account: Account model instance (optional)
-    
+
     Returns:
         Tuple of (Trade, TradeClosePricesMutation) or None on error
     """
     try:
         broker_id = str(order.get("order", ""))
-        
+
         if not broker_id:
             logger.error("Order missing 'order' field (broker_id)")
             return None

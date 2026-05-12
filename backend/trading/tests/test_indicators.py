@@ -10,6 +10,7 @@ With this fixture:
   TR[i>=1] = max(10, 5, 5) = 10  →  ATR(14) = 10.0 everywhere it is defined
   raw_k[i>=13] = 19/23 * 100 ≈ 82.6087  →  k = d ≈ 82.6087 after warmup
 """
+
 import math
 
 import numpy as np

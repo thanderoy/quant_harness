@@ -4,6 +4,7 @@ Unit tests for ASQSafeScalpingStrategy.
 Tests cover _generate_signal, filter helpers, and _compute_sl_tp.
 MT5 client and external calls are fully mocked; no broker connection required.
 """
+
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
@@ -22,9 +23,7 @@ N = 600  # enough bars for EMA(510) + breakout(20) + margin
 
 def _make_strategy(**kwargs) -> ASQSafeScalpingStrategy:
     """Build a strategy instance with MT5 connection mocked out."""
-    with patch(
-        "app.quant.strategies.asqs.strategy.MT5APIClient"
-    ) as mock_cls:
+    with patch("app.quant.strategies.asqs.strategy.MT5APIClient") as mock_cls:
         mock_cls.return_value.connect.return_value = None
         strategy = ASQSafeScalpingStrategy(mt5_base_url="http://mock:5001", **kwargs)
     return strategy
@@ -237,7 +236,13 @@ class TestGenerateSignal:
         lows = closes - 8.0
         times = pd.date_range("2024-01-01", periods=n, freq="5min")
         df = pd.DataFrame(
-            {"time": times, "open": closes - 0.1, "high": highs, "low": lows, "close": closes}
+            {
+                "time": times,
+                "open": closes - 0.1,
+                "high": highs,
+                "low": lows,
+                "close": closes,
+            }
         )
         signal, atr_val = self._signal(df)
         # In a strong unbroken uptrend, at least no crash should occur
@@ -251,7 +256,13 @@ class TestGenerateSignal:
         lows = closes - 8.0
         times = pd.date_range("2024-01-01", periods=n, freq="5min")
         df = pd.DataFrame(
-            {"time": times, "open": closes + 0.1, "high": highs, "low": lows, "close": closes}
+            {
+                "time": times,
+                "open": closes + 0.1,
+                "high": highs,
+                "low": lows,
+                "close": closes,
+            }
         )
         signal, atr_val = self._signal(df)
         assert signal in ("SELL", None)
@@ -302,7 +313,13 @@ class TestGenerateSignal:
         lows = closes_s - 5.0
         times = pd.date_range("2024-01-01", periods=n, freq="5min")
         df = pd.DataFrame(
-            {"time": times, "open": closes_s - 0.1, "high": highs, "low": lows, "close": closes_s}
+            {
+                "time": times,
+                "open": closes_s - 0.1,
+                "high": highs,
+                "low": lows,
+                "close": closes_s,
+            }
         )
         signal, _ = s._generate_signal(df)
         # c_prev (iloc[-3]) = 2100 is already above the rolling max of earlier bars,
@@ -342,9 +359,7 @@ class TestH1Confirmation:
             }
             for i in range(n)
         ]
-        self.s.mt5_client.get_market_rates = MagicMock(
-            return_value={"rates": rates}
-        )
+        self.s.mt5_client.get_market_rates = MagicMock(return_value={"rates": rates})
         result = self.s._check_h1_confirmation("BUY")
         assert result is True
 
@@ -361,9 +376,7 @@ class TestH1Confirmation:
             }
             for i in range(n)
         ]
-        self.s.mt5_client.get_market_rates = MagicMock(
-            return_value={"rates": rates}
-        )
+        self.s.mt5_client.get_market_rates = MagicMock(return_value={"rates": rates})
         result = self.s._check_h1_confirmation("SELL")
         assert result is True
 
@@ -380,8 +393,6 @@ class TestH1Confirmation:
             }
             for i in range(n)
         ]
-        self.s.mt5_client.get_market_rates = MagicMock(
-            return_value={"rates": rates}
-        )
+        self.s.mt5_client.get_market_rates = MagicMock(return_value={"rates": rates})
         result = self.s._check_h1_confirmation("BUY")
         assert result is False

@@ -90,7 +90,9 @@ class ForexeroStrategy(BaseStrategy):
             LOGGER.info(f"Account balance: {balance}, volume: {volume}")
             return volume
         except Exception as e:
-            LOGGER.warning(f"Failed to get balance for volume sizing: {e}. Using minimum 0.01.")
+            LOGGER.warning(
+                f"Failed to get balance for volume sizing: {e}. Using minimum 0.01."
+            )
             return VOLUME_TIERS[0][1]
 
     def _normalize_symbol(self, symbol: str) -> str:
@@ -294,7 +296,10 @@ class ForexeroStrategy(BaseStrategy):
                         account_instance = None
                         if getattr(self, "account_login", None):
                             from app.trades.models import Account
-                            account_instance = Account.objects.filter(login=self.account_login).first()
+
+                            account_instance = Account.objects.filter(
+                                login=self.account_login
+                            ).first()
 
                         try:
                             create_trade_record(

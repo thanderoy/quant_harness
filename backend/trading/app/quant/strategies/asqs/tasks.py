@@ -11,7 +11,8 @@ LOGGER = logging.getLogger(__name__)
 @shared_task(name="quant.asqs.run")
 def run_asqs() -> dict:
     """
-    Runs every 5 minutes, aligned to M5 candle close (fires at HH:01, HH:06, ..., HH:56).
+    Runs every 5 minutes, aligned to M5 candle close
+    (fires at HH:01, HH:06, ..., HH:56).
     Catches and logs all exceptions — task must never crash silently.
     """
     start = _time.monotonic()

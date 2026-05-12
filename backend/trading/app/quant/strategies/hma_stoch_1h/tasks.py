@@ -20,7 +20,9 @@ def run_hma_stoch_1h() -> dict:
         strategy = HMAStoch1HStrategy()
         signal = strategy.evaluate()
         duration = round(_time.monotonic() - start, 2)
-        LOGGER.info(f"quant.hma_stoch_1h.run completed: signal={signal} duration={duration}s")
+        LOGGER.info(
+            f"quant.hma_stoch_1h.run completed: signal={signal} duration={duration}s"
+        )
         return {"signal": signal, "duration": duration}
     except Exception as e:
         duration = round(_time.monotonic() - start, 2)

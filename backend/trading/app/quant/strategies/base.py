@@ -2,7 +2,6 @@ import logging
 
 
 class BaseStrategy:
-
     def __init__(self, environment: str = "prod"):
         """Initialize with required args and inputs."""
 
@@ -26,7 +25,8 @@ class BaseStrategy:
         # Check number of open positions
         if self.open_positions >= self.max_positions:
             self.logger.warning(
-                f"Cannot Enter Trade: Maximum Open Positions {self.open_positions}/{self.max_positions} ")      # noqa: E501
+                f"Cannot Enter Trade: Maximum Open Positions {self.open_positions}/{self.max_positions} "
+            )  # noqa: E501
             return False
 
         # IMPLEMENT YOUR TRADE ENTRY LOGIC HERE .....

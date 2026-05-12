@@ -1,6 +1,7 @@
 """
 Unit tests for app.quant.strategies.sizer
 """
+
 import pytest
 
 from app.quant.strategies.sizer import (
@@ -40,7 +41,9 @@ def test_atr_below_floor_uses_floor():
     # raw_lots = 100 / (7.5 * 100) = 100/750 ≈ 0.1333 → rounds to 0.13
     # clamped to max_lot = 0.10
     result_low_atr = calculate_lot_size(account_balance=5000.0, atr_value=2.0)
-    result_floor_atr = calculate_lot_size(account_balance=5000.0, atr_value=XAUUSD_MIN_ATR)
+    result_floor_atr = calculate_lot_size(
+        account_balance=5000.0, atr_value=XAUUSD_MIN_ATR
+    )
     assert result_low_atr == result_floor_atr
 
 

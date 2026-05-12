@@ -1,6 +1,7 @@
 """
 Celery tasks for London Breakout strategy.
 """
+
 import logging
 from celery import shared_task
 
@@ -9,7 +10,9 @@ from app.quant.strategies.london_breakout.strategy import LondonBreakoutStrategy
 LOGGER = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, name="app.quant.strategies.london_breakout.tasks.run_london_breakout")
+@shared_task(
+    bind=True, name="app.quant.strategies.london_breakout.tasks.run_london_breakout"
+)
 def run_london_breakout(
     self,
     symbol: str = "XAUUSD",
@@ -22,11 +25,11 @@ def run_london_breakout(
 ):
     """
     Celery task to run London Breakout strategy.
-    
+
     Should be scheduled to run every 15 minutes via Celery Beat.
-    
+
     Example Celery Beat schedule in settings:
-    
+
         CELERY_BEAT_SCHEDULE = {
             'london-breakout-every-15-min': {
                 'task': 'app.quant.strategies.london_breakout.tasks.run_london_breakout',
@@ -37,7 +40,7 @@ def run_london_breakout(
     """
     try:
         LOGGER.info(f"Running London Breakout: symbol={symbol}, volume={volume}")
-        
+
         strategy = LondonBreakoutStrategy(
             environment=environment,
             symbol=symbol,
@@ -48,7 +51,7 @@ def run_london_breakout(
             risk_reward_ratio=risk_reward_ratio,
         )
         strategy.run()
-        
+
         return {
             "status": "success",
             "symbol": symbol,
@@ -56,7 +59,7 @@ def run_london_breakout(
             "range_low": strategy.range_low,
             "trade_taken": strategy.daily_trade_taken,
         }
-        
+
     except Exception as e:
         LOGGER.exception(f"London Breakout task error: {e}")
         raise self.retry(exc=e, countdown=60, max_retries=3)

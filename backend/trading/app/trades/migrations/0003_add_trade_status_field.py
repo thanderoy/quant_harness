@@ -4,20 +4,43 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('trades', '0002_account_remove_trade_broker_remove_trade_capital_and_more'),
+        ("trades", "0002_account_remove_trade_broker_remove_trade_capital_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='trade',
-            name='status',
-            field=models.CharField(choices=[('PENDING', 'Pending'), ('FILLED', 'Filled'), ('REJECTED', 'Rejected'), ('CANCELED', 'Canceled'), ('EXPIRED', 'Expired')], default='PENDING', max_length=10),
+            model_name="trade",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("PENDING", "Pending"),
+                    ("FILLED", "Filled"),
+                    ("REJECTED", "Rejected"),
+                    ("CANCELED", "Canceled"),
+                    ("EXPIRED", "Expired"),
+                ],
+                default="PENDING",
+                max_length=10,
+            ),
         ),
         migrations.AlterField(
-            model_name='trade',
-            name='exit_reason',
-            field=models.CharField(blank=True, choices=[('TP', 'Take Profit'), ('SL', 'Stop Loss'), ('MANUAL', 'Manual'), ('LIQUIDATION', 'Liquidation'), ('REJECTED', 'Rejected'), ('CANCELED', 'Canceled'), ('EXPIRED', 'Expired'), ('OTHER', 'Other')], max_length=50, null=True),
+            model_name="trade",
+            name="exit_reason",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("TP", "Take Profit"),
+                    ("SL", "Stop Loss"),
+                    ("MANUAL", "Manual"),
+                    ("LIQUIDATION", "Liquidation"),
+                    ("REJECTED", "Rejected"),
+                    ("CANCELED", "Canceled"),
+                    ("EXPIRED", "Expired"),
+                    ("OTHER", "Other"),
+                ],
+                max_length=50,
+                null=True,
+            ),
         ),
     ]
