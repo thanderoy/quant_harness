@@ -6,7 +6,7 @@ import pandas as pd
 
 from app.quant.strategies.base import BaseStrategy
 from app.quant.strategies.indicators import hma, stochastic, atr
-from app.quant.strategies.sizer import calculate_lot_size, XAUUSD_MIN_ATR
+from app.quant.strategies.sizer import calculate_lot_size
 from app.adapters.mt5_api import MT5APIClient
 from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
@@ -248,14 +248,13 @@ class HMAStochM15Strategy(BaseStrategy):
 
     def evaluate(self) -> Optional[str]:
         start = _time.monotonic()
-        LOGGER.info("HMAStoch1H v1.1 evaluation started")
+        LOGGER.info("HMAStochM15 v1.1 evaluation started")
 
         account_info = self._get_account_info()
         if account_info is None:
             return None
         balance, equity, login = account_info
 
-        # NEW: persistent drawdown guard
         if self.drawdown_guard.is_tripped(equity=equity):
             LOGGER.warning(
                 f"Drawdown guard tripped: {self.drawdown_guard.diagnostics()}, "
@@ -276,8 +275,6 @@ class HMAStochM15Strategy(BaseStrategy):
             LOGGER.info(f"No signal. Duration={_time.monotonic() - start:.2f}s")
             return None
 
-        # NEW: explicit, configurable signal-level ATR filter
-        # (was implicitly absent in v1.0; M15 had this in v1.0 already)
         if atr_value < self.min_atr_for_signal:
             LOGGER.info(
                 f"Signal rejected: ATR {atr_value:.4f} < min_atr_for_signal "
@@ -290,7 +287,6 @@ class HMAStochM15Strategy(BaseStrategy):
 
         entry_price = float(df.iloc[-2]["close"])
 
-        # NEW: sizer returns (lots, effective_atr); use the latter for SL/TP
         lot_size, effective_atr = calculate_lot_size(
             account_balance=balance,
             atr_value=atr_value,
