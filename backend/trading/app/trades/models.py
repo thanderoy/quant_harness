@@ -4,8 +4,8 @@ from django.db import models
 
 
 ENVIRONMENT_CHOICES = [
-    ('PROD', 'Production'),
-    ('TEST', 'Test'),
+    ("PROD", "Production"),
+    ("TEST", "Test"),
 ]
 
 
@@ -17,22 +17,26 @@ class Account(models.Model):
     currency = models.CharField(max_length=10)
     trade_mode = models.IntegerField()
     environment = models.CharField(
-        max_length=4, choices=ENVIRONMENT_CHOICES, default='PROD',
+        max_length=4,
+        choices=ENVIRONMENT_CHOICES,
+        default="PROD",
     )
 
     class Meta:
-        unique_together = ('login', 'environment')
+        unique_together = ("login", "environment")
 
     @property
     def latest_snapshot(self):
-        return self.snapshots.order_by('-date').first()
+        return self.snapshots.order_by("-date").first()
 
     def __str__(self):
         return f"{self.login} - {self.name}"
 
 
 class AccountSnapshot(models.Model):
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='snapshots')
+    account = models.ForeignKey(
+        Account, on_delete=models.CASCADE, related_name="snapshots"
+    )
     date = models.DateField()
     balance = models.FloatField()
     equity = models.FloatField()
@@ -44,8 +48,8 @@ class AccountSnapshot(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('account', 'date')
-        ordering = ['-date']
+        unique_together = ("account", "date")
+        ordering = ["-date"]
 
     def __str__(self):
         return f"Snapshot {self.account.login} on {self.date}"
@@ -53,43 +57,43 @@ class AccountSnapshot(models.Model):
 
 class Trade(models.Model):
     TRADE_DIRECTION_CHOICES = [
-        ('BUY', 'Buy'),
-        ('SELL', 'Sell'),
+        ("BUY", "Buy"),
+        ("SELL", "Sell"),
     ]
 
     CLOSING_REASON_CHOICES = [
-        ('TP', 'Take Profit'),
-        ('SL', 'Stop Loss'),
-        ('MANUAL', 'Manual'),
-        ('LIQUIDATION', 'Liquidation'),
-        ('REJECTED', 'Rejected'),
-        ('CANCELED', 'Canceled'),
-        ('EXPIRED', 'Expired'),
-        ('OTHER', 'Other'),
+        ("TP", "Take Profit"),
+        ("SL", "Stop Loss"),
+        ("MANUAL", "Manual"),
+        ("LIQUIDATION", "Liquidation"),
+        ("REJECTED", "Rejected"),
+        ("CANCELED", "Canceled"),
+        ("EXPIRED", "Expired"),
+        ("OTHER", "Other"),
     ]
 
     STATUS_CHOICES = [
-        ('PENDING', 'Pending'),
-        ('FILLED', 'Filled'),
-        ('REJECTED', 'Rejected'),
-        ('CANCELED', 'Canceled'),
-        ('EXPIRED', 'Expired'),
+        ("PENDING", "Pending"),
+        ("FILLED", "Filled"),
+        ("REJECTED", "Rejected"),
+        ("CANCELED", "Canceled"),
+        ("EXPIRED", "Expired"),
     ]
 
     MARKET_TYPE_CHOICES = [
-        ('FOREX', 'Forex'),
-        ('CRYPTO', 'Crypto'),
-        ('COMMODITIES', 'Commodities'),
-        ('OTHER', 'Other'),
+        ("FOREX", "Forex"),
+        ("CRYPTO", "Crypto"),
+        ("COMMODITIES", "Commodities"),
+        ("OTHER", "Other"),
     ]
 
     TIMEFRAME_CHOICES = [
-        ('1M', '1 Minute'),
-        ('5M', '5 Minutes'),
-        ('15M', '15 Minutes'),
-        ('1H', '1 Hour'),
-        ('4H', '4 Hours'),
-        ('1D', '1 Day'),
+        ("1M", "1 Minute"),
+        ("5M", "5 Minutes"),
+        ("15M", "15 Minutes"),
+        ("1H", "1 Hour"),
+        ("4H", "4 Hours"),
+        ("1D", "1 Day"),
     ]
 
     # Core trade fields
@@ -97,12 +101,15 @@ class Trade(models.Model):
     broker_id = models.CharField(max_length=100)  # Identifier on Broker System
     direction = models.CharField(max_length=4, choices=TRADE_DIRECTION_CHOICES)
     symbol = models.CharField(max_length=10)
-    entry_time = models.DateTimeField(db_index=True, default=timezone.now, editable=False)
+    entry_time = models.DateTimeField(
+        db_index=True, default=timezone.now, editable=False
+    )
     entry_price = models.FloatField()
     exit_time = models.DateTimeField(null=True, blank=True)
     exit_price = models.FloatField(null=True, blank=True)
     exit_reason = models.CharField(
-        max_length=50, null=True, blank=True, choices=CLOSING_REASON_CHOICES)
+        max_length=50, null=True, blank=True, choices=CLOSING_REASON_CHOICES
+    )
     order_volume = models.FloatField(null=True, blank=True)
     sl = models.FloatField(null=True, blank=True)
     tp = models.FloatField(null=True, blank=True)
@@ -110,15 +117,21 @@ class Trade(models.Model):
     pnl = models.FloatField(null=True, blank=True)
 
     # Additional Info
-    account = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, blank=True, related_name='trades')
+    account = models.ForeignKey(
+        Account, on_delete=models.SET_NULL, null=True, blank=True, related_name="trades"
+    )
     strategy = models.CharField(max_length=50)
     market_type = models.CharField(max_length=50, choices=MARKET_TYPE_CHOICES)
     timeframe = models.CharField(max_length=50, choices=TIMEFRAME_CHOICES)
     status = models.CharField(
-        max_length=10, choices=STATUS_CHOICES, default='PENDING',
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="PENDING",
     )
     environment = models.CharField(
-        max_length=4, choices=ENVIRONMENT_CHOICES, default='PROD',
+        max_length=4,
+        choices=ENVIRONMENT_CHOICES,
+        default="PROD",
         db_index=True,
     )
     synched = models.BooleanField(default=False)
@@ -129,7 +142,8 @@ class Trade(models.Model):
 
 class TradeClosePricesMutation(models.Model):
     trade = models.ForeignKey(
-        Trade, on_delete=models.CASCADE, related_name='close_prices_mutations')
+        Trade, on_delete=models.CASCADE, related_name="close_prices_mutations"
+    )
     mutation_time = models.DateTimeField(auto_now_add=True)
     mutation_price = models.FloatField(null=True, blank=True)
     new_tp_price = models.FloatField(null=True, blank=True)
@@ -138,7 +152,7 @@ class TradeClosePricesMutation(models.Model):
     pnl_at_new_sl_price = models.FloatField(null=True, blank=True)
 
     class Meta:
-        ordering = ['mutation_time']
+        ordering = ["mutation_time"]
         verbose_name = "Trade Close Prices Mutation"
         verbose_name_plural = "Trade Close Prices Mutations"
 

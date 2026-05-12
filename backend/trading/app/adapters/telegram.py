@@ -2,18 +2,17 @@ import logging
 from app.config import settings
 from telethon import TelegramClient, events
 
+
 class TelegramAPIClient:
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
         # Use a persistent path for the session file. Avoid re-login prompts on container restarts.
         # Ensure this path matches the volume mounted or directory created in Dockerfile
-        self.API_SESSION_NAME = '/app/session/telegram_session'
+        self.API_SESSION_NAME = "/app/session/telegram_session"
 
         # Initialize client but DON'T start it yet
         self.client = TelegramClient(
-            self.API_SESSION_NAME,
-            settings.TELEGRAM_API_ID,
-            settings.TELEGRAM_API_HASH
+            self.API_SESSION_NAME, settings.TELEGRAM_API_ID, settings.TELEGRAM_API_HASH
         )
 
         # Telegram's channel ID i.e. -1001234567890
@@ -55,17 +54,16 @@ class TelegramAPIClient:
         Run this with: asyncio.run(client.stream_signals(event_handler=...))
         """
         if not event_handler:
-            self.logger.warning("No event_handler provided for stream_signals; messages will be ignored.")
+            self.logger.warning(
+                "No event_handler provided for stream_signals; messages will be ignored."
+            )
             return
 
         await self.start_client()
         channel = channel or self.TARGET_CHANNEL
 
         # Register the handler
-        self.client.add_event_handler(
-            event_handler,
-            events.NewMessage(chats=channel)
-        )
+        self.client.add_event_handler(event_handler, events.NewMessage(chats=channel))
 
         self.logger.info(f"Streaming from {channel}...")
         try:

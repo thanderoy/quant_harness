@@ -15,23 +15,23 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Trade.objects.all()
     serializer_class = TradeSerializer
     filterset_class = TradeFilter
-    ordering_fields = ['entry_time', 'exit_time', 'pnl', 'symbol']
-    ordering = ['-entry_time']  # default ordering
+    ordering_fields = ["entry_time", "exit_time", "pnl", "symbol"]
+    ordering = ["-entry_time"]  # default ordering
 
     def get_queryset(self):
         # Ensure we prefetch the related mutations to avoid N+1 queries
-        return Trade.objects.prefetch_related('close_prices_mutations').all()
+        return Trade.objects.prefetch_related("close_prices_mutations").all()
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def modify(self, request, pk=None):
         """Modify the SL and/or TP of an open position on MT5 and record the mutation."""
         trade = self.get_object()
-        sl = request.data.get('sl')
-        tp = request.data.get('tp')
+        sl = request.data.get("sl")
+        tp = request.data.get("tp")
 
         if sl is None and tp is None:
             return Response(
-                {'detail': 'At least one of sl or tp must be provided.'},
+                {"detail": "At least one of sl or tp must be provided."},
                 status=drf_status.HTTP_400_BAD_REQUEST,
             )
 
@@ -47,23 +47,26 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
                 tp=tp_value,
             )
         except APIError as e:
-            return Response({'detail': str(e)}, status=drf_status.HTTP_502_BAD_GATEWAY)
+            return Response({"detail": str(e)}, status=drf_status.HTTP_502_BAD_GATEWAY)
         finally:
             mt5_client.close()
 
-        if not result.get('success'):
+        if not result.get("success"):
             return Response(
-                {'detail': result.get('comment', 'Modification failed'), 'mt5_response': result},
+                {
+                    "detail": result.get("comment", "Modification failed"),
+                    "mt5_response": result,
+                },
                 status=drf_status.HTTP_400_BAD_REQUEST,
             )
 
         update_fields = []
         if sl_value is not None:
             trade.sl = sl_value
-            update_fields.append('sl')
+            update_fields.append("sl")
         if tp_value is not None:
             trade.tp = tp_value
-            update_fields.append('tp')
+            update_fields.append("tp")
         trade.save(update_fields=update_fields)
 
         TradeClosePricesMutation.objects.create(
@@ -75,24 +78,24 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(trade)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def close(self, request, pk=None):
         """Close an open position on MT5 and record the exit on the Trade."""
         trade = self.get_object()
 
         if trade.exit_time is not None:
             return Response(
-                {'detail': 'Trade is already closed.'},
+                {"detail": "Trade is already closed."},
                 status=drf_status.HTTP_400_BAD_REQUEST,
             )
 
-        exit_reason = request.data.get('exit_reason', 'MANUAL')
-        volume = request.data.get('volume')
+        exit_reason = request.data.get("exit_reason", "MANUAL")
+        volume = request.data.get("volume")
 
         valid_reasons = [c[0] for c in Trade.CLOSING_REASON_CHOICES]
         if exit_reason not in valid_reasons:
             return Response(
-                {'detail': f'Invalid exit_reason. Choices: {valid_reasons}'},
+                {"detail": f"Invalid exit_reason. Choices: {valid_reasons}"},
                 status=drf_status.HTTP_400_BAD_REQUEST,
             )
 
@@ -104,20 +107,23 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
                 volume=float(volume) if volume is not None else None,
             )
         except APIError as e:
-            return Response({'detail': str(e)}, status=drf_status.HTTP_502_BAD_GATEWAY)
+            return Response({"detail": str(e)}, status=drf_status.HTTP_502_BAD_GATEWAY)
         finally:
             mt5_client.close()
 
-        if not result.get('success'):
+        if not result.get("success"):
             return Response(
-                {'detail': result.get('comment', 'Close failed'), 'mt5_response': result},
+                {
+                    "detail": result.get("comment", "Close failed"),
+                    "mt5_response": result,
+                },
                 status=drf_status.HTTP_400_BAD_REQUEST,
             )
 
         trade.exit_time = timezone.now()
-        trade.exit_price = result.get('price')
+        trade.exit_price = result.get("price")
         trade.exit_reason = exit_reason
-        trade.save(update_fields=['exit_time', 'exit_price', 'exit_reason'])
+        trade.save(update_fields=["exit_time", "exit_price", "exit_reason"])
 
         serializer = self.get_serializer(trade)
         return Response(serializer.data)

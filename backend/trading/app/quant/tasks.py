@@ -52,12 +52,16 @@ def _sync_trades_for_environment(env_name: str, mt5_url: str) -> dict:
                 trade.pnl = position.get("profit", 0.0)
                 trade.save(update_fields=["pnl"])
                 still_open_count += 1
-                LOGGER.debug(f"[{env_name}] Trade {trade.id}: OPEN, Updated PnL: {trade.pnl}")
+                LOGGER.debug(
+                    f"[{env_name}] Trade {trade.id}: OPEN, Updated PnL: {trade.pnl}"
+                )
                 continue
 
             order = mt5_client.get_order(ticket)
             if not order:
-                LOGGER.warning(f"[{env_name}] No order found for trade {trade.id} (ticket {ticket})")
+                LOGGER.warning(
+                    f"[{env_name}] No order found for trade {trade.id} (ticket {ticket})"
+                )
                 failed_count += 1
                 continue
 
@@ -66,7 +70,9 @@ def _sync_trades_for_environment(env_name: str, mt5_url: str) -> dict:
             if order_state == 4:  # ORDER_STATE_FILLED
                 deals = mt5_client.get_deals(ticket)
                 if not deals:
-                    LOGGER.warning(f"[{env_name}] No deals found for filled trade {trade.id}")
+                    LOGGER.warning(
+                        f"[{env_name}] No deals found for filled trade {trade.id}"
+                    )
                     failed_count += 1
                     continue
 
@@ -80,17 +86,23 @@ def _sync_trades_for_environment(env_name: str, mt5_url: str) -> dict:
 
                 in_deals = [d for d in deals if d.get("entry") in (0, 2)]
                 if in_deals:
-                    first_in_deal = sorted(in_deals, key=lambda x: x.get("time_msc", 0))[0]
+                    first_in_deal = sorted(
+                        in_deals, key=lambda x: x.get("time_msc", 0)
+                    )[0]
                     entry_price_actual = first_in_deal.get("price", 0.0)
 
                 out_deals = [d for d in deals if d.get("entry") in (1, 3)]
                 if out_deals:
-                    last_out_deal = sorted(out_deals, key=lambda x: x.get("time_msc", 0))[-1]
+                    last_out_deal = sorted(
+                        out_deals, key=lambda x: x.get("time_msc", 0)
+                    )[-1]
                     exit_price = last_out_deal.get("price", 0.0)
                     time_raw = last_out_deal.get("time")
                     if time_raw:
                         if isinstance(time_raw, str):
-                            exit_time = datetime.fromisoformat(time_raw.replace("Z", "+00:00"))
+                            exit_time = datetime.fromisoformat(
+                                time_raw.replace("Z", "+00:00")
+                            )
                         else:
                             exit_time = time_raw
 
@@ -104,16 +116,26 @@ def _sync_trades_for_environment(env_name: str, mt5_url: str) -> dict:
                     trade.entry_price = entry_price_actual
                 trade.exit_price = exit_price
                 trade.exit_time = exit_time
-                trade.pnl = round(total_pnl + total_commission + total_swap + total_fee, 2)
+                trade.pnl = round(
+                    total_pnl + total_commission + total_swap + total_fee, 2
+                )
 
                 if trade.tp and trade.exit_price:
                     if trade.direction == "BUY" and trade.exit_price >= trade.tp:
                         trade.exit_reason = "TP"
                     elif trade.direction == "SELL" and trade.exit_price <= trade.tp:
                         trade.exit_reason = "TP"
-                    elif trade.sl and trade.direction == "BUY" and trade.exit_price <= trade.sl:
+                    elif (
+                        trade.sl
+                        and trade.direction == "BUY"
+                        and trade.exit_price <= trade.sl
+                    ):
                         trade.exit_reason = "SL"
-                    elif trade.sl and trade.direction == "SELL" and trade.exit_price >= trade.sl:
+                    elif (
+                        trade.sl
+                        and trade.direction == "SELL"
+                        and trade.exit_price >= trade.sl
+                    ):
                         trade.exit_reason = "SL"
                     else:
                         trade.exit_reason = "MANUAL"
@@ -122,10 +144,17 @@ def _sync_trades_for_environment(env_name: str, mt5_url: str) -> dict:
 
                 trade.synched = True
                 trade.status = "FILLED"
-                trade.save(update_fields=[
-                    "entry_price", "exit_price", "exit_time", "exit_reason",
-                    "pnl", "status", "synched",
-                ])
+                trade.save(
+                    update_fields=[
+                        "entry_price",
+                        "exit_price",
+                        "exit_time",
+                        "exit_reason",
+                        "pnl",
+                        "status",
+                        "synched",
+                    ]
+                )
                 synched_count += 1
                 LOGGER.info(
                     f"[{env_name}] Trade {trade.id}: CLOSED, exit_price: {trade.exit_price}, pnl: {trade.pnl}"
@@ -148,7 +177,9 @@ def _sync_trades_for_environment(env_name: str, mt5_url: str) -> dict:
                 )
 
             else:
-                LOGGER.debug(f"[{env_name}] Trade {trade.id}: {order.get('state_description')}")
+                LOGGER.debug(
+                    f"[{env_name}] Trade {trade.id}: {order.get('state_description')}"
+                )
                 still_open_count += 1
 
         except Exception as e:
@@ -217,7 +248,7 @@ def _sync_account_for_environment(env_name: str, mt5_url: str) -> dict:
                 "server": account_info.get("server", ""),
                 "currency": account_info.get("currency", ""),
                 "trade_mode": account_info.get("trade_mode", 0),
-            }
+            },
         )
 
         today = timezone.now().date()
@@ -250,7 +281,12 @@ def _sync_account_for_environment(env_name: str, mt5_url: str) -> dict:
             and latest_snapshot.profit == current_profit
         ):
             LOGGER.info(f"[{env_name}] Account {login} unchanged, skipping snapshot.")
-            return {"login": login, "snapshot_updated": False, "created": False, "reason": "unchanged"}
+            return {
+                "login": login,
+                "snapshot_updated": False,
+                "created": False,
+                "reason": "unchanged",
+            }
 
         snapshot, s_created = AccountSnapshot.objects.update_or_create(
             account=account,
@@ -263,10 +299,12 @@ def _sync_account_for_environment(env_name: str, mt5_url: str) -> dict:
                 "margin_level": current_margin_level,
                 "leverage": current_leverage,
                 "profit": current_profit,
-            }
+            },
         )
 
-        LOGGER.info(f"[{env_name}] Account {login} sync completed. Snapshot created: {s_created}")
+        LOGGER.info(
+            f"[{env_name}] Account {login} sync completed. Snapshot created: {s_created}"
+        )
         return {"login": login, "snapshot_updated": True, "created": s_created}
     except Exception as e:
         LOGGER.exception(f"[{env_name}] Error saving account sync details: {e}")

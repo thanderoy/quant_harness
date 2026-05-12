@@ -303,7 +303,9 @@ class OrderInfo(BaseModel):
     sl: float = Field(..., description="Stop Loss level")
     tp: float = Field(..., description="Take Profit level")
     time_setup: Optional[datetime] = Field(None, description="Order setup time")
-    time_done: Optional[datetime] = Field(None, description="Order execution/cancel time")
+    time_done: Optional[datetime] = Field(
+        None, description="Order execution/cancel time"
+    )
     magic: int = Field(..., description="Expert Advisor ID")
     comment: str = Field(..., description="Order comment")
     position_id: int = Field(..., description="Position ID")
@@ -566,9 +568,7 @@ class MT5Service:
                 detail=f"Unexpected error: {str(e)}",
             )
 
-    def get_market_prices(
-        self, request: MarketRatesRequest
-    ) -> MarketRatesResponse:  # noqa: E501
+    def get_market_prices(self, request: MarketRatesRequest) -> MarketRatesResponse:  # noqa: E501
         """
         Retrieve historical market rates.
 
@@ -855,10 +855,14 @@ class MT5Service:
             comment=result_dict.get("comment"),
             request_id=result_dict.get("request_id"),
             retcode=retcode,
-            retcode_description=self.RETCODE_MAP.get(retcode, f"UNKNOWN_CODE_{retcode}"),
+            retcode_description=self.RETCODE_MAP.get(
+                retcode, f"UNKNOWN_CODE_{retcode}"
+            ),
         )
 
-    def modify_position(self, ticket: int, request: ModifyPositionRequest) -> TradeResponse:
+    def modify_position(
+        self, ticket: int, request: ModifyPositionRequest
+    ) -> TradeResponse:
         """
         Modify the SL and/or TP of an open position.
 
@@ -902,9 +906,13 @@ class MT5Service:
 
             response = self._build_trade_response(result)
             if response.success:
-                LOGGER.info(f"Position {ticket} modified: sl={trade_request['sl']} tp={trade_request['tp']}")
+                LOGGER.info(
+                    f"Position {ticket} modified: sl={trade_request['sl']} tp={trade_request['tp']}"
+                )
             else:
-                LOGGER.warning(f"Position {ticket} modify failed: {response.retcode_description} - {response.comment}")
+                LOGGER.warning(
+                    f"Position {ticket} modify failed: {response.retcode_description} - {response.comment}"
+                )
             return response
 
         except HTTPException:
@@ -916,7 +924,9 @@ class MT5Service:
                 detail=f"Unexpected error: {str(e)}",
             )
 
-    def close_position(self, ticket: int, request: ClosePositionRequest) -> TradeResponse:
+    def close_position(
+        self, ticket: int, request: ClosePositionRequest
+    ) -> TradeResponse:
         """
         Close an open position fully or partially.
 
@@ -991,9 +1001,13 @@ class MT5Service:
 
             response = self._build_trade_response(result)
             if response.success:
-                LOGGER.info(f"Position {ticket} closed: volume={volume} price={response.price}")
+                LOGGER.info(
+                    f"Position {ticket} closed: volume={volume} price={response.price}"
+                )
             else:
-                LOGGER.warning(f"Position {ticket} close failed: {response.retcode_description} - {response.comment}")
+                LOGGER.warning(
+                    f"Position {ticket} close failed: {response.retcode_description} - {response.comment}"
+                )
             return response
 
         except HTTPException:
@@ -1036,7 +1050,9 @@ class MT5Service:
                 ticket=pos_dict["ticket"],
                 symbol=pos_dict["symbol"],
                 type=pos_dict["type"],
-                type_description=type_map.get(pos_dict["type"], f"UNKNOWN_{pos_dict['type']}"),
+                type_description=type_map.get(
+                    pos_dict["type"], f"UNKNOWN_{pos_dict['type']}"
+                ),
                 volume=pos_dict["volume"],
                 price_open=pos_dict["price_open"],
                 price_current=pos_dict["price_current"],
@@ -1112,9 +1128,13 @@ class MT5Service:
                 ticket=order_dict["ticket"],
                 symbol=order_dict["symbol"],
                 type=order_dict["type"],
-                type_description=order_type_map.get(order_dict["type"], f"UNKNOWN_{order_dict['type']}"),
+                type_description=order_type_map.get(
+                    order_dict["type"], f"UNKNOWN_{order_dict['type']}"
+                ),
                 state=order_dict.get("state", 0),
-                state_description=order_state_map.get(order_dict.get("state", 0), "UNKNOWN"),
+                state_description=order_state_map.get(
+                    order_dict.get("state", 0), "UNKNOWN"
+                ),
                 volume_initial=order_dict.get("volume_initial", 0.0),
                 volume_current=order_dict.get("volume_current", 0.0),
                 price_open=order_dict.get("price_open", 0.0),
@@ -1122,8 +1142,12 @@ class MT5Service:
                 price_stoplimit=order_dict.get("price_stoplimit", 0.0),
                 sl=order_dict.get("sl", 0.0),
                 tp=order_dict.get("tp", 0.0),
-                time_setup=datetime.fromtimestamp(order_dict["time_setup"]) if order_dict.get("time_setup") else None,
-                time_done=datetime.fromtimestamp(order_dict["time_done"]) if order_dict.get("time_done") else None,
+                time_setup=datetime.fromtimestamp(order_dict["time_setup"])
+                if order_dict.get("time_setup")
+                else None,
+                time_done=datetime.fromtimestamp(order_dict["time_done"])
+                if order_dict.get("time_done")
+                else None,
                 magic=order_dict.get("magic", 0),
                 comment=order_dict.get("comment", ""),
                 position_id=order_dict.get("position_id", 0),
@@ -1175,9 +1199,13 @@ class MT5Service:
                     order=d["order"],
                     symbol=d["symbol"],
                     type=d["type"],
-                    type_description=self.DEAL_TYPE_MAP.get(d["type"], f"UNKNOWN_{d['type']}"),
+                    type_description=self.DEAL_TYPE_MAP.get(
+                        d["type"], f"UNKNOWN_{d['type']}"
+                    ),
                     entry=d.get("entry", 0),
-                    entry_description=self.DEAL_ENTRY_MAP.get(d.get("entry", 0), f"UNKNOWN_{d.get('entry')}"),
+                    entry_description=self.DEAL_ENTRY_MAP.get(
+                        d.get("entry", 0), f"UNKNOWN_{d.get('entry')}"
+                    ),
                     volume=d["volume"],
                     price=d["price"],
                     profit=d["profit"],
@@ -1245,7 +1273,6 @@ class MT5Service:
                 detail=f"Unexpected error: {str(e)}",
             )
 
-
     def get_open_positions(
         self,
         magic: Optional[int] = None,
@@ -1278,7 +1305,9 @@ class MT5Service:
                         ticket=d["ticket"],
                         symbol=d["symbol"],
                         type=d["type"],
-                        type_description=type_map.get(d["type"], f"UNKNOWN_{d['type']}"),
+                        type_description=type_map.get(
+                            d["type"], f"UNKNOWN_{d['type']}"
+                        ),
                         volume=d["volume"],
                         price_open=d["price_open"],
                         price_current=d["price_current"],
@@ -1303,12 +1332,16 @@ class MT5Service:
                 detail=f"Unexpected error: {str(e)}",
             )
 
-    def order_modify(self, ticket: int, sl: Optional[float], tp: Optional[float]) -> TradeResponse:
+    def order_modify(
+        self, ticket: int, sl: Optional[float], tp: Optional[float]
+    ) -> TradeResponse:
         """Modify SL/TP of an open position. Thin wrapper around modify_position."""
         req = ModifyPositionRequest(sl=sl, tp=tp)
         return self.modify_position(ticket, req)
 
-    def order_close(self, ticket: int, volume: Optional[float], deviation: int) -> TradeResponse:
+    def order_close(
+        self, ticket: int, volume: Optional[float], deviation: int
+    ) -> TradeResponse:
         """Close an open position. Thin wrapper around close_position."""
         req = ClosePositionRequest(volume=volume, deviation=deviation)
         return self.close_position(ticket, req)
@@ -1673,9 +1706,7 @@ async def get_position(
         PositionInfo with position details
     """
     loop = asyncio.get_event_loop()
-    position = await loop.run_in_executor(
-        executor, service.get_position_info, ticket
-    )
+    position = await loop.run_in_executor(executor, service.get_position_info, ticket)
     if position is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1711,9 +1742,7 @@ async def get_order(
         OrderInfo with order details
     """
     loop = asyncio.get_event_loop()
-    order = await loop.run_in_executor(
-        executor, service.get_order_info, ticket
-    )
+    order = await loop.run_in_executor(executor, service.get_order_info, ticket)
     if order is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1868,4 +1897,3 @@ async def order_close(
 if __name__ == "__main__":
     # Note: Use 'python -m uvicorn main:app --reload' for development
     uvicorn.run(app, host="0.0.0.0", port=5001)
-
