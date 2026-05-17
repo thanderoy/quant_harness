@@ -8,74 +8,7 @@ x-logging: &default-logging
 x-common-labels: &default-labels
   logging: "promtail"
   logging_jobname: "containerlogs"
-  stackname: "docker-monitoring-stack-gpnc"
-
-services:
-  traefik:
-    image: traefik:v3.6
-    container_name: traefik
-    ports:
-      - 80:80 # HTTP port
-      - 443:443 # HTTPS port
-    restart: always
-    environment:
-      - TRAEFIK_HASHED_PASSWORD=${TRAEFIK_HASHED_PASSWORD?Variable not set}
-    labels:
-      # Traefik configuration
-      <<: *default-labels
-      traefik.enable: true
-      traefik.docker.network: traefik-public
-      traefik.http.services.traefik-dashboard.loadbalancer.server.port: 8080
-
-      # HTTP router configuration
-      traefik.http.routers.traefik-dashboard-http.entrypoints: http
-      traefik.http.routers.traefik-dashboard-http.rule: Host(`${TRAEFIK_SERVICE_DOMAIN?Variable not set}`)
-
-      # HTTPS router configuration
-      traefik.http.routers.traefik-dashboard-https.entrypoints: https
-      traefik.http.routers.traefik-dashboard-https.rule: Host(`${TRAEFIK_SERVICE_DOMAIN?Variable not set}`)
-      traefik.http.routers.traefik-dashboard-https.tls: true
-      traefik.http.routers.traefik-dashboard-https.tls.certresolver: le
-      traefik.http.routers.traefik-dashboard-https.service: api@internal
-
-      # HTTPS redirect middleware
-      traefik.http.middlewares.https-redirect.redirectscheme.scheme: https
-      traefik.http.middlewares.https-redirect.redirectscheme.permanent: true
-      traefik.http.routers.traefik-dashboard-http.middlewares: https-redirect
-
-      # HTTP Basic Auth middleware
-      traefik.http.middlewares.admin-auth.basicauth.users: ${TRAEFIK_USERNAME?Variable not set}:${TRAEFIK_HASHED_PASSWORD?Variable not set}
-      traefik.http.routers.traefik-dashboard-https.middlewares: admin-auth
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro # Docker socket for reading service labels
-      - traefik-public-certificates:/certificates # Certificate storage
-    command:
-      # Docker provider configuration
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-
-      # Entrypoints configuration
-      - --entrypoints.http.address=:80
-      - --entrypoints.http.http.redirections.entryPoint.to=https
-      - --entrypoints.http.http.redirections.entryPoint.scheme=https
-      - --entrypoints.http.http.redirections.entryPoint.permanent=true
-      - --entrypoints.https.address=:443
-
-      # Let's Encrypt configuration
-      - --certificatesresolvers.le.acme.email=${ACME_EMAIL?Variable not set}
-      - --certificatesresolvers.le.acme.storage=/certificates/acme.json
-      - --certificatesresolvers.le.acme.tlschallenge=true
-
-      # Logging and API configuration
-      - --accesslog
-      - --log
-      - --api
-      - --metrics.prometheus=true
-      - --metrics.prometheus.addrouterslabels=true
-      - --metrics.prometheus.addserviceslabels=true
-    networks:
-      - traefik-public
-    logging: *default-logging
+  stackname: "wmps"
 
   mt5:
     build:
@@ -122,11 +55,9 @@ services:
       traefik.http.routers.mt5-api-https.tls.certresolver: le
       traefik.http.routers.mt5-api-https.service: mt5-api-service
       traefik.http.routers.mt5-api-https.middlewares: mt5-api-auth
-      traefik.http.middlewares.mt5-api-auth.basicauth.users: ${TRAEFIK_USERNAME?Variable not set}:${TRAEFIK_HASHED_PASSWORD?Variable not set}
+      traefik.http.middlewares.mt5-api-auth.basicauth.users: ${MT5_API_USERNAME?Variable not set}:${MT5_API_HASHED_PASSWORD?Variable not set}
       traefik.http.services.mt5-api-service.loadbalancer.server.port: 5001
     logging: *default-logging
-    depends_on:
-      - traefik
 
   mt5-test:
     build:
@@ -173,11 +104,9 @@ services:
       traefik.http.routers.mt5-test-api-https.tls.certresolver: le
       traefik.http.routers.mt5-test-api-https.service: mt5-test-api-service
       traefik.http.routers.mt5-test-api-https.middlewares: mt5-test-api-auth
-      traefik.http.middlewares.mt5-test-api-auth.basicauth.users: ${TRAEFIK_USERNAME?Variable not set}:${TRAEFIK_HASHED_PASSWORD?Variable not set}
+      traefik.http.middlewares.mt5-test-api-auth.basicauth.users: ${MT5_API_USERNAME?Variable not set}:${MT5_API_HASHED_PASSWORD?Variable not set}
       traefik.http.services.mt5-test-api-service.loadbalancer.server.port: 5001
     logging: *default-logging
-    depends_on:
-      - traefik
 
   postgres:
     image: postgres:17-alpine
@@ -215,7 +144,6 @@ services:
     command: [ "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application" ]
     depends_on:
       - postgres
-      - traefik
       - redis
     networks:
       - default
@@ -245,8 +173,6 @@ services:
     container_name: redis
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD}
-    depends_on:
-      - traefik
     networks:
       - default
     healthcheck:
@@ -326,7 +252,6 @@ services:
       - grafana-storage:/var/lib/grafana
     depends_on:
       - prometheus
-      - traefik
     cpus: 0.5
     mem_limit: 1024m
     networks:
@@ -362,7 +287,6 @@ services:
       - prometheus-storage:/prometheus
     depends_on:
       - alertmanager
-      - traefik
     cpus: 0.5
     mem_limit: 512m
     networks:
@@ -378,8 +302,6 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    depends_on:
-      - traefik
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -407,8 +329,6 @@ services:
       - "--path.sysfs=/host/sys"
       - "--collector.filesystem.ignored-mount-points"
       - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
-    depends_on:
-      - traefik
     cpus: 0.5
     mem_limit: 512m
     networks:
@@ -433,7 +353,6 @@ services:
       - default
     depends_on:
       - uncomplicated-alert-receiver
-      - traefik
     labels:
       <<: *default-labels
     logging: *default-logging
@@ -445,8 +364,6 @@ services:
     mem_limit: 512m
     networks:
       - default
-    depends_on:
-      - traefik
     labels:
       <<: *default-labels
     logging: *default-logging
@@ -459,8 +376,6 @@ services:
     volumes:
       - ./monitoring/configs/loki/loki.yaml:/etc/loki/loki.yaml
       - ./monitoring/configs/loki/rules.yaml:/etc/loki/rules/fake/loki-rules.yml
-    depends_on:
-      - traefik
     cpus: 0.5
     mem_limit: 512m
     networks:
@@ -481,7 +396,6 @@ services:
     command: -config.file=/etc/promtail/docker-config.yaml
     depends_on:
       - loki
-      - traefik
     cpus: 0.5
     mem_limit: 512m
     networks:
@@ -508,8 +422,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-      traefik:
-        condition: service_started
     cpus: 1
     mem_limit: 2048m
     networks:
@@ -528,7 +440,6 @@ services:
     logging: *default-logging
 
 volumes:
-  traefik-public-certificates: # Persistent volume for certificates
   grafana-storage: {}
   prometheus-storage: {}
   postgres-storage: {}
