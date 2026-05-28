@@ -10,6 +10,7 @@ x-common-labels: &default-labels
   logging_jobname: "containerlogs"
   stackname: "wmps"
 
+services:
   mt5:
     build:
       context: backend/mt5-api
@@ -388,6 +389,7 @@ x-common-labels: &default-labels
     image: grafana/promtail:3.5.5
 
     container_name: promtail
+    user: root
     volumes:
       - promtail-positions:/tmp
       - ./monitoring/configs/promtail/promtail.yaml:/etc/promtail/docker-config.yaml
