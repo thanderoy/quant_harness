@@ -282,6 +282,13 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(
             minute="1,6,11,16,21,26,31,36,41,46,51,56", day_of_week="mon-fri"
         ),
+        # Discard if not picked up within 4 min — by then iloc[-2] has shifted
+        # to the next bar and the signal would be stale.
+        "options": {"expires": 240},
+    },
+    "asqs-audit": {
+        "task": "quant.asqs.audit",
+        "schedule": crontab(hour=20, minute=5, day_of_week="mon-fri"),
     },
 }
 
