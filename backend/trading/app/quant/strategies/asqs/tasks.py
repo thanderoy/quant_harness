@@ -132,7 +132,7 @@ def run_asqs_audit(self) -> dict:
         today = dj_tz.now().date()
         executed = Trade.objects.filter(
             strategy="ASQSafeScalpingStrategy",
-            created_at__date=today,
+            entry_time__date=today,
         ).count()
 
         result = {
