@@ -318,7 +318,7 @@ class ASQSafeScalpingStrategy(BaseStrategy):
         today = dj_tz.now().date()
         count = Trade.objects.filter(
             strategy=self.__class__.__name__,
-            created_at__date=today,
+            entry_time__date=today,
         ).count()
         if count >= self.max_daily_trades:
             LOGGER.info(f"Daily cap reached ({count}/{self.max_daily_trades})")
