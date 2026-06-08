@@ -2,7 +2,7 @@ import logging
 
 
 class BaseStrategy:
-    def __init__(self, environment: str = "prod"):
+    def __init__(self, environment: str = "test"):
         """Initialize with required args and inputs."""
 
         self.environment: str = environment.lower()

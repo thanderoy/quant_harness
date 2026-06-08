@@ -273,10 +273,6 @@ CELERY_BEAT_SCHEDULE = {
         "task": "quant.hma_stoch_1h.run",
         "schedule": crontab(minute=1, day_of_week="mon-fri"),
     },
-    "hma-stoch-m15": {
-        "task": "quant.hma_stoch_m15.run",
-        "schedule": crontab(minute="1,16,31,46", day_of_week="mon-fri"),
-    },
     "asqs": {
         "task": "quant.asqs.run",
         "schedule": crontab(

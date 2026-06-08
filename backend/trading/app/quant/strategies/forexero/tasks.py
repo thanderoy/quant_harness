@@ -10,7 +10,7 @@ LOGGER = logging.getLogger(__name__)
 @shared_task(
     bind=True, name="app.quant.strategies.forexero.tasks.execute_forexero_trade"
 )
-def execute_forexero_trade(self, signal_data: dict, environment: str = "prod"):
+def execute_forexero_trade(self, signal_data: dict, environment: str = "test"):
     """
     Celery task to process a single Forexero signal.
     """
@@ -26,7 +26,7 @@ def execute_forexero_trade(self, signal_data: dict, environment: str = "prod"):
 @shared_task(
     bind=True, name="app.quant.strategies.forexero.tasks.run_forexero_listener"
 )
-def run_forexero_listener(self, channel=None, environment: str = "prod"):
+def run_forexero_listener(self, channel=None, environment: str = "test"):
     """
     Long-running Celery task that listens to Telegram signals
     and dispatches execution tasks.
