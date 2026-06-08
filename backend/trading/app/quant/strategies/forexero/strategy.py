@@ -47,19 +47,19 @@ class ForexeroStrategy(BaseStrategy):
     def __init__(
         self,
         *,
-        environment: str = "prod",
+        environment: str = "test",
         mt5_base_url: Optional[str] = None,
         deviation: int = 20,
         magic_number: int = 2460000,
         trades_per_tp: int = 1,
         use_tps: Optional[List[int]] = None,
-        adjust_for_high_risk_trades: bool = True,
+        adjust_for_high_risk_trades: bool = False,
     ):
         super().__init__(environment=environment)
         self.deviation = deviation
         self.magic_number = magic_number
         self.trades_per_tp = trades_per_tp
-        self.use_tps = use_tps if use_tps is not None else [1, 2]
+        self.use_tps = use_tps if use_tps is not None else [1, 2, 3]
         self.adjust_for_high_risk_trades = adjust_for_high_risk_trades
 
         base_url = mt5_base_url or settings.get_mt5_url(self.environment)
