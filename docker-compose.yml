@@ -119,6 +119,7 @@ services:
       - postgres-storage:/var/lib/postgresql/data
     networks:
       - default
+      - dashboarding   # exposes the metadata/analytics DB to Superset (monitoring stack)
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
       interval: 10s
@@ -176,6 +177,7 @@ services:
     command: redis-server --requirepass ${REDIS_PASSWORD}
     networks:
       - default
+      - dashboarding   # cache/celery broker for Superset (monitoring stack)
     healthcheck:
       test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       interval: 10s
@@ -227,49 +229,16 @@ services:
       <<: *default-labels
     logging: *default-logging
 
-  superset:
-    image: apache/superset:6.0.0
-    container_name: superset
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      - SUPERSET_CONFIG_PATH=/app/superset_config.py
-    volumes:
-      - ./monitoring/superset/superset_config.py:/app/superset_config.py:ro
-      - ./monitoring/superset/bootstrap.sh:/app/bootstrap.sh:ro
-      - superset_home:/app/superset_home
-    command: ["/bin/bash", "/app/bootstrap.sh"]
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    cpus: 1
-    mem_limit: 2048m
-    networks:
-      - default
-      - traefik-public
-    labels:
-      <<: *default-labels
-      traefik.enable: true
-      traefik.docker.network: traefik-public
-      traefik.http.routers.superset-https.rule: Host(`${SUPERSET_SERVICE_DOMAIN?Variable not set}`)
-      traefik.http.routers.superset-https.entrypoints: https
-      traefik.http.routers.superset-https.tls: true
-      traefik.http.routers.superset-https.tls.certresolver: le
-      traefik.http.routers.superset-https.service: superset-service
-      traefik.http.services.superset-service.loadbalancer.server.port: 8088
-    logging: *default-logging
-
 volumes:
   postgres-storage: {}
   static_volume: {}
   media_volume: {}
-  superset_home: {}
 
 networks:
   default:
     driver: bridge
   traefik-public:
+    external: true
+  # Shared BI data-plane: Superset (monitoring stack) reaches postgres/redis here.
+  dashboarding:
     external: true
