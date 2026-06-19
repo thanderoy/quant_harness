@@ -23,7 +23,7 @@ The `trading` Django app provides a modular framework for managing trading algor
    Make sure your Django project includes `trading` in `INSTALLED_APPS` and all requirements are installed.
 
    ```bash
-   pip install -r requirements.txt
+   uv sync
    ```
 
 2. **Apply migrations**
