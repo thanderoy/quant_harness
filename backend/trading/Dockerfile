@@ -3,7 +3,11 @@ FROM python:3.12-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    # Install into the image's system Python so gunicorn/manage.py stay on PATH
+    UV_PROJECT_ENVIRONMENT=/usr/local
 
 # Set work directory
 WORKDIR /app
@@ -15,9 +19,13 @@ RUN apt-get update -y && \
     libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements.txt /app/
-RUN pip install -r requirements.txt
+# Install uv (pinned)
+COPY --from=ghcr.io/astral-sh/uv:0.11.8 /uv /uvx /bin/
+
+# Install Python dependencies straight from the lockfile (cached layer).
+# --no-install-project: only deps, the Django app is copied in below.
+COPY pyproject.toml uv.lock /app/
+RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy project
 COPY . /app/
