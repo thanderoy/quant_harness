@@ -105,6 +105,16 @@ class DrawdownGuard:
             return False
         return equity < threshold
 
+    def current_drawdown(self, equity: float) -> float:
+        """Fractional drawdown from peak, e.g. 0.08 for 8% below peak.
+
+        Read-only helper for logging. Returns 0.0 when no peak is recorded
+        yet or when equity is at/above the peak.
+        """
+        if self._cached_peak is None or self._cached_peak <= 0:
+            return 0.0
+        return max(0.0, (self._cached_peak - equity) / self._cached_peak)
+
     def update(self, equity: float) -> None:
         """Raise peak if new high. Idempotent if equity <= current peak."""
         if self._cached_peak is None or equity > self._cached_peak:

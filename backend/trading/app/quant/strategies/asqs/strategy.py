@@ -685,9 +685,10 @@ class ASQSafeScalpingStrategy(BaseStrategy):
         Full evaluation cycle.
 
         Filter order matches the project's risk management layers:
-          1. Session filter
-          2. Friday cutoff
-          3. Drawdown guard (persistent peak tracking)
+          0. Manage existing positions (always — even when halted)
+          1. Drawdown guard (persistent peak tracking — runs every cycle)
+          2. Session filter
+          3. Friday cutoff
           4. Daily trade cap (DB-queried)
           5. Position dedup (magic number)
           6. Spread filter (live tick)
@@ -700,7 +701,31 @@ class ASQSafeScalpingStrategy(BaseStrategy):
         now = datetime.now(timezone.utc)
 
         # ── Manage existing positions (always, even outside session) ──
+        # Exit management (trailing/BE/partial) keeps running even when the
+        # drawdown guard is tripped — open risk must never be abandoned.
         self.manage_positions()
+
+        # ── Account info ──────────────────────────────────────────
+        # Fetched up-front (one MT5 call per 5-min cycle) so the drawdown
+        # guard can run on EVERY evaluation, including outside the session
+        # and on weekends. Without this the peak goes stale across gaps.
+        account_info = self._get_account_info()
+        if account_info is None:
+            return None
+        balance, equity, login = account_info
+
+        # ── Drawdown guard (persistent peak tracking) ─────────────
+        # Runs before any session/bar/signal logic. is_tripped() is checked
+        # before update() so the peak is never advanced past a breach.
+        if self.drawdown_guard.is_tripped(equity=equity):
+            LOGGER.warning(
+                "asqs.drawdown_halt active equity=%.2f peak=%.2f dd=%.4f",
+                equity,
+                self.drawdown_guard.peak_equity,
+                self.drawdown_guard.current_drawdown(equity),
+            )
+            return None
+        self.drawdown_guard.update(equity=equity)
 
         # ── 1. Session filter (gates new entries only) ────────────
         if not self._check_session(now):
@@ -710,18 +735,6 @@ class ASQSafeScalpingStrategy(BaseStrategy):
         # ── 2. Friday cutoff ──────────────────────────────────────
         if not self._check_friday_cutoff(now):
             return None
-
-        # ── Account info ──────────────────────────────────────────
-        account_info = self._get_account_info()
-        if account_info is None:
-            return None
-        balance, equity, login = account_info
-
-        # ── 3. Drawdown guard (persistent peak tracking) ──────────
-        if self.drawdown_guard.is_tripped(equity=equity):
-            LOGGER.warning("Drawdown guard tripped — halting")
-            return None
-        self.drawdown_guard.update(equity=equity)
 
         # ── 4. Daily trade cap (DB-queried) ───────────────────────
         if not self._check_daily_cap():

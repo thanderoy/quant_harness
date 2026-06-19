@@ -25,8 +25,10 @@ COPY . /app/
 RUN mkdir -p /app/logs && \
     mkdir -p /app/static && \
     mkdir -p /app/session && \
+    mkdir -p /var/lib/qhf && \
     chmod 777 /app/logs && \
-    chmod 777 /app/session
+    chmod 777 /app/session && \
+    chmod 777 /var/lib/qhf
 
 RUN chmod +x /app/entrypoint.sh
 

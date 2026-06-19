@@ -198,6 +198,7 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - /opt/telegram/session:/app/session
+      - qhf_state:/var/lib/qhf
     env_file:
       - .env
     depends_on:
@@ -218,6 +219,7 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - /opt/telegram/session:/app/session
+      - qhf_state:/var/lib/qhf
     env_file:
       - .env
     depends_on:
@@ -233,6 +235,7 @@ volumes:
   postgres-storage: {}
   static_volume: {}
   media_volume: {}
+  qhf_state: {}
 
 networks:
   default:
