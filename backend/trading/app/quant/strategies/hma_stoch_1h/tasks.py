@@ -3,6 +3,7 @@ import time as _time
 
 from celery import shared_task
 
+from app.config import settings
 from app.quant.strategies.hma_stoch_1h.strategy import HMAStoch1HStrategy
 
 LOGGER = logging.getLogger(__name__)
@@ -18,6 +19,12 @@ def run_hma_stoch_1h() -> dict:
     LOGGER.info("quant.hma_stoch_1h.run started")
     try:
         strategy = HMAStoch1HStrategy()
+        # One-line env-routing audit per fire (guards against demo→prod typos).
+        LOGGER.info(
+            "crest_n_keel.task_start env=%s mt5_url=%s",
+            strategy.environment,
+            settings.get_mt5_url(strategy.environment),
+        )
         signal = strategy.evaluate()
         duration = round(_time.monotonic() - start, 2)
         LOGGER.info(
