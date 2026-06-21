@@ -1,9 +1,8 @@
 # flake8: noqa: E501
 from enum import Enum
 from typing import List
-import pytz
 
-from enum import Enum
+import pytz
 
 
 class MT5Timeframe(Enum):
