@@ -34,7 +34,7 @@ Risk model (unchanged conceptually):
   lots          = floor_to_step(raw_lots, lot_step), clamped [min_lot, max_lot]
 
 The CALLER is responsible for any signal-level ATR filtering BEFORE
-calling this. See strategy_patch_*_v1_1_revised.txt.
+calling this.
 """
 
 import math
