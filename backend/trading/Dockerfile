@@ -24,8 +24,12 @@ COPY --from=ghcr.io/astral-sh/uv:0.11.8 /uv /uvx /bin/
 
 # Install Python dependencies straight from the lockfile (cached layer).
 # --no-install-project: only deps, the Django app is copied in below.
+# --group test: bundle pytest tooling so `docker compose exec trading pytest -n 2`
+#   works without ad-hoc installs. The env is dev/test/demo and there is no
+#   separate prod image today, so the few MB of test tooling is acceptable.
+#   Stricter prod/test image separation (multi-stage) is a deliberate follow-up.
 COPY pyproject.toml uv.lock /app/
-RUN uv sync --frozen --no-dev --no-install-project
+RUN uv sync --frozen --no-dev --group test --no-install-project
 
 # Copy project
 COPY . /app/

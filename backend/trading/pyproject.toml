@@ -46,3 +46,31 @@ dependencies = [
     "wcwidth==0.2.13",
     "whitenoise==6.6.0",
 ]
+
+# Test tooling. uv-native dependency group (PEP 735) rather than the
+# [project.optional-dependencies] extra the spec sketched — these are dev-time
+# tools, not optional features of the published package. Installed in the image
+# via `uv sync --group test` (see Dockerfile); excluded from a pure prod sync.
+[dependency-groups]
+test = [
+    "pytest>=8.0,<9",
+    "pytest-django>=4.8,<5",
+    "pytest-xdist>=3.5,<4",
+    "pytest-mock>=3.12,<4",
+    "model-bakery>=1.17,<2",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "app.config.settings"
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+testpaths = ["tests"]
+addopts = "--strict-markers --strict-config"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: tests that touch external services (MT5 mock, Redis, etc.)",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
