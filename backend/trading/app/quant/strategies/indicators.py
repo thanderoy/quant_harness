@@ -41,14 +41,27 @@ def stochastic(
     Stochastic Oscillator. Returns (%K, %D).
     %K = SMA(raw_k, smooth_k) where raw_k = (close - lowest_low) / (highest_high - lowest_low) * 100
     %D = SMA(%K, d_period)
-    Both series NaN-padded at the start.
+
+    Edge-case / insufficient-data contract:
+      - Warmup: the first ``k_period - 1`` bars have no rolling window and are
+        NaN; %K stays NaN until index ``k_period - 1 + smooth_k - 1`` and %D
+        until a further ``d_period - 1`` bars. NaN is never silently filled.
+      - If ``k_period`` exceeds the series length, every value is NaN.
+      - Constant price (range == 0) yields the midpoint 50.0, not NaN — that is
+        a defined reading, not missing data.
+    Callers evaluating live signals must guard against NaN (e.g. skip the bar)
+    rather than assume a numeric %K/%D is always present.
     """
     lowest_low = low.rolling(k_period).min()
     highest_high = high.rolling(k_period).max()
     hl_range = highest_high - lowest_low
     raw_k = (close - lowest_low) / hl_range * 100
-    # When range == 0 (constant prices), default to midpoint
-    raw_k = raw_k.where(hl_range > 0, 50.0)
+    # When the range is exactly 0 (constant prices) default to the midpoint.
+    # Use mask on `hl_range == 0` rather than `where(hl_range > 0, ...)`: the
+    # latter also matches the warmup region (where hl_range is NaN, so the
+    # comparison is False) and would clobber the leading NaN padding with 50.0.
+    # `== 0` is False for NaN, so insufficient-data bars correctly stay NaN.
+    raw_k = raw_k.mask(hl_range == 0, 50.0)
     k = raw_k.rolling(smooth_k).mean()
     d = k.rolling(d_period).mean()
     return k, d
