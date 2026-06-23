@@ -193,21 +193,40 @@ def test_atr_period_longer_than_series():
 
 def test_atr_wilder_smoothing():
     """
-    Create a TR series that steps from 10 to 20 after the seed period.
-    Verify Wilder's formula: atr[i] = (atr[i-1] * 13 + tr[i]) / 14
+    Frozen-fixture regression test for Wilder's recursive ATR.
+
+    Create a TR series that steps from 10 to 20 after the seed period and
+    verify Wilder's formula: atr[i] = (atr[i-1] * 13 + tr[i]) / 14
+
+    NOTE: TR = max(high-low, |high-prev_close|, |low-prev_close|). With a
+    smoothly rising close (step +1/bar) the prev-close terms are small, so the
+    high-low span IS the true range. To make TR step to 20 the span must widen
+    to 20 — i.e. BOTH high and low must move out by 10 from the close (high-low
+    = 20). Widening only the high to close+10 (leaving low at close-5) gives a
+    span of 15, not 20 — that was the bug in the original fixture, which then
+    (correctly) failed against the production implementation.
     """
     period = 14
     n = 30
-    # Build close, high, low so TR = 10 for first 15 bars, 20 afterwards
+    # Build close, high, low so TR = 10 for first 15 bars, 20 afterwards.
     close_vals = [1800.0 + i for i in range(n)]
     high_vals = [c + 5 for c in close_vals]
     low_vals = [c - 5 for c in close_vals]
-    # Override high for bars 15..29 to make TR=20
+    # Widen BOTH sides for bars 15..29 so the high-low span (and thus TR) = 20.
     for i in range(15, n):
         high_vals[i] = close_vals[i] + 10
+        low_vals[i] = close_vals[i] - 10
     c = pd.Series(close_vals)
     h = pd.Series(high_vals)
     lo = pd.Series(low_vals)
+
+    # Guard the fixture itself: assert the engineered TR step is actually 20.
+    prev_close = c.shift(1)
+    tr = pd.concat(
+        [h - lo, (h - prev_close).abs(), (lo - prev_close).abs()], axis=1
+    ).max(axis=1)
+    assert tr.iloc[14] == pytest.approx(10.0)
+    assert tr.iloc[15] == pytest.approx(20.0)
 
     result = atr(h, lo, c, period=period)
 

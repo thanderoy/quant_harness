@@ -5,14 +5,22 @@ Tests cover _generate_signal, filter helpers, and _compute_sl_tp.
 MT5 client and external calls are fully mocked; no broker connection required.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
 import pytest
+from django.utils import timezone as dj_tz
+from model_bakery import baker
 
-from app.quant.strategies.asqs.strategy import ASQSafeScalpingStrategy
+from app.quant.strategies.asqs.strategy import (
+    SL_POINTS,
+    TP_POINTS,
+    XAUUSD_POINT,
+    ASQSafeScalpingStrategy,
+)
+from app.trades.models import Trade
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -66,26 +74,34 @@ def _make_df(
 
 
 class TestComputeSlTp:
+    """
+    ASQS uses FIXED-POINT SL/TP (SL_POINTS / TP_POINTS), not ATR multiples.
+    `_compute_sl_tp(signal, entry_price)` anchors a $3.00 SL and $4.50 TP to the
+    live entry price. (Earlier ATR-multiple `sl_atr_mult`/`tp_atr_mult` tests
+    targeted a removed design — see tests/TRIAGE_NOTES.md, Group B.)
+    """
+
+    SL_DIST = SL_POINTS * XAUUSD_POINT  # 300 × 0.01 = $3.00
+    TP_DIST = TP_POINTS * XAUUSD_POINT  # 450 × 0.01 = $4.50
+
     def setup_method(self):
         self.s = _make_strategy()
 
     def test_buy_sl_below_entry(self):
-        sl, tp = self.s._compute_sl_tp("BUY", 2000.0, 10.0)
-        assert sl == pytest.approx(2000.0 - 10.0 * 1.5)
-        assert tp == pytest.approx(2000.0 + 10.0 * 3.0)
+        sl, tp = self.s._compute_sl_tp("BUY", 2000.0)
+        assert sl == pytest.approx(2000.0 - self.SL_DIST)
+        assert tp == pytest.approx(2000.0 + self.TP_DIST)
 
     def test_sell_sl_above_entry(self):
-        sl, tp = self.s._compute_sl_tp("SELL", 2000.0, 10.0)
-        assert sl == pytest.approx(2000.0 + 10.0 * 1.5)
-        assert tp == pytest.approx(2000.0 - 10.0 * 3.0)
+        sl, tp = self.s._compute_sl_tp("SELL", 2000.0)
+        assert sl == pytest.approx(2000.0 + self.SL_DIST)
+        assert tp == pytest.approx(2000.0 - self.TP_DIST)
 
     def test_rr_ratio(self):
-        sl, tp = self.s._compute_sl_tp("BUY", 2000.0, 10.0)
+        sl, tp = self.s._compute_sl_tp("BUY", 2000.0)
         sl_dist = abs(2000.0 - sl)
         tp_dist = abs(tp - 2000.0)
-        assert tp_dist / sl_dist == pytest.approx(
-            self.s.tp_atr_mult / self.s.sl_atr_mult, rel=1e-6
-        )
+        assert tp_dist / sl_dist == pytest.approx(TP_POINTS / SL_POINTS, rel=1e-6)
 
 
 # ---------------------------------------------------------------------------
@@ -137,51 +153,58 @@ class TestCheckFridayCutoff:
         assert self.s._check_friday_cutoff(dt) is True
 
 
+@pytest.mark.django_db
 class TestCheckDailyCap:
+    """
+    `_check_daily_cap()` counts today's filled Trades for THIS strategy in the
+    DB and blocks once the count reaches `max_daily_trades`. It is stateless by
+    design — a fresh strategy instance is built every Celery cycle, so an
+    in-memory counter would reset each run; the DB is the source of truth.
+    (Earlier in-memory `_daily_trades`/`_last_trade_date` tests targeted a
+    removed design — see tests/TRIAGE_NOTES.md, Group A.)
+    """
+
+    STRATEGY_NAME = "ASQSafeScalpingStrategy"
+
     def setup_method(self):
         self.s = _make_strategy(max_daily_trades=3)
 
-    def _dt(self, day: int) -> datetime:
-        return datetime(2024, 1, day, 10, 0, tzinfo=timezone.utc)
+    def _make_trades(self, count: int, *, entry_time, strategy=None) -> None:
+        baker.make(
+            Trade,
+            strategy=strategy or self.STRATEGY_NAME,
+            entry_time=entry_time,
+            _quantity=count,
+        )
 
     def test_first_call_allows(self):
-        assert self.s._check_daily_cap(self._dt(15)) is True
-
-    def test_cap_reached_blocks(self):
-        self.s._daily_trades = 3
-        self.s._last_trade_date = "2024-01-15"
-        assert self.s._check_daily_cap(self._dt(15)) is False
-
-    def test_new_day_resets_counter(self):
-        self.s._daily_trades = 3
-        self.s._last_trade_date = "2024-01-14"
-        assert self.s._check_daily_cap(self._dt(15)) is True
-        assert self.s._daily_trades == 0
+        # No trades recorded today → under cap.
+        assert self.s._check_daily_cap() is True
 
     def test_below_cap_allows(self):
-        self.s._daily_trades = 2
-        self.s._last_trade_date = "2024-01-15"
-        assert self.s._check_daily_cap(self._dt(15)) is True
+        self._make_trades(2, entry_time=dj_tz.now())
+        assert self.s._check_daily_cap() is True
+
+    def test_cap_reached_blocks(self):
+        self._make_trades(3, entry_time=dj_tz.now())
+        assert self.s._check_daily_cap() is False
+
+    def test_yesterdays_trades_do_not_count(self):
+        # The filter is scoped to today's date, so prior-day trades are ignored.
+        self._make_trades(3, entry_time=dj_tz.now() - timedelta(days=1))
+        assert self.s._check_daily_cap() is True
+
+    def test_other_strategy_trades_do_not_count(self):
+        # The cap is per-strategy; another strategy's trades must not block us.
+        self._make_trades(3, entry_time=dj_tz.now(), strategy="SomeOtherStrategy")
+        assert self.s._check_daily_cap() is True
 
 
-class TestCheckDrawdown:
-    def setup_method(self):
-        self.s = _make_strategy(max_drawdown_pct=10.0)
-
-    def test_no_drawdown_allowed(self):
-        assert self.s._check_drawdown(1000.0, 1000.0) is True
-
-    def test_below_threshold_allowed(self):
-        assert self.s._check_drawdown(1000.0, 950.0) is True  # 5% DD
-
-    def test_at_threshold_blocked(self):
-        assert self.s._check_drawdown(1000.0, 900.0) is False  # exactly 10%
-
-    def test_above_threshold_blocked(self):
-        assert self.s._check_drawdown(1000.0, 850.0) is False
-
-    def test_zero_balance_blocked(self):
-        assert self.s._check_drawdown(0.0, 0.0) is False
+# NOTE: TestCheckDrawdown was deleted here. The v1.0 `_check_drawdown(balance,
+# equity)` method it targeted no longer exists — drawdown enforcement moved to
+# the persistent `DrawdownGuard` (unit-tested in tests/test_asqs_drawdown_guard.py
+# and tests/test_drawdown_guard.py, and integration-tested in the ASQS evaluate()
+# halt tests). See tests/TRIAGE_NOTES.md, Group E.
 
 
 # ---------------------------------------------------------------------------
