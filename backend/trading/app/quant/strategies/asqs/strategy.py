@@ -14,7 +14,7 @@ Entry requires ALL seven conditions to align simultaneously:
   7. H1 EMA(20/50) higher-timeframe confirmation
 
 Risk: single position, fixed SL/TP (300/450pt), 0.5% equity sizing,
-      0.5% drawdown auto-pause, max 4 trades/day, 25pt spread filter.
+      8% drawdown auto-pause, max 4 trades/day, 25pt spread filter.
       No martingale, no grid, no hedging.
 
 Exit management (runs every M5 cycle for all open positions):
@@ -165,7 +165,7 @@ class ASQSafeScalpingStrategy(BaseStrategy):
         h1_ema_slow: int = 50,
         # ── Risk ──
         risk_pct: float = 0.005,
-        max_drawdown_pct: float = 0.005,
+        max_drawdown_pct: float = 0.08,
         max_daily_trades: int = 4,
         max_spread_points: int = DEFAULT_MAX_SPREAD_POINTS,
         # ── Exit management ──
