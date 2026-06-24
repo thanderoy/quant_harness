@@ -40,6 +40,7 @@ cover/
 
 # Virtual Environment
 venv/
+.venv/
 env/
 ENV/
 
@@ -100,3 +101,6 @@ CLAUDE.md
 .claude/*
 docs/*
 backend/trading/app/quant/strategies/asqs/_resources/*
+
+# Research module: large market-data CSVs are local fixtures, not for git
+research/data/
