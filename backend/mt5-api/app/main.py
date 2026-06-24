@@ -19,6 +19,13 @@ logging.basicConfig(
 )
 LOGGER = logging.getLogger("MT5 API Service")
 
+# ENUM_SYMBOL_FILLING_MODE bit flags. These describe the filling modes a symbol
+# permits (symbol_info().filling_mode is a bitmask). The MetaTrader5 Python
+# module only exposes the ORDER_FILLING_* constants, not these SYMBOL_FILLING_*
+# names, so we define them from the documented MQL5 enum values.
+SYMBOL_FILLING_FOK = 1
+SYMBOL_FILLING_IOC = 2
+
 executor = ThreadPoolExecutor(max_workers=4)
 
 
@@ -765,9 +772,9 @@ class MT5Service:
 
             # Resolve dynamic filling mode (avoids silent rejections on some brokers)
             filling_mode = symbol_info.filling_mode
-            if filling_mode & mt5.SYMBOL_FILLING_IOC:
+            if filling_mode & SYMBOL_FILLING_IOC:
                 type_filling = mt5.ORDER_FILLING_IOC
-            elif filling_mode & mt5.SYMBOL_FILLING_FOK:
+            elif filling_mode & SYMBOL_FILLING_FOK:
                 type_filling = mt5.ORDER_FILLING_FOK
             else:
                 type_filling = mt5.ORDER_FILLING_RETURN
@@ -969,9 +976,9 @@ class MT5Service:
 
             symbol_info = mt5.symbol_info(pos.symbol)
             filling_mode = symbol_info.filling_mode if symbol_info else 0
-            if filling_mode & mt5.SYMBOL_FILLING_IOC:
+            if filling_mode & SYMBOL_FILLING_IOC:
                 type_filling = mt5.ORDER_FILLING_IOC
-            elif filling_mode & mt5.SYMBOL_FILLING_FOK:
+            elif filling_mode & SYMBOL_FILLING_FOK:
                 type_filling = mt5.ORDER_FILLING_FOK
             else:
                 type_filling = mt5.ORDER_FILLING_RETURN
