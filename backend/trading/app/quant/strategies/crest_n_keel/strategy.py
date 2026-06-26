@@ -37,10 +37,9 @@ SESSION_END_HOUR = 17
 FRIDAY_CUTOFF_HOUR = 15
 
 
-class HMAStoch1HStrategy(BaseStrategy):
+class CrestNKeelStrategy(BaseStrategy):
     """
-    HMA + Stochastic strategy on the 1H timeframe for XAUUSD (codename
-    ``crest_n_keel``).
+    ``crest_n_keel`` — HMA + Stochastic strategy on the 1H timeframe for XAUUSD.
 
     Entry: HMA direction + price side + stochastic cross from oversold/overbought.
     Exit: asymmetric ATR SL/TP placed broker-side at entry (the edge lives here,
@@ -406,7 +405,7 @@ class HMAStoch1HStrategy(BaseStrategy):
     def evaluate(self) -> Optional[str]:
         start = _time.monotonic()
         now = datetime.now(timezone.utc)
-        LOGGER.info("HMAStoch1H (crest_n_keel) v1.2 evaluation started")
+        LOGGER.info("crest_n_keel v1.2 evaluation started")
 
         # ── Account info + drawdown guard ─────────────────────────
         # Runs on EVERY evaluation, before session / bar / signal logic, so the

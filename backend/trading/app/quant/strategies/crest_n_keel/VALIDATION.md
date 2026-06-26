@@ -1,6 +1,6 @@
-# `crest_n_keel` (hma_stoch_1h) — Demo Validation
+# `crest_n_keel` — Demo Validation
 
-**Codename:** `crest_n_keel`  ·  **Module:** `quant.strategies.hma_stoch_1h`
+**Codename:** `crest_n_keel`  ·  **Module:** `quant.strategies.crest_n_keel`
 **Environment:** `mt5-test` (demo)  ·  **Magic:** `1100001`  ·  **Symbol:** `XAUUSD`  ·  **TF:** H1
 **Status:** deployed to demo — validation accruing.
 
