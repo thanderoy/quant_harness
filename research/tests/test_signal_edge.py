@@ -1,4 +1,4 @@
-"""Tests for research.signal_edge.
+"""Tests for research.pre.signal_edge.
 
 Build/read these in order — each is a checkpoint:
 
@@ -25,7 +25,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from research.signal_edge import signal_edge_report, wilder_atr
+from research.pre.signal_edge import signal_edge_report, wilder_atr
 
 
 # --------------------------------------------------------------------------- #
