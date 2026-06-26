@@ -269,8 +269,8 @@ CELERY_BEAT_SCHEDULE = {
         "task": "app.quant.tasks.sync_account_status",
         "schedule": crontab(minute=0, hour=0, day_of_week="mon-fri"),
     },
-    "hma-stoch-1h": {
-        "task": "quant.hma_stoch_1h.run",
+    "crest-n-keel": {
+        "task": "quant.crest_n_keel.run",
         "schedule": crontab(minute=1, day_of_week="mon-fri"),
     },
     "asqs": {

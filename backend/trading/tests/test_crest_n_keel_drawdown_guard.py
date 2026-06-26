@@ -1,5 +1,5 @@
 """
-Regression tests for the ``crest_n_keel`` (hma_stoch_1h) drawdown-guard call
+Regression tests for the ``crest_n_keel`` drawdown-guard call
 chain in ``evaluate()``.
 
 These prove the guard runs on EVERY evaluation (before any session / bar /
@@ -16,19 +16,19 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.quant.strategies.hma_stoch_1h.strategy import HMAStoch1HStrategy
+from app.quant.strategies.crest_n_keel.strategy import CrestNKeelStrategy
 
 
-def _build(peak_file: Path) -> HMAStoch1HStrategy:
+def _build(peak_file: Path) -> CrestNKeelStrategy:
     """Construct a strategy with MT5 mocked. Caller pre-seeds mock returns."""
-    return HMAStoch1HStrategy(
+    return CrestNKeelStrategy(
         environment="test",
         peak_store_path=str(peak_file),
         mt5_base_url="http://mock:5001",
     )
 
 
-@patch("app.quant.strategies.hma_stoch_1h.strategy.MT5APIClient")
+@patch("app.quant.strategies.crest_n_keel.strategy.MT5APIClient")
 def test_evaluate_seeds_peak_on_first_call(mock_mt5_cls, tmp_path: Path) -> None:
     peak_file = tmp_path / "peak.json"
     mock_mt5 = mock_mt5_cls.return_value
@@ -43,7 +43,7 @@ def test_evaluate_seeds_peak_on_first_call(mock_mt5_cls, tmp_path: Path) -> None
     assert json.loads(peak_file.read_text())["peak_equity"] == pytest.approx(100.0)
 
 
-@patch("app.quant.strategies.hma_stoch_1h.strategy.MT5APIClient")
+@patch("app.quant.strategies.crest_n_keel.strategy.MT5APIClient")
 def test_evaluate_halts_before_signal_work_when_tripped(
     mock_mt5_cls, tmp_path: Path
 ) -> None:
@@ -70,7 +70,7 @@ def test_evaluate_halts_before_signal_work_when_tripped(
     assert json.loads(peak_file.read_text())["peak_equity"] == pytest.approx(100.0)
 
 
-@patch("app.quant.strategies.hma_stoch_1h.strategy.MT5APIClient")
+@patch("app.quant.strategies.crest_n_keel.strategy.MT5APIClient")
 def test_evaluate_does_not_trip_just_below_threshold(
     mock_mt5_cls, tmp_path: Path
 ) -> None:
@@ -89,7 +89,7 @@ def test_evaluate_does_not_trip_just_below_threshold(
     mock_mt5.get_market_rates.assert_called()  # signal work was reached
 
 
-@patch("app.quant.strategies.hma_stoch_1h.strategy.MT5APIClient")
+@patch("app.quant.strategies.crest_n_keel.strategy.MT5APIClient")
 def test_guard_advances_peak_before_candle_fetch(
     mock_mt5_cls, tmp_path: Path
 ) -> None:
