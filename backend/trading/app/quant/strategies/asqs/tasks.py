@@ -1,12 +1,12 @@
-import logging
 import time as _time
 from datetime import datetime, timedelta, timezone
 
 from celery import shared_task
 
-from app.quant.strategies.asqs.strategy import ASQSafeScalpingStrategy
+from app.quant.strategies.asqs.strategy import SHORT_NAME, ASQSafeScalpingStrategy
+from app.quant.strategies.logging_utils import get_strategy_logger
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = get_strategy_logger(__name__, SHORT_NAME)
 
 # Informational threshold only. Hard staleness gating is done by the beat
 # schedule's `expires` option, which discards the task before it runs if it
@@ -51,13 +51,13 @@ def run_asqs(self) -> dict:
     delay_s = (now - (evaluated_bar + timedelta(minutes=5))).total_seconds()
 
     LOGGER.info(
-        f"[ASQ] Task fired at {now.isoformat()} | "
+        f"Task fired at {now.isoformat()} | "
         f"Evaluating bar (open): {evaluated_bar.strftime('%H:%M')} | "
         f"Pickup delay: {delay_s:.1f}s"
     )
     if delay_s > LATE_PICKUP_WARN_S:
         LOGGER.warning(
-            f"[ASQ] Late pickup: {delay_s:.0f}s after bar close "
+            f"Late pickup: {delay_s:.0f}s after bar close "
             f"(warn threshold {LATE_PICKUP_WARN_S}s). Check Celery queue "
             f"backlog or worker health."
         )
@@ -67,7 +67,7 @@ def run_asqs(self) -> dict:
         signal = strategy.evaluate()
         duration = round(_time.monotonic() - start, 2)
         LOGGER.info(
-            f"[ASQ] {'SIGNAL ' + signal if signal else 'No signal'} | "
+            f"{'SIGNAL ' + signal if signal else 'No signal'} | "
             f"Bar: {evaluated_bar.strftime('%H:%M')} | duration={duration}s"
         )
         return {
@@ -80,7 +80,7 @@ def run_asqs(self) -> dict:
         }
     except Exception as e:
         duration = round(_time.monotonic() - start, 2)
-        LOGGER.exception(f"[ASQ] Task failed after {duration}s: {e}")
+        LOGGER.exception(f"Task failed after {duration}s: {e}")
         return {
             "status": "ERROR",
             "signal": None,
@@ -104,7 +104,7 @@ def run_asqs_audit(self) -> dict:
     have generated, compares against trades actually executed, and logs the
     gap for Grafana/Loki dashboards.
     """
-    LOGGER.info("[ASQ AUDIT] Starting daily signal audit")
+    LOGGER.info("AUDIT: Starting daily signal audit")
 
     try:
         import pandas as pd
@@ -115,7 +115,7 @@ def run_asqs_audit(self) -> dict:
         strategy = ASQSafeScalpingStrategy()
         data = strategy.mt5_client.get_market_rates("XAUUSD", "M5", count=300)
         if not data or "rates" not in data:
-            LOGGER.warning("[ASQ AUDIT] Could not fetch candle data")
+            LOGGER.warning("AUDIT: Could not fetch candle data")
             return {"status": "NO_DATA"}
 
         df = pd.DataFrame(data["rates"])
@@ -145,15 +145,15 @@ def run_asqs_audit(self) -> dict:
 
         if signal_count > 0 and executed == 0:
             LOGGER.warning(
-                f"[ASQ AUDIT] {signal_count} chart signals existed today "
+                f"AUDIT: {signal_count} chart signals existed today "
                 f"but 0 were executed — check filters, H1 confirmation, "
                 f"or Celery task health"
             )
         else:
-            LOGGER.info(f"[ASQ AUDIT] {result}")
+            LOGGER.info(f"AUDIT: {result}")
 
         return result
 
     except Exception as exc:
-        LOGGER.exception(f"[ASQ AUDIT] Failed: {exc}")
+        LOGGER.exception(f"AUDIT: Failed: {exc}")
         return {"status": "ERROR", "error": str(exc)}

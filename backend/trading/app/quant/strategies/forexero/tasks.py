@@ -1,10 +1,10 @@
 import asyncio
-import logging
 from celery import shared_task
-from app.quant.strategies.forexero.strategy import ForexeroStrategy
+from app.quant.strategies.forexero.strategy import SHORT_NAME, ForexeroStrategy
+from app.quant.strategies.logging_utils import get_strategy_logger
 from app.adapters.telegram import TelegramAPIClient
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = get_strategy_logger(__name__, SHORT_NAME)
 
 
 @shared_task(

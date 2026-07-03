@@ -1,14 +1,15 @@
-import logging
 import re
 from typing import Dict, Optional, List
 
 from app.quant.strategies.base import BaseStrategy
+from app.quant.strategies.logging_utils import get_strategy_logger
 from app.adapters.mt5_api import MT5APIClient
 from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
 
 
-LOGGER = logging.getLogger(__name__)
+SHORT_NAME = "FXZ"
+LOGGER = get_strategy_logger(__name__, SHORT_NAME)
 
 # (min_balance, volume) — highest matching tier wins
 # Allows for auto scaling based on precalculated thresholds
@@ -43,6 +44,8 @@ class ForexeroStrategy(BaseStrategy):
     For each signal, opens up to max_positions (TP1..TPn) positions and records
     them in the DB as Trade entries.
     """
+
+    SHORT_NAME = SHORT_NAME
 
     def __init__(
         self,
@@ -113,7 +116,7 @@ class ForexeroStrategy(BaseStrategy):
         # First non-empty line is the symbol line
         symbol = self._normalize_symbol(lines[0])
         if symbol not in ["XAUUSD"]:
-            LOGGER.warning(f"FXZ: Invalid symbol {symbol}, skipping signal")
+            LOGGER.warning(f"Invalid symbol {symbol}, skipping signal")
             return None
 
         data["Symbol"] = symbol
@@ -164,19 +167,19 @@ class ForexeroStrategy(BaseStrategy):
         Synchronously process a signal: parse, validate, and execute trades.
         """
         if not signal:
-            LOGGER.info("FXZ: Empty signal object, skipping")
+            LOGGER.info("Empty signal object, skipping")
             return
 
         # Check whether to ignore 'HIGH RISK' trades
         if self.adjust_for_high_risk_trades:
             content = signal.get("content", "").upper()
             if content and "HIGH RISK" in content:
-                LOGGER.info("FXZ: Reduced TPs for HIGH RISK signal")
+                LOGGER.info("Reduced TPs for HIGH RISK signal")
                 self.use_tps = [1]
 
         data = self._extract_signal_data(signal)
         if not data:
-            LOGGER.info("FXZ: Could not parse signal content, skipping")
+            LOGGER.info("Could not parse signal content, skipping")
             return
 
         symbol = data.get("Symbol")
@@ -186,12 +189,12 @@ class ForexeroStrategy(BaseStrategy):
 
         # Validate required fields before proceeding
         if not symbol:
-            LOGGER.warning("FXZ: Missing or invalid symbol, skipping signal")
+            LOGGER.warning("Missing or invalid symbol, skipping signal")
             return
 
         if action not in ("BUY", "SELL"):
             LOGGER.warning(
-                f"FXZ: Invalid action '{action}', must be BUY or SELL, skipping signal"
+                f"Invalid action '{action}', must be BUY or SELL, skipping signal"
             )
             return
 

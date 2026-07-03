@@ -1,4 +1,3 @@
-import logging
 import time as _time
 from datetime import datetime, timezone
 from typing import Optional
@@ -7,6 +6,7 @@ import pandas as pd
 
 from app.quant.strategies.base import BaseStrategy
 from app.quant.strategies.indicators import hma, stochastic, atr
+from app.quant.strategies.logging_utils import get_strategy_logger
 from app.quant.strategies.sizer import calculate_lot_size
 from app.adapters.mt5_api import MT5APIClient
 from app.adapters.utils.create import create_trade as create_trade_record
@@ -17,7 +17,8 @@ from app.quant.strategies.drawdown_guard import (
 )
 
 
-LOGGER = logging.getLogger(__name__)
+SHORT_NAME = "CNK"
+LOGGER = get_strategy_logger(__name__, SHORT_NAME)
 
 SYMBOL = "XAUUSD"
 MAGIC_NUMBER = 1100001
@@ -50,6 +51,8 @@ class CrestNKeelStrategy(BaseStrategy):
     open time, Friday cutoff by wall-clock, live spread, ATR regime floor,
     position dedup by magic number.
     """
+
+    SHORT_NAME = SHORT_NAME
 
     def __init__(
         self,
