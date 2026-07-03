@@ -33,6 +33,15 @@ Sharpe estimates across trials. The function reports which path was used:
 Option 2 is strongly preferred once enough trial Sharpes are logged; option 3
 is a defensible fallback when only one strategy's moments are known.
 
+For **walk-forward** evaluations with N ≥ ~10 folds, pass the per-fold Sharpes
+as ``trial_sharpes=`` (option 2). The empirical cross-fold variance captures the
+actual out-of-sample variability the strategy exhibits, whereas option 3's
+single-Sharpe sampling SE only describes the estimation noise of one in-sample
+fit. The estimated variant typically yields a *materially higher* DSR for the
+same underlying edge — a leniency that should be flagged in the writeup, not
+silently accepted. Reach for option 3 only when per-fold data is genuinely
+unavailable.
+
 Worked numerical anchor
 -----------------------
 For ``n_obs=1000``, per-obs ``SR_hat=0.10`` (annualised ≈ 1.587 at 252),

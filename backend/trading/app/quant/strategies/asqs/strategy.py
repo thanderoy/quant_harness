@@ -27,7 +27,6 @@ LIMITATIONS vs the MT5 EA:
 """
 
 import json
-import logging
 import os
 import time as _time
 from datetime import datetime, timezone
@@ -39,12 +38,14 @@ import pandas as pd
 from app.quant.strategies.base import BaseStrategy
 from app.quant.strategies.drawdown_guard import DrawdownGuard, JsonPeakStore
 from app.quant.strategies.indicators import atr as calc_atr
+from app.quant.strategies.logging_utils import get_strategy_logger
 from app.adapters.mt5_api import MT5APIClient
 from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
 
 
-LOGGER = logging.getLogger(__name__)
+SHORT_NAME = "ASQ"
+LOGGER = get_strategy_logger(__name__, SHORT_NAME)
 
 
 class _PartialCloseTracker:
@@ -139,6 +140,8 @@ def _rsi(series: pd.Series, period: int) -> pd.Series:
 
 class ASQSafeScalpingStrategy(BaseStrategy):
     """ASQ SafeScalping v1.20 — 7-condition breakout scalper for XAUUSD M5."""
+
+    SHORT_NAME = SHORT_NAME
 
     def __init__(
         self,

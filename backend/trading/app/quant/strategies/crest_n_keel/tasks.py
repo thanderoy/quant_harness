@@ -1,12 +1,15 @@
-import logging
 import time as _time
 
 from celery import shared_task
 
 from app.config import settings
-from app.quant.strategies.crest_n_keel.strategy import CrestNKeelStrategy
+from app.quant.strategies.crest_n_keel.strategy import (
+    SHORT_NAME,
+    CrestNKeelStrategy,
+)
+from app.quant.strategies.logging_utils import get_strategy_logger
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = get_strategy_logger(__name__, SHORT_NAME)
 
 
 @shared_task(name="quant.crest_n_keel.run")
