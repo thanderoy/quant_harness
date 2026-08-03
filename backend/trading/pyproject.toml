@@ -12,7 +12,7 @@ dependencies = [
     "celery==5.4.0",
     "certifi>=2024.2.2",
     "charset-normalizer==3.3.2",
-    "click==8.1.7",
+    "click>=8.3.3",
     "click-didyoumean==0.3.1",
     "click-plugins==1.1.1",
     "click-repl==0.3.0",
@@ -58,6 +58,13 @@ test = [
     "pytest-xdist>=3.5,<4",
     "pytest-mock>=3.12,<4",
     "model-bakery>=1.17,<2",
+]
+
+[tool.uv]
+# Security floors for transitive dependencies (GitHub Dependabot).
+# pyasn1 pulled in via telethon -> rsa; pin to patched version.
+constraint-dependencies = [
+    "pyasn1>=0.6.4",
 ]
 
 [tool.pytest.ini_options]
