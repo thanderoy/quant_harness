@@ -53,7 +53,7 @@ dependencies = [
 # via `uv sync --group test` (see Dockerfile); excluded from a pure prod sync.
 [dependency-groups]
 test = [
-    "pytest>=8.0,<9",
+    "pytest>=9.0.3,<10",
     "pytest-django>=4.8,<5",
     "pytest-xdist>=3.5,<4",
     "pytest-mock>=3.12,<4",
