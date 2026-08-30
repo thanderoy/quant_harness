@@ -269,6 +269,21 @@ CELERY_BEAT_SCHEDULE = {
         "task": "app.quant.tasks.sync_account_status",
         "schedule": crontab(minute=0, hour=0, day_of_week="mon-fri"),
     },
+    # H1 intraday momentum -- PAPER-FORWARD DATA COLLECTION, not a promoted
+    # strategy. It is the only effect in the research programme that beat a
+    # permutation null twice (seq=65 p=0.010, seq=71 p=0.005, both against
+    # nulls carrying gold's drift); what it has never done is clear the
+    # recoverability test (nested selection fails at p=0.105). Forward data is
+    # the only evidence not contaminated by selection, and none exists yet.
+    # Demo only. Fires at HH:02 -- one minute after the H1 close plus a margin,
+    # because the task pulls 50,000 bars to rebuild the entry percentile.
+    "h1-momentum": {
+        "task": "quant.h1_momentum.run",
+        "schedule": crontab(minute=2, day_of_week="mon-fri"),
+        # Stale after 5 min: by then the next H1 bar is forming and iloc[-2]
+        # refers to a different bar than the signal was computed on.
+        "options": {"expires": 300},
+    },
     # crest_n_keel and asqs are RETIRED from the schedule. Both ran on demo
     # for months on evidence that has since been refuted, and leaving them
     # scheduled contaminates the read on anything deployed alongside them.

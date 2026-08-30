@@ -18,6 +18,7 @@ app.autodiscover_tasks()
 
 # Explicitly include strategy task modules (not at app root, not auto-discovered).
 app.conf.include = [
+    "app.quant.strategies.h1_momentum.tasks",
     "app.quant.strategies.crest_n_keel.tasks",
     "app.quant.strategies.asqs.tasks",
 ]
