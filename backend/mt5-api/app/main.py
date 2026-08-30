@@ -1534,6 +1534,7 @@ async def get_market_rates(
     symbol: str = "XAUUSD",
     timeframe: str = "M30",
     count: int = 200,
+    start_pos: int = 0,
     service: MT5Service = Depends(get_mt5_service),
 ):
     """
@@ -1550,12 +1551,18 @@ async def get_market_rates(
         symbol: Trading symbol (e.g., EURUSD, GBPUSD)
         timeframe: Chart timeframe (M1, M5, M15, M30, H1, H4, D1, W1, MN1)
         count: Number of bars to return (default 200)
+        start_pos: Bars back from the most recent to start at (default 0).
+            Required to page beyond `count` bars of history -- without it the
+            endpoint can only ever return the most recent `count` bars, so
+            deep history is unreachable no matter how the client asks.
         service: Injected MT5Service instance
 
     Returns:
         RateResponse with historical rate data
     """
-    rate_request = MarketRatesRequest(symbol=symbol, timeframe=timeframe, count=count)
+    rate_request = MarketRatesRequest(
+        symbol=symbol, timeframe=timeframe, count=count, start_pos=start_pos
+    )
 
     loop = asyncio.get_event_loop()
     rates = await loop.run_in_executor(
