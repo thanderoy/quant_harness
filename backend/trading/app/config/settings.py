@@ -269,23 +269,43 @@ CELERY_BEAT_SCHEDULE = {
         "task": "app.quant.tasks.sync_account_status",
         "schedule": crontab(minute=0, hour=0, day_of_week="mon-fri"),
     },
-    "crest-n-keel": {
-        "task": "quant.crest_n_keel.run",
-        "schedule": crontab(minute=1, day_of_week="mon-fri"),
+    # H1 intraday momentum -- PAPER-FORWARD DATA COLLECTION, not a promoted
+    # strategy. It is the only effect in the research programme that beat a
+    # permutation null twice (seq=65 p=0.010, seq=71 p=0.005, both against
+    # nulls carrying gold's drift); what it has never done is clear the
+    # recoverability test (nested selection fails at p=0.105). Forward data is
+    # the only evidence not contaminated by selection, and none exists yet.
+    # Demo only. Fires at HH:02 -- one minute after the H1 close plus a margin,
+    # because the task pulls 50,000 bars to rebuild the entry percentile.
+    "h1-momentum": {
+        "task": "quant.h1_momentum.run",
+        "schedule": crontab(minute=2, day_of_week="mon-fri"),
+        # Stale after 5 min: by then the next H1 bar is forming and iloc[-2]
+        # refers to a different bar than the signal was computed on.
+        "options": {"expires": 300},
     },
-    "asqs": {
-        "task": "quant.asqs.run",
-        "schedule": crontab(
-            minute="1,6,11,16,21,26,31,36,41,46,51,56", day_of_week="mon-fri"
-        ),
-        # Discard if not picked up within 4 min — by then iloc[-2] has shifted
-        # to the next bar and the signal would be stale.
-        "options": {"expires": 240},
-    },
-    "asqs-audit": {
-        "task": "quant.asqs.audit",
-        "schedule": crontab(hour=20, minute=5, day_of_week="mon-fri"),
-    },
+    # crest_n_keel and asqs are RETIRED from the schedule. Both ran on demo
+    # for months on evidence that has since been refuted, and leaving them
+    # scheduled contaminates the read on anything deployed alongside them.
+    #
+    #   crest_n_keel (magic 1100001) — research log seq=49: the nested
+    #     walk-forward showed training rank carries no out-of-sample
+    #     information (selected beat the gate-passing pool in 17/32 folds,
+    #     p=0.430); the full-history leader's apparent edge was 0.68-0.81
+    #     Sharpe of pure lookahead. The deployed PULLBACK variant is
+    #     separately confirmed edgeless (seq=45).
+    #   asqs (magic 1500020) — research log seq=30: harness walk-forward
+    #     returned OOS Sharpe ~-1 and net-losing, refuting the seeded
+    #     5.14 Sharpe / 1.55 profit factor the strategy was deployed on.
+    #     seq=51 adds DSR 0.038 at grid N.
+    #
+    # Verified flat before removal: 0 open XAUUSD positions on demo for both
+    # magic numbers, so nothing was orphaned. Note that asqs.evaluate() also
+    # drives manage_positions() (breakeven, trailing, partial close), so this
+    # entry must NOT be removed while an asqs position is open.
+    #
+    # The strategy code and tasks are retained; only the schedule is removed.
+    # Re-enabling requires new out-of-sample evidence, not just a re-run.
 }
 
 # Telegram API Credentials
