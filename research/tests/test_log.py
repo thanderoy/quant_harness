@@ -7,10 +7,12 @@ import json
 import pytest
 
 from research.log import (
+    RECORD_EVENT_TYPES,
     EdgeGateRole,
     EventType,
     Stage,
     Verdict,
+    append_record,
     current_state,
     history,
     register_hypothesis,
@@ -170,3 +172,51 @@ def test_enum_round_trip(tmp_path):
     assert hist[1].stage is Stage.OOS
     assert hist[1].verdict is Verdict.PROMOTED
     assert hist[1].edge_gate_role is EdgeGateRole.DIAGNOSTIC
+
+
+# --------------------------------------------------------------------------- #
+# Record events (T6)                                                           #
+# --------------------------------------------------------------------------- #
+def test_append_record_does_not_count_as_trial(tmp_path):
+    """A record event must never move the DSR haircut denominator."""
+    register_hypothesis("h1", title="h1", mechanism="m", log_dir=tmp_path)
+    before = trial_count(log_dir=tmp_path)
+
+    for et in RECORD_EVENT_TYPES:
+        append_record(
+            et, record_id=f"record:{et.value}", title=et.value,
+            log_dir=tmp_path,
+        )
+
+    assert trial_count(log_dir=tmp_path) == before
+    ok, msg = verify(log_dir=tmp_path)
+    assert ok, msg
+
+
+def test_append_record_rejects_research_event_types(tmp_path):
+    """HYPOTHESIS/UPDATE have their own entry points and trial semantics."""
+    for et in (EventType.HYPOTHESIS, EventType.UPDATE):
+        with pytest.raises(ValueError, match="not a record event type"):
+            append_record(et, record_id="r", title="t", log_dir=tmp_path)
+
+
+def test_append_record_needs_no_prior_hypothesis(tmp_path):
+    """A migration is not about a hypothesis, so it must not require one."""
+    entry = append_record(
+        EventType.REPO_MIGRATION, record_id="record:move", title="moved",
+        log_dir=tmp_path,
+    )
+    assert entry.seq == 0
+    assert entry.counts_as_trial is False
+    ok, _ = verify(log_dir=tmp_path)
+    assert ok
+
+
+def test_record_events_absent_from_hypothesis_state(tmp_path):
+    """current_state() is a view of hypotheses, not of the log's own history."""
+    register_hypothesis("h1", title="h1", mechanism="m", log_dir=tmp_path)
+    append_record(
+        EventType.AUDIT, record_id="record:baseline", title="baseline",
+        log_dir=tmp_path,
+    )
+    assert set(current_state(log_dir=tmp_path)) == {"h1"}

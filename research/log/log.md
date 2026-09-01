@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 83
+- **Entries:** 85
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (83 entries)
+- **Hash chain:** OK — chain ok (85 entries)
 
 ## Principles
 
@@ -1433,3 +1433,23 @@ _Metrics_: `beat_entry_disabled`=1, `d8_wmps_commit`=3db869a, `drawdown_guard_wi
 > LIVE_RISK_HALT. h1_momentum disabled at the Celery beat schedule (settings.py CELERY_BEAT_SCHEDULE), Phase 0 D6/D8, 2026-08-31. It carried verdict=killed from seq=65 (decisive stream declared nested; nested_p=0.1045 vs prereg_alpha=0.05) and was reaffirmed killed at seq=81, yet was deployed to demo and first fired 2026-08-31. Halted for risk configuration, not for the forward-data rationale: it sets RISK_PCT=0.05 overriding the sizer 2% default, STOP_ATR_MULT=10.0, and wires no DrawdownGuard -- the guard is imported only by crest_n_keel and asqs, both already retired, so the sole scheduled strategy was the only one unguarded. seq=81 had already recorded untradeable_at_100usd=1. Halted rather than re-parameterised: the minimal correct fix for placing bets beyond budget is to stop placing them; choosing new parameters on a live instrument outside the pipeline is what the two-iteration rule forbids. Disabling touches no numerical module, so the D8 golden fixtures are unaffected. Re-enable requires the T5 granularity flag, account-level risk policy (X26) and mandatory DrawdownGuard precondition (X27), plus a completed pre-registration -> E-Ratio -> walk-forward -> DSR record. Recorded as an UPDATE because EventType has no LIVE_RISK_HALT member; adding one is owed under T6 and Phase 0 forbids code changes.
 
 _hash_: `91470ef9fd2f9a97…` · _prev_: `019ff0dd3e1b7209…`
+
+### seq 83 · 2026-09-01T09:47:50Z · schema_migration · `record:t6-eventtype-extension`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `added_event_types`=audit,repo_migration,project_rename,schema_migration,parity_fixture, `canonical_payload_changed`=no, `chain_hash_before`=91470ef9fd2f9a97dc0d77006f36e85864bdaef531140fcdf40156faabf6050d, `entries_before`=83, `logentry_fields_changed`=0, `trial_count_after`=26, `trial_count_before`=26
+
+> Spec T6. Adds AUDIT, REPO_MIGRATION, PROJECT_RENAME, SCHEMA_MIGRATION and PARITY_FIXTURE, a RECORD_EVENT_TYPES frozenset, and append_record() -- an entry point for facts about the log rather than about a hypothesis. counts_as_trial is forced False on record events and is not a parameter, so structural bookkeeping cannot inflate the DSR haircut denominator. current_state() now skips record events so the hypothesis table stays a hypothesis table. No LogEntry field was added, removed or reordered and _canonical() is unchanged, so every pre-existing entry hash still verifies: 83 entries, trial_count 26, terminal 91470ef9...abf6050d, all unchanged across the edit. This event exists because the schema change must live in the chain it governs. The precedent is the research/artifacts/ -> research/{pre,post}/artifacts/ move, made without an event, which left three logged artifact paths unresolvable and no recorded means of resolving them.
+
+_hash_: `95ecc004eb6617df…` · _prev_: `91470ef9fd2f9a97…`
+
+### seq 84 · 2026-09-01T09:47:50Z · audit · `record:phase0-d7-baseline`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `committed_prefix_commit`=6864727, `committed_prefix_entries`=30, `committed_prefix_terminal`=5a060a461d8bfeff, `d7_entries`=82, `d7_terminal_hash`=019ff0dd3e1b7209f9be6ef5bd8efb590a15ee627a540d5c8679cb320da31876, `d7_trial_count`=26, `d7_verify`=true, `entries_at_audit`=84, `hash_chain_only_entries`=53, `trial_count_at_audit`=26
+
+> Phase 0 D7 acceptance. The baseline was measured on 2026-08-31 at 82 entries, terminal 019ff0dd...0da31876, verify() True, trial_count 26. seq=82 (LIVE_RISK_HALT) and the T6 schema migration have been appended since; trial_count is 26 at every one of those points because neither was a trial. Provenance, which bounds what X21 can cross-check: entries.jsonl was first committed at 6864727 with 30 entries (terminal 5a060a461d8bfeff), a strict prefix of the current chain, and that commit is on the remote. So seq 0-29 have independent git-history corroboration; seq 30-82 rest on the hash chain alone. The X21 cross-check therefore starts at 6864727 and the unwitnessed span is 53 entries, not 83. Recorded via append_record() in Phase 0.5 rather than during Phase 0, which had a zero-production-code-change constraint that adding an EventType member would have broken.
+
+_hash_: `9a67a16939724d44…` · _prev_: `95ecc004eb6617df…`
