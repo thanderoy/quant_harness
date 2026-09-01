@@ -182,7 +182,8 @@ class EbbNFlow(Strategy):
 
 # --- Data loading ------------------------------------------------------------
 def load_ohlcv(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
+    # sep=None + python engine sniffs the delimiter (MT5 exports are ';'-delimited).
+    df = pd.read_csv(path, sep=None, engine="python")
     cols = {c.lower(): c for c in df.columns}
     dt_col = next((cols[k] for k in ("time", "datetime", "date", "timestamp") if k in cols), None)
     if dt_col is None:

@@ -3,7 +3,8 @@
 A living record of phases, decisions made, and open items. Updated at the end
 of each work session.
 
-**Last updated:** end of session — Phase 2a complete.
+**Last updated:** Phase 2b underway — `engines.btpy_runner` complete and tested;
+backtesting.py strategy adapters (HMA+Stoch, ASQ SafeScalping, Ebb-n-Flow) landed.
 
 ---
 
@@ -11,9 +12,9 @@ of each work session.
 
 | Metric | Value |
 |---|---|
-| Tests passing | **53 / 53** |
-| Source files | 14 modules (4 packages) |
-| Lines of code | ~2,400 (incl. tests, excl. blank/comments) |
+| Tests passing | **82 / 82** |
+| Source files | 14 modules (6 sub-packages) |
+| Lines of code | ~4,500 (incl. tests, excl. blank/comments) |
 | Calibration | Verified: noise FAILs gates, real alpha PASSes |
 | Real-data verified against | 5 timeframes × 21.6 years XAUUSD (1.4M+ M5 bars) |
 
@@ -32,8 +33,12 @@ of each work session.
 | 2a | data.cost_model (Pepperstone Razor MT5) | ✅ done | 13 |
 | 2a | walk_forward.exclude_ranges + SplitReport + align_data_files | ✅ done | 12 |
 | 2a | examples/gap_report.py diagnostic | ✅ done | — |
-| 2b | engines.btpy_runner (backtesting.py wrapper) | ⏭ next session | — |
-| 2c | validation.stress (spread shock + parameter sensitivity) | ⏭ after 2b | — |
+| 2b | engines.btpy_runner (backtesting.py wrapper) | ✅ done | 29 |
+| 2b | engines.indicators + engines.sizer (shared scaffolding) | ✅ done | included |
+| 2b | engines.strategies.hma_stoch (HMAStoch1H / HMAStochM15) | ✅ done | included |
+| 2b | engines.strategies.asq_safe_scalping + asq_scalping_adapter | ✅ done | included |
+| 2b | engines.strategies.ebb_n_flow (Bollinger mean-reversion, regime-gated) | ✅ done | included |
+| 2c | validation.stress (spread shock + parameter sensitivity) | ⏭ next | — |
 | 3 | engines.vbt_runner (VectorBT parameter-sweep wrapper) | ⏭ later | — |
 | 3 | reports.tearsheet (HTML/PDF strategy report) | ⏭ later | — |
 

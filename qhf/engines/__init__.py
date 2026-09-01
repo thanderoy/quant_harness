@@ -10,7 +10,7 @@ from qhf.engines.btpy_runner import (
     SpreadStressResult,
     PEPPERSTONE_XAUUSD_KNOWN_GAPS,
 )
-from qhf.engines.strategies import HMAStoch1H, HMAStochM15, ASQSafeScalping
+from qhf.engines.strategies import HMAStoch1H, HMAStochM15, ASQSafeScalping, EbbNFlow
 
 __all__ = [
     "run_backtest",
@@ -24,4 +24,5 @@ __all__ = [
     "HMAStoch1H",
     "HMAStochM15",
     "ASQSafeScalping",
+    "EbbNFlow",
 ]

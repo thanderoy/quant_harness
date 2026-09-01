@@ -30,9 +30,8 @@ from dataclasses import dataclass, field
 from typing import Optional
 import pandas as pd
 
-# Strategy class lives in the standalone adapter file
-# (copy asq_scalping.py into the project root or adjust path as needed)
-from asq_scalping import ASQSafeScalping, attach_h1_mtf   # noqa: E402
+# Strategy class lives alongside this adapter in the strategies package
+from qhf.engines.strategies.asq_safe_scalping import ASQSafeScalping, attach_h1_mtf   # noqa: E402
 
 
 # ─────────────────────────────────────────────────────────────────────────────
