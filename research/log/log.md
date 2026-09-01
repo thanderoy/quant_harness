@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 85
+- **Entries:** 86
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (85 entries)
+- **Hash chain:** OK — chain ok (86 entries)
 
 ## Principles
 
@@ -1453,3 +1453,29 @@ _Metrics_: `committed_prefix_commit`=6864727, `committed_prefix_entries`=30, `co
 > Phase 0 D7 acceptance. The baseline was measured on 2026-08-31 at 82 entries, terminal 019ff0dd...0da31876, verify() True, trial_count 26. seq=82 (LIVE_RISK_HALT) and the T6 schema migration have been appended since; trial_count is 26 at every one of those points because neither was a trial. Provenance, which bounds what X21 can cross-check: entries.jsonl was first committed at 6864727 with 30 entries (terminal 5a060a461d8bfeff), a strict prefix of the current chain, and that commit is on the remote. So seq 0-29 have independent git-history corroboration; seq 30-82 rest on the hash chain alone. The X21 cross-check therefore starts at 6864727 and the unwitnessed span is 53 entries, not 83. Recorded via append_record() in Phase 0.5 rather than during Phase 0, which had a zero-production-code-change constraint that adding an EventType member would have broken.
 
 _hash_: `9a67a16939724d44…` · _prev_: `95ecc004eb6617df…`
+
+### seq 85 · 2026-09-01T10:05:38Z · project_rename · `record:qhf-harness-to-quant-harness`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `commit`=4493ebc, `distribution_new`=quant-harness, `distribution_old`=qhf-harness, `github_redirect_active`=true, `python_package_renamed`=no, `repo_new`=thanderoy/quant_harness, `repo_old`=thanderoy/qhf_harness
+
+> PATH MAPPING -- apply when resolving any reference recorded before this entry.
+
+(1) Repository rename, effective seq=85:
+      qhf_harness  ->  quant_harness   (GitHub redirect active)
+    Affects logged references to 'qhf/data/csv_loader.py' and 'qhf_harness/examples/run_cnk_sweep_oos.py'.
+
+(2) HISTORICAL, retroactive -- an artifact move made WITHOUT an event, recorded here because the log otherwise contains three unresolvable paths and no recorded means of resolving them:
+      research/artifacts/  ->  research/pre/artifacts/
+                           or  research/post/artifacts/
+    Made by the pre/post reorganisation (WMPS a6e9d33). All three affected files exist under research/pre/artifacts/; only the recorded prefix is stale:
+      zlch_signal_edge_20260613T124557Z.json
+      avwap_sweep_reclaim_signal_edge_20260614T083827Z.json
+      avwap_multibar_reclaim_signal_edge_20260614T133418Z.json
+
+NOT renamed: the Python package 'qhf'. Per spec it is split into four packages (resources, strategies, research, platform) at Phase 1 T1, so a single old->new namespace pair would be wrong. That mapping is recorded in its own PROJECT_RENAME event when the split lands.
+
+No prior entry was edited to reflect either rename. Recorded references stay as written and are resolved forward through this mapping.
+
+_hash_: `64c1581f8e1bb0de…` · _prev_: `9a67a16939724d44…`
