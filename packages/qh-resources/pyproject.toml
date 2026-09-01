@@ -1,0 +1,16 @@
+[project]
+name = "qh-resources"
+version = "0.1.0"
+description = "quant_harness — instrument-neutral core: registry, mask, panel, indicators, sizing, broker port"
+requires-python = ">=3.12"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["resources"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
