@@ -1,0 +1,27 @@
+{
+  "m1_mean": 0.5479833641536144,
+  "m1_median": 0.5632445633918942,
+  "m1_positive": 15,
+  "n_folds": 17,
+  "pool_mean": 0.0918651001110109,
+  "fixed_mean": 0.7247980188804007,
+  "leakage": 0.17681465472678637,
+  "m2_wins": 13,
+  "m2_n": 17,
+  "m2_p": 0.0245208740234375,
+  "mean_diff": 0.4561182640426035,
+  "train_mean": 1.3394432319754779,
+  "trades_total": 937,
+  "picks": {
+    "intraday_ret": 5,
+    "lower_wick": 2,
+    "ret_12": 1,
+    "dist_vwap": 1,
+    "dist_pdh": 4,
+    "dist_pdl": 1,
+    "body_ratio": 2,
+    "vol_z": 1
+  },
+  "momentum_picks": 12,
+  "lowvol_picks": 11
+}
