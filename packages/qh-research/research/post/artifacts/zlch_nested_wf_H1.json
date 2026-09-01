@@ -1,0 +1,640 @@
+{
+  "timeframe": "H1",
+  "windows": [
+    "1460D",
+    "365D",
+    "365D"
+  ],
+  "gates": {
+    "pf": 1.2,
+    "dd": 0.3,
+    "sharpe": 0.0,
+    "trade_floor_per_year": 4.62962962962963,
+    "trade_floor_min": 30
+  },
+  "pool_sample": 50,
+  "seed": 20260827,
+  "bias_origin": "2004-06-07 00:00:00+00:00",
+  "fixed_config": {
+    "atr_period": 20,
+    "atr_mult": 5.0,
+    "bias_tf": "D1",
+    "zlsma_len": 20,
+    "direction": "long",
+    "min_atr": 0.0
+  },
+  "folds": [
+    {
+      "train_start": "2004-06-11",
+      "train_end": "2008-06-10",
+      "test_end": "2009-06-10",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 1365,
+      "seconds": 49.4,
+      "selected": {
+        "config": "long atr10x5 biasD1/z20 minATR0",
+        "atr_period": 10,
+        "atr_mult": 5.0,
+        "bias_tf": "D1",
+        "zlsma_len": 20,
+        "direction": "long",
+        "min_atr": 0.0,
+        "train_sharpe": 1.8482576027325088,
+        "train_trades": 81,
+        "oos_sharpe": 0.1141390049826261,
+        "oos_trades": 17,
+        "oos_max_dd": 0.09719554116979745,
+        "oos_profit_factor": 1.0758873218369522,
+        "oos_cagr_acct": 0.022790280598536716
+      },
+      "pool": {
+        "n": 50,
+        "mean": 0.007443157652044452,
+        "median": 0.2892337783492539,
+        "selected_beats_median": false
+      },
+      "fixed": {
+        "oos_sharpe": 0.28027681672359944,
+        "oos_trades": 17
+      }
+    },
+    {
+      "train_start": "2005-06-11",
+      "train_end": "2009-06-10",
+      "test_end": "2010-06-10",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 1280,
+      "seconds": 54.5,
+      "selected": {
+        "config": "both atr10x5 biasD1/z20 minATR0",
+        "atr_period": 10,
+        "atr_mult": 5.0,
+        "bias_tf": "D1",
+        "zlsma_len": 20,
+        "direction": "both",
+        "min_atr": 0.0,
+        "train_sharpe": 1.6780584218141656,
+        "train_trades": 128,
+        "oos_sharpe": 1.6859320199352636,
+        "oos_trades": 23,
+        "oos_max_dd": 0.030172588035488168,
+        "oos_profit_factor": 2.833060550027066,
+        "oos_cagr_acct": 0.09512626094463039
+      },
+      "pool": {
+        "n": 50,
+        "mean": 0.6858374222992093,
+        "median": 1.0825133286746398,
+        "selected_beats_median": true
+      },
+      "fixed": {
+        "oos_sharpe": 1.69481647246866,
+        "oos_trades": 15
+      }
+    },
+    {
+      "train_start": "2006-06-11",
+      "train_end": "2010-06-10",
+      "test_end": "2011-06-10",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 918,
+      "seconds": 55.0,
+      "selected": {
+        "config": "long atr10x5 biasnone minATR0",
+        "atr_period": 10,
+        "atr_mult": 5.0,
+        "bias_tf": "none",
+        "zlsma_len": 0,
+        "direction": "long",
+        "min_atr": 0.0,
+        "train_sharpe": 1.6671168851050382,
+        "train_trades": 160,
+        "oos_sharpe": -0.07855773231442961,
+        "oos_trades": 43,
+        "oos_max_dd": 0.05715265940598402,
+        "oos_profit_factor": 0.9718852247251091,
+        "oos_cagr_acct": -0.006220692144001672
+      },
+      "pool": {
+        "n": 50,
+        "mean": -0.3104579465328532,
+        "median": -0.16122763985519795,
+        "selected_beats_median": true
+      },
+      "fixed": {
+        "oos_sharpe": 1.0908028509726406,
+        "oos_trades": 20
+      }
+    },
+    {
+      "train_start": "2007-06-11",
+      "train_end": "2011-06-10",
+      "test_end": "2012-06-09",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 933,
+      "seconds": 54.5,
+      "selected": {
+        "config": "long atr10x5 biasnone minATR0",
+        "atr_period": 10,
+        "atr_mult": 5.0,
+        "bias_tf": "none",
+        "zlsma_len": 0,
+        "direction": "long",
+        "min_atr": 0.0,
+        "train_sharpe": 1.4848068188790757,
+        "train_trades": 157,
+        "oos_sharpe": 1.3511517237265869,
+        "oos_trades": 39,
+        "oos_max_dd": 0.10872735823524005,
+        "oos_profit_factor": 1.7645468587629984,
+        "oos_cagr_acct": 0.1068228127281885
+      },
+      "pool": {
+        "n": 50,
+        "mean": 0.47046967769200015,
+        "median": 0.5832934105234338,
+        "selected_beats_median": true
+      },
+      "fixed": {
+        "oos_sharpe": 1.3415442728402287,
+        "oos_trades": 15
+      }
+    },
+    {
+      "train_start": "2008-06-10",
+      "train_end": "2012-06-09",
+      "test_end": "2013-06-09",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 892,
+      "seconds": 54.2,
+      "selected": {
+        "config": "long atr8x5 biasH4/z20 minATR1",
+        "atr_period": 8,
+        "atr_mult": 5.0,
+        "bias_tf": "H4",
+        "zlsma_len": 20,
+        "direction": "long",
+        "min_atr": 1.0,
+        "train_sharpe": 1.3336170325184125,
+        "train_trades": 110,
+        "oos_sharpe": -0.5464626118063576,
+        "oos_trades": 27,
+        "oos_max_dd": 0.05960222521291636,
+        "oos_profit_factor": 0.7784198938427314,
+        "oos_cagr_acct": -0.03660810254284619
+      },
+      "pool": {
+        "n": 50,
+        "mean": -0.6697398599031985,
+        "median": -0.554786368451107,
+        "selected_beats_median": true
+      },
+      "fixed": {
+        "oos_sharpe": -1.2162826336525148,
+        "oos_trades": 16
+      }
+    },
+    {
+      "train_start": "2009-06-10",
+      "train_end": "2013-06-09",
+      "test_end": "2014-06-09",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 794,
+      "seconds": 53.6,
+      "selected": {
+        "config": "long atr14x5 biasD1/z32 minATR1",
+        "atr_period": 14,
+        "atr_mult": 5.0,
+        "bias_tf": "D1",
+        "zlsma_len": 32,
+        "direction": "long",
+        "min_atr": 1.0,
+        "train_sharpe": 1.3927120711052299,
+        "train_trades": 65,
+        "oos_sharpe": -1.1003778739726688,
+        "oos_trades": 17,
+        "oos_max_dd": 0.09079667613359177,
+        "oos_profit_factor": 0.5154315644972118,
+        "oos_cagr_acct": -0.028954070277082744
+      },
+      "pool": {
+        "n": 50,
+        "mean": -0.18160033039255122,
+        "median": 0.03450551185140403,
+        "selected_beats_median": false
+      },
+      "fixed": {
+        "oos_sharpe": -0.2876784392890113,
+        "oos_trades": 14
+      }
+    },
+    {
+      "train_start": "2010-06-10",
+      "train_end": "2014-06-09",
+      "test_end": "2015-06-09",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 914,
+      "seconds": 51.9,
+      "selected": {
+        "config": "short atr50x1 biasD1/z20 minATR0",
+        "atr_period": 50,
+        "atr_mult": 1.0,
+        "bias_tf": "D1",
+        "zlsma_len": 20,
+        "direction": "short",
+        "min_atr": 0.0,
+        "train_sharpe": 1.3549247877685902,
+        "train_trades": 404,
+        "oos_sharpe": 0.32372687768606423,
+        "oos_trades": 127,
+        "oos_max_dd": 0.050345266110980114,
+        "oos_profit_factor": 1.1063348404191817,
+        "oos_cagr_acct": 0.025913793950835373
+      },
+      "pool": {
+        "n": 50,
+        "mean": -0.5117766178930083,
+        "median": -0.3039035229773792,
+        "selected_beats_median": true
+      },
+      "fixed": {
+        "oos_sharpe": -0.520266265223069,
+        "oos_trades": 16
+      }
+    },
+    {
+      "train_start": "2011-06-10",
+      "train_end": "2015-06-09",
+      "test_end": "2016-06-08",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 1082,
+      "seconds": 53.1,
+      "selected": {
+        "config": "short atr27x1 biasD1/z20 minATR0",
+        "atr_period": 27,
+        "atr_mult": 1.0,
+        "bias_tf": "D1",
+        "zlsma_len": 20,
+        "direction": "short",
+        "min_atr": 0.0,
+        "train_sharpe": 1.4652100772644796,
+        "train_trades": 618,
+        "oos_sharpe": -0.4826412216674409,
+        "oos_trades": 161,
+        "oos_max_dd": 0.06130971391214113,
+        "oos_profit_factor": 0.8950373917941269,
+        "oos_cagr_acct": -0.02591210070615635
+      },
+      "pool": {
+        "n": 50,
+        "mean": -0.45402279893536845,
+        "median": -0.37703711320206634,
+        "selected_beats_median": false
+      },
+      "fixed": {
+        "oos_sharpe": -0.24810074633749576,
+        "oos_trades": 14
+      }
+    },
+    {
+      "train_start": "2012-06-09",
+      "train_end": "2016-06-08",
+      "test_end": "2017-06-08",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 590,
+      "seconds": 53.3,
+      "selected": {
+        "config": "both atr10x4 biasH4/z80 minATR1",
+        "atr_period": 10,
+        "atr_mult": 4.0,
+        "bias_tf": "H4",
+        "zlsma_len": 80,
+        "direction": "both",
+        "min_atr": 1.0,
+        "train_sharpe": 1.1646737244553722,
+        "train_trades": 134,
+        "oos_sharpe": 0.6625081812599255,
+        "oos_trades": 36,
+        "oos_max_dd": 0.03985464284305207,
+        "oos_profit_factor": 1.3267134826171858,
+        "oos_cagr_acct": 0.04487434145916391
+      },
+      "pool": {
+        "n": 50,
+        "mean": 0.24053921218756777,
+        "median": 0.5330469590589637,
+        "selected_beats_median": true
+      },
+      "fixed": {
+        "oos_sharpe": -1.6555240941775378,
+        "oos_trades": 15
+      }
+    },
+    {
+      "train_start": "2013-06-09",
+      "train_end": "2017-06-08",
+      "test_end": "2018-06-08",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 504,
+      "seconds": 53.2,
+      "selected": {
+        "config": "both atr10x4 biasH4/z80 minATR1",
+        "atr_period": 10,
+        "atr_mult": 4.0,
+        "bias_tf": "H4",
+        "zlsma_len": 80,
+        "direction": "both",
+        "min_atr": 1.0,
+        "train_sharpe": 1.2315149773401808,
+        "train_trades": 141,
+        "oos_sharpe": -1.0345340351914487,
+        "oos_trades": 36,
+        "oos_max_dd": 0.05892833308585643,
+        "oos_profit_factor": 0.6673668586785375,
+        "oos_cagr_acct": -0.0585087112259266
+      },
+      "pool": {
+        "n": 50,
+        "mean": -0.6110490360978647,
+        "median": -0.5177322257322772,
+        "selected_beats_median": false
+      },
+      "fixed": {
+        "oos_sharpe": 0.4002470987045091,
+        "oos_trades": 13
+      }
+    },
+    {
+      "train_start": "2014-06-09",
+      "train_end": "2018-06-08",
+      "test_end": "2019-06-08",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 260,
+      "seconds": 47.1,
+      "selected": {
+        "config": "long atr10x3 biasH4/z80 minATR0",
+        "atr_period": 10,
+        "atr_mult": 3.0,
+        "bias_tf": "H4",
+        "zlsma_len": 80,
+        "direction": "long",
+        "min_atr": 0.0,
+        "train_sharpe": 0.9945494838368564,
+        "train_trades": 119,
+        "oos_sharpe": -0.7955219452010849,
+        "oos_trades": 34,
+        "oos_max_dd": 0.04028482645323439,
+        "oos_profit_factor": 0.672803891737591,
+        "oos_cagr_acct": -0.03930713953875953
+      },
+      "pool": {
+        "n": 50,
+        "mean": -0.5332267211459614,
+        "median": -0.4445342344012081,
+        "selected_beats_median": false
+      },
+      "fixed": {
+        "oos_sharpe": -0.5127294348370763,
+        "oos_trades": 12
+      }
+    },
+    {
+      "train_start": "2015-06-09",
+      "train_end": "2019-06-08",
+      "test_end": "2020-06-07",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 238,
+      "seconds": 47.5,
+      "selected": {
+        "config": "long atr27x2.5 biasH4/z80 minATR0",
+        "atr_period": 27,
+        "atr_mult": 2.5,
+        "bias_tf": "H4",
+        "zlsma_len": 80,
+        "direction": "long",
+        "min_atr": 0.0,
+        "train_sharpe": 1.0045932727398768,
+        "train_trades": 196,
+        "oos_sharpe": -1.990937065196887,
+        "oos_trades": 46,
+        "oos_max_dd": 0.0899444503014073,
+        "oos_profit_factor": 0.4732886822391732,
+        "oos_cagr_acct": -0.07319652660125986
+      },
+      "pool": {
+        "n": 50,
+        "mean": -0.2548723081833134,
+        "median": 0.48617027591301976,
+        "selected_beats_median": false
+      },
+      "fixed": {
+        "oos_sharpe": 1.350310593783575,
+        "oos_trades": 13
+      }
+    },
+    {
+      "train_start": "2016-06-08",
+      "train_end": "2020-06-07",
+      "test_end": "2021-06-07",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 434,
+      "seconds": 45.5,
+      "selected": {
+        "config": "long atr5x2 biasD1/z80 minATR1",
+        "atr_period": 5,
+        "atr_mult": 2.0,
+        "bias_tf": "D1",
+        "zlsma_len": 80,
+        "direction": "long",
+        "min_atr": 1.0,
+        "train_sharpe": 1.076680140590934,
+        "train_trades": 316,
+        "oos_sharpe": 1.0173841295257327,
+        "oos_trades": 70,
+        "oos_max_dd": 0.06379961302980608,
+        "oos_profit_factor": 1.4185289814838924,
+        "oos_cagr_acct": 0.18414954060219269
+      },
+      "pool": {
+        "n": 50,
+        "mean": 0.7405181328169981,
+        "median": 0.8083279691818983,
+        "selected_beats_median": true
+      },
+      "fixed": {
+        "oos_sharpe": 1.8816346925487322,
+        "oos_trades": 13
+      }
+    },
+    {
+      "train_start": "2017-06-08",
+      "train_end": "2021-06-07",
+      "test_end": "2022-06-07",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 776,
+      "seconds": 46.0,
+      "selected": {
+        "config": "long atr27x5 biasH4/z50 minATR1",
+        "atr_period": 27,
+        "atr_mult": 5.0,
+        "bias_tf": "H4",
+        "zlsma_len": 50,
+        "direction": "long",
+        "min_atr": 1.0,
+        "train_sharpe": 1.356056880238489,
+        "train_trades": 50,
+        "oos_sharpe": -0.9991610863381035,
+        "oos_trades": 19,
+        "oos_max_dd": 0.0570030918329224,
+        "oos_profit_factor": 0.5307530722700747,
+        "oos_cagr_acct": -0.05319322420657513
+      },
+      "pool": {
+        "n": 50,
+        "mean": -0.04730897228225924,
+        "median": 0.23782700602785617,
+        "selected_beats_median": false
+      },
+      "fixed": {
+        "oos_sharpe": -0.3796945219209113,
+        "oos_trades": 18
+      }
+    },
+    {
+      "train_start": "2018-06-08",
+      "train_end": "2022-06-07",
+      "test_end": "2023-06-07",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 747,
+      "seconds": 47.2,
+      "selected": {
+        "config": "long atr34x5 biasD1/z80 minATR0",
+        "atr_period": 34,
+        "atr_mult": 5.0,
+        "bias_tf": "D1",
+        "zlsma_len": 80,
+        "direction": "long",
+        "min_atr": 0.0,
+        "train_sharpe": 1.347916570973813,
+        "train_trades": 70,
+        "oos_sharpe": -1.4262405208568587,
+        "oos_trades": 24,
+        "oos_max_dd": 0.061297745138867654,
+        "oos_profit_factor": 0.4905337558208703,
+        "oos_cagr_acct": -0.04651559063804023
+      },
+      "pool": {
+        "n": 50,
+        "mean": -0.9298659829492628,
+        "median": -0.782390938434664,
+        "selected_beats_median": false
+      },
+      "fixed": {
+        "oos_sharpe": 0.37473172012861644,
+        "oos_trades": 17
+      }
+    },
+    {
+      "train_start": "2019-06-08",
+      "train_end": "2023-06-07",
+      "test_end": "2024-06-06",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 576,
+      "seconds": 45.8,
+      "selected": {
+        "config": "long atr14x2 biasH4/z20 minATR1",
+        "atr_period": 14,
+        "atr_mult": 2.0,
+        "bias_tf": "H4",
+        "zlsma_len": 20,
+        "direction": "long",
+        "min_atr": 1.0,
+        "train_sharpe": 1.175177554016448,
+        "train_trades": 229,
+        "oos_sharpe": 0.40709273138729485,
+        "oos_trades": 76,
+        "oos_max_dd": 0.0366671050031494,
+        "oos_profit_factor": 1.1835257387761606,
+        "oos_cagr_acct": 0.04397596124569958
+      },
+      "pool": {
+        "n": 50,
+        "mean": 0.5307067646862162,
+        "median": 0.7033981179741375,
+        "selected_beats_median": false
+      },
+      "fixed": {
+        "oos_sharpe": 2.2406251149446166,
+        "oos_trades": 13
+      }
+    },
+    {
+      "train_start": "2020-06-07",
+      "train_end": "2024-06-06",
+      "test_end": "2025-06-06",
+      "train_years": 4.0,
+      "trade_floor": 30,
+      "n_grid": 3696,
+      "n_passers": 804,
+      "seconds": 47.0,
+      "selected": {
+        "config": "long atr5x4 biasH4/z120 minATR0",
+        "atr_period": 5,
+        "atr_mult": 4.0,
+        "bias_tf": "H4",
+        "zlsma_len": 120,
+        "direction": "long",
+        "min_atr": 0.0,
+        "train_sharpe": 1.2625575443551953,
+        "train_trades": 90,
+        "oos_sharpe": 1.643791921940376,
+        "oos_trades": 26,
+        "oos_max_dd": 0.027914365298017274,
+        "oos_profit_factor": 2.3257132091297894,
+        "oos_cagr_acct": 0.1380221103037631
+      },
+      "pool": {
+        "n": 50,
+        "mean": 1.1129133711048573,
+        "median": 1.245384570278237,
+        "selected_beats_median": true
+      },
+      "fixed": {
+        "oos_sharpe": 1.7829010382530321,
+        "oos_trades": 18
+      }
+    }
+  ]
+}

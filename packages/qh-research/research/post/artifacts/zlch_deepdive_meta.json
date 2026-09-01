@@ -1,0 +1,13 @@
+{
+  "n_configs": 18480,
+  "n_distinct": 15630,
+  "n_survivors": 2421,
+  "gates": {
+    "n_trades_min": 100,
+    "profit_factor_min": 1.2,
+    "max_dd_max": 0.3,
+    "sharpe_min": 0.0
+  },
+  "n_permutations": 500,
+  "top_per_tf": 3
+}

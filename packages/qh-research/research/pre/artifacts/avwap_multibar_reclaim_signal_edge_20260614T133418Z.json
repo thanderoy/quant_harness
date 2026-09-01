@@ -1,0 +1,87 @@
+{
+  "hypothesis_id": "avwap_multibar_reclaim_m15",
+  "period": {
+    "start": "2018-01-02 09:00:00+00:00",
+    "end": "2025-12-31 23:45:00+00:00",
+    "n_bars": 186611
+  },
+  "params": {
+    "h1_hma_period": 50,
+    "sweep_threshold_atr_mult": 0.2,
+    "max_sweep_bars": 3,
+    "stoch_k": 14,
+    "stoch_d": 3,
+    "stoch_smooth": 3,
+    "atr_period": 14,
+    "forward_window_primary": 16,
+    "forward_windows_sensitivity": [
+      8,
+      32
+    ],
+    "permutations": 1000,
+    "random_seed": 42
+  },
+  "trigger_count_total": 83,
+  "trigger_count_long": 40,
+  "trigger_count_short": 43,
+  "trigger_count_sweep_1bar": 40,
+  "trigger_count_sweep_2bar": 27,
+  "trigger_count_sweep_3bar": 16,
+  "signal_hash": "97102210ade375b6",
+  "primary": {
+    "window": 16,
+    "e_ratio_combined": 0.7442676947027749,
+    "e_ratio_long": 0.752738401545089,
+    "e_ratio_short": 0.7373789256325337,
+    "n_signals_eligible": 83,
+    "n_long_eligible": 40,
+    "n_short_eligible": 43,
+    "mean_norm_mfe": 2.1195797446009608,
+    "mean_norm_mae": 2.847872828132652,
+    "p_value": 0.943,
+    "null_mean": 1.0135513330065116,
+    "null_p05": 0.7338073025220379,
+    "null_p95": 1.3435445752288044,
+    "baseline_e_ratio": 1.1712825593901284,
+    "e_ratio_sweep_1bar": 0.8587431852056898,
+    "n_sweep_1bar": 40,
+    "e_ratio_sweep_2bar": 0.6593045423120963,
+    "n_sweep_2bar": 27,
+    "e_ratio_sweep_3bar": 0.63133028877003,
+    "n_sweep_3bar": 16
+  },
+  "sensitivity": {
+    "8": {
+      "window": 8,
+      "e_ratio_combined": 0.8029473830802075,
+      "e_ratio_long": 0.8977299902772283,
+      "e_ratio_short": 0.7267214002790571,
+      "n_signals_eligible": 83,
+      "n_long_eligible": 40,
+      "n_short_eligible": 43,
+      "mean_norm_mfe": 1.5652004041031249,
+      "mean_norm_mae": 1.9493187686829723,
+      "p_value": 0.886,
+      "null_mean": 1.0143094208389918,
+      "null_p05": 0.7439843139392558,
+      "null_p95": 1.353889127779586,
+      "baseline_e_ratio": 1.2550608632804223
+    },
+    "32": {
+      "window": 32,
+      "e_ratio_combined": 0.8579269972413494,
+      "e_ratio_long": 0.8914873633898268,
+      "e_ratio_short": 0.8290690843496525,
+      "n_signals_eligible": 83,
+      "n_long_eligible": 40,
+      "n_short_eligible": 43,
+      "mean_norm_mfe": 3.4067683328365685,
+      "mean_norm_mae": 3.970930328327443,
+      "p_value": 0.783,
+      "null_mean": 1.0171713612299904,
+      "null_p05": 0.7445222591525176,
+      "null_p95": 1.3732122354490863,
+      "baseline_e_ratio": 1.1207945238947323
+    }
+  }
+}
