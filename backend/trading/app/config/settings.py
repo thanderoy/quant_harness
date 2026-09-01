@@ -269,21 +269,46 @@ CELERY_BEAT_SCHEDULE = {
         "task": "app.quant.tasks.sync_account_status",
         "schedule": crontab(minute=0, hour=0, day_of_week="mon-fri"),
     },
-    # H1 intraday momentum -- PAPER-FORWARD DATA COLLECTION, not a promoted
-    # strategy. It is the only effect in the research programme that beat a
-    # permutation null twice (seq=65 p=0.010, seq=71 p=0.005, both against
-    # nulls carrying gold's drift); what it has never done is clear the
-    # recoverability test (nested selection fails at p=0.105). Forward data is
-    # the only evidence not contaminated by selection, and none exists yet.
-    # Demo only. Fires at HH:02 -- one minute after the H1 close plus a margin,
-    # because the task pulls 50,000 bars to rebuild the entry percentile.
-    "h1-momentum": {
-        "task": "quant.h1_momentum.run",
-        "schedule": crontab(minute=2, day_of_week="mon-fri"),
-        # Stale after 5 min: by then the next H1 bar is forming and iloc[-2]
-        # refers to a different bar than the signal was computed on.
-        "options": {"expires": 300},
-    },
+    # h1_momentum is HALTED -- LIVE_RISK_HALT, Phase 0 D6/D8, 2026-08-31.
+    #
+    # It was paper-forward data collection: the only effect in the research
+    # programme that beat a permutation null twice (seq=65 p=0.010, seq=71
+    # p=0.005, both against nulls carrying gold's drift), never having cleared
+    # the recoverability test (nested selection fails at p=0.105).
+    #
+    # Halted because it sizes positions it cannot afford. Measured, not
+    # estimated -- from the D8 golden sizer grid:
+    #
+    #   - It sets RISK_PCT = 0.05 and STOP_ATR_MULT = 10.0, overriding the
+    #     sizer's 2% default with the value the trading profile calls stale.
+    #   - It wires NO DrawdownGuard. The guard is imported only by
+    #     crest_n_keel and asqs, both already retired, so the only strategy
+    #     on the schedule was the only one with no drawdown protection.
+    #   - At its own geometry (10xATR, 5%) with H1 gold ATR $14-22/oz, one
+    #     minimum lot realises 140-220% of a $100 account. It survived only
+    #     because the demo balance is $3,643, where the same geometry is
+    #     3.8-6.0%.
+    #   - Across the full 480-cell sizer grid, 125 cells (26%) realise more
+    #     risk than their own budget; worst case 600% of account. Once lots
+    #     pin at min_lot the clamp stops bounding risk at all.
+    #
+    # Halted rather than re-parameterised deliberately. The minimal correct
+    # fix for placing bets beyond the budget is to stop placing them; picking
+    # new RISK_PCT / STOP_ATR_MULT values here would be parameter selection on
+    # a live instrument, outside the pipeline, which is what the two-iteration
+    # rule exists to prevent. Disabling touches no numerical module, so the D8
+    # golden fixtures are unaffected.
+    #
+    # Re-enabling requires BOTH: (a) the T5 granularity flag, the account-level
+    # risk policy object (X26) and the mandatory DrawdownGuard precondition
+    # (X27) landed, and (b) a completed pre-registration -> E-Ratio ->
+    # walk-forward -> DSR record. Not a re-run, and not a config change.
+    #
+    # "h1-momentum": {
+    #     "task": "quant.h1_momentum.run",
+    #     "schedule": crontab(minute=2, day_of_week="mon-fri"),
+    #     "options": {"expires": 300},
+    # },
     # crest_n_keel and asqs are RETIRED from the schedule. Both ran on demo
     # for months on evidence that has since been refuted, and leaving them
     # scheduled contaminates the read on anything deployed alongside them.
