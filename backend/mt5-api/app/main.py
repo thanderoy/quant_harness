@@ -2,6 +2,7 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
+import time
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -793,6 +794,39 @@ class MT5Service:
             raw = mt5.copy_ticks_range(
                 symbol, date_from, date_to, mt5.COPY_TICKS_ALL
             )
+
+            # MT5 must download tick history before the first range query
+            # succeeds; the initial call commonly returns -1 while that runs.
+            # Retry briefly before concluding the history does not exist —
+            # otherwise a warm-up delay is indistinguishable from a broker that
+            # retains nothing, and D3b would record the wrong reason.
+            attempts = 1
+            while raw is None and attempts < 4:
+                code, _ = mt5.last_error()
+                if code == 0:
+                    break
+                time.sleep(5)
+                raw = mt5.copy_ticks_range(
+                    symbol, date_from, date_to, mt5.COPY_TICKS_ALL
+                )
+                attempts += 1
+
+            # Fall back to the count-based API. copy_ticks_from is served from
+            # a different code path in the terminal and sometimes succeeds
+            # where the range query does not; the window is then trimmed
+            # client-side, so the reported extent stays honest.
+            if raw is None:
+                LOGGER.warning(
+                    f"copy_ticks_range failed for {symbol} after {attempts} "
+                    f"attempts; falling back to copy_ticks_from"
+                )
+                raw = mt5.copy_ticks_from(
+                    symbol, date_from, self.MAX_TICKS, mt5.COPY_TICKS_ALL
+                )
+                if raw is not None:
+                    cutoff = date_to.timestamp()
+                    raw = [r for r in raw if r["time"] <= cutoff]
+
             if raw is None:
                 code, msg = mt5.last_error()
                 LOGGER.error(f"copy_ticks_range failed: {code} - {msg}")
