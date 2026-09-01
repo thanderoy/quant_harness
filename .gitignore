@@ -102,5 +102,23 @@ CLAUDE.md
 docs/*
 backend/trading/app/quant/strategies/asqs/_resources/*
 
-# Research module: large market-data CSVs are local fixtures, not for git
-research/data/
+# Research module: market-data CSVs are local fixtures, not for git.
+#
+# Note the trailing /* rather than a bare directory: git does not descend into
+# an excluded directory, so a bare `research/data/` would make the negation
+# below unreachable.
+#
+# The carve-out is a dependency argument, not a size one. Broker OHLCV is not
+# durably reproducible -- Pepperstone revises bars, backfills gaps and retains
+# finite history -- so a file that is only hashed cannot be restored once lost,
+# and any parity claim resting on it becomes permanently uncheckable rather
+# than merely stale. XAUUSD_H1.csv underpins T9a and the seq=31 flood_tide
+# artifact, so it must be recoverable, not merely verifiable. At H1 that costs
+# 6.2 MB.
+#
+# Everything else stays ignored and is pinned by research/data_manifest.json,
+# relocatable via QH_DATA_DIR. Bulk series need their own off-disk archive: a
+# checksum on a file that exists in exactly one place is a detection mechanism
+# with nothing behind it.
+research/data/*
+!research/data/XAUUSD_H1.csv

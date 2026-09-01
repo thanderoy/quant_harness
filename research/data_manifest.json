@@ -1,19 +1,37 @@
 {
-  "generated_at_utc": "2026-09-01T07:42:57.987904+00:00",
+  "generated_at_utc": "2026-09-01T10:15:07.233117+00:00",
   "generator": "research/data_manifest.py",
-  "data_dir": "research/data/",
-  "gitignored": true,
-  "note": "research/data/ is not tracked. This manifest pins its contents so a silent data change cannot be mistaken for a code regression.",
+  "data_dir": "/home/roy-thande/Local/wine-mt5-python-setup/research/data",
+  "data_dir_env_override": "QH_DATA_DIR",
+  "policy": {
+    "default": "gitignored; pinned here, not stored in git",
+    "tracked_in_git": [
+      "XAUUSD_H1.csv"
+    ],
+    "tracked_because": "not durably reproducible from the broker, and T9a/seq=31 depend on it -- must be recoverable, not merely verifiable",
+    "size_warn_bytes": 52428800,
+    "grandfathered": {
+      "quant_harness cb48e00:qhf/data/raw/XAUUSD_M5.csv": {
+        "size_bytes_approx": 74361143,
+        "reason": "committed before the policy existed; history not rewritten"
+      }
+    },
+    "off_disk_archive_required": true,
+    "off_disk_archive_note": "A checksum on a file that exists in exactly one place is a detection mechanism with nothing behind it. Untracked bulk series need their own off-disk archive; this manifest detects divergence but cannot restore."
+  },
+  "note": "Most of research/data/ is not tracked. This manifest pins its contents so a silent data change cannot be mistaken for a code regression.",
   "files": {
     "DFII10.csv": {
       "size_bytes": 98703,
       "sha256": "051e52315a5ac91d59e610eeaf1692cfeee8acd20481bdc8eee1b099c70728ce",
+      "tracked_in_git": false,
       "format": "non_ohlcv",
       "n_lines_incl_header": 6172
     },
     "EURUSD_H1.csv": {
       "size_bytes": 4456583,
       "sha256": "a8668868fb39736b59db5ffccc23caebe48edd5c533aa2a154cd14487b283deb",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 80000,
       "first_bar_utc": "2013-10-08 06:00:00+00:00",
@@ -23,6 +41,7 @@
     "GBPUSD_H1.csv": {
       "size_bytes": 4754105,
       "sha256": "da64baeb092e4af65ac490600dd1b8c8e86cae5b502f23ef0219eb923dfcc36f",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 80000,
       "first_bar_utc": "2013-10-08 06:00:00+00:00",
@@ -32,6 +51,7 @@
     "SYNDXY_H1.csv": {
       "size_bytes": 7474839,
       "sha256": "41fe3874a85ec71de121e7b34316f099d727f627eded9b83812d329593714f7a",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 79928,
       "first_bar_utc": "2013-10-08 13:00:00+00:00",
@@ -41,6 +61,7 @@
     "US500_H1.csv": {
       "size_bytes": 3118314,
       "sha256": "4aecea882d0d97bee3abd8ef1ec1dad4833b3a91a95362b6649ee8fe87d78638",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 62726,
       "first_bar_utc": "2012-08-06 00:00:00+00:00",
@@ -50,6 +71,7 @@
     "USDCAD_H1.csv": {
       "size_bytes": 4667344,
       "sha256": "559e17b61b1b782173f2387a7eba0f3202c447e261c0d96f40bc33626c9509d1",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 80000,
       "first_bar_utc": "2013-10-08 16:00:00+00:00",
@@ -59,6 +81,7 @@
     "USDCHF_H1.csv": {
       "size_bytes": 4268584,
       "sha256": "3d95f43c3223a236e29cedd82d31da9f3718b0834c0164341befad1e6cca902d",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 80000,
       "first_bar_utc": "2013-10-07 12:00:00+00:00",
@@ -68,6 +91,7 @@
     "USDJPY_H1.csv": {
       "size_bytes": 4279252,
       "sha256": "a62088a3139c3f99a152d7e653fc3e54130631959c2e6b7a249d2ea03455b4f6",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 80000,
       "first_bar_utc": "2013-10-08 11:00:00+00:00",
@@ -77,6 +101,7 @@
     "USDSEK_H1.csv": {
       "size_bytes": 4388412,
       "sha256": "02604fd65e24fadc0e5b489690aad94cacef01f9b25171e4876cd9e9b4363680",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 80000,
       "first_bar_utc": "2013-10-07 06:00:00+00:00",
@@ -86,6 +111,7 @@
     "USDX_H1.csv": {
       "size_bytes": 152538,
       "sha256": "0108251f3b176e457cc9fa7a13747e3a9c069a0e7dc05f112aa9b177e61aaf60",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 3548,
       "first_bar_utc": "2024-02-29 17:00:00+00:00",
@@ -95,6 +121,7 @@
     "XAGUSD_H1.csv": {
       "size_bytes": 4887309,
       "sha256": "2b253ffb89001b2fbde927aaaf3fe9a0008258f2649b7bddffb13d7ba84dbfb1",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 99999,
       "first_bar_utc": "2009-08-18 20:00:00+00:00",
@@ -104,6 +131,7 @@
     "XAUUSD_D1.csv": {
       "size_bytes": 297131,
       "sha256": "86a52838d03a524d378e08e3caabdc5869ddaebf915b688feb794b05b58b71ca",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 5531,
       "first_bar_utc": "2004-06-11 00:00:00+00:00",
@@ -113,6 +141,7 @@
     "XAUUSD_H1.csv": {
       "size_bytes": 6538802,
       "sha256": "2d28c58c21a73f5599bb255d6ef72ec515597f7b4d03fed51d314cc155bac482",
+      "tracked_in_git": true,
       "format": "house_semicolon_ohlcv",
       "n_bars": 124887,
       "first_bar_utc": "2004-06-11 07:00:00+00:00",
@@ -122,6 +151,7 @@
     "XAUUSD_H4.csv": {
       "size_bytes": 1746277,
       "sha256": "4b2fea68d3b67d515b3a042e877f72f3e60d660cb77b3f597ca7a925732dc0f4",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 32960,
       "first_bar_utc": "2004-06-11 04:00:00+00:00",
@@ -131,6 +161,7 @@
     "XAUUSD_M15.csv": {
       "size_bytes": 25538469,
       "sha256": "d6a5d1fa7af47dae3254b352083f65ffe1b28524ee83b127f2b94d1debb648b1",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 492964,
       "first_bar_utc": "2004-06-11 07:15:00+00:00",
@@ -140,6 +171,7 @@
     "XAUUSD_M5.csv": {
       "size_bytes": 74361143,
       "sha256": "9b0f8e72f8688da0d12a771b7365af2bb6f5484d62f4aa965734296e12bce3c2",
+      "tracked_in_git": false,
       "format": "house_semicolon_ohlcv",
       "n_bars": 1443451,
       "first_bar_utc": "2004-06-11 07:15:00+00:00",
