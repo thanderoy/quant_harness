@@ -1,0 +1,4 @@
+# Collector run artifacts are ignored by the root .gitignore; the D1 dump that
+# produced a committed registry snapshot is the exception — it is the evidence
+# behind those specs and must stay resolvable.
+!d1_contract_specs_20260901T135210Z.json
