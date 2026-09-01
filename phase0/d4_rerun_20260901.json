@@ -1,0 +1,430 @@
+{
+  "task": "D4_rerun",
+  "generated_at_utc": "2026-09-01T14:14:13.117725+00:00",
+  "generator": "phase0/rerun_d4.py",
+  "supersedes": "d4_correlation in phase0_universe_20260831.json",
+  "reason": "AUDUSD and NZDUSD were absent from local CSVs, so the original effective-N was stamped an UPPER BOUND. Both are available from the broker (log seq=87).",
+  "missing_instruments": [],
+  "data_provenance": "MT5 rates via mt5-api on ganymede, 2026-09-01",
+  "note": "NZDUSD history is only ~1.7 years; a panel is intersected, so including it truncates every series. The third variant is therefore a DIFFERENT measurement, not a better one, and the variants are not collapsed into a single figure.",
+  "variants": [
+    {
+      "variant": "original_no_aud_nzd",
+      "window_start": "2020-12-31",
+      "window_end": "2025-12-31",
+      "n_observations": 1269,
+      "correlation_matrix": {
+        "EURUSD": {
+          "EURUSD": 1.0,
+          "GBPUSD": 0.766791,
+          "USDJPY": 0.488541,
+          "USDCHF": 0.755923,
+          "USDCAD": 0.57046,
+          "XAUUSD": 0.385551,
+          "XAGUSD": 0.366553
+        },
+        "GBPUSD": {
+          "EURUSD": 0.766791,
+          "GBPUSD": 1.0,
+          "USDJPY": 0.445735,
+          "USDCHF": 0.6021,
+          "USDCAD": 0.611824,
+          "XAUUSD": 0.375616,
+          "XAGUSD": 0.393406
+        },
+        "USDJPY": {
+          "EURUSD": 0.488541,
+          "GBPUSD": 0.445735,
+          "USDJPY": 1.0,
+          "USDCHF": 0.578863,
+          "USDCAD": 0.273403,
+          "XAUUSD": 0.380578,
+          "XAGUSD": 0.255629
+        },
+        "USDCHF": {
+          "EURUSD": 0.755923,
+          "GBPUSD": 0.6021,
+          "USDJPY": 0.578863,
+          "USDCHF": 1.0,
+          "USDCAD": 0.470845,
+          "XAUUSD": 0.408415,
+          "XAGUSD": 0.324863
+        },
+        "USDCAD": {
+          "EURUSD": 0.57046,
+          "GBPUSD": 0.611824,
+          "USDJPY": 0.273403,
+          "USDCHF": 0.470845,
+          "USDCAD": 1.0,
+          "XAUUSD": 0.334556,
+          "XAGUSD": 0.407159
+        },
+        "XAUUSD": {
+          "EURUSD": 0.385551,
+          "GBPUSD": 0.375616,
+          "USDJPY": 0.380578,
+          "USDCHF": 0.408415,
+          "USDCAD": 0.334556,
+          "XAUUSD": 1.0,
+          "XAGUSD": 0.700372
+        },
+        "XAGUSD": {
+          "EURUSD": 0.366553,
+          "GBPUSD": 0.393406,
+          "USDJPY": 0.255629,
+          "USDCHF": 0.324863,
+          "USDCAD": 0.407159,
+          "XAUUSD": 0.700372,
+          "XAGUSD": 1.0
+        }
+      },
+      "fx_only": {
+        "instruments": [
+          "EURUSD",
+          "GBPUSD",
+          "USDJPY",
+          "USDCHF",
+          "USDCAD"
+        ],
+        "k": 5,
+        "avg_pairwise_abs_rho": 0.5564485148004684,
+        "avg_pairwise_signed_rho": 0.5564485148004684,
+        "effective_n_from_abs_rho": 1.5500059545763751,
+        "effective_n_from_signed_rho": 1.5500059545763751
+      },
+      "fx_plus_metals": {
+        "instruments": [
+          "EURUSD",
+          "GBPUSD",
+          "USDJPY",
+          "USDCHF",
+          "USDCAD",
+          "XAUUSD",
+          "XAGUSD"
+        ],
+        "k": 7,
+        "avg_pairwise_abs_rho": 0.47129447485482684,
+        "avg_pairwise_signed_rho": 0.47129447485482684,
+        "effective_n_from_abs_rho": 1.828742521659308,
+        "effective_n_from_signed_rho": 1.828742521659308
+      }
+    },
+    {
+      "variant": "plus_audusd",
+      "window_start": "2020-12-31",
+      "window_end": "2025-12-31",
+      "n_observations": 1269,
+      "correlation_matrix": {
+        "EURUSD": {
+          "EURUSD": 1.0,
+          "GBPUSD": 0.766791,
+          "USDJPY": 0.488541,
+          "USDCHF": 0.755923,
+          "USDCAD": 0.57046,
+          "AUDUSD": 0.651977,
+          "XAUUSD": 0.385551,
+          "XAGUSD": 0.366553
+        },
+        "GBPUSD": {
+          "EURUSD": 0.766791,
+          "GBPUSD": 1.0,
+          "USDJPY": 0.445735,
+          "USDCHF": 0.6021,
+          "USDCAD": 0.611824,
+          "AUDUSD": 0.707667,
+          "XAUUSD": 0.375616,
+          "XAGUSD": 0.393406
+        },
+        "USDJPY": {
+          "EURUSD": 0.488541,
+          "GBPUSD": 0.445735,
+          "USDJPY": 1.0,
+          "USDCHF": 0.578863,
+          "USDCAD": 0.273403,
+          "AUDUSD": 0.399445,
+          "XAUUSD": 0.380578,
+          "XAGUSD": 0.255629
+        },
+        "USDCHF": {
+          "EURUSD": 0.755923,
+          "GBPUSD": 0.6021,
+          "USDJPY": 0.578863,
+          "USDCHF": 1.0,
+          "USDCAD": 0.470845,
+          "AUDUSD": 0.536652,
+          "XAUUSD": 0.408415,
+          "XAGUSD": 0.324863
+        },
+        "USDCAD": {
+          "EURUSD": 0.57046,
+          "GBPUSD": 0.611824,
+          "USDJPY": 0.273403,
+          "USDCHF": 0.470845,
+          "USDCAD": 1.0,
+          "AUDUSD": 0.759341,
+          "XAUUSD": 0.334556,
+          "XAGUSD": 0.407159
+        },
+        "AUDUSD": {
+          "EURUSD": 0.651977,
+          "GBPUSD": 0.707667,
+          "USDJPY": 0.399445,
+          "USDCHF": 0.536652,
+          "USDCAD": 0.759341,
+          "AUDUSD": 1.0,
+          "XAUUSD": 0.424845,
+          "XAGUSD": 0.499128
+        },
+        "XAUUSD": {
+          "EURUSD": 0.385551,
+          "GBPUSD": 0.375616,
+          "USDJPY": 0.380578,
+          "USDCHF": 0.408415,
+          "USDCAD": 0.334556,
+          "AUDUSD": 0.424845,
+          "XAUUSD": 1.0,
+          "XAGUSD": 0.700372
+        },
+        "XAGUSD": {
+          "EURUSD": 0.366553,
+          "GBPUSD": 0.393406,
+          "USDJPY": 0.255629,
+          "USDCHF": 0.324863,
+          "USDCAD": 0.407159,
+          "AUDUSD": 0.499128,
+          "XAUUSD": 0.700372,
+          "XAGUSD": 1.0
+        }
+      },
+      "fx_only": {
+        "instruments": [
+          "EURUSD",
+          "GBPUSD",
+          "USDJPY",
+          "USDCHF",
+          "USDCAD",
+          "AUDUSD"
+        ],
+        "k": 6,
+        "avg_pairwise_abs_rho": 0.5746378344788781,
+        "avg_pairwise_signed_rho": 0.5746378344788781,
+        "effective_n_from_abs_rho": 1.5491110123833234,
+        "effective_n_from_signed_rho": 1.5491110123833234
+      },
+      "fx_plus_metals": {
+        "instruments": [
+          "EURUSD",
+          "GBPUSD",
+          "USDJPY",
+          "USDCHF",
+          "USDCAD",
+          "AUDUSD",
+          "XAUUSD",
+          "XAGUSD"
+        ],
+        "k": 8,
+        "avg_pairwise_abs_rho": 0.4955799834958262,
+        "avg_pairwise_signed_rho": 0.4955799834958262,
+        "effective_n_from_abs_rho": 1.7900856571196613,
+        "effective_n_from_signed_rho": 1.7900856571196613
+      }
+    },
+    {
+      "variant": "plus_aud_and_nzd_short_window",
+      "window_start": "2025-01-23",
+      "window_end": "2025-12-31",
+      "n_observations": 221,
+      "correlation_matrix": {
+        "EURUSD": {
+          "EURUSD": 1.0,
+          "GBPUSD": 0.785805,
+          "USDJPY": 0.685752,
+          "USDCHF": 0.822426,
+          "USDCAD": 0.564203,
+          "AUDUSD": 0.56934,
+          "NZDUSD": 0.666569,
+          "XAUUSD": 0.382396,
+          "XAGUSD": 0.188332
+        },
+        "GBPUSD": {
+          "EURUSD": 0.785805,
+          "GBPUSD": 1.0,
+          "USDJPY": 0.606637,
+          "USDCHF": 0.610782,
+          "USDCAD": 0.52757,
+          "AUDUSD": 0.658326,
+          "NZDUSD": 0.72706,
+          "XAUUSD": 0.369344,
+          "XAGUSD": 0.19852
+        },
+        "USDJPY": {
+          "EURUSD": 0.685752,
+          "GBPUSD": 0.606637,
+          "USDJPY": 1.0,
+          "USDCHF": 0.719692,
+          "USDCAD": 0.420223,
+          "AUDUSD": 0.364714,
+          "NZDUSD": 0.462344,
+          "XAUUSD": 0.313775,
+          "XAGUSD": 0.009513
+        },
+        "USDCHF": {
+          "EURUSD": 0.822426,
+          "GBPUSD": 0.610782,
+          "USDJPY": 0.719692,
+          "USDCHF": 1.0,
+          "USDCAD": 0.481747,
+          "AUDUSD": 0.354711,
+          "NZDUSD": 0.484183,
+          "XAUUSD": 0.355675,
+          "XAGUSD": 0.080808
+        },
+        "USDCAD": {
+          "EURUSD": 0.564203,
+          "GBPUSD": 0.52757,
+          "USDJPY": 0.420223,
+          "USDCHF": 0.481747,
+          "USDCAD": 1.0,
+          "AUDUSD": 0.689999,
+          "NZDUSD": 0.673403,
+          "XAUUSD": 0.270051,
+          "XAGUSD": 0.241055
+        },
+        "AUDUSD": {
+          "EURUSD": 0.56934,
+          "GBPUSD": 0.658326,
+          "USDJPY": 0.364714,
+          "USDCHF": 0.354711,
+          "USDCAD": 0.689999,
+          "AUDUSD": 1.0,
+          "NZDUSD": 0.914684,
+          "XAUUSD": 0.344985,
+          "XAGUSD": 0.380138
+        },
+        "NZDUSD": {
+          "EURUSD": 0.666569,
+          "GBPUSD": 0.72706,
+          "USDJPY": 0.462344,
+          "USDCHF": 0.484183,
+          "USDCAD": 0.673403,
+          "AUDUSD": 0.914684,
+          "NZDUSD": 1.0,
+          "XAUUSD": 0.326711,
+          "XAGUSD": 0.312855
+        },
+        "XAUUSD": {
+          "EURUSD": 0.382396,
+          "GBPUSD": 0.369344,
+          "USDJPY": 0.313775,
+          "USDCHF": 0.355675,
+          "USDCAD": 0.270051,
+          "AUDUSD": 0.344985,
+          "NZDUSD": 0.326711,
+          "XAUUSD": 1.0,
+          "XAGUSD": 0.551097
+        },
+        "XAGUSD": {
+          "EURUSD": 0.188332,
+          "GBPUSD": 0.19852,
+          "USDJPY": 0.009513,
+          "USDCHF": 0.080808,
+          "USDCAD": 0.241055,
+          "AUDUSD": 0.380138,
+          "NZDUSD": 0.312855,
+          "XAUUSD": 0.551097,
+          "XAGUSD": 1.0
+        }
+      },
+      "fx_only": {
+        "instruments": [
+          "EURUSD",
+          "GBPUSD",
+          "USDJPY",
+          "USDCHF",
+          "USDCAD",
+          "AUDUSD",
+          "NZDUSD"
+        ],
+        "k": 7,
+        "avg_pairwise_abs_rho": 0.6090557823438867,
+        "avg_pairwise_signed_rho": 0.6090557823438867,
+        "effective_n_from_abs_rho": 1.5039743508193801,
+        "effective_n_from_signed_rho": 1.5039743508193801
+      },
+      "fx_plus_metals": {
+        "instruments": [
+          "EURUSD",
+          "GBPUSD",
+          "USDJPY",
+          "USDCHF",
+          "USDCAD",
+          "AUDUSD",
+          "NZDUSD",
+          "XAUUSD",
+          "XAGUSD"
+        ],
+        "k": 9,
+        "avg_pairwise_abs_rho": 0.47542852904584226,
+        "avg_pairwise_signed_rho": 0.47542852904584226,
+        "effective_n_from_abs_rho": 1.8736618024925782,
+        "effective_n_from_signed_rho": 1.8736618024925782
+      }
+    }
+  ],
+  "breadth_ceiling": {
+    "original_no_aud_nzd": {
+      "fx_only": {
+        "avg_pairwise_abs_rho": 0.5564485148004684,
+        "effective_n_ceiling_as_k_to_infinity": 1.7971114548820037,
+        "target": 4.0,
+        "target_reachable_by_adding_instruments": false,
+        "max_rho_bar_that_admits_target": 0.25,
+        "verdict": "With rho_bar = 0.556 the ceiling is 1.80. A target of 4 requires rho_bar <= 0.250, so it cannot be reached by adding correlated instruments at any k."
+      },
+      "fx_plus_metals": {
+        "avg_pairwise_abs_rho": 0.47129447485482684,
+        "effective_n_ceiling_as_k_to_infinity": 2.121815665901941,
+        "target": 4.0,
+        "target_reachable_by_adding_instruments": false,
+        "max_rho_bar_that_admits_target": 0.25,
+        "verdict": "With rho_bar = 0.471 the ceiling is 2.12. A target of 4 requires rho_bar <= 0.250, so it cannot be reached by adding correlated instruments at any k."
+      }
+    },
+    "plus_audusd": {
+      "fx_only": {
+        "avg_pairwise_abs_rho": 0.5746378344788781,
+        "effective_n_ceiling_as_k_to_infinity": 1.7402265218176423,
+        "target": 4.0,
+        "target_reachable_by_adding_instruments": false,
+        "max_rho_bar_that_admits_target": 0.25,
+        "verdict": "With rho_bar = 0.575 the ceiling is 1.74. A target of 4 requires rho_bar <= 0.250, so it cannot be reached by adding correlated instruments at any k."
+      },
+      "fx_plus_metals": {
+        "avg_pairwise_abs_rho": 0.4955799834958262,
+        "effective_n_ceiling_as_k_to_infinity": 2.0178377523361415,
+        "target": 4.0,
+        "target_reachable_by_adding_instruments": false,
+        "max_rho_bar_that_admits_target": 0.25,
+        "verdict": "With rho_bar = 0.496 the ceiling is 2.02. A target of 4 requires rho_bar <= 0.250, so it cannot be reached by adding correlated instruments at any k."
+      }
+    },
+    "plus_aud_and_nzd_short_window": {
+      "fx_only": {
+        "avg_pairwise_abs_rho": 0.6090557823438867,
+        "effective_n_ceiling_as_k_to_infinity": 1.6418857336049022,
+        "target": 4.0,
+        "target_reachable_by_adding_instruments": false,
+        "max_rho_bar_that_admits_target": 0.25,
+        "verdict": "With rho_bar = 0.609 the ceiling is 1.64. A target of 4 requires rho_bar <= 0.250, so it cannot be reached by adding correlated instruments at any k."
+      },
+      "fx_plus_metals": {
+        "avg_pairwise_abs_rho": 0.47542852904584226,
+        "effective_n_ceiling_as_k_to_infinity": 2.1033655721227804,
+        "target": 4.0,
+        "target_reachable_by_adding_instruments": false,
+        "max_rho_bar_that_admits_target": 0.25,
+        "verdict": "With rho_bar = 0.475 the ceiling is 2.10. A target of 4 requires rho_bar <= 0.250, so it cannot be reached by adding correlated instruments at any k."
+      }
+    }
+  }
+}
