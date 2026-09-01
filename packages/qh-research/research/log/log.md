@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 86
+- **Entries:** 87
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (86 entries)
+- **Hash chain:** OK — chain ok (87 entries)
 
 ## Principles
 
@@ -1479,3 +1479,19 @@ NOT renamed: the Python package 'qhf'. Per spec it is split into four packages (
 No prior entry was edited to reflect either rename. Recorded references stay as written and are resolved forward through this mapping.
 
 _hash_: `64c1581f8e1bb0de…` · _prev_: `9a67a16939724d44…`
+
+### seq 86 · 2026-09-01T11:42:33Z · repo_migration · `record:research-tree-to-quant-harness`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `byte_identical_to_source`=yes (all shared files), `commits_carried`=10, `entries_before`=86, `files_carried`=145, `graft_commit`=f8c5837e7417746cab8d0f5e8b55115e190fcb0c, `method`=git subtree split + git subtree add, `source_commit`=456467f, `source_prefix`=research/, `source_repo`=thanderoy/wine-mt5-python-setup, `target_prefix`=packages/qh-research/research, `target_repo`=thanderoy/quant_harness, `terminal_hash_before`=64c1581f8e1bb0dec1249b86455f44b3dcfa1507c9d06305ecde5a46ab058c79, `trial_count_before`=26
+
+> Phase 0.5 step 3. The chain migrated intact and was verified at the new location BEFORE this entry was appended: verify() True, 86 entries, trial_count 26, terminal 64c1581f...ab058c79 -- identical to the source. All 10 carried commits verified reachable as ancestors of the graft commit via merge-base --is-ancestor, so history is a real second parent rather than a squashed import blob.
+
+CANONICAL LOCATION. From this entry forward, the log at packages/qh-research/research/log/ in quant_harness is the one that is appended to. The copy remaining in wine-mt5-python-setup is frozen at seq=85 and is historical: WMPS is bug-fix-only through Phase 2 and nothing is deleted from its research tree on parity, so the two copies deliberately diverge from here. Any entry appended to the WMPS copy after this point is a mistake, and the divergence is detectable -- the chains share a prefix through seq=85 and any WMPS seq>=86 will not appear here.
+
+DATA. research/data/ is gitignored except XAUUSD_H1.csv, which is tracked because it underpins T9a and the seq=31 artifact and broker OHLCV is not durably reproducible. It travelled with the graft. The other 15 series did not; data_manifest reports them as MISSING rather than proceeding, and QH_DATA_DIR repoints the tree at a populated data directory (verified: 16/16 files ok).
+
+The Python package 'qhf' is NOT renamed by this event. It is split into four packages at Phase 1 T1; that mapping gets its own PROJECT_RENAME when the split lands. The repo rename and the historical research/artifacts/ mapping are already recorded at seq=85.
+
+_hash_: `8e19240d8e347ea2…` · _prev_: `64c1581f8e1bb0de…`
