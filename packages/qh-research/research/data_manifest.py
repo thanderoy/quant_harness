@@ -54,6 +54,27 @@ NON_OHLCV = {"DFII10.csv"}
 #: artifact, so they must be recoverable, not merely verifiable.
 TRACKED_IN_GIT = {"XAUUSD_H1.csv"}
 
+#: Off-disk archive of the untracked bulk series. Recorded here so the
+#: obligation is auditable rather than remembered: a manifest that declares an
+#: archive is required, without saying where it is or how to check it, is the
+#: same empty gesture as a checksum on a single-copy file.
+OFF_DISK_ARCHIVE = {
+    "host": "ganymede",
+    "path": "~/archive/quant-research-data/research_data_20260901.tar.gz",
+    "sha256": "92dfd81cb3938081fa8be7603bb65f9ec25605ed821b3d7b71f3120a89e9ef94",
+    "size_bytes": 66_600_000,
+    "created_utc": "2026-09-01",
+    "contents": "research/data/ in full — 43 CSVs including all 15 untracked series",
+    "verified": "sha256 recomputed on ganymede after transfer; identical",
+    "restore": "scp ganymede:<path> . && tar -xzf research_data_20260901.tar.gz -C research/",
+    "caveat": (
+        "One archive on one other machine is redundancy, not a backup "
+        "strategy. It survives this laptop failing; it does not survive both "
+        "machines, and it is a point-in-time copy that does not track "
+        "subsequent data pulls."
+    ),
+}
+
 #: Advisory ceiling for anything added from here on. GitHub warns above 50 MB
 #: and hard-fails at 100 MB.
 SIZE_POLICY_WARN_BYTES = 50 * 1024 * 1024
@@ -144,6 +165,7 @@ def build() -> dict:
             "size_warn_bytes": SIZE_POLICY_WARN_BYTES,
             "grandfathered": GRANDFATHERED,
             "off_disk_archive_required": True,
+            "off_disk_archive": OFF_DISK_ARCHIVE,
             "off_disk_archive_note": "A checksum on a file that exists in "
                                      "exactly one place is a detection "
                                      "mechanism with nothing behind it. "

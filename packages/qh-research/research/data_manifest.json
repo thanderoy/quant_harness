@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-01T10:15:07.233117+00:00",
+  "generated_at_utc": "2026-09-01T14:20:08.264223+00:00",
   "generator": "research/data_manifest.py",
   "data_dir": "/home/roy-thande/Local/wine-mt5-python-setup/research/data",
   "data_dir_env_override": "QH_DATA_DIR",
@@ -17,10 +17,31 @@
       }
     },
     "off_disk_archive_required": true,
+    "off_disk_archive": {
+      "host": "ganymede",
+      "path": "~/archive/quant-research-data/research_data_20260901.tar.gz",
+      "sha256": "92dfd81cb3938081fa8be7603bb65f9ec25605ed821b3d7b71f3120a89e9ef94",
+      "size_bytes": 66600000,
+      "created_utc": "2026-09-01",
+      "contents": "research/data/ in full \u2014 43 CSVs including all 15 untracked series",
+      "verified": "sha256 recomputed on ganymede after transfer; identical",
+      "restore": "scp ganymede:<path> . && tar -xzf research_data_20260901.tar.gz -C research/",
+      "caveat": "One archive on one other machine is redundancy, not a backup strategy. It survives this laptop failing; it does not survive both machines, and it is a point-in-time copy that does not track subsequent data pulls."
+    },
     "off_disk_archive_note": "A checksum on a file that exists in exactly one place is a detection mechanism with nothing behind it. Untracked bulk series need their own off-disk archive; this manifest detects divergence but cannot restore."
   },
   "note": "Most of research/data/ is not tracked. This manifest pins its contents so a silent data change cannot be mistaken for a code regression.",
   "files": {
+    "AUDUSD_H1.csv": {
+      "size_bytes": 2935117,
+      "sha256": "967b8c6fdc9add2dcf1c499b0a6183ee64b14915699bbd3d94fcdebc2e89e8f3",
+      "tracked_in_git": false,
+      "format": "house_semicolon_ohlcv",
+      "n_bars": 54958,
+      "first_bar_utc": "2017-10-24 00:00:00+00:00",
+      "last_bar_utc": "2026-08-28 23:00:00+00:00",
+      "ohlc_hash_sha16": "d50029ea1f7fbc34"
+    },
     "DFII10.csv": {
       "size_bytes": 98703,
       "sha256": "051e52315a5ac91d59e610eeaf1692cfeee8acd20481bdc8eee1b099c70728ce",
@@ -47,6 +68,16 @@
       "first_bar_utc": "2013-10-08 06:00:00+00:00",
       "last_bar_utc": "2026-08-28 23:00:00+00:00",
       "ohlc_hash_sha16": "12287dd7026b9250"
+    },
+    "NZDUSD_H1.csv": {
+      "size_bytes": 533687,
+      "sha256": "cf3357bb9715d87bebd84d0b10a42b62fddae61657671d71afea96adea780930",
+      "tracked_in_git": false,
+      "format": "house_semicolon_ohlcv",
+      "n_bars": 10000,
+      "first_bar_utc": "2025-01-22 00:00:00+00:00",
+      "last_bar_utc": "2026-09-01 17:00:00+00:00",
+      "ohlc_hash_sha16": "365ddec7613c8c24"
     },
     "SYNDXY_H1.csv": {
       "size_bytes": 7474839,
