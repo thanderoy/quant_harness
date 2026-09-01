@@ -3,7 +3,10 @@ name = "qh-resources"
 version = "0.1.0"
 description = "quant_harness — instrument-neutral core: registry, mask, panel, indicators, sizing, broker port"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+]
 
 [build-system]
 requires = ["hatchling"]
