@@ -58,7 +58,7 @@ retyping.
 
 **WMPS freeze.** For the duration of Phases 0–2, WMPS is bug-fix-only. Any change to
 `indicators.py`, `sizer.py` or `drawdown_guard.py` during the window must be mirrored into
-`qh_core` and the D8 golden fixtures regenerated in the same commit. No new strategies are
+`resources` and the D8 golden fixtures regenerated in the same commit. No new strategies are
 deployed. Falsified and shelved mechanisms stay disabled.
 
 ### 1.4 Honest caveat on the chosen universe
@@ -104,14 +104,23 @@ never in a quote currency, never with a hardcoded tick size.
 
 ### 2.1 Repository structure
 
+**Four packages, imported unprefixed.** The repository is `quant_harness` and is not itself
+importable; each package under `packages/` ships as its own distribution and is imported under a
+short bare name.
+
 ```
 quant_harness/
 ├── packages/
-│   ├── qh_core/          instrument registry, tradability mask, panel, indicators,
+│   ├── qh-resources/   → import `resources`
+│   │                     instrument registry, tradability mask, panel, indicators,
 │   │                     normalisation, sizing, drawdown guard, broker port
 │   │                     — no Django, no Celery, no MetaTrader5, pure functions
-│   ├── qh_research/      signal_edge, dsr, mintrl, log, btpy_runner, artifacts
-│   └── qh_execution/     (Phase 3) Django app: strategies, tasks, models, MT5 adapter
+│   ├── qh-strategies/  → import `strategies`
+│   │                     strategy definitions; instrument-neutral, emit risk units
+│   ├── qh-research/    → import `research`
+│   │                     signal_edge, dsr, mintrl, log, btpy_runner, artifacts
+│   └── qh-platform/    → import `platform`
+│                         (Phase 3) Django app: tasks, models, MT5 adapter
 ├── services/
 │   ├── mt5-api/          (Phase 3) Wine container; only place MetaTrader5 is imported
 │   └── trading/          (Phase 3) Django + Gunicorn + Celery
@@ -119,18 +128,35 @@ quant_harness/
 └── docker-compose.yml    (Phase 3)
 ```
 
+`resources` is the instrument-neutral core — the role the earlier `qh_core` name referred to.
+There is no `qh_core`; that name was superseded in the same pass that split execution into two
+packages. It appears nowhere else in this document, and any code or doc still using it is stale.
+
 **Import-direction contract, enforced in CI (X19):**
 
-- `qh_core` imports nothing from `qh_research` or `qh_execution`.
-- `qh_research` and `qh_execution` each depend on `qh_core`, and never on each other.
-- `qh_core` is importable with no Django settings configured and no network access.
+```
+resources  ←  strategies  ←  { research, platform }
+```
+
+- `resources` imports nothing from the other three.
+- `strategies` depends only on `resources`.
+- `research` and `platform` each depend on `strategies` (and transitively `resources`), and never
+  on each other.
+- `resources` is importable with no Django settings configured and no network access.
+
+**Stdlib shadowing (X32).** A top-level package named `platform` shadows the stdlib `platform`
+module for anything that imports it after `qh-platform` is installed. This is accepted
+deliberately, but it is not free: CI must assert that `import platform` from a clean interpreter
+still resolves to the stdlib, and that `qh-platform`'s own modules reach the stdlib module when
+they need it. A shadowing failure is silent and surfaces far from its cause, so it is tested
+rather than trusted.
 
 This contract is what makes backtest/live parity structural rather than aspirational. It is the
 single rule that must not be relaxed for convenience.
 
 ### 2.2 Broker port
 
-`qh_core` defines a broker interface; `MT5APIClient` (Phase 3) and `SimulatedBroker` (Phase 1)
+`resources` defines a broker interface; `MT5APIClient` (Phase 3) and `SimulatedBroker` (Phase 1)
 both implement it. The backtester and the live trader then run identical strategy code against
 different broker implementations, and the execution-assumption matrix becomes a set of
 `SimulatedBroker` configurations rather than a parallel simulation code path:
@@ -291,7 +317,7 @@ Before any code is written in the new repository, generate and commit reference 
 - `DrawdownGuard`: state transitions over a scripted equity sequence, including first-evaluation
   no-trip, peak advance, trip, and post-trip behaviour.
 
-These fixtures are the contract `qh_core` must satisfy. They are generated once, committed, and
+These fixtures are the contract `resources` must satisfy. They are generated once, committed, and
 never regenerated except under the WMPS-freeze mirror rule (§1.3).
 
 **Note:** the D8 fixtures are generated from XAUUSD H1 data because that is what the current code
@@ -300,7 +326,7 @@ is not covered by them.
 
 ### D9 — Log and artifact location
 Establish where `research/log.py`, the JSONL chain, and `research/artifacts/` currently live, and
-produce the migration plan: source path, target path (`packages/qh_research/`), and the
+produce the migration plan: source path, target path (`packages/qh-research/`), and the
 `git subtree` command sequence that preserves history. Confirm the chain is self-contained — no
 entry depends on a file outside the migrated tree.
 
@@ -338,16 +364,16 @@ A short, mechanical phase. No behavioural change, no new logic.
    entries are not rewritten.
 4. Add the CI rules: import-direction test (X19), log append-only check (X21), path-filtered test
    selection per package.
-5. Commit the D8 golden fixtures into `packages/qh_core/tests/fixtures/`.
+5. Commit the D8 golden fixtures into `packages/qh-resources/tests/fixtures/`.
 
-**Acceptance:** `verify()` passes; `trial_count()` equals the D7 baseline; `qh_core` is an empty
+**Acceptance:** `verify()` passes; `trial_count()` equals the D7 baseline; `resources` is an empty
 but importable package with the fixtures present and CI green.
 
 ---
 
 ## 6. Phase 1 — Implementation tasks
 
-### T1 — `qh_core/instruments/registry.py`
+### T1 — `resources/instruments/registry.py`
 `InstrumentSpec` dataclass carrying every D1 field plus derived helpers: `value_per_price_unit()`,
 `round_to_lot_step()`, `min_position_risk(stop_distance, account_ccy_rate)`.
 
@@ -363,7 +389,7 @@ import time**, so backtests are reproducible and offline. A separate `refresh_re
 command re-pulls from `mt5-api` and writes a new snapshot with a new `as_of`; snapshots are never
 overwritten, only added, and every backtest artifact records which snapshot it used.
 
-### T2 — `qh_core/data/mask.py`
+### T2 — `resources/data/mask.py`
 `TradabilityMask`: a boolean Series aligned to the bar index, `True` where the bar is tradable.
 Falsity sources, each independently flagged so they can be attributed:
 `session_closed`, `weekend_gap`, `holiday`, `rollover_window`, `spread_above_threshold`,
@@ -375,14 +401,14 @@ indicator declares its class at definition time; there is no default and no per-
 divergence is a bug fix, not a regression; it must be quantified and recorded in the T9 parity
 report rather than suppressed.
 
-### T3 — `qh_core/data/panel.py`
+### T3 — `resources/data/panel.py`
 `Panel`: aligned multi-instrument OHLCV plus per-instrument mask, UTC-indexed.
 
 Alignment policy is explicit and tested: union index, **no forward-fill across a closed session**.
 A bar that does not exist for an instrument is masked, never synthesised. Any strategy reading a
 masked bar must receive NaN, not a stale price.
 
-### T4 — `qh_core/features/normalize.py`
+### T4 — `resources/features/normalize.py`
 Instrument-neutral primitives: `atr_normalise(series, atr)`, `vol_zscore(series, window)`,
 `log_return(series)`, `range_pct(high, low, close)`. Every strategy input and every target passes
 through one of these. A Donchian breakout must carry identical meaning on USDJPY and on gold.
@@ -390,7 +416,7 @@ through one of these. A Donchian breakout must carry identical meaning on USDJPY
 **Invariant to assert in tests:** the disjointness rule already adopted in the harness — feature
 inputs and the target normaliser must not share a window. Enforce mechanically, not by convention.
 
-### T5 — `qh_core/risk/sizer.py` (port of WMPS `sizer.py`)
+### T5 — `resources/risk/sizer.py` (port of WMPS `sizer.py`)
 Signature becomes:
 
 ```
@@ -410,7 +436,7 @@ Requirements:
 - Caller contract preserved: the returned effective stop distance, not the raw one, is used for
   SL/TP placement.
 
-### T6 — `qh_research/log.py` schema extension
+### T6 — `research/log.py` schema extension
 Additive only. New optional fields on pre-registration events, becoming mandatory for entries
 created after the migration marker:
 
@@ -436,7 +462,7 @@ field set, and an explicit statement that all prior entries have `universe: ["XA
 `selection_rule: POOLED_ALL`. **Existing entries are not rewritten.** `verify()` must pass across
 the migration boundary and `trial_count()` must return the D7 baseline value unchanged.
 
-### T7 — `qh_research/mintrl.py`
+### T7 — `research/mintrl.py`
 Minimum Track Record Length (Bailey & López de Prado), stdlib-only, mirroring `dsr.py`'s structure:
 
 ```
@@ -444,12 +470,12 @@ MinTRL = 1 + [1 − γ₃·SR + (γ₄−1)/4 · SR²] · (Z_α / (SR − SR*))�
 ```
 
 Sibling implementation under `research/post/` with the same verified parity contract that exists
-between `qh_research.post.dsr` and `qh_core/metrics/deflated.py`. Exposed as a **pre-registration filter**:
+between `research.post.dsr` and `resources/metrics/deflated.py`. Exposed as a **pre-registration filter**:
 given intended sample length and SR*, return the minimum Sharpe that is decidable. Hypotheses whose
 plausible effect size falls below that floor are rejected before any compute is spent.
 
 ### T8 — DSR benchmark wiring
-`qh_research/dsr.py` currently evaluates against SR* = 0. Add `benchmark_sharpe` as a required
+`research/dsr.py` currently evaluates against SR* = 0. Add `benchmark_sharpe` as a required
 argument sourced from the pre-registration record. Log the SR* used in every
 `log_dsr_evaluation()` call. Retrospectively note in the log — as a new entry, not an edit — that
 prior gold DSR evaluations used SR* = 0 and were therefore lenient.
@@ -556,7 +582,7 @@ Explicitly **not** in scope, in either phase:
 
 ### T11 — Ported-code parity
 
-Every function ported from WMPS into `qh_core` must reproduce its D8 golden fixture exactly
+Every function ported from WMPS into `resources` must reproduce its D8 golden fixture exactly
 (float equality on serialised float64, not `approx`). Applies to `wma`, `hma`, `stochastic`,
 `atr`, `calculate_lot_size` and `DrawdownGuard`.
 
@@ -569,7 +595,7 @@ the reason, and the effect on the T9 parity run.
 
 ### T12 — Broker port and `SimulatedBroker`
 
-Define the broker interface in `qh_core` (§2.2) and implement `SimulatedBroker` with the four fill
+Define the broker interface in `resources` (§2.2) and implement `SimulatedBroker` with the four fill
 configurations. `btpy_runner` gains a `fill_config` parameter; every backtest artifact records
 which configuration produced it.
 
@@ -585,8 +611,8 @@ conditional.
 | ID | Test | Assertion |
 |---|---|---|
 | X1 | Registry purity | No symbol string literal appears outside `instruments/`. AST-level check, not grep. |
-| X2 | Registry offline | Importing `qh_core.instruments` with networking disabled succeeds. |
-| X3 | Mask — weekend | An indicator computed across a Friday-close/Monday-open boundary emits NaN or excludes the gap per declared policy. Property-based over synthetic calendars. |
+| X2 | Registry offline | Importing `resources.instruments` with networking disabled succeeds. |
+| X3 | Mask — weekend (WINDOW only) | A **WINDOW** indicator computed across a Friday-close/Monday-open boundary emits NaN for bars whose window spans the gap. Property-based over synthetic calendars. Narrowed per R3/X25: ACCUMULATOR indicators legitimately carry state across the gap and must *not* NaN, so applying this to them would fail a correct implementation. X25 covers the ACCUMULATOR case. |
 | X4 | Panel — no fill | A masked bar returns NaN, never a forward-filled price. |
 | X5 | Look-ahead (Chan test) | Truncate the last N bars, re-run, assert the surviving position series is identical to the untruncated run's prefix. Run for every strategy in the repo. |
 | X6 | `iloc[-2]` discipline | Signal generation never reads the forming bar. Assert via a fixture whose final bar is corrupted; output must be unchanged. |
@@ -596,7 +622,7 @@ conditional.
 | X10 | Log — chain | `verify()` passes across the migration boundary; terminal hash chains from the D7 baseline. |
 | X11 | Log — trial arithmetic | `POOLED_ALL` over 7 instruments increments by 1; `POST_HOC_SELECTION` over 7 increments by 7. |
 | X12 | Log — prohibition | Pre-registering per-instrument parameters raises. |
-| X13 | MinTRL parity | `qh_research.post.mintrl` and `qh_core/metrics` agree to 1e-9 across a parameter sweep. |
+| X13 | MinTRL parity | `research.post.mintrl` and `resources/metrics` agree to 1e-9 across a parameter sweep. |
 | X14 | DSR benchmark | Omitting `benchmark_sharpe` raises rather than silently defaulting to 0. |
 | X15a | Parity, `pre/` | T9a mask-off reproduces `ohlc_hash`, `signal_hash`, `n_long_signals=1669`, signal timestamps and E-Ratios at h=20/50/100 exactly. Assertions ordered so failure localises to a layer. |
 | X15b | Parity, `post/` | T9b mask-off is trade-for-trade identical on timestamps, prices, direction and volume, with per-fold and aggregate Sharpe matching. |
@@ -605,13 +631,27 @@ conditional.
 | X16 | Rename completeness | No `qhf` identifier survives in code, config, Compose files or env-var names. Excludes `research/log/`, `research/artifacts/` and git history, which are intentionally preserved. |
 | X17 | Rename is behaviour-neutral | The T10 commit, run against the parity fixture, produces output identical to its parent commit. |
 | X18 | Log preserved across rename | `verify()` passes and `trial_count()` is unchanged after the `PROJECT_RENAME` event is appended. |
-| X19 | Import direction | AST-level: `qh_core` imports nothing from `qh_research` or `qh_execution`; the latter two never import each other. Fails the build, not a warning. |
-| X20 | `qh_core` standalone | `qh_core` imports and its full suite passes with no Django settings module, no `DJANGO_SETTINGS_MODULE`, no database, and networking disabled. |
+| X19 | Import direction | AST-level, over the ruled graph `resources <- strategies <- {research, platform}`: `resources` imports none of the other three; `strategies` imports only `resources`; `research` and `platform` never import each other. Fails the build, not a warning. |
+| X20 | `resources` standalone | `resources` imports and its full suite passes with no Django settings module, no `DJANGO_SETTINGS_MODULE`, no database, and networking disabled. |
 | X21 | Log append-only | CI rejects any commit that modifies or deletes an existing line in the JSONL chain. Additions only. |
 | X22 | Ported-code parity | Every D8 golden fixture reproduces exactly. Float equality on serialised float64, not `approx`. |
 | X23 | Fill frontier completeness | No backtest artifact is written with fewer than all four `SimulatedBroker` fill configurations recorded. |
 | X24 | Registry provenance | `Registry.load()` raises on a `HAND_ENTERED` snapshot without `allow_provisional=True`; artifacts produced under one are stamped `PROVISIONAL_SPECS`. |
 | X25 | Indicator mask class | Every indicator declares `WINDOW` or `ACCUMULATOR` at definition; an undeclared indicator fails to register. `masked_rolling` applies NaN or skip-with-index accordingly. |
+| X26 | Account risk policy | Position sizing consults a single account-level risk-policy object; no strategy module may set its own `RISK_PCT`. A strategy overriding the account policy fails the test. Motivated by h1_momentum running 5% against a 2% default (§8). |
+| X27 | DrawdownGuard precondition | A strategy cannot be registered as live-eligible without a DrawdownGuard wired. Absence is a registration failure, not a warning. The only strategy on the schedule was the only one with no guard; nothing detected that. |
+| X28 | *(unallocated)* | Referenced in the §8 ruling alongside X26/X27, but its content was never stated. Left unallocated deliberately rather than invented — see the note below the table. |
+| X29 | Schedule from registry | The Celery beat schedule is generated from `strategies/registry.py`, not hand-maintained. A strategy whose registry verdict is KILLED or SHELVED cannot appear in a generated schedule. Supports a `SHADOW` state that evaluates and logs without ordering. Motivated by a KILLED strategy (seq=65) reaching the live path with nothing connecting verdict to scheduler. |
+| X30 | Entry vs position management | Entry evaluation and position management are separately addressable: disabling entries must not disable management of an open position. Retiring a strategy whose `evaluate()` also drove trailing/breakeven/partial-close would otherwise strand live positions unmanaged. |
+| X31 | MinTRL moments | Skew and kurtosis are measured from the return series under evaluation by default. Passing literal moments requires an explicit override flag, and the flag is stamped into both the artifact and the log entry. Omitting it where literals are used raises. |
+| X32 | Stdlib shadowing | From a clean interpreter with `qh-platform` installed, `import platform` resolves to the stdlib module, and `qh-platform`'s own modules can still reach it. A top-level package named `platform` shadows the stdlib; the failure is silent and surfaces far from its cause, so it is tested rather than trusted. |
+
+---
+
+**On X28.** The §8 ruling names X26, X27 and X28 together, but only X26 and X27 were ever
+described. Rather than invent a plausible-looking third test, the number is held unallocated and
+the acceptance criterion skips it explicitly. A test that exists only as a number in a checklist
+is worse than a gap, because the checklist then reports coverage that was never specified.
 
 ---
 
@@ -637,12 +677,12 @@ Binary. All must hold.
    the `crest_n_keel` walk-forward artifact respectively.
 3. T9 mask-on divergence is fully attributed. For T9a the signal-set and ATR-normaliser channels
    are reported separately; for T9b every differing trade is traced to a named mask flag.
-4. X1–X25 pass in CI (X15 counted as X15a–d).
+4. X1–X32 pass in CI (X15 counted as X15a–d; X28 unallocated and skipped).
 5. A single strategy module runs unmodified against all seven majors and against XAUUSD, producing
    per-instrument results, with no symbol-specific branching anywhere in the call path.
 6. `docs/hardcoded_audit.md` has every row marked resolved or explicitly deferred with a reason.
 7. No new strategy hypothesis has been pre-registered during the phase.
-8. Every D8 golden fixture reproduces exactly through `qh_core`, or the deviation is logged with
+8. Every D8 golden fixture reproduces exactly through `resources`, or the deviation is logged with
    a stated reason (T11).
 9. `SimulatedBroker` produces the full four-configuration fill frontier for the T9 fixture, and
    the cost-to-ATR ratio from D3 is recorded alongside it.
@@ -658,7 +698,7 @@ Binary. All must hold.
 These are methodological choices, not empirical questions. Each is ruled now, with its reason
 stated, precisely because seeing the numbers first would let the answer be chosen for how it looks.
 
-**R1 — Sequencing.** New `quant_harness` repository built first; WMPS merged as `qh_execution` at
+**R1 — Sequencing.** New `quant_harness` repository built first; WMPS merged as `platform` at
 Phase 3, frozen to bug-fix-only meanwhile (§1.3). Residual risk — two implementations of the same
 numerical code coexisting — is controlled by D8 golden fixtures, T11 parity and the freeze rule.
 An unmirrored WMPS change is a spec violation, not an inconvenience.
@@ -704,7 +744,7 @@ validating the machine and making a claim with it.
 **O1 — Timeframe for the first panel research run: H1 or H4.**
 
 Decided from D2 (granularity) and D3 (cost-to-ATR), and brought back with the numbers attached.
-**Not a Phase 1 blocker** — `qh_core` and the panel harness are timeframe-agnostic; this binds only
+**Not a Phase 1 blocker** — `resources` and the panel harness are timeframe-agnostic; this binds only
 the first Phase 2 research run.
 
 Declared prior, to be overturned only by data: **H4.** Larger stop distances improve lot
@@ -734,12 +774,12 @@ the verdict is confirmed in one run.
 effective N ≳ 3.5, per the D4 measurement. Re-evaluate the shelved XAUUSD mechanisms against the
 correct SR\* for the first time.
 
-**Phase 3 — Execution merge.** `git subtree add` WMPS into `packages/qh_execution/` and
+**Phase 3 — Execution merge.** `git subtree add` WMPS into `packages/qh-platform/` and
 `services/`, preserving history. Refactor the Django strategies to import indicators, sizer and
-drawdown guard from `qh_core`, then delete the duplicated modules. Adapt `MT5APIClient` to the
+drawdown guard from `resources`, then delete the duplicated modules. Adapt `MT5APIClient` to the
 broker port and verify by replaying recorded live orders through both the old client and the port.
 Complete the execution-side namespace rename (T10). Acceptance: live strategy signals through
-`qh_core` are identical to the pre-merge signals on the D8 fixtures, and the demo stack runs a full
+`resources` are identical to the pre-merge signals on the D8 fixtures, and the demo stack runs a full
 week unattended with no behavioural change.
 
 **Phase 4 — Multi-symbol live.** Portfolio-level inverse-volatility weighting, correlation cap,
