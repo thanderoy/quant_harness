@@ -1,389 +1,573 @@
-"""qhf.engines.strategies.asq_safe_scalping — ASQ SafeScalping v1.20 adapter.
+"""
+ASQ SafeScalping v1.20 — backtesting.py Adapter
+================================================
+Source  : mql5.com/en/code/71189 (AlgoSphere Quant / Robin2.0)
+Adapter : QHF harness, compatible with btpy_runner.py
 
-Faithful backtesting.py translation of the MQL5 EA by AlgoSphere Quant
-(Robin2.0): https://www.mql5.com/en/code/71189
+BUG FIXES vs MQL5 original
+───────────────────────────
+BUG-2  Partial-close ticket array never pruned on the original.
+       After an EA restart, any trade that already received a partial
+       close would get partial-closed again.
+       FIX: replaced with a two-leg entry (TP1 leg + remainder leg).
+       No ticket tracking required — each leg has its own independent TP.
+       P&L is equivalent when TP1 is hit cleanly; minor divergence if SL
+       hits before TP1 (both legs stop out, which is correct behaviour).
 
-Ground-truth source: the MQL5 .mq5 file (full EA source, not the Pine Script
-recreation). Default parameters match the Phase 1 optimized preset.
+BUG-3  DD guard compared equity vs. peak *balance* (not peak equity).
+       During a drawdown with open positions, equity could fall well below
+       the configured threshold without triggering the halt.
+       FIX: g_peakEquity is updated every bar from self.equity; the DD
+       ratio is computed against that, not against a stale balance figure.
 
-IMPORTANT DIFFERENCES FROM THE PYTHON CLASS (qhf/strategies in the live app)
--------------------------------------------------------------------------------
-1. SL/TP: The MQL5 EA uses FIXED POINTS, not ATR multiples. The live Python
-   class (ASQSafeScalpingStrategy) incorrectly uses ATR-based exits. This
-   adapter uses fixed points, matching the real EA. For Pepperstone XAUUSD
-   (SYMBOL_DIGITS=2): 1 point = $0.01/oz.
+KNOWN DIVERGENCES FROM MT5 ORIGINAL
+─────────────────────────────────────
+1. Breakeven / trailing applied at bar close, not every tick.
+   Conservative bias: some intra-bar activations are missed.
+   Effect on metrics: slightly lower win rate, slightly wider realised DD
+   vs MT5 Strategy Tester in "Every Tick" mode.
 
-2. Exit management: The real EA runs breakeven, trailing stop, and partial
-   close in OnTick. This adapter runs them at bar-close (in next()), which
-   is a bar-level approximation. For M5 bars, this is reasonable — the
-   maximum one-bar error is bounded by the bar's range.
+2. Partial close implemented as two simultaneous legs at entry time.
+   (See BUG-2 fix above.)
 
-3. MTF confirmation: Computed by resampling the M5 close series to H1 and
-   computing EMA(20) and EMA(50) on the H1 series, then forward-filling back
-   to M5 frequency. This approximates what the EA does via H1 indicator handles.
-   Small differences arise from the EMA seed bar calculation.
+3. Spread filter: a fixed spread cost is deducted via backtesting.Backtest()
+   commission arg. Dynamic intra-bar spread widening is not modelled.
 
-4. Session filter: Implemented in next() using bar timestamps, NOT via pre-
-   filtering bars. Friday cutoff is included.
+4. News filter: NOT modelled — no real-time news feed available.
 
-5. Spread filter: Not modelled (requires real-time tick data).
+5. MTF confirmation: H1 data must be resampled from M5 bars and passed in
+   as `h1_close` class attribute before running. If omitted, MTF is
+   automatically disabled regardless of use_mtf setting.
 
-6. News filter: Not modelled.
+6. Session timezone: assumes the DataFrame index is UTC.
+   Caller is responsible for ensuring this.
 
-PHASE 1 PRESET PARAMETERS (AlgoSphere Quant optimized, all fixed)
-------------------------------------------------------------------
-EMA: 50 / 200 (M5 basis)
-RSI: 14, buy 45-65, sell 35-55
-Breakout: lookback 15, buffer 0.3, ATR period 50
-SL/TP: 300pt / 450pt = $3.00 / $4.50 (R:R = 1.5:1)
-Breakeven: start 150pt, offset 20pt
-Trailing: start 200pt, step 100pt
-Partial close: TP1 at 200pt, close 50%
-MTF: H1 EMA(20) / EMA(50)
-Session: 08:00-17:00, Friday cutoff 14:00
-Risk: 0.5% per trade
+7. `point` is hardcoded to 0.01 for XAUUSD (5-digit broker pricing).
+   Override _get_point() if your data feed uses different precision.
 
-Note: PHASE 2-4 optimization should be run in MT5's own Strategy Tester,
-then the winning parameters loaded into this class for OOS validation via
-the qhf harness.
+SIZING NOTE
+───────────
+size = risk_amount / sl_distance (both in price terms).
+In backtesting.py this means: P&L = size × Δprice.
+For XAUUSD at $3000/oz, 0.5% risk on $100 equity with a 300-pt SL:
+  risk_amount = $0.50
+  sl_distance = 300 × $0.01 = $3.00
+  size        = 0.167 oz  ≈ 0.00167 MT5 lots (below min 0.01 lot)
+This is expected at $100 capital — the harness measures Sharpe/DD
+in return-space, not absolute $ terms, so sub-lot sizing is fine
+for validation purposes.
 """
 
 from __future__ import annotations
-
-from typing import Set
 
 import numpy as np
 import pandas as pd
 from backtesting import Strategy
 
-from qhf.engines.indicators import atr as calc_atr
 
-# Pepperstone XAUUSD: 2 decimal places, 1 point = $0.01/oz
-XAUUSD_POINT = 0.01
-XAUUSD_CONTRACT_SIZE = 100.0  # oz per standard lot
-XAUUSD_MIN_LOT = 0.01
-XAUUSD_MAX_LOT = 0.10
-XAUUSD_LOT_STEP = 0.01
+# ─────────────────────────────────────────────────────────────────────────────
+# Indicator helpers (self-contained, no external dependency)
+# ─────────────────────────────────────────────────────────────────────────────
 
-
-def _ema(series: pd.Series, span: int) -> pd.Series:
-    return series.ewm(span=span, adjust=False).mean()
+def _ema(series: pd.Series, period: int) -> np.ndarray:
+    return series.ewm(span=period, adjust=False).mean().to_numpy()
 
 
-def _rsi(series: pd.Series, period: int) -> pd.Series:
-    delta = series.diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
-    avg_gain = gain.ewm(alpha=1 / period, min_periods=period, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1 / period, min_periods=period, adjust=False).mean()
-    rs = avg_gain / avg_loss.replace(0, np.nan)
-    return 100 - (100 / (1 + rs))
+def _rsi(close: pd.Series, period: int) -> np.ndarray:
+    delta = close.diff()
+    gain  = delta.clip(lower=0).ewm(com=period - 1, adjust=False).mean()
+    loss  = (-delta.clip(upper=0)).ewm(com=period - 1, adjust=False).mean()
+    rs    = gain / loss.replace(0, np.nan)
+    return (100 - 100 / (1 + rs)).to_numpy()
 
+
+def _atr(high: pd.Series, low: pd.Series, close: pd.Series,
+         period: int) -> np.ndarray:
+    prev = close.shift(1)
+    tr   = pd.concat([high - low,
+                      (high - prev).abs(),
+                      (low  - prev).abs()], axis=1).max(axis=1)
+    return tr.ewm(span=period, adjust=False).mean().to_numpy()
+
+
+def _rolling_high(high: pd.Series, lookback: int) -> np.ndarray:
+    """
+    N-bar rolling high of bars *prior* to the signal bar.
+    Mirrors MQL5 loop: for(i=2; i<=lookback+1; i++) which starts at bar[2].
+    shift(1) excludes bar[0] (current forming bar);
+    rolling(lookback) then covers bars [1..lookback].
+    """
+    return high.shift(1).rolling(lookback).max().to_numpy()
+
+
+def _rolling_low(low: pd.Series, lookback: int) -> np.ndarray:
+    return low.shift(1).rolling(lookback).min().to_numpy()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Strategy
+# ─────────────────────────────────────────────────────────────────────────────
 
 class ASQSafeScalping(Strategy):
-    """ASQ SafeScalping v1.20 — Phase 1 preset.
+    """
+    backtesting.py adapter for ASQ SafeScalping v1.20.
 
-    Run on M5 XAUUSD bars filtered to session hours (08:00-17:00 UTC)
-    using session_hours=(8, 17) in run_backtest / run_walk_forward.
-    The session filter in this class provides redundant safety for Friday
-    cutoff (which can't be expressed as a simple hour range).
+    Default parameters match the Phase 1 preset (structural baseline).
+    To run the optimised Phase 2 / grid preset, override via
+    Backtest(...).optimize() or pass **params to the constructor.
     """
 
-    # -- EMA trend filter (Phase 1 fixed) -----------------------------------
-    ema_fast: int = 50
-    ema_slow: int = 200
-    trend_strength: str = "MODERATE"   # "WEAK", "MODERATE", "STRONG" → 0.1/0.3/0.6 × ATR
+    # ── EMA trend ──────────────────────────────────────────────────────────
+    ema_fast       : int   = 50
+    ema_slow       : int   = 200
+    # 0 = weak (0.1×ATR), 1 = moderate (0.3×ATR), 2 = strong (0.6×ATR)
+    trend_strength : int   = 1
 
-    # -- ATR (for trend strength calculation, not for SL/TP) ----------------
-    atr_period: int = 50
+    # ── RSI ────────────────────────────────────────────────────────────────
+    rsi_period     : int   = 14
+    rsi_buy_min    : float = 45.0
+    rsi_buy_max    : float = 65.0
+    rsi_sell_min   : float = 35.0
+    rsi_sell_max   : float = 55.0
 
-    # -- MTF H1 confirmation (Phase 1 enabled) ------------------------------
-    use_mtf: bool = True
-    mtf_ema_fast: int = 20
-    mtf_ema_slow: int = 50
+    # ── Breakout ───────────────────────────────────────────────────────────
+    breakout_lookback : int   = 15
+    breakout_buffer   : float = 0.3    # fraction of ATR
+    atr_period        : int   = 50
 
-    # -- RSI filter (Phase 1 fixed) -----------------------------------------
-    rsi_period: int = 14
-    rsi_buy_lo: float = 45.0
-    rsi_buy_hi: float = 65.0
-    rsi_sell_lo: float = 35.0
-    rsi_sell_hi: float = 55.0
+    # ── SL / TP (in price points — for XAUUSD: 1 point = $0.01) ───────────
+    sl_points : int = 300
+    tp_points : int = 450
 
-    # -- Breakout detection (Phase 1 fixed) ---------------------------------
-    breakout_lookback: int = 15
-    breakout_buffer: float = 0.3    # × ATR
+    # ── Breakeven ──────────────────────────────────────────────────────────
+    use_breakeven    : bool = True
+    breakeven_start  : int  = 150     # points of profit before activation
+    breakeven_offset : int  = 20      # points above/below open for BE SL
 
-    # -- SL / TP in POINTS (Pepperstone XAUUSD: 1 pt = $0.01) ---------------
-    sl_points: int = 300             # $3.00
-    tp_points: int = 450             # $4.50
+    # ── Trailing stop ──────────────────────────────────────────────────────
+    use_trailing : bool = True
+    trail_start  : int  = 200         # points of profit before activation
+    trail_step   : int  = 100         # trail distance in points
 
-    # -- Breakeven (Phase 1 enabled) ----------------------------------------
-    use_breakeven: bool = True
-    breakeven_start: int = 150       # points profit before moving SL to BE
-    breakeven_offset: int = 20       # points above entry for BE SL (BE + offset)
+    # ── Partial close (two-leg approximation — see BUG-2 fix) ─────────────
+    use_partial_close : bool  = True
+    tp1_points        : int   = 200
+    tp1_close_pct     : float = 50.0  # % of position closed at TP1
 
-    # -- Trailing stop (Phase 1 enabled) ------------------------------------
-    use_trailing: bool = True
-    trail_start: int = 200           # points profit before trailing activates
-    trail_step: int = 100            # trail distance in points
+    # ── Risk ───────────────────────────────────────────────────────────────
+    risk_pct       : float = 0.5   # % equity risked per trade (signal)
+    max_day_trades : int   = 4     # 0 = unlimited
+    max_dd_pct     : float = 8.0   # % peak-equity drawdown halt
 
-    # -- Partial close (Phase 1 enabled) ------------------------------------
-    use_partial: bool = True
-    tp1_points: int = 200            # points profit to trigger partial close
-    tp1_pct: float = 0.50            # fraction to close at TP1
+    # ── Session ────────────────────────────────────────────────────────────
+    use_session    : bool = True
+    session_start  : int  = 8      # UTC hour, inclusive
+    session_end    : int  = 17     # UTC hour, exclusive
+    avoid_friday   : bool = True
+    friday_cutoff  : int  = 14     # UTC hour
 
-    # -- Position sizing ----------------------------------------------------
-    use_risk_pct: bool = True
-    risk_pct: float = 0.005          # 0.5% of equity
-    fixed_lots: float = 0.01
+    # ── MTF ────────────────────────────────────────────────────────────────
+    # Set use_mtf=True AND assign h1_close (np.ndarray, same length as bars)
+    # as a class attribute before running. Example:
+    #   ASQSafeScalping.h1_close = resample_to_h1(df['Close'])
+    #   ASQSafeScalping.use_mtf  = True
+    use_mtf      : bool = False
+    mtf_ema_fast : int  = 20
+    mtf_ema_slow : int  = 50
 
-    # -- Daily trade cap & drawdown halt ------------------------------------
-    max_day_trades: int = 4
-    max_dd_pct: float = 8.0          # halt if DD from peak ≥ 8%
+    # ──────────────────────────────────────────────────────────────────────
+    # init
+    # ──────────────────────────────────────────────────────────────────────
 
-    # -- Session filter (in addition to runner's session_hours pre-filter) --
-    session_start: int = 8           # UTC hour
-    session_end: int = 17            # UTC hour (exclusive)
-    friday_cutoff: int = 14          # stop on Friday at this hour
+    def init(self) -> None:
+        close = pd.Series(self.data.Close, dtype=float)
+        high  = pd.Series(self.data.High,  dtype=float)
+        low   = pd.Series(self.data.Low,   dtype=float)
 
-    # -- Internal state (reset each backtest run) ---------------------------
-    _peak_equity: float = 0.0
-    _day_trades: int = 0
-    _last_day: str = ""
-    _partial_done: Set[int] = None   # trade entry_bar indices that had TP1 partial close
+        # Core indicators
+        self.i_ema_fast = self.I(_ema, close, self.ema_fast,
+                                 name='EMA_fast', overlay=True)
+        self.i_ema_slow = self.I(_ema, close, self.ema_slow,
+                                 name='EMA_slow', overlay=True)
+        self.i_rsi      = self.I(_rsi, close, self.rsi_period, name='RSI')
+        self.i_atr      = self.I(_atr, high, low, close,
+                                 self.atr_period, name='ATR')
+        self.i_hi       = self.I(_rolling_high, high,
+                                 self.breakout_lookback, name='RollingHigh',
+                                 overlay=True)
+        self.i_lo       = self.I(_rolling_low,  low,
+                                 self.breakout_lookback, name='RollingLow',
+                                 overlay=True)
 
-    def init(self):
-        close = pd.Series(self.data.Close, index=self.data.df.index)
-        high  = pd.Series(self.data.High,  index=self.data.df.index)
-        low   = pd.Series(self.data.Low,   index=self.data.df.index)
+        # MTF indicators — require h1_close to be set externally
+        self._mtf_active = False
+        if self.use_mtf and hasattr(self.__class__, 'h1_close'):
+            h1 = pd.Series(self.__class__.h1_close, dtype=float)
+            if len(h1) == len(close):
+                self.i_mtf_fast = self.I(_ema, h1, self.mtf_ema_fast,
+                                         name='MTF_EMA_fast')
+                self.i_mtf_slow = self.I(_ema, h1, self.mtf_ema_slow,
+                                         name='MTF_EMA_slow')
+                self._mtf_active = True
+            else:
+                import warnings
+                warnings.warn(
+                    f"[ASQ] h1_close length {len(h1)} != bars {len(close)}. "
+                    "MTF disabled.", RuntimeWarning)
 
-        # -- M5 indicators --------------------------------------------------
-        ef = _ema(close, self.ema_fast).ffill().values
-        es = _ema(close, self.ema_slow).ffill().values
-        rsi_arr = _rsi(close, self.rsi_period).fillna(50.0).values
-        atr_arr = calc_atr(high, low, close, self.atr_period).ffill().values
+        # ── State (BUG-3 fix: peak equity, not peak balance) ──────────────
+        self._peak_equity  : float    = float(self.equity)
+        self._today_date   : object   = None
+        self._today_trades : int      = 0
 
-        # Rolling breakout high/low: max/min over lookback bars BEFORE the
-        # signal bar. shift(1) so that at bar t, we have the max/min of
-        # bars t-1 down to t-lookback (matching MQL5's i=2..lookback+1).
-        brk_hi = high.rolling(self.breakout_lookback).max().shift(1).ffill().values
-        brk_lo = low.rolling(self.breakout_lookback).min().shift(1).ffill().values
+    # ──────────────────────────────────────────────────────────────────────
+    # next  (called once per bar close)
+    # ──────────────────────────────────────────────────────────────────────
 
-        self._ef      = self.I(lambda: ef,      name="EMA_fast")
-        self._es      = self.I(lambda: es,       name="EMA_slow")
-        self._rsi     = self.I(lambda: rsi_arr,  name="RSI")
-        self._atr     = self.I(lambda: atr_arr,  name="ATR")
-        self._brk_hi  = self.I(lambda: brk_hi,   name="BrkHi")
-        self._brk_lo  = self.I(lambda: brk_lo,   name="BrkLo")
+    def next(self) -> None:
+        # ── Tick-level management approximated at bar close ────────────────
+        if self.use_breakeven:
+            self._manage_breakeven()
+        if self.use_trailing:
+            self._manage_trailing()
 
-        # -- MTF H1 EMA (resample M5 → H1, forward-fill back to M5) --------
-        if self.use_mtf:
-            h1_close = close.resample("h").last().ffill()
-            htf_ef = _ema(h1_close, self.mtf_ema_fast).ffill()
-            htf_es = _ema(h1_close, self.mtf_ema_slow).ffill()
-            # Forward-fill back to M5 frequency
-            htf_ef_m5 = htf_ef.reindex(close.index, method="ffill").ffill().values
-            htf_es_m5 = htf_es.reindex(close.index, method="ffill").ffill().values
-            self._htf_ef = self.I(lambda: htf_ef_m5, name="HTF_EMA_fast")
-            self._htf_es = self.I(lambda: htf_es_m5, name="HTF_EMA_slow")
-        else:
-            self._htf_ef = None
-            self._htf_es = None
-
-        # -- State ----------------------------------------------------------
-        self._peak_equity = float(self.equity)
-        self._day_trades = 0
-        self._last_day = ""
-        self._partial_done = set()
-
-    def next(self):
-        bar_dt = self.data.index[-1]   # current bar's timestamp
-
-        # -- Drawdown halt --------------------------------------------------
+        # ── BUG-3 fix: update peak equity every bar ────────────────────────
         eq = float(self.equity)
         if eq > self._peak_equity:
             self._peak_equity = eq
-        dd = ((self._peak_equity - eq) / self._peak_equity * 100.0
-              if self._peak_equity > 0 else 0.0)
-        if dd >= self.max_dd_pct:
+
+        # ── Drawdown halt ──────────────────────────────────────────────────
+        if self._peak_equity > 0:
+            dd_pct = (self._peak_equity - eq) / self._peak_equity * 100.0
+            if dd_pct >= self.max_dd_pct:
+                return
+
+        # ── Day cap ────────────────────────────────────────────────────────
+        today = self.data.index[-1].date()
+        if today != self._today_date:
+            self._today_date   = today
+            self._today_trades = 0
+        if self.max_day_trades > 0 and self._today_trades >= self.max_day_trades:
             return
 
-        # -- Exit management for open positions (bar-level approximation) ---
-        # Order matters: partial close first, then breakeven, then trailing.
-        if self.trades:
-            self._manage_exits(bar_dt)
-
-        # -- Session filter -------------------------------------------------
-        if not self._pass_session(bar_dt):
-            return
-
-        # -- Day cap --------------------------------------------------------
-        today = bar_dt.strftime("%Y-%m-%d")
-        if today != self._last_day:
-            self._last_day = today
-            self._day_trades = 0
-        if self.max_day_trades > 0 and self._day_trades >= self.max_day_trades:
-            return
-
-        # -- One position at a time -----------------------------------------
+        # ── One signal at a time ───────────────────────────────────────────
         if self.position:
             return
 
-        # -- Indicator values at last CLOSED bar ([-1] in next() = current) -
-        # MQL5 convention: c1 = bar[1] = last closed bar.
-        # In backtesting.py's next(), [-1] IS the current (just closed) bar.
-        if len(self._ef) < 3:
+        # ── Session filter ─────────────────────────────────────────────────
+        if self.use_session and not self._pass_session():
             return
 
-        ef    = float(self._ef[-1])
-        es    = float(self._es[-1])
-        rsi   = float(self._rsi[-1])
-        atr   = float(self._atr[-1])
-        brk_h = float(self._brk_hi[-1])
-        brk_l = float(self._brk_lo[-1])
-        c1    = float(self.data.Close[-1])   # close[1] in MQL5 = last closed bar
-        c2    = float(self.data.Close[-2])   # close[2] in MQL5 = bar before that
+        # ── Indicator reads — use bar[-1] (last closed bar) ───────────────
+        ema_f = float(self.i_ema_fast[-1])
+        ema_s = float(self.i_ema_slow[-1])
+        rsi   = float(self.i_rsi[-1])
+        atr   = float(self.i_atr[-1])
+        hi_n  = float(self.i_hi[-1])   # N-bar rolling high, bars prior to [-1]
+        lo_n  = float(self.i_lo[-1])
+        c1    = float(self.data.Close[-1])
+        c2    = float(self.data.Close[-2])
 
-        if any(np.isnan(v) for v in [ef, es, rsi, atr, brk_h, brk_l]):
+        if any(np.isnan(v) for v in (ema_f, ema_s, rsi, atr, hi_n, lo_n)):
             return
         if atr == 0:
             return
 
-        # -- Trend strength filter ------------------------------------------
-        sep = abs(ef - es)
-        mult = {"WEAK": 0.1, "MODERATE": 0.3, "STRONG": 0.6}.get(
-            self.trend_strength, 0.3
-        )
-        if sep < atr * mult:
+        # ── Condition 1: EMA trend direction ──────────────────────────────
+        bull_trend = ema_f > ema_s
+        bear_trend = ema_f < ema_s
+
+        # ── Condition 2: Trend strength ────────────────────────────────────
+        _mult_map  = {0: 0.1, 1: 0.3, 2: 0.6}
+        min_sep    = atr * _mult_map.get(int(self.trend_strength), 0.3)
+        if abs(ema_f - ema_s) < min_sep:
             return
 
-        # -- MTF filter -----------------------------------------------------
+        # ── Condition 3: Price position relative to both EMAs ─────────────
+        above_both = c1 > ema_f and c1 > ema_s
+        below_both = c1 < ema_f and c1 < ema_s
+
+        # ── Condition 4: Breakout detection ───────────────────────────────
+        buf        = atr * float(self.breakout_buffer)
+        bull_break = (c1 > hi_n - buf) and (c2 <= hi_n)
+        bear_break = (c1 < lo_n + buf) and (c2 >= lo_n)
+
+        # ── Condition 5: RSI filter ────────────────────────────────────────
+        rsi_buy  = float(self.rsi_buy_min)  <= rsi <= float(self.rsi_buy_max)
+        rsi_sell = float(self.rsi_sell_min) <= rsi <= float(self.rsi_sell_max)
+
+        # ── Condition 6: Momentum (bar-over-bar) ──────────────────────────
+        bull_mom = c1 > c2
+        bear_mom = c1 < c2
+
+        # ── Condition 7: MTF EMA agreement (optional) ─────────────────────
         mtf_buy = mtf_sell = True
-        if self.use_mtf and self._htf_ef is not None:
-            htf_ef = float(self._htf_ef[-1])
-            htf_es = float(self._htf_es[-1])
-            if not np.isnan(htf_ef) and not np.isnan(htf_es):
-                mtf_buy  = htf_ef > htf_es
-                mtf_sell = htf_ef < htf_es
+        if self._mtf_active:
+            mf = float(self.i_mtf_fast[-1])
+            ms = float(self.i_mtf_slow[-1])
+            if not (np.isnan(mf) or np.isnan(ms)):
+                mtf_buy  = mf > ms
+                mtf_sell = mf < ms
 
-        # -- Derived conditions (mirrors MQL5 OnTick logic exactly) ---------
-        bull_trend   = ef > es
-        bear_trend   = ef < es
-        above_both   = c1 > ef and c1 > es
-        below_both   = c1 < ef and c1 < es
-        buf          = atr * self.breakout_buffer
-        bull_break   = (c1 > brk_h - buf) and (c2 <= brk_h)
-        bear_break   = (c1 < brk_l + buf) and (c2 >= brk_l)
-        rsi_buy      = self.rsi_buy_lo  <= rsi <= self.rsi_buy_hi
-        rsi_sell     = self.rsi_sell_lo <= rsi <= self.rsi_sell_hi
-        bull_mom     = c1 > c2
-        bear_mom     = c1 < c2
-
-        pt  = XAUUSD_POINT
-        ask = c1          # use close as fill price (bar-close convention)
-        bid = c1
-
-        lot = self._calc_lot(ask)
-        if lot <= 0:
+        # ── Position sizing ────────────────────────────────────────────────
+        pt      = self._get_point()
+        sl_dist = self.sl_points * pt
+        tp_dist = self.tp_points * pt
+        size    = self._calc_size(sl_dist)
+        if size <= 0:
             return
-        # Convert lots → oz (units). backtesting.py size < 1.0 is interpreted
-        # as a fraction of maximum position — always pass as oz (integer-ish).
-        size_oz = round(lot * 100, 2)
 
-        sl_d = self.sl_points * pt
-        tp_d = self.tp_points * pt
+        # ── Entries ────────────────────────────────────────────────────────
+        long_signal  = (bull_trend and above_both and bull_break
+                        and rsi_buy and bull_mom and mtf_buy)
+        short_signal = (bear_trend and below_both and bear_break
+                        and rsi_sell and bear_mom and mtf_sell)
 
-        if bull_trend and above_both and bull_break and rsi_buy and bull_mom and mtf_buy:
-            self.buy(
-                size=size_oz,
-                sl=round(ask - sl_d, 2),
-                tp=round(ask + tp_d, 2),
-            )
-            self._day_trades += 1
+        if long_signal:
+            self._enter_long(size, sl_dist, tp_dist, pt)
 
-        elif bear_trend and below_both and bear_break and rsi_sell and bear_mom and mtf_sell:
-            self.sell(
-                size=size_oz,
-                sl=round(bid + sl_d, 2),
-                tp=round(bid - tp_d, 2),
-            )
-            self._day_trades += 1
+        elif short_signal:
+            self._enter_short(size, sl_dist, tp_dist, pt)
 
-    # -- Exit management helpers --------------------------------------------
+    # ──────────────────────────────────────────────────────────────────────
+    # Entry helpers
+    # ──────────────────────────────────────────────────────────────────────
 
-    def _manage_exits(self, bar_dt) -> None:
-        """Update open trades for breakeven, trailing, and partial close."""
-        for trade in list(self.trades):
-            entry  = trade.entry_price
-            is_long = trade.is_long
-            cur    = float(self.data.Close[-1])
-            pt     = XAUUSD_POINT
+    def _enter_long(self, size: float, sl_dist: float,
+                    tp_dist: float, pt: float) -> None:
+        entry = float(self.data.Close[-1])
+        sl    = entry - sl_dist
+        tp    = entry + tp_dist
 
-            profit_pts = ((cur - entry) if is_long else (entry - cur)) / pt
+        if self.use_partial_close:
+            tp1      = entry + self.tp1_points * pt
+            size_tp1 = self._coerce_size(size * float(self.tp1_close_pct) / 100.0)
+            size_rem = self._coerce_size(size - size * float(self.tp1_close_pct) / 100.0)
+            if size_tp1 > 0 and size_rem > 0:
+                self.buy(size=size_tp1, sl=sl, tp=tp1)   # TP1 leg
+                self.buy(size=size_rem,  sl=sl, tp=tp)   # Remainder leg
+                self._today_trades += 1
+                return
 
-            # Partial close at TP1 (only once per trade)
-            if self.use_partial and trade.entry_bar not in self._partial_done:
-                if profit_pts >= self.tp1_points:
-                    try:
-                        trade.close(self.tp1_pct)
-                        self._partial_done.add(trade.entry_bar)
-                    except Exception:
-                        pass  # trade may have closed between checks
+        self.buy(size=size, sl=sl, tp=tp)
+        self._today_trades += 1
 
-            # Breakeven — move SL to entry + offset if profit ≥ start
-            if self.use_breakeven and profit_pts >= self.breakeven_start:
-                be_sl = (round(entry + self.breakeven_offset * pt, 2)
-                         if is_long
-                         else round(entry - self.breakeven_offset * pt, 2))
-                if is_long and (trade.sl is None or trade.sl < be_sl):
-                    try:
-                        trade.sl = be_sl
-                    except Exception:
-                        pass
-                elif not is_long and (trade.sl is None or trade.sl > be_sl):
-                    try:
-                        trade.sl = be_sl
-                    except Exception:
-                        pass
+    def _enter_short(self, size: float, sl_dist: float,
+                     tp_dist: float, pt: float) -> None:
+        entry = float(self.data.Close[-1])
+        sl    = entry + sl_dist
+        tp    = entry - tp_dist
 
-            # Trailing stop
-            if self.use_trailing and profit_pts >= self.trail_start:
-                trail_sl = (round(cur - self.trail_step * pt, 2)
-                            if is_long
-                            else round(cur + self.trail_step * pt, 2))
-                if is_long and (trade.sl is None or trail_sl > trade.sl):
-                    try:
-                        trade.sl = trail_sl
-                    except Exception:
-                        pass
-                elif not is_long and (trade.sl is None or trail_sl < trade.sl):
-                    try:
-                        trade.sl = trail_sl
-                    except Exception:
-                        pass
+        if self.use_partial_close:
+            tp1      = entry - self.tp1_points * pt
+            size_tp1 = self._coerce_size(size * float(self.tp1_close_pct) / 100.0)
+            size_rem = self._coerce_size(size - size * float(self.tp1_close_pct) / 100.0)
+            if size_tp1 > 0 and size_rem > 0:
+                self.sell(size=size_tp1, sl=sl, tp=tp1)
+                self.sell(size=size_rem,  sl=sl, tp=tp)
+                self._today_trades += 1
+                return
 
-    def _pass_session(self, bar_dt) -> bool:
-        """Session + Friday filter — matches MQL5 PassSession() logic."""
-        dow  = bar_dt.weekday()   # Mon=0, Fri=4, Sat=5, Sun=6
-        hour = bar_dt.hour
-        if dow >= 5:              # weekend
+        self.sell(size=size, sl=sl, tp=tp)
+        self._today_trades += 1
+
+    @staticmethod
+    def _coerce_size(size: float) -> float:
+        """
+        Enforce backtesting.py size constraints:
+          0 < size < 1  → fractional equity (keep as-is)
+          size >= 1     → must be a whole number (floor)
+          otherwise     → invalid, return 0
+        """
+        if size <= 0:
+            return 0.0
+        if size < 1.0:
+            return size
+        return float(int(size))
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Exit management (bar-close approximation of tick-level MT5 handlers)
+    # ──────────────────────────────────────────────────────────────────────
+
+    def _manage_breakeven(self) -> None:
+        """
+        Move SL to breakeven (open ± offset) once price has moved
+        breakeven_start points in our favour.
+        Applied to all open trades (both legs if partial close is active).
+        """
+        pt = self._get_point()
+        for trade in self.trades:
+            op = float(trade.entry_price)
+            if trade.is_long:
+                be_trigger = op + self.breakeven_start * pt
+                be_sl      = op + self.breakeven_offset * pt
+                if (float(self.data.Close[-1]) >= be_trigger
+                        and (trade.sl is None or float(trade.sl) < be_sl)):
+                    trade.sl = be_sl
+            else:
+                be_trigger = op - self.breakeven_start * pt
+                be_sl      = op - self.breakeven_offset * pt
+                if (float(self.data.Close[-1]) <= be_trigger
+                        and (trade.sl is None or float(trade.sl) > be_sl)):
+                    trade.sl = be_sl
+
+    def _manage_trailing(self) -> None:
+        """
+        Once price has moved trail_start points in our favour, trail the SL
+        by trail_step points from the current close.
+        Applied to all open trades (both legs).
+        """
+        pt  = self._get_point()
+        bar = float(self.data.Close[-1])
+        for trade in self.trades:
+            op = float(trade.entry_price)
+            if trade.is_long:
+                if bar >= op + self.trail_start * pt:
+                    new_sl = bar - self.trail_step * pt
+                    if trade.sl is None or new_sl > float(trade.sl) + pt:
+                        trade.sl = new_sl
+            else:
+                if bar <= op - self.trail_start * pt:
+                    new_sl = bar + self.trail_step * pt
+                    if trade.sl is None or new_sl < float(trade.sl) - pt:
+                        trade.sl = new_sl
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Sizing
+    # ──────────────────────────────────────────────────────────────────────
+
+    def _calc_size(self, sl_dist: float) -> float:
+        """
+        Risk-percent position sizing.
+
+        size  = risk_amount / sl_dist
+        P&L   = size × Δprice   (backtesting.py convention)
+
+        backtesting.py requires size to be either:
+          - a fraction strictly between 0 and 1, OR
+          - a positive whole number >= 1
+
+        We floor to int when size >= 1 (typical at harness cash=10_000),
+        and keep as fraction when size < 1 (typical at cash=100).
+        Risk_pct is soft-capped at 5% to mirror CalcLot() guard.
+        """
+        if sl_dist <= 0:
+            return 0.0
+        capped_risk = min(float(self.risk_pct), 5.0)
+        risk_amount = float(self.equity) * capped_risk / 100.0
+        size = risk_amount / sl_dist
+        if size >= 1.0:
+            size = float(int(size))   # floor — must be whole number
+            if size < 1.0:
+                return 0.0
+        elif size <= 0.0:
+            return 0.0
+        return size
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Filters
+    # ──────────────────────────────────────────────────────────────────────
+
+    def _pass_session(self) -> bool:
+        """
+        Mirrors PassSession() in the MQL5 source.
+        Assumes index is UTC. Weekends always blocked.
+        """
+        dt  = self.data.index[-1]
+        dow = dt.dayofweek          # 0=Mon … 4=Fri, 5=Sat, 6=Sun
+        if dow >= 5:
             return False
-        if dow == 4 and hour >= self.friday_cutoff:   # Friday cutoff
+        if self.avoid_friday and dow == 4 and dt.hour >= int(self.friday_cutoff):
             return False
-        return self.session_start <= hour < self.session_end
+        return int(self.session_start) <= dt.hour < int(self.session_end)
 
-    def _calc_lot(self, entry_price: float) -> float:
-        """Position sizing matching MQL5 CalcLot() with risk % mode."""
-        if self.use_risk_pct and self.risk_pct > 0:
-            risk_amount = float(self.equity) * min(self.risk_pct, 0.05)
-            sl_distance = self.sl_points * XAUUSD_POINT   # $/oz
-            # risk_amount = lot × contract_size × sl_distance
-            raw_lots = risk_amount / (sl_distance * XAUUSD_CONTRACT_SIZE)
-        else:
-            raw_lots = self.fixed_lots
+    # ──────────────────────────────────────────────────────────────────────
+    # Utility
+    # ──────────────────────────────────────────────────────────────────────
 
-        # Floor to lot step, clamp
-        import math
-        stepped = math.floor(raw_lots / XAUUSD_LOT_STEP) * XAUUSD_LOT_STEP
-        lot = max(XAUUSD_MIN_LOT, min(XAUUSD_MAX_LOT, round(stepped, 2)))
-        return lot
+    @staticmethod
+    def _get_point() -> float:
+        """
+        XAUUSD point size. MT5 SYMBOL_POINT = 0.01 for 5-digit brokers.
+        Override this method if your data uses different precision.
+        """
+        return 0.01
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MTF helper — call this before running if use_mtf=True
+# ─────────────────────────────────────────────────────────────────────────────
+
+def attach_h1_mtf(strategy_cls: type, m5_df: pd.DataFrame) -> None:
+    """
+    Resample M5 OHLCV data to H1 and attach the H1 close series to the
+    strategy class so MTF indicators can be computed.
+
+    Usage:
+        attach_h1_mtf(ASQSafeScalping, df)
+        ASQSafeScalping.use_mtf = True
+        bt = Backtest(df, ASQSafeScalping, ...)
+    """
+    h1 = (m5_df['Close']
+          .resample('1h')
+          .last()
+          .reindex(m5_df.index, method='ffill'))
+    strategy_cls.h1_close = h1.to_numpy()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Quick smoke test (run file directly: python asq_scalping.py)
+# ─────────────────────────────────────────────────────────────────────────────
+
+if __name__ == '__main__':
+    import sys
+    import os
+
+    print("ASQ SafeScalping adapter — smoke test")
+    print("Loading sample data...")
+
+    # Try to load from the standard harness data location
+    csv_candidates = [
+        os.path.expanduser('~/Downloads/qhf_harness/XAUUSD_M5.csv'),
+        os.path.expanduser('~/Downloads/XAUUSD_M5.csv'),
+    ]
+    df = None
+    for p in csv_candidates:
+        if os.path.exists(p):
+            df = pd.read_csv(p, index_col=0, parse_dates=True)
+            print(f"Loaded: {p}  ({len(df):,} rows)")
+            break
+
+    if df is None:
+        print("No data file found at expected paths.")
+        print("Expected columns: Open, High, Low, Close, Volume")
+        print("Adapter loaded OK — import and use ASQSafeScalping in your harness.")
+        sys.exit(0)
+
+    # Standardise column names
+    df.columns = [c.capitalize() for c in df.columns]
+    df = df[['Open', 'High', 'Low', 'Close', 'Volume']].dropna()
+
+    # Use 6 months of data for the smoke test
+    df = df.iloc[-int(6 * 21 * 24 * 12):]   # ~6 months of M5
+
+    from backtesting import Backtest
+
+    # Pepperstone Razor cost model: $7 RT/lot commission
+    # For sizing at ~0.167 oz per trade: commission ≈ $7 × 0.00167 ≈ $0.012
+    # Expressed as fraction: 0.012 / 3000 ≈ 0.000004
+    # Spread: $0.22/oz ÷ 3000 ≈ 0.000073
+    # Combined ≈ 0.00008 per unit per side → pass as commission= per-unit total
+    bt = Backtest(
+        df,
+        ASQSafeScalping,
+        cash        = 100,
+        commission  = 0.00008,  # approximate; use cost_model.py for precision
+        exclusive_orders = False,   # allow two-leg entries
+    )
+
+    stats = bt.run()
+    print("\n── Smoke test results (6-month window) ──")
+    print(stats[['Return [%]', 'Sharpe Ratio', 'Max. Drawdown [%]',
+                 '# Trades', 'Win Rate [%]', 'Profit Factor']])
+    print("\nAdapter OK.")
