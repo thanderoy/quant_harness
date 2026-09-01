@@ -8,3 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Collector output — samples and run artifacts, not deliverables
+phase0/d3a_spread_samples.jsonl
+phase0/d1_contract_specs_*.json
+phase0/d3b_spread_history_*.json
