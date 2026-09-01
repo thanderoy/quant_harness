@@ -26,18 +26,49 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
 
-DATA_DIR = Path(__file__).resolve().parent / "data"
+#: Where the OHLCV inputs live. Override with ``QH_DATA_DIR`` so the tree can
+#: be relocated -- the four-package split moves this module without moving the
+#: ~150 MB of broker exports beside it.
+DATA_DIR = Path(
+    os.environ.get("QH_DATA_DIR", Path(__file__).resolve().parent / "data")
+).expanduser()
+
 MANIFEST = Path(__file__).resolve().parent / "data_manifest.json"
 
 # Files not in the house ``;``-separated OHLCV format get bytes-level pinning
 # only; there is no ohlc_hash to reproduce for them.
 NON_OHLCV = {"DFII10.csv"}
+
+#: Tracked in git rather than merely hashed. The test is dependency, not size.
+#: Broker OHLCV is not durably reproducible -- bars get revised, gaps
+#: backfilled, and history retention is finite -- so a hashed-only file cannot
+#: be restored once lost, and a parity claim resting on it becomes permanently
+#: uncheckable rather than merely stale. These underpin T9a and the seq=31
+#: artifact, so they must be recoverable, not merely verifiable.
+TRACKED_IN_GIT = {"XAUUSD_H1.csv"}
+
+#: Advisory ceiling for anything added from here on. GitHub warns above 50 MB
+#: and hard-fails at 100 MB.
+SIZE_POLICY_WARN_BYTES = 50 * 1024 * 1024
+
+#: Grandfathered: already in history, deliberately not rewritten. Excising it
+#: would mean rewriting the history of a repository whose premise is that
+#: records are appended and never altered, and would break the X21 git
+#: cross-check for every commit before the rewrite. Documented exception, not
+#: a precedent.
+GRANDFATHERED = {
+    "quant_harness cb48e00:qhf/data/raw/XAUUSD_M5.csv": {
+        "size_bytes_approx": 74_361_143,
+        "reason": "committed before the policy existed; history not rewritten",
+    },
+}
 
 
 def sha256_file(path: Path) -> str:
@@ -84,6 +115,7 @@ def describe(path: Path) -> dict:
     entry = {
         "size_bytes": path.stat().st_size,
         "sha256": sha256_file(path),
+        "tracked_in_git": path.name in TRACKED_IN_GIT,
     }
     if path.name in NON_OHLCV:
         entry["format"] = "non_ohlcv"
@@ -101,9 +133,25 @@ def build() -> dict:
     return {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "generator": "research/data_manifest.py",
-        "data_dir": "research/data/",
-        "gitignored": True,
-        "note": "research/data/ is not tracked. This manifest pins its "
+        "data_dir": str(DATA_DIR),
+        "data_dir_env_override": "QH_DATA_DIR",
+        "policy": {
+            "default": "gitignored; pinned here, not stored in git",
+            "tracked_in_git": sorted(TRACKED_IN_GIT),
+            "tracked_because": "not durably reproducible from the broker, and "
+                               "T9a/seq=31 depend on it -- must be "
+                               "recoverable, not merely verifiable",
+            "size_warn_bytes": SIZE_POLICY_WARN_BYTES,
+            "grandfathered": GRANDFATHERED,
+            "off_disk_archive_required": True,
+            "off_disk_archive_note": "A checksum on a file that exists in "
+                                     "exactly one place is a detection "
+                                     "mechanism with nothing behind it. "
+                                     "Untracked bulk series need their own "
+                                     "off-disk archive; this manifest detects "
+                                     "divergence but cannot restore.",
+        },
+        "note": "Most of research/data/ is not tracked. This manifest pins its "
                 "contents so a silent data change cannot be mistaken for a "
                 "code regression.",
         "files": {p.name: describe(p) for p in files},
