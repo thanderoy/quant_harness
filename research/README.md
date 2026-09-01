@@ -48,7 +48,7 @@ canonical DSR for this repo. See "DSR canonicality" below.
         │                                                  continuation; DIAGNOSTIC
         │                                                  only for pullback/MR)
         ▼
-  qhf walk-forward harness         ../qhf_harness      ← full backtest, OOS folds,
+  qhf walk-forward harness         ../quant_harness      ← full backtest, OOS folds,
         │  (separate repo)                                Pepperstone Razor costs
         ▼
   post/dsr verdict                 research.post       ← Deflated Sharpe vs the
@@ -87,7 +87,7 @@ There are two DSR implementations, by necessity:
 | Implementation | Repo | Role |
 |---|---|---|
 | `research.post.dsr` | this repo | **Canonical.** Wired to `research.log.trial_count()`. |
-| `qhf/metrics/deflated.py` | `../qhf_harness` (separate repo/venv) | Harness-side twin, so the backtester can deflate inline without importing this package. |
+| `qhf/metrics/deflated.py` | `../quant_harness` (separate repo/venv) | Harness-side twin, so the backtester can deflate inline without importing this package. |
 
 They must stay numerically identical. The contract is locked by
 `tests/test_dsr_parity.py` — golden vectors for the deterministic primitives
