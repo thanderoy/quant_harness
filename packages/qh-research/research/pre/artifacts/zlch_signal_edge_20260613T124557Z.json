@@ -1,0 +1,126 @@
+{
+  "hypothesis_id": "zerolag_chandelier",
+  "period": {
+    "start": "2018-01-02 09:00:00+00:00",
+    "end": "2025-12-31 23:45:00+00:00",
+    "n_bars": 186611
+  },
+  "params": {
+    "chandelier_atr_period": 14,
+    "chandelier_atr_mult": 2.5,
+    "h4_zlsma_length": 50,
+    "forward_window_primary": 32,
+    "forward_windows_sensitivity": [
+      16,
+      64
+    ],
+    "atr_period": 14,
+    "permutations": 1000,
+    "random_seed": 42
+  },
+  "trigger_count_total": 3769,
+  "trigger_count_long": 1984,
+  "trigger_count_short": 1785,
+  "signal_hash": "605f94fe1150069a",
+  "primary": {
+    "window": 32,
+    "e_ratio_combined": 0.9812997845502123,
+    "e_ratio_long": 1.0329712568883036,
+    "e_ratio_short": 0.9272756416318665,
+    "n_signals_eligible": 3768,
+    "n_long_eligible": 1984,
+    "n_short_eligible": 1784,
+    "mean_norm_mfe": 3.501488146957443,
+    "mean_norm_mae": 3.5682145273907118,
+    "mean_fwd_return": -3.868220591655989e-05,
+    "hit_rate": 0.49150743099787686,
+    "p_value": 0.772,
+    "null_mean": 1.0023602782524097,
+    "null_p05": 0.9569090443774892,
+    "null_p95": 1.0489893240653485,
+    "baseline_e_ratio": 1.0010775037450308,
+    "metadata": {
+      "signal_hash": "605f94fe1150069a",
+      "ohlc_hash": "a47fae42524e09e2",
+      "ohlc_start": "2018-01-02T09:00:00+00:00",
+      "ohlc_end": "2025-12-31T23:45:00+00:00",
+      "n_bars": 186611,
+      "atr_period": 14,
+      "forward_windows": [
+        32
+      ],
+      "n_permutations": 1000,
+      "random_seed": 42,
+      "n_long_signals": 1984,
+      "n_short_signals": 1785
+    }
+  },
+  "sensitivity": {
+    "16": {
+      "window": 16,
+      "e_ratio_combined": 0.9982942985402807,
+      "e_ratio_long": 1.0380666589182594,
+      "e_ratio_short": 0.9557083226458083,
+      "n_signals_eligible": 3768,
+      "n_long_eligible": 1984,
+      "n_short_eligible": 1784,
+      "mean_norm_mfe": 2.424602420639122,
+      "mean_norm_mae": 2.4287451347607694,
+      "mean_fwd_return": -1.6022427251432042e-05,
+      "hit_rate": 0.48274946921443734,
+      "p_value": 0.551,
+      "null_mean": 1.002416049518233,
+      "null_p05": 0.9576312708979515,
+      "null_p95": 1.050858376488247,
+      "baseline_e_ratio": 1.002498090948498,
+      "metadata": {
+        "signal_hash": "605f94fe1150069a",
+        "ohlc_hash": "a47fae42524e09e2",
+        "ohlc_start": "2018-01-02T09:00:00+00:00",
+        "ohlc_end": "2025-12-31T23:45:00+00:00",
+        "n_bars": 186611,
+        "atr_period": 14,
+        "forward_windows": [
+          16
+        ],
+        "n_permutations": 1000,
+        "random_seed": 42,
+        "n_long_signals": 1984,
+        "n_short_signals": 1785
+      }
+    },
+    "64": {
+      "window": 64,
+      "e_ratio_combined": 0.9947033410972972,
+      "e_ratio_long": 1.0832499500415622,
+      "e_ratio_short": 0.9054063112590678,
+      "n_signals_eligible": 3766,
+      "n_long_eligible": 1984,
+      "n_short_eligible": 1782,
+      "mean_norm_mfe": 4.999888608091448,
+      "mean_norm_mae": 5.026512329370353,
+      "mean_fwd_return": 3.891129814252273e-05,
+      "hit_rate": 0.4960169941582581,
+      "p_value": 0.627,
+      "null_mean": 1.004242866670584,
+      "null_p05": 0.9572152010222515,
+      "null_p95": 1.0503923088157365,
+      "baseline_e_ratio": 0.9944786835158022,
+      "metadata": {
+        "signal_hash": "605f94fe1150069a",
+        "ohlc_hash": "a47fae42524e09e2",
+        "ohlc_start": "2018-01-02T09:00:00+00:00",
+        "ohlc_end": "2025-12-31T23:45:00+00:00",
+        "n_bars": 186611,
+        "atr_period": 14,
+        "forward_windows": [
+          64
+        ],
+        "n_permutations": 1000,
+        "random_seed": 42,
+        "n_long_signals": 1984,
+        "n_short_signals": 1785
+      }
+    }
+  }
+}

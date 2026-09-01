@@ -1,0 +1,26 @@
+{
+  "n_bars": 79928,
+  "start": "2013-10-08 13:00:00+00:00",
+  "end": "2026-08-28 20:00:00+00:00",
+  "level_min": 79.05295436380906,
+  "level_max": 114.76215282108451,
+  "legs": {
+    "EURUSD": -0.576,
+    "USDJPY": 0.136,
+    "GBPUSD": -0.119,
+    "USDCAD": 0.091,
+    "USDSEK": 0.042,
+    "USDCHF": 0.036
+  },
+  "validation": {
+    "validated": true,
+    "overlap_bars": 3540,
+    "overlap_start": "2024-02-29 15:00:00+00:00",
+    "overlap_end": "2026-08-28 20:00:00+00:00",
+    "logret_pearson": 0.010389061777630175,
+    "logret_spearman": 0.014464480392571763,
+    "level_pearson": 0.004727380086666384,
+    "scale_ratio_mean": 3.9389414883499527,
+    "scale_ratio_sd": 0.13380101368031908
+  }
+}
