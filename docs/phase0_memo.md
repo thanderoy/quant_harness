@@ -4,7 +4,7 @@
 **Artifact:** `phase0/phase0_universe_20260831.json`
 **Stamps:** `PARTIAL_UNIVERSE`, `PROVISIONAL_SPECS`
 
-Status: **D6, D7, D8, D9 complete. D2, D4, D5 complete but stamped. D1 and D3 BLOCKED.**
+Status: **D6, D7, D8, D9 complete. D2, D4, D5 complete but stamped. D3a RUNNING. D1 and D3b BLOCKED on two missing `mt5-api` endpoints — not on hardware (corrected, log seq=87).**
 
 ---
 
@@ -319,11 +319,18 @@ live instrument outside the pipeline is precisely what the two-iteration rule fo
 touches no numerical module, so the D8 fixtures are unaffected. Verified: only `sync-trades-hourly`
 and `sync-account-daily` remain active; no strategy fires.
 
-**Timing note.** `celery`, `celery-beat`, `mt5` and `mt5-test` containers do not currently exist,
-so beat was not running and the halt could not orphan an open position. This matters for
-sequencing: `h1_momentum` drives its own 12-bar exit via `manage_positions()` inside the same
-scheduled task, so the halt had to land **before** the stack is brought back up for D1/D3a —
-otherwise the strategy resumes at 5% unguarded the moment a terminal is available.
+**Timing note — CORRECTED 2026-09-01, see log seq=87.** This originally read that `celery`,
+`celery-beat`, `mt5` and `mt5-test` "do not currently exist, so beat was not running". That was
+true of the laptop and false of the system. On the execution host (`ganymede`) beat *was* running
+and `h1_momentum` was firing hourly at HH:02 — which is what seq=81's `first_fire_utc` recorded
+all along. The halt was source-only until ganymede was redeployed to `456467f`; it is now
+operationally in effect there and the active schedule is `sync-trades-hourly` and
+`sync-account-daily` only.
+
+The sequencing point survives the correction and was the right instinct for the wrong reason:
+`h1_momentum` drives its own 12-bar exit via `manage_positions()` inside the same scheduled task,
+so unscheduling it could strand an open position. Verified at deploy: 0 open positions on both
+demo and prod, so nothing was orphaned.
 
 **Two structural fixes are owed**, because this bug was only *possible* by design, not by
 misconfiguration — a strategy could set its own budget and silently omit the guard:
@@ -426,18 +433,35 @@ T9a.**
 
 Per Phase 0 acceptance, `BLOCKED` is acceptable; a substituted assumption is not.
 
-| Task | Status | Dependency | Collector |
+**The dependency column below was wrong, and the error is instructive.** It named a missing
+terminal. `mt5` and `mt5-test` had been healthy on `ganymede` for ~2 months; the collectors were
+being run from a laptop that has no MT5 and never had one, so they faithfully reported the
+environment they ran in rather than the one that exists. Corrected at log seq=87.
+
+| Task | Status | Real dependency | Collector |
 |---|---|---|---|
-| D1 contract specs | **BLOCKED** | `mt5`/`mt5-test` containers down | Not yet written — owed |
-| D3a forward spread collector | **BLOCKED** | Live MT5 | Not yet written — owed, **highest-value MT5 action** |
-| D3b historical spread | **BLOCKED** | `copy_ticks_range` retention | Not yet written — owed |
+| D1 contract specs | **BLOCKED** | `mt5-api` exposes no `symbol_info` endpoint — host-independent, real | Written, committed, unrun |
+| D3a forward spread collector | **RUNNING since 2026-09-01** | none — `/api/v1/tick` existed throughout | Written and collecting on ganymede |
+| D3b historical spread | **BLOCKED** | `mt5-api` exposes no `copy_ticks_range` endpoint | Written, committed, unrun |
+
+**Cost of the error: ~2 months of forward spread data that cannot be recovered.** D3a needed
+nothing that did not already exist. A stated dependency is a claim; this one was never checked
+against the host that runs the system. Any future `BLOCKED` record must name the host it was
+evaluated on.
 
 Nothing in the D1/D3 path was substituted. D2 uses hand-entered specs and is stamped
 `PROVISIONAL_SPECS` accordingly; under T1's refusal rule nothing derived from it may close an
 acceptance criterion.
 
-**Every day D3a is not running is a day of spread data that cannot be recovered.** Bring
-`mt5-test` up when convenient; the D1 dump and the D3a switch-on belong in the same session.
+**Every day D3a is not running is a day of spread data that cannot be recovered** — which is why
+the two lost months are recorded rather than quietly absorbed. D3a is now running. D1 and D3b wait
+on the two `mt5-api` endpoints in `docs/mt5_api_additions.md`, not on hardware.
+
+**D4 consequence.** All nine candidates resolve on the live terminal, AUDUSD and NZDUSD included.
+D4's effective-N figures were stamped UPPER BOUNDS precisely because those two were missing from
+local CSVs. They are available from the broker, so the bound can be tightened — and Phase 2b's
+target of effective N >= 4 was set against a bound that may not hold. Re-run D4 once AUD/NZD
+history is pulled.
 
 ---
 
