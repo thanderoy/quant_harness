@@ -183,3 +183,84 @@ def test_x2_registry_loads_with_networking_disabled(monkeypatch):
 
     reg = Registry.load(SNAPSHOT, allow_provisional=True)
     assert len(reg) == 9
+
+
+# --------------------------------------------------------------------------- #
+# D1 — the broker-confirmed snapshot                                           #
+# --------------------------------------------------------------------------- #
+REAL = "pepperstone_demo_20260901.json"
+
+
+def test_real_snapshot_loads_without_opt_in():
+    """MT5_SYMBOL_INFO provenance needs no allow_provisional and carries no stamp."""
+    reg = Registry.load(REAL)
+    assert not reg.is_provisional
+    assert reg.provenance_summary() == {"MT5_SYMBOL_INFO": 9}
+    assert "PROVISIONAL_SPECS" not in reg.artifact_metadata()["registry_stamps"]
+
+
+def test_tick_value_embeds_the_fx_rate_which_is_why_we_do_not_use_it():
+    """`tick_value` is reported in the ACCOUNT currency, not the quote currency.
+
+    Measured, not asserted. For a pair quoted in something other than USD, the
+    ratio of `contract_size * tick_size` to the reported `tick_value` is the
+    live FX rate at the moment the spec was pulled:
+
+        USDJPY  160.08   (spot 160.149 at capture)
+        USDCHF    0.810  (spot 0.81019)
+        USDCAD    1.388  (spot 1.38824)
+
+    A registry pinned in January and used in June would therefore size every
+    JPY-quoted position against a stale rate. This is precisely why
+    `value_per_price_unit()` derives from `contract_size` and leaves
+    conversion to the caller, with a rate the caller supplies.
+    """
+    reg = Registry.load(REAL)
+    for sym, spot in (("USDJPY", 160.149), ("USDCHF", 0.81019), ("USDCAD", 1.38824)):
+        spec = reg[sym]
+        implied = (spec.contract_size * spec.tick_size) / spec.tick_value
+        assert implied == pytest.approx(spot, rel=0.02), (
+            f"{sym}: tick_value implies rate {implied}, spot was {spot}")
+
+    # USD-quoted pairs need no conversion, so the two agree exactly.
+    for sym in ("EURUSD", "GBPUSD", "AUDUSD", "NZDUSD"):
+        spec = reg[sym]
+        assert spec.contract_size * spec.tick_size == pytest.approx(spec.tick_value)
+
+
+def test_metals_tick_value_disagrees_by_exactly_ten():
+    """Gold and silver are USD-quoted, so no FX rate explains this.
+
+    contract_size * tick_size is 10x the reported tick_value for both metals.
+    Whatever the broker's reason, sizing gold from tick_value would be wrong by
+    an order of magnitude — which is the concrete cost of the shortcut this
+    registry refuses to take.
+    """
+    reg = Registry.load(REAL)
+    for sym in ("XAUUSD", "XAGUSD"):
+        spec = reg[sym]
+        assert spec.currency_profit == "USD"          # no conversion involved
+        derived = spec.contract_size * spec.tick_size
+        assert derived / spec.tick_value == pytest.approx(10.0)
+
+
+def test_ioc_does_not_generalise_across_the_universe():
+    """The repo-wide ORDER_FILLING_IOC rule holds for 3 of 9 symbols.
+
+    filling_mode is a bitmask; bit 2 is SYMBOL_FILLING_IOC. Six majors report
+    mode 1 — FOK only. Sending IOC to those is the silent-rejection failure the
+    architecture rule warns about for ORDER_FILLING_RETURN, arrived at from the
+    other direction.
+    """
+    reg = Registry.load(REAL)
+    IOC = 2
+    supported = {s for s in reg.symbols if (reg[s].filling_mode or 0) & IOC}
+    assert supported == {"NZDUSD", "XAUUSD", "XAGUSD"}
+    assert len(reg.symbols) - len(supported) == 6
+
+
+def test_gold_min_position_risk_from_real_specs():
+    """D2's headline, recomputed from broker-confirmed terms."""
+    xau = Registry.load(REAL)["XAUUSD"]
+    # 0.01 lots x 100 oz = 1 oz; a $14 stop risks $14 = 14% of a $100 account.
+    assert xau.min_position_risk(14.0) == pytest.approx(14.0)
