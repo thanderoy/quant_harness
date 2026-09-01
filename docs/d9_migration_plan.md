@@ -188,8 +188,8 @@ assertions must pass there before the real run. Required by Phase 0 acceptance.
 | ~~B1~~ | ~~53 log entries and 108 files uncommitted~~ | — | **CLEARED.** Committed in `28fd39c`/`81e38c0`, merged `#104`. 144 files tracked, 0 untracked. |
 | ~~B2~~ | ~~`research/data/` gitignored, T9a depends on it~~ | — | **CLEARED.** `research/data_manifest.{py,json}` (`279bc97`) pins all 16 CSVs: sha256, row count, first/last bar, `ohlc_hash`. XAUUSD_H1 → `a8cd64270c5376ca`, matching the seq=31 artifact. |
 | B5 | `research/data/` does not travel with the subtree | Running research in the migrated tree | It is gitignored, so the graft lands with `research/data/` absent and `data_manifest` exits non-zero. Relocate or symlink the data dir as an explicit migration step — see the dry-run finding below. |
-| B3 | `research/artifacts/` path mapping unrecorded | Resolving seq<40 artifact paths | Include in `PROJECT_RENAME` (Step 4) |
-| B4 | `EventType` has no `AUDIT` / `REPO_MIGRATION` / `PROJECT_RENAME` / `SCHEMA_MIGRATION` / `PARITY_FIXTURE` members | D7 log entry, Phase 0.5 step 3, T9 | T6 schema extension — but D7's own acceptance wants an `AUDIT` entry *during Phase 0*, which is a code change to `log.py`. Sequencing conflict, flagged below. |
+| ~~B3~~ | ~~`research/artifacts/` path mapping unrecorded~~ | — | **CLEARED.** Recorded at seq=85 (`project_rename`, `record:qhf-harness-to-quant-harness`) together with the repo rename. |
+| ~~B4~~ | ~~`EventType` has no record members~~ | — | **CLEARED.** T6 landed in WMPS `994d7aa`: five record types, `RECORD_EVENT_TYPES`, `append_record()` with `counts_as_trial` forced False. Resolved by option 1 below — the `AUDIT` entry was deferred to Phase 0.5, keeping Phase 0's zero-code-change guarantee true. Recorded at seq=84. |
 
 ### Sequencing conflict to resolve
 
