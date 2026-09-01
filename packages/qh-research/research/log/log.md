@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 87
+- **Entries:** 88
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (87 entries)
+- **Hash chain:** OK — chain ok (88 entries)
 
 ## Principles
 
@@ -1495,3 +1495,23 @@ DATA. research/data/ is gitignored except XAUUSD_H1.csv, which is tracked becaus
 The Python package 'qhf' is NOT renamed by this event. It is split into four packages at Phase 1 T1; that mapping gets its own PROJECT_RENAME when the split lands. The repo rename and the historical research/artifacts/ mapping are already recorded at seq=85.
 
 _hash_: `8e19240d8e347ea2…` · _prev_: `64c1581f8e1bb0de…`
+
+### seq 87 · 2026-09-01T12:58:33Z · audit · `record:d1-d3-block-reason-correction`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `actual_state`=mt5 and mt5-test healthy on ganymede for ~2 months, `audusd_nzdusd_available`=true, `claimed_dependency`=MT5 terminal unavailable (mt5 / mt5-test containers down), `corrects_entry_seq`=84, `corrects_record_id`=record:phase0-d7-baseline, `d1_d3b_still_blocked_on`=mt5-api lacks symbol_info and copy_ticks_range endpoints, `d3a_lost_collection_window_months`=2, `d3a_started_utc`=2026-09-01T12:50:00+00:00, `execution_host`=ganymede, `host_checked_instead`=830-G5 (laptop)
+
+> Correcting seq=84 and the Phase 0 memo/D9 plan. Both recorded D1 and D3 as BLOCKED with the dependency 'MT5 terminal unavailable'. That dependency was never true. mt5 and mt5-test have been up and healthy on the execution host (ganymede) for approximately two months. The collectors were being run from a laptop that has no MT5 and never had one, and the BLOCKED artifacts they wrote faithfully reported the environment they were run in rather than the environment that exists.
+
+The prior entry is not edited and remains in the chain as written. The finding it recorded (the D7 baseline) is unaffected and still correct; only the stated reason for the D1/D3 block was wrong.
+
+WHAT WAS ACTUALLY BLOCKED, and still is: D1 and D3b need two mt5-api endpoints that do not exist at any commit -- symbol_info and copy_ticks_range (docs/mt5_api_additions.md). That block is real and host-independent. D3a needed nothing: it runs against /api/v1/tick, which has existed throughout, and it is now collecting.
+
+COST: D3a only accumulates from the moment it is switched on. Roughly two months of forward spread data were not collected for no reason other than the check being run in the wrong place.
+
+CONSEQUENCE FOR D4: all nine candidate symbols resolve on the live terminal, AUDUSD and NZDUSD included. D4's effective-N figures (1.55 majors-only, 1.83 with metals) were stamped UPPER BOUNDS specifically because those two were absent from local CSVs. They are available from the broker, so the bound can be tightened -- and the Phase 2b target of effective N >= 4 was set against a bound that may not hold. Re-run D4 once AUD/NZD history is pulled.
+
+GENERALISATION: a stated dependency is a claim, and this one was never checked against the host that runs the system. Any future BLOCKED record must name the host it was evaluated on.
+
+_hash_: `d52b582c214c409d…` · _prev_: `8e19240d8e347ea2…`
