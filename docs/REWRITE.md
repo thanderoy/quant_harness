@@ -640,7 +640,7 @@ conditional.
 | X25 | Indicator mask class | Every indicator declares `WINDOW` or `ACCUMULATOR` at definition; an undeclared indicator fails to register. `masked_rolling` applies NaN or skip-with-index accordingly. |
 | X26 | Account risk policy | Position sizing consults a single account-level risk-policy object; no strategy module may set its own `RISK_PCT`. A strategy overriding the account policy fails the test. Motivated by h1_momentum running 5% against a 2% default (§8). |
 | X27 | DrawdownGuard precondition | A strategy cannot be registered as live-eligible without a DrawdownGuard wired. Absence is a registration failure, not a warning. The only strategy on the schedule was the only one with no guard; nothing detected that. |
-| X28 | *(unallocated)* | Referenced in the §8 ruling alongside X26/X27, but its content was never stated. Left unallocated deliberately rather than invented — see the note below the table. |
+| X28 | Realised risk never exceeds budget | For every (balance, ATR, risk_pct, stop) cell, either the sizer returns 0 lots or `lots x contract_size x stop_distance <= balance x risk_pct`. Run over the full D8 grid. **PROPOSED, not ruled** — see the note below the table. |
 | X29 | Schedule from registry | The Celery beat schedule is generated from `strategies/registry.py`, not hand-maintained. A strategy whose registry verdict is KILLED or SHELVED cannot appear in a generated schedule. Supports a `SHADOW` state that evaluates and logs without ordering. Motivated by a KILLED strategy (seq=65) reaching the live path with nothing connecting verdict to scheduler. |
 | X30 | Entry vs position management | Entry evaluation and position management are separately addressable: disabling entries must not disable management of an open position. Retiring a strategy whose `evaluate()` also drove trailing/breakeven/partial-close would otherwise strand live positions unmanaged. |
 | X31 | MinTRL moments | Skew and kurtosis are measured from the return series under evaluation by default. Passing literal moments requires an explicit override flag, and the flag is stamped into both the artifact and the log entry. Omitting it where literals are used raises. |
@@ -648,10 +648,21 @@ conditional.
 
 ---
 
-**On X28.** The §8 ruling names X26, X27 and X28 together, but only X26 and X27 were ever
-described. Rather than invent a plausible-looking third test, the number is held unallocated and
-the acceptance criterion skips it explicitly. A test that exists only as a number in a checklist
-is worse than a gap, because the checklist then reports coverage that was never specified.
+**On X28 — proposed, and flagged as such.** The §8 ruling names X26, X27 and X28 together, but
+only X26 and X27 were ever described. The gap was held open rather than filled with something
+plausible, because a test that exists only as a number in a checklist reports coverage nobody
+specified.
+
+It is now filled with a **proposal**, clearly marked, on the grounds that the §8 findings leave
+exactly one risk failure uncovered by X26 and X27. X26 makes the *intended* risk single-sourced;
+X27 makes the drawdown guard mandatory. Neither catches the case where the intended risk is
+correct and the **realised** risk is not — which is the actual D8 finding: once lots pin at
+`volume_min`, the clamp stops bounding risk, and 125 of 480 grid cells (26%) breach their own
+budget, worst case 600% of account. That is what halted `h1_momentum`, and nothing in X26 or X27
+would have caught it.
+
+If X28 was meant to be something else, this should be replaced rather than kept alongside it. The
+proposal is recorded here so the gap is visible, not so it is closed by default.
 
 ---
 
@@ -677,7 +688,7 @@ Binary. All must hold.
    the `crest_n_keel` walk-forward artifact respectively.
 3. T9 mask-on divergence is fully attributed. For T9a the signal-set and ATR-normaliser channels
    are reported separately; for T9b every differing trade is traced to a named mask flag.
-4. X1–X32 pass in CI (X15 counted as X15a–d; X28 unallocated and skipped).
+4. X1–X32 pass in CI (X15 counted as X15a–d; X28 is a proposal pending confirmation).
 5. A single strategy module runs unmodified against all seven majors and against XAUUSD, producing
    per-instrument results, with no symbol-specific branching anywhere in the call path.
 6. `docs/hardcoded_audit.md` has every row marked resolved or explicitly deferred with a reason.
