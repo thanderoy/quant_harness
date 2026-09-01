@@ -2,11 +2,11 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Query, status
 import MetaTrader5 as mt5
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
@@ -189,6 +189,72 @@ class TickInfo(BaseModel):
                 "time": "2026-01-13T12:00:00",
             }
         }
+
+
+class SymbolInfo(BaseModel):
+    """Contract specification for one instrument, as reported by MT5.
+
+    Field names mirror the ``symbol_info`` struct so a consumer maps them
+    across without a translation layer inventing chances to transpose
+    something. Values are passed through unmodified: no rounding, no
+    normalisation, and no defaults substituted for missing fields. A defaulted
+    ``tick_value`` is indistinguishable downstream from a measured one, and it
+    is the term the whole position-size calculation rests on.
+    """
+
+    symbol: str = Field(..., description="Trading symbol")
+    contract_size: float = Field(..., description="Units per 1.0 lot")
+    tick_size: float = Field(..., description="Minimum price increment")
+    tick_value: float = Field(..., description="Account-currency value of one tick")
+    volume_min: float = Field(..., description="Minimum lot")
+    volume_max: float = Field(..., description="Maximum lot")
+    volume_step: float = Field(..., description="Lot increment")
+    digits: int = Field(..., description="Price decimal places")
+    currency_profit: str = Field(..., description="Quote currency — P&L denomination")
+    currency_margin: str = Field(..., description="Base/margin currency")
+    trade_stops_level: int = Field(..., description="Minimum stop distance, points")
+    trade_freeze_level: int = Field(..., description="Freeze distance, points")
+    filling_mode: int = Field(..., description="Supported filling modes, bitmask")
+    swap_long: float = Field(..., description="Swap charged on long positions")
+    swap_short: float = Field(..., description="Swap charged on short positions")
+    swap_mode: int = Field(..., description="Swap calculation mode")
+    visible: bool = Field(..., description="Selected in Market Watch")
+    terminal_build: int | None = Field(None, description="Terminal build at capture")
+    as_of_utc: datetime = Field(..., description="Capture time, UTC")
+
+
+class Tick(BaseModel):
+    """One historical tick."""
+
+    time: datetime
+    bid: float
+    ask: float
+    last: float
+    volume: float
+    flags: int
+
+
+class TickHistory(BaseModel):
+    """Result of a tick-history pull.
+
+    ``truncated`` is load-bearing. Broker tick retention varies by symbol and
+    the requested window may simply not exist. Silently narrowing the window,
+    or padding it, converts a data limitation into a false cost estimate that
+    then propagates into every gate downstream. The consumer computes obtained
+    depth from ``returned_from``/``returned_to`` and can only do so if this
+    response reflects the true extent of what was available.
+    """
+
+    symbol: str
+    requested_from: datetime
+    requested_to: datetime
+    returned_from: datetime | None
+    returned_to: datetime | None
+    count: int
+    truncated: bool = Field(
+        ..., description="True if a row cap was hit; the window was not fully returned"
+    )
+    ticks: list[Tick]
 
 
 class TradeRequest(BaseModel):
@@ -642,6 +708,131 @@ class MT5Service:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Unexpected error: {str(e)}",
+            )
+
+    #: Hard cap on ticks returned in one response. A tick range over months is
+    #: large enough to exhaust memory; the cap is surfaced via `truncated` so a
+    #: shortened result is never mistaken for a complete one.
+    MAX_TICKS = 2_000_000
+
+    def _select(self, symbol: str):
+        """Resolve a symbol and ensure it is visible in Market Watch."""
+        info = mt5.symbol_info(symbol)
+        if info is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Symbol {symbol} not found",
+            )
+        if not info.visible:
+            if not mt5.symbol_select(symbol, True):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Failed to enable symbol {symbol}",
+                )
+            info = mt5.symbol_info(symbol)
+        return info
+
+    def get_symbol_info(self, symbol: str) -> SymbolInfo:
+        """Contract specification for one symbol.
+
+        Values are returned exactly as MT5 reports them. Nothing is rounded,
+        normalised, or defaulted — a substituted value here would be
+        indistinguishable downstream from a measured one, and these terms feed
+        every position-size calculation in the system.
+        """
+        self._ensure_connection()
+        try:
+            info = self._select(symbol)
+            build = None
+            terminal = mt5.terminal_info()
+            if terminal is not None:
+                build = getattr(terminal, "build", None)
+
+            return SymbolInfo(
+                symbol=info.name,
+                contract_size=info.trade_contract_size,
+                tick_size=info.trade_tick_size,
+                tick_value=info.trade_tick_value,
+                volume_min=info.volume_min,
+                volume_max=info.volume_max,
+                volume_step=info.volume_step,
+                digits=info.digits,
+                currency_profit=info.currency_profit,
+                currency_margin=info.currency_margin,
+                trade_stops_level=info.trade_stops_level,
+                trade_freeze_level=info.trade_freeze_level,
+                filling_mode=info.filling_mode,
+                swap_long=info.swap_long,
+                swap_short=info.swap_short,
+                swap_mode=info.swap_mode,
+                visible=info.visible,
+                terminal_build=build,
+                as_of_utc=datetime.now(timezone.utc),
+            )
+        except HTTPException:
+            raise
+        except Exception:
+            LOGGER.exception("Unexpected error retrieving symbol_info")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to retrieve symbol_info for {symbol}",
+            )
+
+    def get_ticks(self, symbol: str, date_from: datetime,
+                  date_to: datetime) -> TickHistory:
+        """Tick history over a window, best-effort.
+
+        Returns whatever the broker retains. The window is never silently
+        narrowed and the result is never padded: the caller derives obtained
+        depth from the returned timestamps, which is only meaningful if this
+        reflects the true extent of what was available.
+        """
+        self._ensure_connection()
+        try:
+            self._select(symbol)
+            raw = mt5.copy_ticks_range(
+                symbol, date_from, date_to, mt5.COPY_TICKS_ALL
+            )
+            if raw is None:
+                code, msg = mt5.last_error()
+                LOGGER.error(f"copy_ticks_range failed: {code} - {msg}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to retrieve ticks for {symbol}: {msg}",
+                )
+
+            total = len(raw)
+            truncated = total > self.MAX_TICKS
+            rows = raw[: self.MAX_TICKS] if truncated else raw
+
+            ticks = [
+                Tick(
+                    time=datetime.fromtimestamp(int(r["time"]), tz=timezone.utc),
+                    bid=float(r["bid"]),
+                    ask=float(r["ask"]),
+                    last=float(r["last"]),
+                    volume=float(r["volume"]),
+                    flags=int(r["flags"]),
+                )
+                for r in rows
+            ]
+            return TickHistory(
+                symbol=symbol,
+                requested_from=date_from,
+                requested_to=date_to,
+                returned_from=ticks[0].time if ticks else None,
+                returned_to=ticks[-1].time if ticks else None,
+                count=len(ticks),
+                truncated=truncated,
+                ticks=ticks,
+            )
+        except HTTPException:
+            raise
+        except Exception:
+            LOGGER.exception("Unexpected error retrieving tick history")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to retrieve ticks for {symbol}",
             )
 
     def get_tick(self, symbol: str) -> TickInfo:
@@ -1602,6 +1793,69 @@ async def get_tick(
     loop = asyncio.get_event_loop()
     tick = await loop.run_in_executor(executor, service.get_tick, symbol)
     return tick
+
+
+@app.get(
+    "/api/v1/symbol_info",
+    response_model=SymbolInfo,
+    status_code=status.HTTP_200_OK,
+    tags=["Market Rates/Data"],
+    summary="Get Contract Specification",
+    description=(
+        "Contract terms for one symbol, as MT5 reports them. Required by the "
+        "Phase 0 D1 collector. Values are passed through unmodified — nothing "
+        "is rounded, normalised, or defaulted."
+    ),
+)
+async def get_symbol_info(
+    symbol: str = "XAUUSD",
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """Contract specification for a symbol.
+
+    ``filling_mode`` is a bitmask; bit 2 is ``SYMBOL_FILLING_IOC``. The
+    codebase-wide IOC assumption rests on one symbol on one broker, so D1
+    checks it per instrument rather than inheriting it.
+    """
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(executor, service.get_symbol_info, symbol)
+
+
+@app.get(
+    "/api/v1/ticks",
+    response_model=TickHistory,
+    status_code=status.HTTP_200_OK,
+    tags=["Market Rates/Data"],
+    summary="Get Tick History",
+    description=(
+        "Tick history over a window, best-effort. Required by the Phase 0 D3b "
+        "collector. Returns what the broker retains; the window is never "
+        "silently narrowed and the result is never padded. If a row cap is "
+        "hit, `truncated` is true."
+    ),
+)
+async def get_ticks(
+    symbol: str = "XAUUSD",
+    date_from: datetime = Query(..., description="Window start, ISO-8601 UTC"),
+    date_to: datetime = Query(..., description="Window end, ISO-8601 UTC"),
+    service: MT5Service = Depends(get_mt5_service),
+):
+    """Tick history for a symbol over ``[date_from, date_to]``.
+
+    Broker tick retention varies by symbol and the requested window may not
+    exist. The caller derives obtained depth from the returned timestamps, so
+    this must reflect the true extent of what was available — a quietly
+    clamped window turns a data limitation into a false cost estimate.
+    """
+    if date_to <= date_from:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_to must be after date_from",
+        )
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        executor, service.get_ticks, symbol, date_from, date_to
+    )
 
 
 # Orders Endpoint
