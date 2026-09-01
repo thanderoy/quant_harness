@@ -1,6 +1,6 @@
 # Phase 0 memo — universe diagnostic
 
-**Date:** 2026-08-31 · **Repos:** WMPS `3db869a` (dirty), `qhf_harness` `cb48e00`
+**Date:** 2026-08-31 · **Repos:** WMPS `3db869a` (dirty), `quant_harness` `cb48e00`
 **Artifact:** `phase0/phase0_universe_20260831.json`
 **Stamps:** `PARTIAL_UNIVERSE`, `PROVISIONAL_SPECS`
 
@@ -395,7 +395,7 @@ protect.
 
 Self-containment: the chain is self-contained in substance, with three exceptions —
 
-1. Two references into `qhf_harness`, which is itself being absorbed; they resolve through the
+1. Two references into `quant_harness`, which is itself being absorbed; they resolve through the
    `PROJECT_RENAME` mapping.
 2. **A prior rename already went unrecorded.** Three artifacts are logged at
    `research/artifacts/…` but live at `research/pre/artifacts/…`; the pre/post reorganisation

@@ -4,7 +4,7 @@
 across the two repositories in scope, with its generalised replacement.
 
 - **Scope:** `wine-mt5-python-setup` (WMPS) at `3db869a` (working tree, dirty) and
-  `qhf_harness` at `cb48e00`.
+  `quant_harness` at `cb48e00`.
 - **Produced:** 2026-08-31. No production code was changed.
 - **Package naming:** target packages are `resources`, `strategies`, `research`, `platform`
   (distributions `qh-resources` / `qh-strategies` / `qh-research` / `qh-platform`), per the
@@ -49,7 +49,7 @@ in the spec is a fact about code, and the fact is that the T9b fixture exercises
 
 ## FINDING 1 — the two `sizer.py` copies are numerically identical
 
-`WMPS backend/trading/app/quant/strategies/sizer.py` and `qhf_harness qhf/engines/sizer.py`
+`WMPS backend/trading/app/quant/strategies/sizer.py` and `quant_harness qhf/engines/sizer.py`
 were compared with docstrings stripped via AST normalisation. The arithmetic is identical:
 same `effective_atr = max(atr_value, safety_floor_atr)`, same `risk_amount`, same
 `sl_distance`, same `math.floor` step-down, same clamp.

@@ -64,9 +64,9 @@ Every string in all 82 entries (pre-halt) was scanned for file-like references (
 | Reference | Resolves to |
 |---|---|
 | `qhf/data/csv_loader.py` | the harness repo → becomes `resources` |
-| `qhf_harness/examples/run_cnk_sweep_oos.py` | the harness repo → `research` examples |
+| `quant_harness/examples/run_cnk_sweep_oos.py` | the harness repo → `research` examples |
 
-Both point into `qhf_harness`, which is itself being absorbed. They resolve through the
+Both point into `quant_harness`, which is itself being absorbed. They resolve through the
 `PROJECT_RENAME` module-path mapping, which per the naming ruling must be a **mapping**, not a
 single old→new namespace pair, since `qhf.*` fans out across four packages.
 

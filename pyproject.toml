@@ -1,7 +1,7 @@
 [project]
-name = "qhf-harness"
+name = "quant-harness"
 version = "0.1.0"
-description = "Add your description here"
+description = "quant_harness — symbol-agnostic research and execution harness"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
