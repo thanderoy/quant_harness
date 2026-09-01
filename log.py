@@ -72,8 +72,42 @@ RENDERED_FILENAME: str = "log.md"
 
 
 class EventType(str, Enum):
+    """What kind of event a line records.
+
+    Two families. ``HYPOTHESIS``/``UPDATE`` are *research* events, attached to
+    a hypothesis and subject to trial accounting. The rest are *record* events
+    (see ``RECORD_EVENT_TYPES``): facts about the log or the repository that
+    governs it, appended via ``append_record()``. Record events never count as
+    trials — recording that the schema changed is not a new hypothesis test.
+
+    Record events exist so that structural changes live inside the chain they
+    govern. A repository migration or a schema extension that is only visible
+    in git history is exactly the kind of unrecorded change that already broke
+    three logged artifact paths (the ``research/artifacts/`` ->
+    ``research/{pre,post}/artifacts/`` move, made without an event).
+    """
+
+    # research events — attached to a hypothesis
     HYPOTHESIS = "hypothesis"
     UPDATE = "update"
+
+    # record events — facts about the log or its repository
+    AUDIT = "audit"                      # a verified baseline of the chain itself
+    REPO_MIGRATION = "repo_migration"    # the log moved repository or path
+    PROJECT_RENAME = "project_rename"    # module/import paths remapped
+    SCHEMA_MIGRATION = "schema_migration"  # this enum, or LogEntry, changed
+    PARITY_FIXTURE = "parity_fixture"    # a golden fixture pinned or reproduced
+
+
+#: Event types that describe the log/repository rather than a hypothesis.
+#: These are appended with :func:`append_record` and never count as trials.
+RECORD_EVENT_TYPES: frozenset[EventType] = frozenset({
+    EventType.AUDIT,
+    EventType.REPO_MIGRATION,
+    EventType.PROJECT_RENAME,
+    EventType.SCHEMA_MIGRATION,
+    EventType.PARITY_FIXTURE,
+})
 
 
 class Stage(str, Enum):
@@ -337,6 +371,57 @@ def update_hypothesis(
     return entry
 
 
+def append_record(
+    event_type: EventType,
+    *,
+    record_id: str,
+    title: str,
+    note: str = "",
+    metrics: Optional[dict] = None,
+    log_dir: Path = DEFAULT_LOG_DIR,
+) -> LogEntry:
+    """Append a record event — a fact about the log or the repo that holds it.
+
+    Unlike :func:`update_hypothesis` this requires no prior HYPOTHESIS event,
+    because a repository migration or a schema change is not about a
+    hypothesis. ``record_id`` occupies the ``hypothesis_id`` slot so the line
+    stays self-describing and the existing chain format is unchanged; use a
+    namespaced value such as ``"record:phase0-d7-baseline"``.
+
+    ``counts_as_trial`` is forced False and is not a parameter. Recording that
+    the schema changed is not a new hypothesis test, and allowing it to be set
+    would let structural bookkeeping inflate the DSR haircut denominator.
+
+    Raises
+    ------
+    ValueError
+        If ``event_type`` is not a record type — HYPOTHESIS and UPDATE have
+        their own entry points and their own trial semantics.
+    """
+    if event_type not in RECORD_EVENT_TYPES:
+        raise ValueError(
+            f"{event_type.value!r} is not a record event type. "
+            f"Use register_hypothesis() or update_hypothesis(). "
+            f"Record types: {sorted(e.value for e in RECORD_EVENT_TYPES)}"
+        )
+
+    entries = _read_all(log_dir)
+    seq, prev_hash = _next_seq_and_prev_hash(entries)
+    entry = LogEntry(
+        seq=seq, timestamp=_now_iso(), prev_hash=prev_hash, entry_hash="",
+        event_type=event_type, hypothesis_id=record_id,
+        title=title, mechanism="", market="", timeframe="", family="",
+        edge_gate_role=EdgeGateRole.UNSET, predictions=[],
+        stage=Stage.HYPOTHESIS, verdict=Verdict.OPEN,
+        metrics=dict(metrics) if metrics else {},
+        note=note,
+        counts_as_trial=False,
+    )
+    entry.entry_hash = _hash(_entry_to_payload(entry))
+    _append(log_dir, entry)
+    return entry
+
+
 def history(hypothesis_id: str, log_dir: Path = DEFAULT_LOG_DIR) -> list[LogEntry]:
     """All events for one hypothesis, in append order."""
     return [e for e in _read_all(log_dir) if e.hypothesis_id == hypothesis_id]
@@ -351,6 +436,8 @@ def current_state(log_dir: Path = DEFAULT_LOG_DIR) -> dict[str, LogEntry]:
     """Latest merged state of every hypothesis."""
     by_id: dict[str, list[LogEntry]] = {}
     for e in _read_all(log_dir):
+        if e.event_type in RECORD_EVENT_TYPES:
+            continue  # record events describe the log, not a hypothesis
         by_id.setdefault(e.hypothesis_id, []).append(e)
     return {hid: _merge(events) for hid, events in by_id.items()}
 
