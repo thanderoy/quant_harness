@@ -1,0 +1,102 @@
+{
+  "hypothesis_id": "regime_align_h1",
+  "seq": 37,
+  "prediction": "P1_entry_edge",
+  "run_utc": "2026-07-26T20:39:32.632598+00:00",
+  "git_sha": "3db869a71a8563fe5bcd4eaa97da7fb961d682e9",
+  "data": {
+    "path": "research/data/XAUUSD_H1.csv",
+    "bars": 124887,
+    "start": "2004-06-11T07:00:00+00:00",
+    "end": "2025-12-31T23:00:00+00:00"
+  },
+  "frozen_test": {
+    "horizons": [
+      20,
+      50,
+      100
+    ],
+    "e_ratio_threshold": 1.15,
+    "p_value_threshold": 0.05,
+    "n_permutations": 1000,
+    "atr_period": 14,
+    "random_seed": 20260726
+  },
+  "signal": {
+    "n_entries": 1628,
+    "aligned_bars": 7026,
+    "aligned_pct": 5.626,
+    "bias_eligible_bars": 69288
+  },
+  "decisive_null_bias_eligible": [
+    {
+      "horizon": 20,
+      "n_signals": 1628,
+      "e_ratio": 1.1568558266133093,
+      "p_value": 0.046,
+      "null_mean": 1.0828120852452563,
+      "null_p95": 1.1548109404959725,
+      "baseline_e_ratio": 1.101019318675054,
+      "passes_e_ratio": true,
+      "passes_p_value": true
+    },
+    {
+      "horizon": 50,
+      "n_signals": 1628,
+      "e_ratio": 1.160887142583467,
+      "p_value": 0.357,
+      "null_mean": 1.1438344616281164,
+      "null_p95": 1.216045126020361,
+      "baseline_e_ratio": 1.1991829330926342,
+      "passes_e_ratio": true,
+      "passes_p_value": false
+    },
+    {
+      "horizon": 100,
+      "n_signals": 1626,
+      "e_ratio": 1.2558623731061898,
+      "p_value": 0.302,
+      "null_mean": 1.2305648413267114,
+      "null_p95": 1.3114555781690405,
+      "baseline_e_ratio": 1.2662732970455663,
+      "passes_e_ratio": true,
+      "passes_p_value": false
+    }
+  ],
+  "diagnostic_null_unconditional": [
+    {
+      "horizon": 20,
+      "n_signals": 1628,
+      "e_ratio": 1.1568558266133093,
+      "p_value": 0.0,
+      "null_mean": 1.0183495878836955,
+      "null_p95": 1.0829066309447897,
+      "baseline_e_ratio": 1.0396140668448914,
+      "passes_e_ratio": true,
+      "passes_p_value": true
+    },
+    {
+      "horizon": 50,
+      "n_signals": 1628,
+      "e_ratio": 1.160887142583467,
+      "p_value": 0.007,
+      "null_mean": 1.0607957086738484,
+      "null_p95": 1.127687297913445,
+      "baseline_e_ratio": 1.0962565820192456,
+      "passes_e_ratio": true,
+      "passes_p_value": true
+    },
+    {
+      "horizon": 100,
+      "n_signals": 1626,
+      "e_ratio": 1.2558623731061898,
+      "p_value": 0.002,
+      "null_mean": 1.1178415138537576,
+      "null_p95": 1.1910555819631075,
+      "baseline_e_ratio": 1.1616671204790812,
+      "passes_e_ratio": true,
+      "passes_p_value": true
+    }
+  ],
+  "verdict": "SHELVE_K2_DRIFT_ONLY"
+}

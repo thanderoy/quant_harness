@@ -1,0 +1,161 @@
+{
+  "timeframe": "H1",
+  "horizon": 12,
+  "features": [
+    "intraday_ret",
+    "ret_12",
+    "dist_pdl",
+    "dist_pdh",
+    "dist_vwap"
+  ],
+  "cost_round_trip": 0.29000000000000004,
+  "spearman_corr": {
+    "intraday_ret": {
+      "intraday_ret": 1.0,
+      "ret_12": 0.773,
+      "dist_pdl": 0.6937,
+      "dist_pdh": 0.6982,
+      "dist_vwap": 0.8398
+    },
+    "ret_12": {
+      "intraday_ret": 0.773,
+      "ret_12": 1.0,
+      "dist_pdl": 0.6767,
+      "dist_pdh": 0.6908,
+      "dist_vwap": 0.7431
+    },
+    "dist_pdl": {
+      "intraday_ret": 0.6937,
+      "ret_12": 0.6767,
+      "dist_pdl": 1.0,
+      "dist_pdh": 0.6306,
+      "dist_vwap": 0.5945
+    },
+    "dist_pdh": {
+      "intraday_ret": 0.6982,
+      "ret_12": 0.6908,
+      "dist_pdl": 0.6306,
+      "dist_pdh": 1.0,
+      "dist_vwap": 0.5965
+    },
+    "dist_vwap": {
+      "intraday_ret": 0.8398,
+      "ret_12": 0.7431,
+      "dist_pdl": 0.5945,
+      "dist_pdh": 0.5965,
+      "dist_vwap": 1.0
+    }
+  },
+  "individual": {
+    "intraday_ret": {
+      "n": 124874,
+      "spread_usd_per_oz": 1.4296933055733514,
+      "net_usd_per_oz": 1.1396933055733514,
+      "nw_t": 4.347615959361131,
+      "monotonicity": 0.7333333333333332,
+      "pays_costs": true
+    },
+    "ret_12": {
+      "n": 124862,
+      "spread_usd_per_oz": 1.3475894930727956,
+      "net_usd_per_oz": 1.0575894930727956,
+      "nw_t": 4.115533028478361,
+      "monotonicity": 0.9636363636363635,
+      "pays_costs": true
+    },
+    "dist_pdl": {
+      "n": 124862,
+      "spread_usd_per_oz": 1.049489869464242,
+      "net_usd_per_oz": 0.759489869464242,
+      "nw_t": 3.0374715023641428,
+      "monotonicity": 0.8303030303030302,
+      "pays_costs": true
+    },
+    "dist_pdh": {
+      "n": 124862,
+      "spread_usd_per_oz": 0.9452838952510618,
+      "net_usd_per_oz": 0.6552838952510618,
+      "nw_t": 2.586053003627952,
+      "monotonicity": 0.9272727272727272,
+      "pays_costs": true
+    },
+    "dist_vwap": {
+      "n": 124874,
+      "spread_usd_per_oz": 0.6830509288917364,
+      "net_usd_per_oz": 0.3930509288917363,
+      "nw_t": 2.406199497343493,
+      "monotonicity": 0.8060606060606059,
+      "pays_costs": true
+    }
+  },
+  "composite_all": {
+    "n": 124874,
+    "spread_usd_per_oz": 1.1470916079436257,
+    "net_usd_per_oz": 0.8570916079436257,
+    "nw_t": 3.5492787922687525,
+    "monotonicity": 0.8787878787878788,
+    "pays_costs": true
+  },
+  "composite_momentum": {
+    "n": 124874,
+    "spread_usd_per_oz": 1.431355701473415,
+    "net_usd_per_oz": 1.141355701473415,
+    "nw_t": 4.41902042611773,
+    "monotonicity": 0.7939393939393938,
+    "pays_costs": true
+  },
+  "conditioned": {
+    "atr_ratio": {
+      "low": {
+        "n": 41598,
+        "spread_usd_per_oz": 2.8305432692307697,
+        "net_usd_per_oz": 2.5405432692307697,
+        "nw_t": 3.2164255558859622,
+        "monotonicity": 0.9757575757575757,
+        "pays_costs": true
+      },
+      "mid": {
+        "n": 41595,
+        "spread_usd_per_oz": 1.2885841346153843,
+        "net_usd_per_oz": 0.9985841346153843,
+        "nw_t": 2.5962737339951767,
+        "monotonicity": 0.35757575757575755,
+        "pays_costs": true
+      },
+      "high": {
+        "n": 41586,
+        "spread_usd_per_oz": 1.2556407790334205,
+        "net_usd_per_oz": 0.9656407790334205,
+        "nw_t": 2.249562073878603,
+        "monotonicity": 0.6727272727272726,
+        "pays_costs": true
+      }
+    },
+    "vol_z": {
+      "low": {
+        "n": 41595,
+        "spread_usd_per_oz": 1.2201706730769237,
+        "net_usd_per_oz": 0.9301706730769237,
+        "nw_t": 3.5525583695151917,
+        "monotonicity": 0.406060606060606,
+        "pays_costs": true
+      },
+      "mid": {
+        "n": 41593,
+        "spread_usd_per_oz": 1.561036057692311,
+        "net_usd_per_oz": 1.271036057692311,
+        "nw_t": 3.7517122188446823,
+        "monotonicity": 0.7454545454545454,
+        "pays_costs": true
+      },
+      "high": {
+        "n": 41591,
+        "spread_usd_per_oz": 1.508258534549724,
+        "net_usd_per_oz": 1.2182585345497239,
+        "nw_t": 2.537245705510895,
+        "monotonicity": 0.8787878787878788,
+        "pays_costs": true
+      }
+    }
+  }
+}

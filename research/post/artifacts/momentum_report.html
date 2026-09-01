@@ -1,0 +1,383 @@
+<title>H1 Intraday Momentum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground:#F5F7F9; --panel:#FFFFFF; --ink:#1B1F26; --ink-soft:#525C69;
+  --ink-faint:#7C8794; --rule:#DDE2E8; --rule-soft:#EAEEF2;
+  --accent:#0E5A63; --accent-soft:#E2EEEF;
+  --pos:#2E7D57; --neg:#B03A26; --warn:#8F6A16;
+  --pos-bg:#E4F0EA; --neg-bg:#F8E5E1;
+  --shadow:0 1px 2px rgba(20,30,40,.06), 0 8px 24px -16px rgba(20,30,40,.28);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#121519; --panel:#181C22; --ink:#E4E8ED; --ink-soft:#A0AAB6;
+    --ink-faint:#78838F; --rule:#282E36; --rule-soft:#20252C;
+    --accent:#5FB3BC; --accent-soft:#163034;
+    --pos:#5FB98B; --neg:#E0765E; --warn:#C79A3C;
+    --pos-bg:#152A21; --neg-bg:#2C1A16;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:#121519; --panel:#181C22; --ink:#E4E8ED; --ink-soft:#A0AAB6;
+  --ink-faint:#78838F; --rule:#282E36; --rule-soft:#20252C;
+  --accent:#5FB3BC; --accent-soft:#163034;
+  --pos:#5FB98B; --neg:#E0765E; --warn:#C79A3C;
+  --pos-bg:#152A21; --neg-bg:#2C1A16;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+}
+*,*::before,*::after { box-sizing:border-box; }
+body {
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.62; -webkit-font-smoothing:antialiased;
+}
+.wrap { max-width:1080px; margin:0 auto; padding:clamp(28px,5vw,72px) clamp(18px,4vw,40px) 96px; }
+.prose { max-width:68ch; }
+h1,h2,h3 { font-family:Newsreader,Georgia,serif; font-weight:600; text-wrap:balance; margin:0; letter-spacing:-.012em; }
+h1 { font-size:clamp(2.1rem,4.6vw,3.15rem); line-height:1.08; }
+h2 { font-size:clamp(1.4rem,2.5vw,1.85rem); line-height:1.2; }
+h3 { font-size:1.02rem; font-family:"IBM Plex Sans",sans-serif; font-weight:600; letter-spacing:0; }
+p { margin:0 0 1.05em; }
+a { color:var(--accent); }
+strong { font-weight:600; }
+.eyebrow {
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.7rem;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+  margin:0 0 14px;
+}
+header.hero { border-bottom:2px solid var(--ink); padding-bottom:26px; margin-bottom:14px; }
+.lede { font-size:1.13rem; color:var(--ink-soft); max-width:62ch; margin-top:18px; }
+.meta {
+  display:flex; flex-wrap:wrap; gap:6px 26px; margin-top:22px;
+  font-family:"IBM Plex Mono",monospace; font-size:.74rem; color:var(--ink-faint);
+}
+.meta b { color:var(--ink-soft); font-weight:500; }
+section { margin-top:56px; scroll-margin-top:20px; }
+section > h2 { margin-bottom:6px; }
+section > .sub {
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-faint); margin:0 0 22px;
+}
+.callout {
+  background:var(--panel); border:1px solid var(--rule); border-left:3px solid var(--accent);
+  border-radius:3px; padding:22px 26px; box-shadow:var(--shadow); margin:26px 0;
+}
+.callout p:last-child { margin-bottom:0; }
+.callout.warn { border-left-color:var(--warn); }
+/* verdict rows */
+.kgrid { display:flex; flex-direction:column; gap:1px; background:var(--rule);
+  border:1px solid var(--rule); border-radius:3px; overflow:hidden; box-shadow:var(--shadow); }
+.krow { display:grid; grid-template-columns:56px 1fr auto; gap:18px; align-items:start;
+  background:var(--panel); padding:18px 22px; }
+.krow .kid { font-family:"IBM Plex Mono",monospace; font-size:.9rem; font-weight:600;
+  color:var(--ink-faint); padding-top:1px; }
+.krow.pass .kid { color:var(--pos); }
+.krow.fail .kid { color:var(--neg); }
+.krow h3 { margin:0 0 5px; }
+.krow p { margin:0; font-size:.9rem; color:var(--ink-soft); }
+.pill {
+  display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:.68rem;
+  font-weight:600; letter-spacing:.07em; text-transform:uppercase;
+  padding:3px 9px; border-radius:2px; white-space:nowrap;
+}
+.pill.pass { background:var(--pos-bg); color:var(--pos); }
+.pill.fail { background:var(--neg-bg); color:var(--neg); }
+/* tables */
+.scroll { overflow-x:auto; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); box-shadow:var(--shadow); margin:20px 0 8px; }
+table { border-collapse:collapse; width:100%; font-size:.845rem; }
+thead th {
+  position:sticky; top:0; background:var(--panel); text-align:left;
+  font-family:"IBM Plex Mono",monospace; font-size:.68rem; font-weight:600;
+  letter-spacing:.07em; text-transform:uppercase; color:var(--ink-faint);
+  padding:12px 14px; border-bottom:1px solid var(--rule); white-space:nowrap;
+}
+tbody td { padding:9px 14px; border-bottom:1px solid var(--rule-soft); white-space:nowrap; }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover td { background:var(--accent-soft); }
+.num { text-align:right; font-family:"IBM Plex Mono",monospace;
+  font-variant-numeric:tabular-nums; }
+th.num { text-align:right; }
+.tf { font-family:"IBM Plex Mono",monospace; font-weight:600; color:var(--accent); }
+.cfg { font-family:"IBM Plex Mono",monospace; font-size:.79rem; color:var(--ink-soft); }
+.muted { color:var(--ink-faint); }
+.pos { color:var(--pos); } .neg { color:var(--neg); }
+td.hl { font-weight:600; color:var(--ink); background:var(--accent-soft); }
+.barcell { position:relative; }
+.bar { display:inline-block; width:52px; height:7px; margin-left:9px;
+  background:var(--rule-soft); border-radius:1px; vertical-align:middle; position:relative; }
+.bt { position:absolute; top:0; bottom:0; left:0; border-radius:1px; }
+.bt.pos { background:var(--pos); } .bt.neg { background:var(--neg); }
+.note { font-size:.82rem; color:var(--ink-faint); max-width:74ch; margin:10px 0 0; }
+.note code, code { font-family:"IBM Plex Mono",monospace; font-size:.86em;
+  background:var(--rule-soft); padding:1px 5px; border-radius:2px; }
+pre { background:var(--panel); border:1px solid var(--rule); border-radius:3px;
+  padding:16px 18px; overflow-x:auto; font-family:"IBM Plex Mono",monospace;
+  font-size:.8rem; line-height:1.65; box-shadow:var(--shadow); }
+pre code { background:none; padding:0; }
+ul { padding-left:1.15em; margin:0 0 1.05em; }
+li { margin-bottom:.5em; }
+footer { margin-top:72px; padding-top:22px; border-top:1px solid var(--rule);
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; color:var(--ink-faint); }
+@media (max-width:620px) {
+  .krow { grid-template-columns:44px 1fr; }
+  .krow .kstate { grid-column:2; }
+}
+@media (prefers-reduced-motion:reduce) { * { animation:none!important; transition:none!important; } }
+</style>
+<div class="wrap">
+<header class="hero">
+  <p class="eyebrow">Research log seq 57&ndash;62 &middot; XAUUSD H1</p>
+  <h1>A real effect we cannot reliably find</h1>
+  <p class="lede">An H1 intraday-momentum rule survived nested walk-forward selection
+  and 2&ndash;3&times; cost stress. The Deflated Sharpe gate rejected it &mdash; and
+  that gate turned out to be measuring the wrong thing. A purpose-built permutation
+  null says the effect is real at p=0.010, and that the procedure which would have
+  found it is not.</p>
+  <div class="meta">
+    <span><b>Instrument</b> XAUUSD</span>
+    <span><b>Timeframe</b> H1</span>
+    <span><b>Folds</b> 17 nested</span>
+    <span><b>OOS trades</b> 1,132</span>
+    <span><b>Permutation null</b> p=0.010 fixed / 0.105 nested</span>
+    <span><b>Verdict</b> Do not promote</span>
+  </div>
+</header>
+
+<section>
+  <h2>The rule</h2>
+  <p class="sub">Frozen before the walk-forward ran</p>
+  <div class="prose">
+  <p>The simplest expression of the effect the feature screen surfaced. No stop, no
+  target, no sizing logic, no re-entry &mdash; deliberately, so that anything the rule
+  earns is attributable to the entry signal rather than to an exit that happens to
+  be well tuned.</p>
+  </div>
+  <pre><code>feature       intraday_ret  (return from the session's first bar)
+entry         long when the causal expanding percentile of the feature >= 0.90
+hold          12 bars, then exit at market
+direction     long only
+stop / target none
+sizing        constant
+costs         $0.29/oz round trip (spread $0.22 + commission $0.07)</code></pre>
+  <p class="note">The percentile is computed on an expanding window from history
+  available at the bar, not with <code>pd.qcut</code> over the full sample. That
+  distinction is worth about 0.15 Sharpe and is the difference between a causal
+  rule and a mildly lookahead one.</p>
+</section>
+
+<section>
+  <h2>Where the feature came from</h2>
+  <p class="sub">264 screen tests &rarr; 186 FDR-significant &rarr; 22 that pay costs</p>
+  <div class="prose">
+  <p>A broad screen tested candidate features for forward predictive content across
+  M5, M15 and H1. Statistical significance was abundant and almost meaningless:
+  186 of 264 tests survived Benjamini&ndash;Hochberg FDR control. Only 22 produced a
+  top-versus-bottom decile spread large enough to pay the $0.29/oz round trip,
+  and 21 of those 22 were on H1. M5 produced <em>none</em> &mdash; which is the
+  direct answer to the scalping preference: at this instrument's cost structure,
+  the shorter the timeframe, the more completely costs eat the signal.</p>
+  </div>
+  <div class="scroll"><table><thead><tr><th>Feature</th><th class="num">Bars</th><th class="num">Gross $/oz</th><th class="num">Net of cost $/oz</th><th class="num">NW t</th><th class="num">Decile monotonicity</th></tr></thead><tbody><tr><td class="tf">intraday_ret</td><td class="num">124,874</td><td class="num">1.430</td><td class="num barcell pos">+1.140<span class="bar"><span class="bt pos" style="width:44%"></span></span></td><td class="num">4.35</td><td class="num">+0.73</td></tr><tr><td class="tf">ret_12</td><td class="num">124,862</td><td class="num">1.348</td><td class="num barcell pos">+1.058<span class="bar"><span class="bt pos" style="width:41%"></span></span></td><td class="num">4.12</td><td class="num">+0.96</td></tr><tr><td class="tf">dist_pdl</td><td class="num">124,862</td><td class="num">1.049</td><td class="num barcell pos">+0.759<span class="bar"><span class="bt pos" style="width:29%"></span></span></td><td class="num">3.04</td><td class="num">+0.83</td></tr><tr><td class="tf">dist_pdh</td><td class="num">124,862</td><td class="num">0.945</td><td class="num barcell pos">+0.655<span class="bar"><span class="bt pos" style="width:25%"></span></span></td><td class="num">2.59</td><td class="num">+0.93</td></tr><tr><td class="tf">dist_vwap</td><td class="num">124,874</td><td class="num">0.683</td><td class="num barcell pos">+0.393<span class="bar"><span class="bt pos" style="width:15%"></span></span></td><td class="num">2.41</td><td class="num">+0.81</td></tr><tr><td class="cfg">composite (momentum only)</td><td class="num">124,874</td><td class="num">1.431</td><td class="num hl">+1.141</td><td class="num">4.42</td><td class="num">+0.79</td></tr><tr><td class="cfg">composite (all five)</td><td class="num">124,874</td><td class="num">1.147</td><td class="num hl">+0.857</td><td class="num">3.55</td><td class="num">+0.88</td></tr></tbody></table></div>
+  <p class="note">Spreads are top-decile minus bottom-decile forward return over
+  12 bars, in dollars per ounce. Newey&ndash;West t-statistics correct for the
+  overlapping windows. The five surviving features are highly collinear
+  (Spearman 0.59&ndash;0.84), so they are variations on one effect, not five
+  independent edges &mdash; which is why the composite adds nothing over
+  <code>intraday_ret</code> alone.</p>
+</section>
+
+<section>
+  <h2>Gate results</h2>
+  <p class="sub">Five pre-registered checks, plus the Deflated Sharpe threshold</p>
+  <div class="kgrid"><div class="krow pass"><div class="kid">M1</div><div><h3>Out-of-sample folds are positive</h3><p>Mean OOS Sharpe +0.548, median +0.563, 15/17 folds above zero.</p></div><div class="kstate"><span class="pill pass">Pass</span></div></div><div class="krow pass"><div class="kid">M2</div><div><h3>The selection beats its own candidate pool</h3><p>Selected config beat the fold pool median in 13/17 folds (sign p=0.0245, Wilcoxon p=0.0056). Mean margin +0.456.</p></div><div class="kstate"><span class="pill pass">Pass</span></div></div><div class="krow pass"><div class="kid">M3</div><div><h3>Selection lookahead is small</h3><p>Fixed-parameter run scores +0.725 against the nested +0.548 — leakage of 0.177 Sharpe, versus 0.7-0.8 measured at seq=49.</p></div><div class="kstate"><span class="pill pass">Pass</span></div></div><div class="krow pass"><div class="kid">M4</div><div><h3>The chosen horizon is stable across folds</h3><p>Horizon h=12 was selected in 17/17 folds. Feature choice concentrates on the momentum family (12/17 picks).</p></div><div class="kstate"><span class="pill pass">Pass</span></div></div><div class="krow pass"><div class="kid">M5</div><div><h3>The edge survives realistic costs</h3><p>At modelled cost with swap the unfiltered rule holds +0.626; breakeven sits near 3-4x cost. Cost has genuine headroom.</p></div><div class="kstate"><span class="pill pass">Pass</span></div></div><div class="krow fail"><div class="kid">DSR</div><div><h3>Deflated Sharpe clears the pre-registered threshold</h3><p>Per-observation Sharpe 0.0763 over 1132 OOS trades gives DSR 0.514 at N=126 and 0.412 at N=276, against a 0.95 threshold.</p></div><div class="kstate"><span class="pill fail">Fail</span></div></div></div>
+</section>
+
+<section>
+  <h2>Nested walk-forward, fold by fold</h2>
+  <p class="sub">Feature and horizon re-selected inside every training window</p>
+  <div class="prose">
+  <p>Each fold trains on four years, selects a feature/horizon/filter combination
+  from the candidate pool using training data only, then trades that choice forward
+  for one year. The pool median column is the honest control: it shows what a
+  randomly chosen candidate from the same pool would have earned in the same window.</p>
+  </div>
+  <div class="scroll"><table><thead><tr><th class="num">#</th><th>Test window</th><th>Feature picked</th><th class="num">h</th><th class="num">Low-vol filter</th><th class="num">Train SR</th><th class="num">OOS SR</th><th class="num">Trades</th><th class="num">Pool median</th></tr></thead><tbody><tr><td class="num muted">1</td><td class="cfg">2008-06-10 &rarr; 2009-06-10</td><td class="tf">intraday_ret</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+1.67</td><td class="num barcell pos">+1.758<span class="bar"><span class="bt pos" style="width:98%"></span></span></td><td class="num">16</td><td class="num pos">+0.317</td></tr><tr><td class="num muted">2</td><td class="cfg">2009-06-10 &rarr; 2010-06-10</td><td class="tf">intraday_ret</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+1.79</td><td class="num barcell pos">+0.480<span class="bar"><span class="bt pos" style="width:27%"></span></span></td><td class="num">26</td><td class="num pos">+0.441</td></tr><tr><td class="num muted">3</td><td class="cfg">2010-06-10 &rarr; 2011-06-10</td><td class="tf">intraday_ret</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+1.84</td><td class="num barcell pos">+0.137<span class="bar"><span class="bt pos" style="width:8%"></span></span></td><td class="num">22</td><td class="num neg">-0.435</td></tr><tr><td class="num muted">4</td><td class="cfg">2011-06-10 &rarr; 2012-06-09</td><td class="tf">lower_wick</td><td class="num">12</td><td class="num">no</td><td class="num muted">+1.53</td><td class="num barcell pos">+0.929<span class="bar"><span class="bt pos" style="width:52%"></span></span></td><td class="num">159</td><td class="num pos">+0.019</td></tr><tr><td class="num muted">5</td><td class="cfg">2012-06-09 &rarr; 2013-06-09</td><td class="tf">lower_wick</td><td class="num">12</td><td class="num">no</td><td class="num muted">+1.60</td><td class="num barcell neg">-1.186<span class="bar"><span class="bt neg" style="width:66%"></span></span></td><td class="num">177</td><td class="num neg">-0.929</td></tr><tr><td class="num muted">6</td><td class="cfg">2013-06-09 &rarr; 2014-06-09</td><td class="tf">ret_12</td><td class="num">12</td><td class="num">no</td><td class="num muted">+1.12</td><td class="num barcell pos">+0.563<span class="bar"><span class="bt pos" style="width:31%"></span></span></td><td class="num">60</td><td class="num neg">-0.265</td></tr><tr><td class="num muted">7</td><td class="cfg">2014-06-09 &rarr; 2015-06-09</td><td class="tf">intraday_ret</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+0.98</td><td class="num barcell pos">+0.147<span class="bar"><span class="bt pos" style="width:8%"></span></span></td><td class="num">16</td><td class="num neg">-0.339</td></tr><tr><td class="num muted">8</td><td class="cfg">2015-06-09 &rarr; 2016-06-08</td><td class="tf">intraday_ret</td><td class="num">12</td><td class="num">no</td><td class="num muted">+0.84</td><td class="num barcell pos">+1.375<span class="bar"><span class="bt pos" style="width:76%"></span></span></td><td class="num">76</td><td class="num pos">+0.829</td></tr><tr><td class="num muted">9</td><td class="cfg">2016-06-08 &rarr; 2017-06-08</td><td class="tf">dist_vwap</td><td class="num">12</td><td class="num">no</td><td class="num muted">+0.95</td><td class="num barcell pos">+0.198<span class="bar"><span class="bt pos" style="width:11%"></span></span></td><td class="num">97</td><td class="num pos">+0.322</td></tr><tr><td class="num muted">10</td><td class="cfg">2017-06-08 &rarr; 2018-06-08</td><td class="tf">dist_pdh</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+1.09</td><td class="num barcell pos">+2.044<span class="bar"><span class="bt pos" style="width:100%"></span></span></td><td class="num">23</td><td class="num pos">+0.744</td></tr><tr><td class="num muted">11</td><td class="cfg">2018-06-08 &rarr; 2019-06-08</td><td class="tf">dist_pdh</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+1.01</td><td class="num barcell pos">+0.366<span class="bar"><span class="bt pos" style="width:20%"></span></span></td><td class="num">24</td><td class="num neg">-0.124</td></tr><tr><td class="num muted">12</td><td class="cfg">2019-06-08 &rarr; 2020-06-07</td><td class="tf">dist_pdh</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+1.96</td><td class="num barcell pos">+0.921<span class="bar"><span class="bt pos" style="width:51%"></span></span></td><td class="num">15</td><td class="num pos">+0.650</td></tr><tr><td class="num muted">13</td><td class="cfg">2020-06-07 &rarr; 2021-06-07</td><td class="tf">dist_pdh</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+1.29</td><td class="num barcell pos">+0.730<span class="bar"><span class="bt pos" style="width:41%"></span></span></td><td class="num">20</td><td class="num neg">-0.484</td></tr><tr><td class="num muted">14</td><td class="cfg">2021-06-07 &rarr; 2022-06-07</td><td class="tf">dist_pdl</td><td class="num">12</td><td class="num">no</td><td class="num muted">+1.22</td><td class="num barcell pos">+0.658<span class="bar"><span class="bt pos" style="width:37%"></span></span></td><td class="num">53</td><td class="num neg">-0.093</td></tr><tr><td class="num muted">15</td><td class="cfg">2022-06-07 &rarr; 2023-06-07</td><td class="tf">body_ratio</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+1.43</td><td class="num barcell pos">+0.615<span class="bar"><span class="bt pos" style="width:34%"></span></span></td><td class="num">69</td><td class="num pos">+0.600</td></tr><tr><td class="num muted">16</td><td class="cfg">2023-06-07 &rarr; 2024-06-06</td><td class="tf">body_ratio</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+1.30</td><td class="num barcell neg">-0.493<span class="bar"><span class="bt neg" style="width:27%"></span></span></td><td class="num">63</td><td class="num neg">-0.197</td></tr><tr><td class="num muted">17</td><td class="cfg">2024-06-06 &rarr; 2025-06-06</td><td class="tf">vol_z</td><td class="num">12</td><td class="num">yes</td><td class="num muted">+1.15</td><td class="num barcell pos">+0.072<span class="bar"><span class="bt pos" style="width:4%"></span></span></td><td class="num">21</td><td class="num pos">+0.505</td></tr></tbody></table></div>
+  <p class="note">Train-to-OOS decay is 1.339 &rarr;
+  0.548. Selection lookahead measured against a fixed-parameter
+  run is 0.177 Sharpe &mdash; compare seq=49, where
+  top-of-grid selection carried 0.7&ndash;0.8 of pure lookahead and no
+  out-of-sample information at all.</p>
+</section>
+
+<section>
+  <h2>Cost stress</h2>
+  <p class="sub">Mean OOS Sharpe and folds positive, swap costs included</p>
+  <div class="prose">
+  <p>Broker cost was multiplied up to 4&times; and per-side slippage added on top,
+  with overnight swap charged at &minus;$10/lot/night long and triple on Wednesdays.
+  A rule that dies at 1.1&times; cost is not tradeable; this one holds to roughly
+  3&ndash;4&times;.</p>
+  </div>
+  <h3>Unfiltered &mdash; 1,132 trades</h3>
+  <div class="scroll"><table><thead><tr><th>Cost multiple</th><th class="num">slip $0.00/oz</th><th class="num">slip $0.05/oz</th><th class="num">slip $0.10/oz</th><th class="num">slip $0.20/oz</th></tr></thead><tbody><tr><td class="tf">1&times;</td><td class="num hl">+0.626<span class="muted"> &middot; 15/17</span></td><td class="num pos">+0.535<span class="muted"> &middot; 14/17</span></td><td class="num pos">+0.443<span class="muted"> &middot; 13/17</span></td><td class="num pos">+0.260<span class="muted"> &middot; 12/17</span></td></tr><tr><td class="tf">1.5&times;</td><td class="num pos">+0.534<span class="muted"> &middot; 14/17</span></td><td class="num pos">+0.442<span class="muted"> &middot; 13/17</span></td><td class="num pos">+0.351<span class="muted"> &middot; 13/17</span></td><td class="num pos">+0.168<span class="muted"> &middot; 11/17</span></td></tr><tr><td class="tf">2&times;</td><td class="num pos">+0.441<span class="muted"> &middot; 13/17</span></td><td class="num pos">+0.350<span class="muted"> &middot; 13/17</span></td><td class="num pos">+0.258<span class="muted"> &middot; 12/17</span></td><td class="num pos">+0.075<span class="muted"> &middot; 10/17</span></td></tr><tr><td class="tf">3&times;</td><td class="num pos">+0.256<span class="muted"> &middot; 12/17</span></td><td class="num pos">+0.165<span class="muted"> &middot; 10/17</span></td><td class="num pos">+0.074<span class="muted"> &middot; 10/17</span></td><td class="num neg">-0.109<span class="muted"> &middot; 9/17</span></td></tr><tr><td class="tf">4&times;</td><td class="num pos">+0.072<span class="muted"> &middot; 10/17</span></td><td class="num neg">-0.020<span class="muted"> &middot; 9/17</span></td><td class="num neg">-0.111<span class="muted"> &middot; 9/17</span></td><td class="num neg">-0.294<span class="muted"> &middot; 7/17</span></td></tr></tbody></table></div>
+  <h3>Low-volatility filter &mdash; 374 trades</h3>
+  <div class="scroll"><table><thead><tr><th>Cost multiple</th><th class="num">slip $0.00/oz</th><th class="num">slip $0.05/oz</th><th class="num">slip $0.10/oz</th><th class="num">slip $0.20/oz</th></tr></thead><tbody><tr><td class="tf">1&times;</td><td class="num hl">+0.491<span class="muted"> &middot; 14/17</span></td><td class="num pos">+0.436<span class="muted"> &middot; 14/17</span></td><td class="num pos">+0.381<span class="muted"> &middot; 12/17</span></td><td class="num pos">+0.270<span class="muted"> &middot; 11/17</span></td></tr><tr><td class="tf">1.5&times;</td><td class="num pos">+0.436<span class="muted"> &middot; 14/17</span></td><td class="num pos">+0.380<span class="muted"> &middot; 12/17</span></td><td class="num pos">+0.325<span class="muted"> &middot; 12/17</span></td><td class="num pos">+0.215<span class="muted"> &middot; 11/17</span></td></tr><tr><td class="tf">2&times;</td><td class="num pos">+0.380<span class="muted"> &middot; 12/17</span></td><td class="num pos">+0.325<span class="muted"> &middot; 12/17</span></td><td class="num pos">+0.270<span class="muted"> &middot; 11/17</span></td><td class="num pos">+0.159<span class="muted"> &middot; 9/17</span></td></tr><tr><td class="tf">3&times;</td><td class="num pos">+0.269<span class="muted"> &middot; 11/17</span></td><td class="num pos">+0.214<span class="muted"> &middot; 11/17</span></td><td class="num pos">+0.159<span class="muted"> &middot; 10/17</span></td><td class="num pos">+0.048<span class="muted"> &middot; 9/17</span></td></tr><tr><td class="tf">4&times;</td><td class="num pos">+0.158<span class="muted"> &middot; 10/17</span></td><td class="num pos">+0.103<span class="muted"> &middot; 9/17</span></td><td class="num pos">+0.048<span class="muted"> &middot; 9/17</span></td><td class="num neg">-0.062<span class="muted"> &middot; 8/17</span></td></tr></tbody></table></div>
+  <p class="note">The filtered variant starts lower but degrades more slowly, crossing
+  above the unfiltered version at roughly 2&times; cost plus $0.10 slippage. Under the
+  modelled cost structure the unfiltered variant is the better choice, and its larger
+  trade count also makes every downstream statistic less fragile.</p>
+</section>
+
+<section>
+  <h2>Deflated Sharpe &mdash; the gate it fails</h2>
+  <p class="sub">Computed on concatenated out-of-sample fold returns</p>
+  <div class="scroll"><table><thead><tr><th>Variant</th><th class="num">OOS trades</th><th class="num">Per-obs Sharpe</th><th class="num">N=1</th><th class="num">N=21</th><th class="num">N=126</th><th class="num">N=276</th></tr></thead><tbody><tr><td class="tf">Unfiltered</td><td class="num">1,132</td><td class="num">0.0763</td><td class="num pos">0.9959</td><td class="num neg">0.7658</td><td class="num neg">0.5144</td><td class="num neg">0.4121</td></tr><tr><td class="tf">Low-volatility filter</td><td class="num">374</td><td class="num">0.1178</td><td class="num pos">0.9936</td><td class="num neg">0.7147</td><td class="num neg">0.4517</td><td class="num neg">0.3521</td></tr></tbody></table></div>
+  <div class="callout warn">
+  <p><strong>It fails at every trial count except N=1.</strong> The per-observation
+  Sharpe of 0.0763 annualises to roughly 0.55 at ~52 trades a
+  year, consistent with the walk-forward's +0.548. The effect is
+  genuine &mdash; it survived nested selection at p=0.0245 against a
+  pool control, and 2&ndash;3&times; cost stress. It is also <em>small</em>, and DSR
+  asks whether a Sharpe that size could be the best of N tries under a null. At
+  N=126 it could be.</p>
+  </div>
+  <div class="prose">
+  <p>One caveat runs the other way, and it is not an escape hatch. DSR assumes the
+  Sharpe was selected as the maximum of N trials <em>on the data it is measured on</em>.
+  These are out-of-sample returns from a procedure that did its selecting inside
+  training windows, so the haircut is arguably too harsh here. That is a reason to
+  read the number carefully. It is not a reason to waive a pre-registered threshold
+  because the result is one we would like to keep &mdash; which is precisely the
+  failure mode the research log exists to prevent.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The gate itself was wrong</h2>
+  <p class="sub">Three defects, found by calibrating rather than arguing</p>
+  <div class="prose">
+  <p>Asking whether a threshold is too strict, immediately after a result you liked
+  failed it, is the worst possible moment to move it. So the question was settled by
+  measurement, with the acceptance rule fixed in advance. Three things turned out to be
+  wrong &mdash; and only one of them made the gate too harsh.</p>
+  </div>
+  <div class="kgrid">
+    <div class="krow fail"><div class="kid">1</div><div>
+      <h3>We were on the lenient branch, not the strict one</h3>
+      <p>No <code>trial_sharpes</code> was passed, so the calculation silently took the
+      estimated Var(SR) path. The module's own docstring calls that &ldquo;a leniency
+      that should be flagged&rdquo;. Using per-fold Sharpes instead gives DSR 0.0099 at
+      N=21 and 0.0000 at N=126, against the 0.766 and 0.514 reported. Neither path is
+      unambiguously right &mdash; and a verdict that swings from 0.51 to 0.00 on an
+      unobservable choice is not measuring the strategy.</p>
+    </div><div class="kstate"><span class="pill fail">Lenient</span></div></div>
+    <div class="krow fail"><div class="kid">2</div><div>
+      <h3>The gate had almost no power</h3>
+      <p>Bootstrapped at 4,000 replications: at N=126 the false-positive rate is 0.0000
+      and power at the observed effect size is 0.061. A real edge of exactly this size
+      would have failed roughly 94% of the time. Gold's own buy-and-hold &mdash; +1,173%
+      over 21 years, annualised Sharpe 0.744 &mdash; scores 0.811 at N=126 and also
+      fails.</p>
+    </div><div class="kstate"><span class="pill fail">No power</span></div></div>
+    <div class="krow fail"><div class="kid">3</div><div>
+      <h3>It benchmarked against zero on a long-only rule</h3>
+      <p>The permutation null's mean is <strong>+0.011</strong>, not zero: a long-only
+      rule on a drifting instrument earns a Sharpe from drift alone even after every
+      trace of intraday predictability is destroyed. About 14% of the raw statistic is
+      drift capture that a zero-benchmark test never subtracts.</p>
+    </div><div class="kstate"><span class="pill fail">Wrong null</span></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>The replacement, and what it found</h2>
+  <p class="sub">200 permutation runs of the entire pipeline &middot; rule fixed before results</p>
+  <div class="prose">
+  <p>The null needs neither a trial count nor a Var(SR) choice. Bar order is permuted
+  <em>within each trading day</em>, so the daily return distribution, volatility
+  clustering, bar geometry, volume and session structure all survive, but no first-bar
+  return can predict what follows. The whole pipeline &mdash; feature build, nested
+  training selection, out-of-sample concatenation &mdash; is then re-run on each
+  permuted history.</p>
+  </div>
+  <div class="scroll"><table><thead><tr>
+    <th>Stream</th><th class="num">Observed</th><th class="num">Null mean</th>
+    <th class="num">Null q95</th><th class="num">Excess</th><th class="num">p</th><th>Result</th>
+  </tr></thead><tbody>
+    <tr><td class="tf">fixed</td>
+      <td class="num hl">0.07627</td>
+      <td class="num">+0.01104</td>
+      <td class="num">+0.04741</td>
+      <td class="num pos">2.93 sd</td>
+      <td class="num pos">0.0100</td>
+      <td><span class="pill pass">Pass</span></td></tr>
+    <tr><td class="tf">nested</td>
+      <td class="num hl">0.03747</td>
+      <td class="num">+0.00467</td>
+      <td class="num">+0.04417</td>
+      <td class="num">1.23 sd</td>
+      <td class="num neg">0.1045</td>
+      <td><span class="pill fail">Fail</span></td></tr>
+  </tbody></table></div>
+  <p class="note"><code>fixed</code> is the frozen intraday_ret/h=12 rule &mdash; the
+  statistic the Deflated Sharpe actually evaluated. <code>nested</code> lets each fold
+  select freely from all 126 candidates, so it is the stream carrying the cost of
+  choosing. Only 1 of 200 permuted histories reached the fixed rule's result; 20 of 200
+  reached the nested one.</p>
+  <div class="callout warn">
+  <p><strong>The streams split, and the pre-registration did not say which one wins.</strong>
+  That is a defect in the pre-registration, and not one that can be resolved by picking
+  the stream that gives the answer we want after seeing both. Resolving it on the text
+  that was actually written: the pre-registration describes the nested stream as
+  &ldquo;the selection procedure itself, which is what carries the selection cost&rdquo;.
+  Nested is decisive. The rule does not clear the bar.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Verdict</h2>
+  <p class="sub">What this licenses, and what it does not</p>
+  <div class="callout">
+  <p><strong>Do not promote &mdash; but not for the reason originally given.</strong>
+  The effect is real: the fixed rule beats its own permutation null at p=0.010, nearly
+  three null standard deviations clear, against a benchmark that already includes the
+  drift a long-only rule captures for free. The Deflated Sharpe score of 0.514
+  understated the evidence.</p>
+  <p>What fails is <em>recoverability</em>. Selecting freely per fold yields 0.037
+  against a null whose 95th percentile is 0.044. The effect is real conditional on
+  already knowing to freeze <code>intraday_ret</code> at h=12 &mdash; and that knowledge
+  came from a screen run over the full sample, including every test window. The
+  procedure that would have discovered it honestly does not beat chance.</p>
+  </div>
+  <div class="prose">
+  <p>This is the same finding as seq=49, where the nested walk-forward on
+  <code>crest_n_keel</code> showed training rank carried no information about the test
+  window (p=0.430). Two unrelated hypothesis families, different machinery, same lesson.
+  The momentum feature family is markedly more informative than the crest_n_keel grid
+  &mdash; 0.105 against 0.430 &mdash; and still does not clear 0.05.</p>
+  <p>One path is now closed for good. Resolving this on forward data is clean in
+  principle, but the rule trades about 54 times a year and roughly 3,000 trades are
+  needed before the question is answerable. That is decades; anyone proposing to wait is
+  proposing something that does not terminate. More instruments would work. Higher
+  frequency would not &mdash; the screen found <strong>zero</strong> features paying the
+  $0.29/oz round trip at M5. Scalping XAUUSD at this cost structure is arithmetic, not
+  tuning.</p>
+  <p>Separately, <code>crest_n_keel</code> (magic 1100001) and <code>asqs</code> are
+  still running on demo on premises this programme has refuted, and
+  <code>zerolag_chandelier</code> has never had a nested walk-forward at all &mdash; its
+  honest status is untested out-of-sample, not refuted.</p>
+  </div>
+</section>
+
+<footer>
+  Generated from research/pre/artifacts by research/post/sweeps/build_momentum_report.py &middot;
+  Research log seq 57&ndash;62, chain verified &middot;
+  Runners: feature_screen.py, feature_combine.py, momentum_nested_wf.py,
+  momentum_cost_stress.py, momentum_dsr.py
+</footer>
+</div>

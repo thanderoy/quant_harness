@@ -406,15 +406,24 @@ def _permutation_test(
     close: np.ndarray,
     atr_arr: np.ndarray,
     pools: dict[int, np.ndarray],
+    null_pools: dict[int, np.ndarray],
     n_permutations: int,
     rng: np.random.Generator,
 ) -> pd.DataFrame:
     """One-sided permutation test of the actual E-Ratio against a shuffled null.
 
     For each window we hold the long/short *counts fixed* and scatter that many
-    signals at random over the eligible bar pool, recomputing the E-Ratio each
-    time. The null answers: "how large an E-Ratio would this many random entries
-    on this data produce by chance?"
+    signals at random over the null bar pool, recomputing the E-Ratio each time.
+    The null answers: "how large an E-Ratio would this many random entries on
+    this data produce by chance?"
+
+    ``pools`` (finite-ATR, window-fit) is used only to *count* how many actual
+    signals contribute at each window. ``null_pools`` is the universe the random
+    entries are drawn from — identical to ``pools`` by default, but restricted to
+    a caller-supplied eligible universe (e.g. regime-filtered bars) when a
+    ``eligible_pool`` is passed to :func:`signal_edge_report`. Restricting the
+    null this way stops a separate regime filter's directional drift from leaking
+    into — and inflating — the entry's measured E-Ratio.
 
     PITFALL #3 (window overlap): signals within ``w`` bars share overlapping
     forward windows and are therefore *not independent*. We do not try to
@@ -431,6 +440,7 @@ def _permutation_test(
     for window in forward_windows:
         fwd_high, fwd_low, fwd_close = _forward_extremes(high, low, close, window)
         pool = pools[window]
+        sample_pool = null_pools[window]
 
         eligible = np.isin(signal_idx, pool)
         dirs = signal_dir[eligible]
@@ -443,12 +453,12 @@ def _permutation_test(
         )
 
         null = np.full(n_permutations, np.nan)
-        if n_place > 0 and pool.size >= n_place and np.isfinite(actual):
+        if n_place > 0 and sample_pool.size >= n_place and np.isfinite(actual):
             perm_dirs = np.empty(n_place, dtype=np.int64)
             perm_dirs[:n_long] = 1
             perm_dirs[n_long:] = -1
             for p in range(n_permutations):
-                chosen = rng.choice(pool, size=n_place, replace=False)
+                chosen = rng.choice(sample_pool, size=n_place, replace=False)
                 null[p] = _e_ratio_for_indices(
                     chosen, perm_dirs, open_, fwd_high, fwd_low, fwd_close, atr_arr
                 )
@@ -491,20 +501,24 @@ def _random_baseline(
     close: np.ndarray,
     atr_arr: np.ndarray,
     finite_atr_idx: np.ndarray,
+    sampling_pool_idx: np.ndarray,
     index: pd.Index,
     rng: np.random.Generator,
 ) -> pd.DataFrame:
     """A single random-entry signal report at the same long/short frequency.
 
     This is a tangible "what does no edge look like" reference, distinct from
-    the permutation null (which is a distribution). Bars are sampled from the
-    finite-ATR pool that also leaves room for the *largest* forward window, so
-    the same random signal is evaluable at every window.
+    the permutation null (which is a distribution). Bars are sampled from
+    ``sampling_pool_idx`` (the finite-ATR pool by default, or a caller-supplied
+    eligible universe such as regime-filtered bars) intersected with the room
+    needed for the *largest* forward window, so the same random signal is
+    evaluable at every window. ``finite_atr_idx`` is still used to normalise the
+    chosen bars' excursions.
     """
     n = len(close)
     n_place = n_long + n_short
     max_window = max(forward_windows)
-    base_pool = finite_atr_idx[finite_atr_idx <= n - max_window - 1]
+    base_pool = sampling_pool_idx[sampling_pool_idx <= n - max_window - 1]
 
     if n_place == 0 or base_pool.size < n_place:
         empty = pd.DataFrame(
@@ -559,6 +573,29 @@ def _validate_inputs(signal: pd.Series, ohlc: pd.DataFrame) -> None:
         raise ValueError(f"signal must contain only -1, 0, +1; found {sorted(bad)}")
 
 
+def _coerce_eligible_mask(
+    eligible_pool: pd.Series | np.ndarray, n: int
+) -> np.ndarray:
+    """Coerce a caller-supplied eligible universe to a boolean mask of length n.
+
+    Accepts either a boolean mask (Series or ndarray) aligned to ``ohlc.index``,
+    or an array of integer bar positions. Returns a length-``n`` boolean mask.
+    """
+    arr = eligible_pool.to_numpy() if isinstance(eligible_pool, pd.Series) else np.asarray(eligible_pool)
+    if arr.dtype == bool:
+        if arr.shape[0] != n:
+            raise ValueError(
+                f"eligible_pool boolean mask length ({arr.shape[0]}) != n_bars ({n})"
+            )
+        return arr
+    mask = np.zeros(n, dtype=bool)
+    positions = arr.astype(np.int64)
+    if positions.size and (positions.min() < 0 or positions.max() >= n):
+        raise ValueError("eligible_pool integer positions out of range [0, n_bars)")
+    mask[positions] = True
+    return mask
+
+
 def _sha16(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
@@ -573,6 +610,7 @@ def signal_edge_report(
     atr_period: int = 14,
     n_permutations: int = 1000,
     random_seed: int = 42,
+    eligible_pool: pd.Series | np.ndarray | None = None,
 ) -> SignalEdgeReport:
     """Measure raw signal edge before any exit logic exists.
 
@@ -594,6 +632,16 @@ def signal_edge_report(
     random_seed:
         Seed for the permutation and baseline sampling (reproducibility). The
         baseline uses ``random_seed + 1`` so it is independent of the null.
+    eligible_pool:
+        Optional universe the permutation null *and* random baseline draw their
+        random entries from — a boolean mask aligned to ``ohlc.index`` or an
+        array of integer bar positions. It is intersected with the finite-ATR
+        pool. Default ``None`` samples from all finite-ATR bars (unchanged
+        behaviour). Pass a regime-filtered mask when the entry is preceded by a
+        separate filter, so the filter's directional drift is baked into the
+        null instead of inflating the entry's measured E-Ratio. The *actual*
+        signals are never restricted by this — only the null they are tested
+        against.
 
     Returns
     -------
@@ -626,6 +674,14 @@ def signal_edge_report(
     # excursion can be normalised. (PITFALL: skip NaN / near-zero ATR.)
     finite_atr_idx = np.where(np.isfinite(atr_arr) & (atr_arr >= ATR_FLOOR))[0]
 
+    # Universe the null / baseline sample from. Restricted to the caller's
+    # eligible bars (intersected with finite ATR) when provided.
+    if eligible_pool is None:
+        eligible_atr_idx = finite_atr_idx
+    else:
+        elig_mask = _coerce_eligible_mask(eligible_pool, n)
+        eligible_atr_idx = finite_atr_idx[elig_mask[finite_atr_idx]]
+
     sig_arr = signal.fillna(0).to_numpy()
     signal_idx = np.where(sig_arr != 0)[0]
     signal_dir = np.sign(sig_arr[signal_idx]).astype(np.int64)
@@ -640,17 +696,21 @@ def signal_edge_report(
     )
 
     # --- permutation test --------------------------------------------------- #
+    # Null-sampling pools restricted to the eligible universe (== `pools` when
+    # no eligible_pool was supplied).
+    null_pools = {w: _window_pool(eligible_atr_idx, n, w) for w in forward_windows}
     rng = np.random.default_rng(random_seed)
     permutation = _permutation_test(
         per_window, signal_idx, signal_dir, forward_windows,
-        open_, high, low, close, atr_arr, pools, n_permutations, rng,
+        open_, high, low, close, atr_arr, pools, null_pools, n_permutations, rng,
     )
 
     # --- random-entry baseline (independent seed) --------------------------- #
     baseline_rng = np.random.default_rng(random_seed + 1)
     baseline = _random_baseline(
         n_long_total, n_short_total, forward_windows,
-        open_, high, low, close, atr_arr, finite_atr_idx, index, baseline_rng,
+        open_, high, low, close, atr_arr, finite_atr_idx, eligible_atr_idx,
+        index, baseline_rng,
     )
 
     # --- metadata ----------------------------------------------------------- #
@@ -666,6 +726,8 @@ def signal_edge_report(
         "random_seed": random_seed,
         "n_long_signals": n_long_total,
         "n_short_signals": n_short_total,
+        "eligible_pool_restricted": eligible_pool is not None,
+        "n_eligible_pool_bars": int(eligible_atr_idx.size),
     }
 
     return SignalEdgeReport(
