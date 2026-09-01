@@ -78,6 +78,28 @@ def in_rollover_window(ts: datetime) -> bool:
     return abs(minutes) <= ROLLOVER_MINUTES or abs(minutes + 1440) <= ROLLOVER_MINUTES
 
 
+def warm_up(symbols: tuple[str, ...]) -> int:
+    """Touch every symbol once and discard the result.
+
+    mt5-api selects a symbol into MarketWatch on first request, and that first
+    tick comes back degenerate — measured on Pepperstone demo, every one of the
+    nine candidates returned bid == ask == spread 0.0 on first touch and real
+    spreads immediately after. Recording those zeros would drag the median
+    spread down with values that were never quotable, which is precisely the
+    kind of quiet contamination this census exists to avoid.
+
+    Returns the number of symbols that answered.
+    """
+    ok = 0
+    for sym in symbols:
+        try:
+            get("/api/v1/tick", {"symbol": sym})
+            ok += 1
+        except (MT5Unavailable, EndpointMissing):
+            pass
+    return ok
+
+
 def sample_once(symbols: tuple[str, ...]) -> list[dict]:
     rows: list[dict] = []
     for sym in symbols:
@@ -92,12 +114,18 @@ def sample_once(symbols: tuple[str, ...]) -> list[dict]:
             payload = get("/api/v1/tick", {"symbol": sym}).payload
             bid = float(payload["bid"])
             ask = float(payload["ask"])
+            spread = ask - bid
             row.update({
                 "bid": bid,
                 "ask": ask,
-                "spread": ask - bid,
+                "spread": spread,
                 "tick_time": payload.get("time"),
                 "ok": True,
+                # A non-positive spread is not tradeable and is never a real
+                # quote. Flagged rather than dropped: the rate at which it
+                # occurs is itself a data-quality signal, and dropping rows
+                # would hide a degrading feed.
+                "suspect_zero_spread": spread <= 0.0,
             })
         except (MT5Unavailable, EndpointMissing, KeyError, TypeError, ValueError) as exc:
             # Recorded, never dropped: a gap with no reason in it is
@@ -129,13 +157,19 @@ def main() -> int:
     symbols = tuple(args.symbols)
     args.out.parent.mkdir(parents=True, exist_ok=True)
 
+    warmed = warm_up(symbols)
+    print(json.dumps({"warm_up_symbols_ok": warmed,
+                      "note": "first touch discarded — see warm_up()"}))
+
     rounds = 0
     ok_rows = 0
+    suspect = 0
     while not _stop:
         rows = sample_once(symbols)
         append(args.out, rows)
         rounds += 1
         ok_rows += sum(1 for r in rows if r.get("ok"))
+        suspect += sum(1 for r in rows if r.get("suspect_zero_spread"))
         if args.once:
             break
         slept = 0.0
@@ -147,6 +181,7 @@ def main() -> int:
         "rounds": rounds,
         "rows_written": rounds * len(symbols),
         "rows_ok": ok_rows,
+        "rows_suspect_zero_spread": suspect,
         "out": str(args.out),
         "stopped_at_utc": now_iso(),
     }, indent=2))
