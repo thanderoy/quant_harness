@@ -23,7 +23,7 @@ import warnings
 from pathlib import Path
 
 warnings.filterwarnings("ignore")
-sys.path.insert(0, "/home/roy-thande/Local/qhf_harness")
+sys.path.insert(0, str(Path.home() / "Local" / "quant_harness"))
 
 import numpy as np
 

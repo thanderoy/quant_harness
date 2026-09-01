@@ -16,13 +16,14 @@ Usage:  python -m research.post.sweeps.run_cnk_parity
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 import warnings
 
 import numpy as np
 import pandas as pd
 
 warnings.filterwarnings("ignore")
-sys.path.insert(0, "/home/roy-thande/Local/qhf_harness")
+sys.path.insert(0, str(Path.home() / "Local" / "quant_harness"))
 
 from qhf.engines.btpy_runner import run_backtest                      # noqa: E402
 from qhf.engines.strategies.hma_stoch import HMAStoch1H               # noqa: E402
