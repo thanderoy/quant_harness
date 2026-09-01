@@ -1,0 +1,452 @@
+{
+  "task": "phase0_universe",
+  "generated_at_utc": "2026-08-31T13:18:36.049336+00:00",
+  "generator": "phase0/run_d2_d4_d5.py",
+  "stamps": [
+    "PARTIAL_UNIVERSE",
+    "PROVISIONAL_SPECS"
+  ],
+  "d1_contract_specs": {
+    "status": "BLOCKED",
+    "dependency": "MT5 terminal unavailable (mt5 / mt5-test containers down)",
+    "provenance": "HAND_ENTERED",
+    "specs_used": {
+      "EURUSD": {
+        "contract_size": 100000,
+        "min_lot": 0.01,
+        "quote_ccy": "USD",
+        "base_ccy": "EUR"
+      },
+      "GBPUSD": {
+        "contract_size": 100000,
+        "min_lot": 0.01,
+        "quote_ccy": "USD",
+        "base_ccy": "GBP"
+      },
+      "USDJPY": {
+        "contract_size": 100000,
+        "min_lot": 0.01,
+        "quote_ccy": "JPY",
+        "base_ccy": "USD"
+      },
+      "USDCHF": {
+        "contract_size": 100000,
+        "min_lot": 0.01,
+        "quote_ccy": "CHF",
+        "base_ccy": "USD"
+      },
+      "USDCAD": {
+        "contract_size": 100000,
+        "min_lot": 0.01,
+        "quote_ccy": "CAD",
+        "base_ccy": "USD"
+      },
+      "XAUUSD": {
+        "contract_size": 100,
+        "min_lot": 0.01,
+        "quote_ccy": "USD",
+        "base_ccy": "XAU"
+      },
+      "XAGUSD": {
+        "contract_size": 5000,
+        "min_lot": 0.01,
+        "quote_ccy": "USD",
+        "base_ccy": "XAG"
+      }
+    },
+    "note": "Standard retail values, NOT broker-confirmed. Registry.load() must refuse these without allow_provisional=True (T1)."
+  },
+  "d2_granularity": {
+    "provenance": "PROVISIONAL_SPECS",
+    "universe_status": "PARTIAL_UNIVERSE",
+    "missing_instruments": [
+      "AUDUSD",
+      "NZDUSD"
+    ],
+    "account_equity_usd": 100.0,
+    "target_risk_pct": 0.02,
+    "stop_atr_multiplier": 1.5,
+    "atr_period": 14,
+    "median_window_months": 24,
+    "rows": [
+      {
+        "symbol": "EURUSD",
+        "timeframe": "H1",
+        "median_atr_24m": 0.0012924841611820386,
+        "stop_distance_price": 0.001938726241773058,
+        "median_price": 1.152795,
+        "min_lot": 0.01,
+        "contract_size": 100000,
+        "min_position_risk_usd": 1.938726241773058,
+        "min_position_risk_pct_of_100": 0.019387262417730578,
+        "tradable_at_capital": true
+      },
+      {
+        "symbol": "EURUSD",
+        "timeframe": "H4",
+        "median_atr_24m": 0.0027624790135981443,
+        "stop_distance_price": 0.004143718520397216,
+        "median_price": 1.15283,
+        "min_lot": 0.01,
+        "contract_size": 100000,
+        "min_position_risk_usd": 4.143718520397216,
+        "min_position_risk_pct_of_100": 0.04143718520397216,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "GBPUSD",
+        "timeframe": "H1",
+        "median_atr_24m": 0.0015945458049685902,
+        "stop_distance_price": 0.0023918187074528853,
+        "median_price": 1.33531,
+        "min_lot": 0.01,
+        "contract_size": 100000,
+        "min_position_risk_usd": 2.3918187074528854,
+        "min_position_risk_pct_of_100": 0.023918187074528852,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "GBPUSD",
+        "timeframe": "H4",
+        "median_atr_24m": 0.0033495729002367635,
+        "stop_distance_price": 0.005024359350355145,
+        "median_price": 1.33531,
+        "min_lot": 0.01,
+        "contract_size": 100000,
+        "min_position_risk_usd": 5.024359350355145,
+        "min_position_risk_pct_of_100": 0.050243593503551454,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "USDJPY",
+        "timeframe": "H1",
+        "median_atr_24m": 0.22219776970999744,
+        "stop_distance_price": 0.33329665456499613,
+        "median_price": 153.372,
+        "min_lot": 0.01,
+        "contract_size": 100000,
+        "min_position_risk_usd": 2.173125828475837,
+        "min_position_risk_pct_of_100": 0.02173125828475837,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "USDJPY",
+        "timeframe": "H4",
+        "median_atr_24m": 0.4858915296467632,
+        "stop_distance_price": 0.7288372944701448,
+        "median_price": 153.36950000000002,
+        "min_lot": 0.01,
+        "contract_size": 100000,
+        "min_position_risk_usd": 4.752165811782295,
+        "min_position_risk_pct_of_100": 0.047521658117822954,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "USDCHF",
+        "timeframe": "H1",
+        "median_atr_24m": 0.0010595910931717324,
+        "stop_distance_price": 0.0015893866397575986,
+        "median_price": 0.80746,
+        "min_lot": 0.01,
+        "contract_size": 100000,
+        "min_position_risk_usd": 1.9683781732316137,
+        "min_position_risk_pct_of_100": 0.019683781732316136,
+        "tradable_at_capital": true
+      },
+      {
+        "symbol": "USDCHF",
+        "timeframe": "H4",
+        "median_atr_24m": 0.002258417424684956,
+        "stop_distance_price": 0.003387626137027434,
+        "median_price": 0.80742,
+        "min_lot": 0.01,
+        "contract_size": 100000,
+        "min_position_risk_usd": 4.195618311445634,
+        "min_position_risk_pct_of_100": 0.04195618311445634,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "USDCAD",
+        "timeframe": "H1",
+        "median_atr_24m": 0.0011795228548684203,
+        "stop_distance_price": 0.0017692842823026304,
+        "median_price": 1.38648,
+        "min_lot": 0.01,
+        "contract_size": 100000,
+        "min_position_risk_usd": 1.276097947538104,
+        "min_position_risk_pct_of_100": 0.01276097947538104,
+        "tradable_at_capital": true
+      },
+      {
+        "symbol": "USDCAD",
+        "timeframe": "H4",
+        "median_atr_24m": 0.002415909871700022,
+        "stop_distance_price": 0.003623864807550033,
+        "median_price": 1.38648,
+        "min_lot": 0.01,
+        "contract_size": 100000,
+        "min_position_risk_usd": 2.6137158902761186,
+        "min_position_risk_pct_of_100": 0.026137158902761186,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "XAUUSD",
+        "timeframe": "H1",
+        "median_atr_24m": 7.024803060299054,
+        "stop_distance_price": 10.537204590448582,
+        "median_price": 2678.265,
+        "min_lot": 0.01,
+        "contract_size": 100,
+        "min_position_risk_usd": 10.537204590448582,
+        "min_position_risk_pct_of_100": 0.10537204590448582,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "XAUUSD",
+        "timeframe": "H4",
+        "median_atr_24m": 14.190635307800207,
+        "stop_distance_price": 21.28595296170031,
+        "median_price": 2678.715,
+        "min_lot": 0.01,
+        "contract_size": 100,
+        "min_position_risk_usd": 21.28595296170031,
+        "min_position_risk_pct_of_100": 0.2128595296170031,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "XAGUSD",
+        "timeframe": "H1",
+        "median_atr_24m": 0.2146101164104296,
+        "stop_distance_price": 0.3219151746156444,
+        "median_price": 39.103,
+        "min_lot": 0.01,
+        "contract_size": 5000,
+        "min_position_risk_usd": 16.09575873078222,
+        "min_position_risk_pct_of_100": 0.1609575873078222,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "XAGUSD",
+        "timeframe": "H4",
+        "median_atr_24m": 0.4094783080994029,
+        "stop_distance_price": 0.6142174621491043,
+        "median_price": 39.37,
+        "min_lot": 0.01,
+        "contract_size": 5000,
+        "min_position_risk_usd": 30.710873107455217,
+        "min_position_risk_pct_of_100": 0.30710873107455217,
+        "tradable_at_capital": false
+      }
+    ]
+  },
+  "d3_spread_cost": {
+    "status": "BLOCKED",
+    "d3a_forward_collector": "not started \u2014 requires live MT5",
+    "d3b_historical": "not attempted \u2014 requires copy_ticks_range",
+    "note": "Local CSVs are Date;Open;High;Low;Close;Volume with no spread column, so no spread statistic is derivable offline."
+  },
+  "d4_correlation": {
+    "universe_status": "PARTIAL_UNIVERSE",
+    "missing_instruments": [
+      "AUDUSD",
+      "NZDUSD"
+    ],
+    "note": "AUDUSD and NZDUSD absent. They correlate strongly with each other and with the commodity complex, so every effective-N below is an UPPER BOUND on true breadth.",
+    "window_years": 5,
+    "window_start": "2020-12-31",
+    "window_end": "2025-12-31",
+    "n_observations": 1269,
+    "sign_adjustment": {
+      "EURUSD": 1.0,
+      "GBPUSD": 1.0,
+      "USDJPY": -1.0,
+      "USDCHF": -1.0,
+      "USDCAD": -1.0,
+      "XAUUSD": 1.0,
+      "XAGUSD": 1.0
+    },
+    "correlation_matrix": {
+      "EURUSD": {
+        "EURUSD": 1.0,
+        "GBPUSD": 0.766791,
+        "USDJPY": 0.488541,
+        "USDCHF": 0.755923,
+        "USDCAD": 0.57046,
+        "XAUUSD": 0.385551,
+        "XAGUSD": 0.366553
+      },
+      "GBPUSD": {
+        "EURUSD": 0.766791,
+        "GBPUSD": 1.0,
+        "USDJPY": 0.445735,
+        "USDCHF": 0.6021,
+        "USDCAD": 0.611824,
+        "XAUUSD": 0.375616,
+        "XAGUSD": 0.393406
+      },
+      "USDJPY": {
+        "EURUSD": 0.488541,
+        "GBPUSD": 0.445735,
+        "USDJPY": 1.0,
+        "USDCHF": 0.578863,
+        "USDCAD": 0.273403,
+        "XAUUSD": 0.380578,
+        "XAGUSD": 0.255629
+      },
+      "USDCHF": {
+        "EURUSD": 0.755923,
+        "GBPUSD": 0.6021,
+        "USDJPY": 0.578863,
+        "USDCHF": 1.0,
+        "USDCAD": 0.470845,
+        "XAUUSD": 0.408415,
+        "XAGUSD": 0.324863
+      },
+      "USDCAD": {
+        "EURUSD": 0.57046,
+        "GBPUSD": 0.611824,
+        "USDJPY": 0.273403,
+        "USDCHF": 0.470845,
+        "USDCAD": 1.0,
+        "XAUUSD": 0.334556,
+        "XAGUSD": 0.407159
+      },
+      "XAUUSD": {
+        "EURUSD": 0.385551,
+        "GBPUSD": 0.375616,
+        "USDJPY": 0.380578,
+        "USDCHF": 0.408415,
+        "USDCAD": 0.334556,
+        "XAUUSD": 1.0,
+        "XAGUSD": 0.700372
+      },
+      "XAGUSD": {
+        "EURUSD": 0.366553,
+        "GBPUSD": 0.393406,
+        "USDJPY": 0.255629,
+        "USDCHF": 0.324863,
+        "USDCAD": 0.407159,
+        "XAUUSD": 0.700372,
+        "XAGUSD": 1.0
+      }
+    },
+    "majors_available_only": {
+      "instruments": [
+        "EURUSD",
+        "GBPUSD",
+        "USDJPY",
+        "USDCHF",
+        "USDCAD"
+      ],
+      "k": 5,
+      "avg_pairwise_abs_rho": 0.5564485148004684,
+      "avg_pairwise_signed_rho": 0.5564485148004684,
+      "effective_n_from_abs_rho": 1.5500059545763751,
+      "effective_n_from_signed_rho": 1.5500059545763751
+    },
+    "majors_plus_metals": {
+      "instruments": [
+        "EURUSD",
+        "GBPUSD",
+        "USDJPY",
+        "USDCHF",
+        "USDCAD",
+        "XAUUSD",
+        "XAGUSD"
+      ],
+      "k": 7,
+      "avg_pairwise_abs_rho": 0.47129447485482684,
+      "avg_pairwise_signed_rho": 0.47129447485482684,
+      "effective_n_from_abs_rho": 1.828742521659308,
+      "effective_n_from_signed_rho": 1.828742521659308
+    }
+  },
+  "d5_benchmark_sharpe": {
+    "universe_status": "PARTIAL_UNIVERSE",
+    "missing_instruments": [
+      "AUDUSD",
+      "NZDUSD"
+    ],
+    "rf_rate": 0.0,
+    "annualisation_factor": 252,
+    "note": "SR* for DSR. Long-only buy-and-hold, zero risk-free rate. Near-zero for FX majors is the expected and desirable result; the metals values are not, which is why gold results must be re-evaluated against a non-zero SR* (spec T8).",
+    "per_instrument": [
+      {
+        "symbol": "EURUSD",
+        "start": "2013-10-09",
+        "end": "2026-08-28",
+        "n_days": 3346,
+        "mean_daily_log_return": -4.737654405781623e-05,
+        "daily_vol": 0.004787207463730367,
+        "buy_and_hold_sharpe_annualised": -0.15710188602146188
+      },
+      {
+        "symbol": "GBPUSD",
+        "start": "2013-10-09",
+        "end": "2026-08-28",
+        "n_days": 3346,
+        "mean_daily_log_return": -5.157542805005097e-05,
+        "daily_vol": 0.005583913590901899,
+        "buy_and_hold_sharpe_annualised": -0.14662378365360756
+      },
+      {
+        "symbol": "USDJPY",
+        "start": "2013-10-09",
+        "end": "2026-08-28",
+        "n_days": 3347,
+        "mean_daily_log_return": 0.00015001204482094268,
+        "daily_vol": 0.005618100966129861,
+        "buy_and_hold_sharpe_annualised": 0.4238740812811321
+      },
+      {
+        "symbol": "USDCHF",
+        "start": "2013-10-08",
+        "end": "2026-08-28",
+        "n_days": 3346,
+        "mean_daily_log_return": -3.282379208482527e-05,
+        "daily_vol": 0.005423446493529231,
+        "buy_and_hold_sharpe_annualised": -0.0960757234863314
+      },
+      {
+        "symbol": "USDCAD",
+        "start": "2013-10-09",
+        "end": "2026-08-28",
+        "n_days": 3346,
+        "mean_daily_log_return": 8.769087987027089e-05,
+        "daily_vol": 0.004369048118547477,
+        "buy_and_hold_sharpe_annualised": 0.31861621216793967
+      },
+      {
+        "symbol": "XAUUSD",
+        "start": "2004-06-14",
+        "end": "2025-12-31",
+        "n_days": 5515,
+        "mean_daily_log_return": 0.0004387539518003802,
+        "daily_vol": 0.010980184450097987,
+        "buy_and_hold_sharpe_annualised": 0.6343247775952983
+      },
+      {
+        "symbol": "XAGUSD",
+        "start": "2009-08-19",
+        "end": "2026-08-28",
+        "n_days": 4388,
+        "mean_daily_log_return": 0.00035557971403600867,
+        "daily_vol": 0.02003015917491952,
+        "buy_and_hold_sharpe_annualised": 0.2818076940027679
+      }
+    ],
+    "equal_risk_weighted_panel": {
+      "weights": {
+        "EURUSD": 0.18195396180209317,
+        "GBPUSD": 0.15558271090520603,
+        "USDJPY": 0.15638590071167516,
+        "USDCHF": 0.16173129667470149,
+        "USDCAD": 0.19836631964585263,
+        "XAUUSD": 0.09356914833946556,
+        "XAGUSD": 0.052410661921005845
+      },
+      "n_days": 3131,
+      "sharpe_annualised": 0.5465769830143149
+    }
+  }
+}
