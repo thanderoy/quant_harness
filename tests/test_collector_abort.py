@@ -51,6 +51,9 @@ class _DyingHandler(BaseHTTPRequestHandler):
     def _data(self) -> dict:
         if self.path.startswith("/api/v1/ticks"):
             return {"ticks": [], "count": 0}
+        if self.path.startswith("/api/v1/account"):
+            return {"server": "PepperstoneKE-MT5-Live01", "trade_mode": 0,
+                    "currency": "USD", "login": 123, "name": "someone"}
         return {"bid": 1.1, "ask": 1.1001, "time": "2026-09-01T00:00:00"}
 
     def _send(self, status: int, payload: dict) -> None:
@@ -139,3 +142,33 @@ def test_d3b_aborts_mid_run_and_records_unattempted_symbols(dying_server, tmp_pa
     # absent, so obtained coverage cannot later be read as broker behaviour.
     assert "not attempted" in artifact["errors"]["GBPUSD"]
     assert "not attempted" in artifact["errors"]["USDJPY"]
+
+
+def test_d3a_stamps_the_trade_server_on_every_row(dying_server, tmp_path):
+    """The mislabel that voided the 2026-09-01 runs must not be repeatable."""
+    url = dying_server(ok_calls=10_000)
+    out = tmp_path / "samples.jsonl"
+
+    proc = _run("phase0.collectors.d3a_spread_forward", url,
+                "--interval", "0.1", "--once",
+                "--symbols", "EURUSD", "GBPUSD", "--out", str(out))
+
+    assert proc.returncode == 0, proc.stderr
+    rows = [json.loads(line) for line in out.read_text().splitlines()]
+    assert rows and all(r["server"] == "PepperstoneKE-MT5-Live01" for r in rows)
+
+    # Account identity is deliberately not collected.
+    assert not any("login" in r or "name" in r for r in rows)
+
+
+def test_d3a_refuses_a_server_that_does_not_match(dying_server, tmp_path):
+    url = dying_server(ok_calls=10_000)
+    out = tmp_path / "samples.jsonl"
+
+    proc = _run("phase0.collectors.d3a_spread_forward", url,
+                "--interval", "0.1", "--once", "--symbols", "EURUSD",
+                "--expect-server", "MetaQuotes", "--out", str(out))
+
+    assert proc.returncode == 3, proc.stdout
+    assert "does not match" in proc.stderr
+    assert not out.exists()

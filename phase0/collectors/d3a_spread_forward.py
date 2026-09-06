@@ -78,6 +78,30 @@ def in_rollover_window(ts: datetime) -> bool:
     return abs(minutes) <= ROLLOVER_MINUTES or abs(minutes + 1440) <= ROLLOVER_MINUTES
 
 
+def broker_context() -> dict:
+    """Identify the trade server this run is sampling.
+
+    Load-bearing. The D1/D3a/D3b runs of 2026-09-01 were labelled
+    "Pepperstone (demo)" on the strength of the container's name; the terminal
+    was in fact authorized on MetaQuotes-Demo, and nothing in the output
+    recorded otherwise, so the mislabel survived into a committed snapshot and
+    into conclusions about filling modes and spreads. A sample with no broker
+    on it is not a measurement of anything.
+
+    Records ``server`` and ``trade_mode`` only. ``login`` and ``name`` are
+    account identity and are deliberately dropped rather than collected.
+    """
+    try:
+        payload = get("/api/v1/account").payload
+    except (MT5Unavailable, EndpointMissing) as exc:
+        return {"server": None, "trade_mode": None, "error": str(exc)}
+    return {
+        "server": payload.get("server"),
+        "trade_mode": payload.get("trade_mode"),
+        "currency": payload.get("currency"),
+    }
+
+
 def warm_up(symbols: tuple[str, ...]) -> int:
     """Touch every symbol once and discard the result.
 
@@ -100,12 +124,17 @@ def warm_up(symbols: tuple[str, ...]) -> int:
     return ok
 
 
-def sample_once(symbols: tuple[str, ...]) -> list[dict]:
+def sample_once(symbols: tuple[str, ...], server: str | None = None) -> list[dict]:
     rows: list[dict] = []
     for sym in symbols:
         ts = datetime.now(timezone.utc)
         row: dict = {
             "symbol": sym,
+            # Stamped per row, not once per file. An append-only file outlives
+            # the process, and the collector can be restarted against a
+            # different terminal; a run-level header would silently cover rows
+            # it never described.
+            "server": server,
             "sampled_at_utc": ts.isoformat(),
             "session": session_bucket(ts),
             "rollover_window": in_rollover_window(ts),
@@ -149,6 +178,11 @@ def main() -> int:
                     help="take a single round and exit")
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
     ap.add_argument("--symbols", nargs="*", default=list(UNIVERSE))
+    ap.add_argument("--expect-server", default=None,
+                    help="refuse to run unless the terminal's trade server "
+                         "contains this substring (case-insensitive). Use it "
+                         "whenever the output feeds a broker-specific "
+                         "conclusion.")
     ap.add_argument("--max-consecutive-failures", type=int, default=30,
                     help="exit non-zero after this many rounds in which every "
                          "symbol failed (default 30; at the default interval "
@@ -161,8 +195,22 @@ def main() -> int:
     symbols = tuple(args.symbols)
     args.out.parent.mkdir(parents=True, exist_ok=True)
 
+    broker = broker_context()
+    server = broker.get("server")
+
+    if args.expect_server:
+        if not server or args.expect_server.lower() not in server.lower():
+            print(json.dumps({
+                "aborted": True,
+                "reason": "trade server does not match --expect-server",
+                "expected_substring": args.expect_server,
+                "actual_server": server,
+            }), file=sys.stderr)
+            return 3
+
     warmed = warm_up(symbols)
     print(json.dumps({"warm_up_symbols_ok": warmed,
+                      "broker": broker,
                       "note": "first touch discarded — see warm_up()"}))
 
     rounds = 0
@@ -171,7 +219,7 @@ def main() -> int:
     consecutive_dead_rounds = 0
     aborted = False
     while not _stop:
-        rows = sample_once(symbols)
+        rows = sample_once(symbols, server)
         append(args.out, rows)
         rounds += 1
         round_ok = sum(1 for r in rows if r.get("ok"))
@@ -209,6 +257,7 @@ def main() -> int:
         "rows_written": rounds * len(symbols),
         "rows_ok": ok_rows,
         "rows_suspect_zero_spread": suspect,
+        "server": server,
         "consecutive_dead_rounds_at_exit": consecutive_dead_rounds,
         "aborted_source_unreachable": aborted,
         "out": str(args.out),
