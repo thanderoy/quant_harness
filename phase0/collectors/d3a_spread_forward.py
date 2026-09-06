@@ -149,6 +149,10 @@ def main() -> int:
                     help="take a single round and exit")
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
     ap.add_argument("--symbols", nargs="*", default=list(UNIVERSE))
+    ap.add_argument("--max-consecutive-failures", type=int, default=30,
+                    help="exit non-zero after this many rounds in which every "
+                         "symbol failed (default 30; at the default interval "
+                         "that is 30 minutes of a dead endpoint)")
     args = ap.parse_args()
 
     signal.signal(signal.SIGINT, _handle_signal)
@@ -164,12 +168,35 @@ def main() -> int:
     rounds = 0
     ok_rows = 0
     suspect = 0
+    consecutive_dead_rounds = 0
+    aborted = False
     while not _stop:
         rows = sample_once(symbols)
         append(args.out, rows)
         rounds += 1
-        ok_rows += sum(1 for r in rows if r.get("ok"))
+        round_ok = sum(1 for r in rows if r.get("ok"))
+        ok_rows += round_ok
         suspect += sum(1 for r in rows if r.get("suspect_zero_spread"))
+
+        # Rows are still recorded with their reason (see sample_once), but a
+        # collector whose source has gone away must stop and say so. Left
+        # unbounded this wrote 65,228 error rows over five days against a dead
+        # mt5-test while looking, by line count and process liveness, healthy.
+        if round_ok == 0:
+            consecutive_dead_rounds += 1
+            if consecutive_dead_rounds >= args.max_consecutive_failures:
+                print(json.dumps({
+                    "aborted": True,
+                    "reason": "no symbol answered in "
+                              f"{consecutive_dead_rounds} consecutive rounds",
+                    "last_error": next((r.get("error") for r in rows
+                                        if r.get("error")), None),
+                }), file=sys.stderr)
+                aborted = True
+                break
+        else:
+            consecutive_dead_rounds = 0
+
         if args.once:
             break
         slept = 0.0
@@ -182,9 +209,13 @@ def main() -> int:
         "rows_written": rounds * len(symbols),
         "rows_ok": ok_rows,
         "rows_suspect_zero_spread": suspect,
+        "consecutive_dead_rounds_at_exit": consecutive_dead_rounds,
+        "aborted_source_unreachable": aborted,
         "out": str(args.out),
         "stopped_at_utc": now_iso(),
     }, indent=2))
+    if aborted:
+        return 2
     return 0 if ok_rows else 1
 
 

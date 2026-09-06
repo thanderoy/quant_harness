@@ -7,3 +7,15 @@ requires-python = ">=3.13"
 dependencies = [
     "ipython>=9.13.0",
 ]
+
+[tool.pytest.ini_options]
+# Without these, a bare `pytest` at the repo root collects tests/ fine and then
+# fails the four package suites with ModuleNotFoundError — which reads as
+# broken code rather than a missing path. Same class of false alarm as running
+# the suite under the wrong interpreter.
+pythonpath = [
+    "packages/qh-resources",
+    "packages/qh-strategies",
+    "packages/qh-research",
+    "packages/qh-platform",
+]
