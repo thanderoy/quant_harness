@@ -29,3 +29,63 @@ is_python_package_installed() {
 
 # Mute Unnecessary Wine Errors
 export WINEDEBUG=-all,err-toolbar,fixme-all
+
+# --- Service liveness helpers -------------------------------------------------
+# Shared by 09-start-wine-fastapi.sh (initial start) and 10-supervise.sh
+# (restart-on-death). Both the MT5 terminal and the FastAPI server are started
+# with '&' and are not supervised by s6, so if either dies the container stays
+# up with a dead API. These helpers make that state detectable and recoverable.
+
+api_port="${MT5_API_PORT:-5001}"
+
+# True if the FastAPI server answers on its own port.
+api_healthy() {
+    wget -qO- --timeout=10 "http://localhost:${api_port}/" >/dev/null 2>&1
+}
+
+# True if the Wine MT5 terminal process is present.
+terminal_running() {
+    pgrep -f "terminal64.exe" >/dev/null 2>&1
+}
+
+# True if the Wine python process hosting the API is present.
+fastapi_running() {
+    pgrep -f "main.py" >/dev/null 2>&1
+}
+
+# Start the MT5 terminal under Wine if it is not already running.
+ensure_terminal() {
+    if terminal_running; then
+        return 0
+    fi
+    if [ ! -e "$mt5file" ]; then
+        log_message "ERROR" "Cannot start terminal: $mt5file is missing."
+        return 1
+    fi
+    log_message "INFO" "Starting MT5 terminal..."
+    $wine_executable "$mt5file" &
+    sleep 20
+    terminal_running
+}
+
+# Start the FastAPI server under Wine. Does not check health; callers poll.
+start_fastapi() {
+    log_message "INFO" "Starting FastAPI server in Wine environment..."
+    $wine_executable python /app/main.py &
+}
+
+# Poll api_healthy() until it succeeds or the budget is exhausted.
+# Usage: wait_for_api <attempts> <sleep_seconds>
+wait_for_api() {
+    local attempts="${1:-30}"
+    local gap="${2:-10}"
+    local i=0
+    while [ "$i" -lt "$attempts" ]; do
+        if api_healthy; then
+            return 0
+        fi
+        i=$((i + 1))
+        sleep "$gap"
+    done
+    return 1
+}
