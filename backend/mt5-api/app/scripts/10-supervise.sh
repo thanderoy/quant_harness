@@ -30,7 +30,20 @@ backoff="$BACKOFF_START"
 restarts=0
 
 recover() {
-    log_message "WARN" "API unreachable on port ${api_port} — attempting recovery."
+    # Cheapest repair first. If the service is up and only the terminal link is
+    # missing — the state both containers sat in after restarting — a single
+    # connect call fixes it, with no Wine restart and no downtime.
+    if api_responding; then
+        log_message "WARN" "API responding but terminal link is down — calling /api/v1/connect."
+        if api_connect && api_connected; then
+            restarts=$((restarts + 1))
+            log_message "INFO" "Reconnected without a restart (recovery #${restarts})."
+            return 0
+        fi
+        log_message "WARN" "Reconnect did not take; falling through to a restart."
+    fi
+
+    log_message "WARN" "API unhealthy on port ${api_port} — attempting recovery."
 
     if ! terminal_running; then
         log_message "WARN" "MT5 terminal is not running."
@@ -45,7 +58,8 @@ recover() {
 
     start_fastapi
 
-    if wait_for_api 18 10; then
+    # The terminal needs a moment after launch before it will accept a link.
+    if wait_for_responding 18 10 && api_connect && api_connected; then
         restarts=$((restarts + 1))
         log_message "INFO" "Recovery succeeded (restart #${restarts})."
         return 0
