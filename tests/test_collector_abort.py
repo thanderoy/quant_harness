@@ -212,3 +212,27 @@ def test_d3a_does_not_flag_a_fresh_tick(dying_server, tmp_path):
     assert proc.returncode == 0, proc.stderr
     row = json.loads(out.read_text().splitlines()[0])
     assert row["stale"] is False
+
+
+def test_d1_refuses_a_server_mismatch(dying_server, tmp_path):
+    """Contract specs are broker policy; an unlabelled dump is uninterpretable."""
+    url = dying_server(ok_calls=10_000)
+
+    proc = _run("phase0.collectors.d1_contract_specs", url,
+                "--out-dir", str(tmp_path), "--expect-server", "MetaQuotes")
+
+    assert proc.returncode == 4, proc.stdout + proc.stderr
+    assert "does not match" in proc.stderr
+
+
+def test_d3b_refuses_a_server_mismatch(dying_server, tmp_path):
+    url = dying_server(ok_calls=10_000)
+
+    proc = _run("phase0.collectors.d3b_spread_history", url,
+                "--months", "1", "--out-dir", str(tmp_path),
+                "--expect-server", "MetaQuotes")
+
+    assert proc.returncode == 4, proc.stdout + proc.stderr
+    artifact = json.loads(sorted(tmp_path.glob("d3b_*.json"))[-1].read_text())
+    assert artifact["status"] == "REFUSED_SERVER_MISMATCH"
+    assert artifact["broker"]["server"] == "PepperstoneKE-MT5-Live01"

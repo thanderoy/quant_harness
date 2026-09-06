@@ -40,6 +40,8 @@ from pathlib import Path
 
 from phase0.collectors._client import (
     UNIVERSE,
+    broker_context,
+    server_mismatch,
     EndpointMissing,
     MT5Unavailable,
     get,
@@ -216,6 +218,9 @@ def main() -> int:
     ap.add_argument("--atr", type=str, default="",
                     help='JSON of {symbol: {M15: x, H1: y, H4: z}} median ATR, '
                          'from D2. Omitted -> ATR ratios reported as null.')
+    ap.add_argument("--expect-server", default=None,
+                    help="refuse to collect unless the terminal's trade "
+                         "server contains this substring (case-insensitive)")
     ap.add_argument("--out-dir", type=Path, default=None,
                     help="directory for the artifact (default: phase0/)")
     ap.add_argument("--max-consecutive-failures", type=int, default=10,
@@ -245,6 +250,19 @@ def main() -> int:
         print(f"BLOCKED — {artifact['blocked_reason']}", file=sys.stderr)
         print(f"artifact: {path}")
         return 2
+
+    # Spread distributions are broker-specific by definition; an unlabelled
+    # census is uninterpretable. See broker_context().
+    artifact["broker"] = broker_context()
+    mismatch = server_mismatch(artifact["broker"], args.expect_server)
+    if mismatch:
+        artifact["status"] = "REFUSED_SERVER_MISMATCH"
+        artifact["blocked_reason"] = mismatch
+        path = write_artifact(f"d3b_spread_history_{stamp}.json", artifact,
+                              args.out_dir)
+        print(f"REFUSED — {mismatch}", file=sys.stderr)
+        print(f"artifact: {path}")
+        return 4
 
     per_symbol: dict[str, dict] = {}
     errors: dict[str, str] = {}
@@ -354,6 +372,7 @@ def main() -> int:
     path = write_artifact(f"d3b_spread_history_{stamp}.json", artifact, args.out_dir)
     print(json.dumps({
         "status": artifact["status"],
+        "server": artifact["broker"].get("server"),
         "n_symbols": len(per_symbol),
         "depth_shortfalls": shortfalls,
         "errors": list(errors),

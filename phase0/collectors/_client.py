@@ -100,3 +100,38 @@ def write_artifact(name: str, payload: dict, out_dir: Path | None = None) -> Pat
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2, default=str) + "\n")
     return out
+
+
+def broker_context() -> dict:
+    """Identify the trade server the caller is about to collect from.
+
+    Load-bearing, and shared by every collector. The D1/D3a/D3b runs of
+    2026-09-01 were labelled "Pepperstone (demo)" on the strength of the
+    container's name; the terminal was authorized on MetaQuotes-Demo, and
+    nothing in any output recorded otherwise, so the mislabel survived into a
+    committed snapshot and into conclusions about filling modes and spreads.
+    A measurement with no broker on it is not a measurement of anything.
+
+    Records ``server``, ``trade_mode`` and ``currency`` only. ``login`` and
+    ``name`` are account identity and are deliberately dropped.
+    """
+    try:
+        payload = get("/api/v1/account").payload
+    except (MT5Unavailable, EndpointMissing) as exc:
+        return {"server": None, "trade_mode": None, "error": str(exc)}
+    return {
+        "server": payload.get("server"),
+        "trade_mode": payload.get("trade_mode"),
+        "currency": payload.get("currency"),
+    }
+
+
+def server_mismatch(broker: dict, expect: str | None) -> str | None:
+    """Return an error string when the server does not match ``expect``."""
+    if not expect:
+        return None
+    server = broker.get("server")
+    if not server or expect.lower() not in server.lower():
+        return (f"trade server {server!r} does not match expected "
+                f"substring {expect!r}")
+    return None
