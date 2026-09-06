@@ -4,20 +4,13 @@ source /scripts/02-common.sh
 
 log_message "RUNNING" "09-start-wine-fastapi.sh"
 
-log_message "INFO" "Starting FastAPI server in Wine environment..."
+start_fastapi
 
-# Run the FastAPI app using Wine's Python
-$wine_executable python /app/main.py &
-
-FASTAPI_PID=$!
-
-# Give the server some time to start
-sleep 5
-
-# Check if the FastAPI server is running
-if ps -p $FASTAPI_PID > /dev/null; then
-    log_message "INFO" "FastAPI server in Wine started successfully with PID $FASTAPI_PID."
+# Poll the port rather than the PID. The old check ("is the wine wrapper PID
+# alive 5 seconds later?") passed even when the server never bound its port.
+if wait_for_api 30 10; then
+    log_message "INFO" "FastAPI server in Wine is answering on port ${api_port}."
 else
-    log_message "ERROR" "Failed to start FastAPI server in Wine."
-    exit 1
+    log_message "ERROR" "FastAPI server did not answer on port ${api_port} within 5 minutes."
+    log_message "ERROR" "Leaving recovery to 10-supervise.sh; container healthcheck will report unhealthy."
 fi

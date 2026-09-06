@@ -23,5 +23,8 @@ set -e
 log_message "INFO" "------------------------------------------------"
 log_message "INFO" "Container is ready."
 
-# Keep the script running
-tail -f /dev/null
+# Hand off to the supervisor. This replaces `tail -f /dev/null`: the container
+# now stays alive by actively watching the terminal and the API, rather than by
+# blocking on nothing while they die underneath it.
+set +e
+exec /scripts/10-supervise.sh

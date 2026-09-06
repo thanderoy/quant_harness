@@ -59,6 +59,10 @@ services:
       traefik.http.middlewares.mt5-api-auth.basicauth.users: ${MT5_API_USERNAME?Variable not set}:${MT5_API_HASHED_PASSWORD?Variable not set}
       traefik.http.services.mt5-api-service.loadbalancer.server.port: 5001
     logging: *default-logging
+    # Cap the Wine/MT5 process tree. Steady-state RSS is ~512 MiB; the ceiling
+    # exists so a runaway tick pull is killed inside this cgroup instead of
+    # taking the 8 GB host with it (see 10-supervise.sh header).
+    mem_limit: 2g
 
   mt5-test:
     build:
@@ -108,6 +112,10 @@ services:
       traefik.http.middlewares.mt5-test-api-auth.basicauth.users: ${MT5_API_USERNAME?Variable not set}:${MT5_API_HASHED_PASSWORD?Variable not set}
       traefik.http.services.mt5-test-api-service.loadbalancer.server.port: 5001
     logging: *default-logging
+    # Cap the Wine/MT5 process tree. Steady-state RSS is ~512 MiB; the ceiling
+    # exists so a runaway tick pull is killed inside this cgroup instead of
+    # taking the 8 GB host with it (see 10-supervise.sh header).
+    mem_limit: 2g
 
   postgres:
     image: postgres:17-alpine
