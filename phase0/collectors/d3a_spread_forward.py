@@ -124,6 +124,31 @@ def warm_up(symbols: tuple[str, ...]) -> int:
     return ok
 
 
+#: A tick older than this is not a live quote. Generous enough to survive a
+#: quiet minute in an illiquid symbol, short enough to catch a closed market.
+STALE_TICK_SECONDS = 300
+
+
+def tick_age_seconds(tick_time: str | None, sampled_at: datetime) -> float | None:
+    """Age of the broker's tick at sampling time, in seconds."""
+    if not tick_time:
+        return None
+    try:
+        ts = datetime.fromisoformat(tick_time)
+    except (TypeError, ValueError):
+        return None
+    if ts.tzinfo is None:
+        # mt5-api returns broker server time without an offset. Treated as UTC
+        # for age purposes only; the raw value is kept in `tick_time` so a
+        # later correction does not need re-collection.
+        ts = ts.replace(tzinfo=timezone.utc)
+    return (sampled_at - ts).total_seconds()
+
+
+def _is_stale(age: float | None) -> bool:
+    return age is not None and age > STALE_TICK_SECONDS
+
+
 def sample_once(symbols: tuple[str, ...], server: str | None = None) -> list[dict]:
     rows: list[dict] = []
     for sym in symbols:
@@ -144,7 +169,11 @@ def sample_once(symbols: tuple[str, ...], server: str | None = None) -> list[dic
             bid = float(payload["bid"])
             ask = float(payload["ask"])
             spread = ask - bid
+            # Computed before the update: inside a dict literal, row.get()
+            # would still be reading the dict as it was before this call.
+            age = tick_age_seconds(payload.get("time"), ts)
             row.update({
+                "tick_age_s": age,
                 "bid": bid,
                 "ask": ask,
                 "spread": spread,
@@ -155,6 +184,13 @@ def sample_once(symbols: tuple[str, ...], server: str | None = None) -> list[dic
                 # occurs is itself a data-quality signal, and dropping rows
                 # would hide a degrading feed.
                 "suspect_zero_spread": spread <= 0.0,
+                # The endpoint returns the last known tick whether or not the
+                # market is open, so a closed market yields the same Friday
+                # quote every round. Over one weekend that is ~26,000 identical
+                # rows at nine symbols a minute, all carrying the wide
+                # at-the-close spread. Unflagged, they would dominate any
+                # median computed over the file.
+                "stale": _is_stale(age),
             })
         except (MT5Unavailable, EndpointMissing, KeyError, TypeError, ValueError) as exc:
             # Recorded, never dropped: a gap with no reason in it is
@@ -217,6 +253,7 @@ def main() -> int:
     ok_rows = 0
     suspect = 0
     consecutive_dead_rounds = 0
+    stale = 0
     aborted = False
     while not _stop:
         rows = sample_once(symbols, server)
@@ -225,6 +262,7 @@ def main() -> int:
         round_ok = sum(1 for r in rows if r.get("ok"))
         ok_rows += round_ok
         suspect += sum(1 for r in rows if r.get("suspect_zero_spread"))
+        stale += sum(1 for r in rows if r.get("stale"))
 
         # Rows are still recorded with their reason (see sample_once), but a
         # collector whose source has gone away must stop and say so. Left
@@ -257,6 +295,7 @@ def main() -> int:
         "rows_written": rounds * len(symbols),
         "rows_ok": ok_rows,
         "rows_suspect_zero_spread": suspect,
+        "rows_stale": stale,
         "server": server,
         "consecutive_dead_rounds_at_exit": consecutive_dead_rounds,
         "aborted_source_unreachable": aborted,

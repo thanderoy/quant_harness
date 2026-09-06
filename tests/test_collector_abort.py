@@ -30,6 +30,7 @@ class _DyingHandler(BaseHTTPRequestHandler):
 
     ok_calls = 0
     calls = 0
+    tick_time = "2026-09-01T00:00:00"
 
     def log_message(self, *args) -> None:  # noqa: ANN002 — silence the server
         pass
@@ -54,7 +55,7 @@ class _DyingHandler(BaseHTTPRequestHandler):
         if self.path.startswith("/api/v1/account"):
             return {"server": "PepperstoneKE-MT5-Live01", "trade_mode": 0,
                     "currency": "USD", "login": 123, "name": "someone"}
-        return {"bid": 1.1, "ask": 1.1001, "time": "2026-09-01T00:00:00"}
+        return {"bid": 1.1, "ask": 1.1001, "time": self.tick_time}
 
     def _send(self, status: int, payload: dict) -> None:
         body = json.dumps(payload).encode()
@@ -67,8 +68,10 @@ class _DyingHandler(BaseHTTPRequestHandler):
 
 @pytest.fixture
 def dying_server():
-    def _start(ok_calls: int) -> str:
-        handler = type("H", (_DyingHandler,), {"ok_calls": ok_calls, "calls": 0})
+    def _start(ok_calls: int, tick_time: str | None = None) -> str:
+        handler = type("H", (_DyingHandler,),
+                       {"ok_calls": ok_calls, "calls": 0,
+                        "tick_time": tick_time or _DyingHandler.tick_time})
         srv = HTTPServer(("127.0.0.1", 0), handler)
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         _start.servers.append(srv)
@@ -172,3 +175,40 @@ def test_d3a_refuses_a_server_that_does_not_match(dying_server, tmp_path):
     assert proc.returncode == 3, proc.stdout
     assert "does not match" in proc.stderr
     assert not out.exists()
+
+
+def test_d3a_flags_a_stale_tick(dying_server, tmp_path):
+    """A closed market returns the same last tick every round.
+
+    Nine symbols a minute across a weekend is ~26,000 identical rows, each
+    carrying the wide at-the-close spread. Recorded, but flagged, so they
+    cannot dominate a median computed over the file.
+    """
+    url = dying_server(ok_calls=10_000, tick_time="2026-09-04T23:54:58")
+    out = tmp_path / "samples.jsonl"
+
+    proc = _run("phase0.collectors.d3a_spread_forward", url,
+                "--interval", "0.1", "--once", "--symbols", "EURUSD",
+                "--out", str(out))
+
+    assert proc.returncode == 0, proc.stderr
+    row = json.loads(out.read_text().splitlines()[0])
+    assert row["stale"] is True
+    assert row["tick_age_s"] > 300
+    # Flagged, never dropped: the spread is still recorded.
+    assert row["spread"] > 0
+
+
+def test_d3a_does_not_flag_a_fresh_tick(dying_server, tmp_path):
+    from datetime import datetime, timezone
+    fresh = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
+    url = dying_server(ok_calls=10_000, tick_time=fresh)
+    out = tmp_path / "samples.jsonl"
+
+    proc = _run("phase0.collectors.d3a_spread_forward", url,
+                "--interval", "0.1", "--once", "--symbols", "EURUSD",
+                "--out", str(out))
+
+    assert proc.returncode == 0, proc.stderr
+    row = json.loads(out.read_text().splitlines()[0])
+    assert row["stale"] is False
