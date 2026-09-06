@@ -90,8 +90,13 @@ def probe() -> dict:
         return {"reachable": False, "error": str(exc)}
 
 
-def write_artifact(name: str, payload: dict) -> Path:
-    """Write a Phase 0 artifact and return its path."""
-    out = ARTIFACT_DIR / name
+def write_artifact(name: str, payload: dict, out_dir: Path | None = None) -> Path:
+    """Write a Phase 0 artifact and return its path.
+
+    ``out_dir`` overrides the default location so a test run does not deposit
+    artifacts into the repo alongside real collection output.
+    """
+    out = (out_dir or ARTIFACT_DIR) / name
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2, default=str) + "\n")
     return out

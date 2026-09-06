@@ -36,6 +36,7 @@ import json
 import sys
 from collections import Counter
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from phase0.collectors._client import (
     UNIVERSE,
@@ -215,6 +216,11 @@ def main() -> int:
     ap.add_argument("--atr", type=str, default="",
                     help='JSON of {symbol: {M15: x, H1: y, H4: z}} median ATR, '
                          'from D2. Omitted -> ATR ratios reported as null.')
+    ap.add_argument("--out-dir", type=Path, default=None,
+                    help="directory for the artifact (default: phase0/)")
+    ap.add_argument("--max-consecutive-failures", type=int, default=10,
+                    help="abort the run after this many consecutive chunk "
+                         "fetches fail as unreachable (default 10)")
     args = ap.parse_args()
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -235,7 +241,7 @@ def main() -> int:
     if not artifact["probe"]["reachable"]:
         artifact["status"] = "BLOCKED"
         artifact["blocked_reason"] = artifact["probe"]["error"]
-        path = write_artifact(f"d3b_spread_history_{stamp}.json", artifact)
+        path = write_artifact(f"d3b_spread_history_{stamp}.json", artifact, args.out_dir)
         print(f"BLOCKED — {artifact['blocked_reason']}", file=sys.stderr)
         print(f"artifact: {path}")
         return 2
@@ -245,7 +251,17 @@ def main() -> int:
     chunks = month_chunks(start, end, args.chunk_days)
     artifact["n_chunks_per_symbol"] = len(chunks)
 
+    # A hole in one chunk is transient; a source that has gone away answers
+    # nothing, ever. Without this bound the 2026-09-01 run ground through 7
+    # symbols x 72 chunks of connection-refused before reporting.
+    max_consecutive = args.max_consecutive_failures
+    consecutive_unavailable = 0
+    aborted_reason: str | None = None
+
     for sym in args.symbols:
+        if aborted_reason:
+            errors[sym] = f"not attempted: {aborted_reason}"
+            continue
         acc = SymbolAccumulator()
         chunk_errors: list[str] = []
         for c_start, c_end in chunks:
@@ -258,7 +274,7 @@ def main() -> int:
                     "mt5-api must expose GET /api/v1/ticks (copy_ticks_range) — "
                     "see docs/mt5_api_additions.md"
                 )
-                path = write_artifact(f"d3b_spread_history_{stamp}.json", artifact)
+                path = write_artifact(f"d3b_spread_history_{stamp}.json", artifact, args.out_dir)
                 print(f"BLOCKED — {exc}", file=sys.stderr)
                 print(f"artifact: {path}")
                 return 3
@@ -266,7 +282,15 @@ def main() -> int:
                 # One failed chunk is a hole in the window, not a dead symbol.
                 # Recorded so obtained depth is not overstated.
                 chunk_errors.append(f"{c_start.date()}..{c_end.date()}: {exc}")
+                consecutive_unavailable += 1
+                if consecutive_unavailable >= max_consecutive:
+                    aborted_reason = (
+                        f"source unreachable for {consecutive_unavailable} "
+                        f"consecutive chunks: {exc}"
+                    )
+                    break
                 continue
+            consecutive_unavailable = 0
             acc.add(ticks, truncated)
             print(f"  {sym} {c_start.date()}..{c_end.date()}: "
                   f"{len(ticks)} ticks", file=sys.stderr)
@@ -299,7 +323,7 @@ def main() -> int:
         artifact["per_symbol"] = per_symbol
         artifact["errors"] = errors
         artifact["status"] = "IN_PROGRESS"
-        write_artifact(f"d3b_spread_history_{stamp}.json", artifact)
+        write_artifact(f"d3b_spread_history_{stamp}.json", artifact, args.out_dir)
         print(f"  [{sym}] done — {stats['overall']['n']} spreads, "
               f"median {stats['overall']['median_spread']}", file=sys.stderr)
 
@@ -309,7 +333,14 @@ def main() -> int:
     shortfalls = [s for s, v in per_symbol.items() if v["depth_shortfall"]]
     artifact["depth_shortfalls"] = shortfalls
 
-    if not per_symbol:
+    # Checked before the empty-result case: if the source died mid-run, that is
+    # why there is nothing here. Reporting BLOCKED instead would point at a
+    # dependency or code fault and send the next reader to the wrong place.
+    if aborted_reason:
+        artifact["status"] = "ABORTED_SOURCE_UNREACHABLE"
+        artifact["aborted_reason"] = aborted_reason
+        rc = 2
+    elif not per_symbol:
         artifact["status"] = "BLOCKED"
         artifact["blocked_reason"] = "no symbol returned usable tick history"
         rc = 1
@@ -320,12 +351,13 @@ def main() -> int:
         artifact["status"] = "OK"
         rc = 0
 
-    path = write_artifact(f"d3b_spread_history_{stamp}.json", artifact)
+    path = write_artifact(f"d3b_spread_history_{stamp}.json", artifact, args.out_dir)
     print(json.dumps({
         "status": artifact["status"],
         "n_symbols": len(per_symbol),
         "depth_shortfalls": shortfalls,
         "errors": list(errors),
+        "aborted_reason": aborted_reason,
         "artifact": str(path),
     }, indent=2))
     return rc
