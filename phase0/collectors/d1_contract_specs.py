@@ -24,12 +24,16 @@ authoring the puller.
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 from phase0.collectors._client import (
     UNIVERSE,
+    broker_context,
+    server_mismatch,
     EndpointMissing,
     MT5Unavailable,
     get,
@@ -85,6 +89,14 @@ def terminal_build() -> dict:
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--out-dir", type=Path, default=None,
+                    help="directory for the artifact (default: phase0/)")
+    ap.add_argument("--expect-server", default=None,
+                    help="refuse to collect unless the terminal's trade "
+                         "server contains this substring (case-insensitive)")
+    args = ap.parse_args()
+
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     artifact: dict = {
         "task": "D1",
@@ -99,12 +111,30 @@ def main() -> int:
         artifact["status"] = "BLOCKED"
         artifact["blocked_reason"] = artifact["probe"]["error"]
         artifact["dependency"] = "mt5-api reachable at MT5_API_URL"
-        path = write_artifact(f"d1_contract_specs_{stamp}.json", artifact)
+        path = write_artifact(f"d1_contract_specs_{stamp}.json", artifact,
+                              args.out_dir)
         print(f"BLOCKED — {artifact['blocked_reason']}", file=sys.stderr)
         print(f"artifact: {path}")
         return 2
 
     artifact["terminal"] = terminal_build()
+
+    # Recorded before any spec is fetched. Contract specs are broker policy —
+    # filling modes, volume caps, swap rates all differ per broker — so a dump
+    # that does not name its server cannot be interpreted, and worse, can be
+    # mislabelled by whoever writes it up later. That is exactly what happened
+    # on 2026-09-01.
+    artifact["broker"] = broker_context()
+    mismatch = server_mismatch(artifact["broker"], args.expect_server)
+    if mismatch:
+        artifact["status"] = "REFUSED_SERVER_MISMATCH"
+        artifact["blocked_reason"] = mismatch
+        path = write_artifact(f"d1_contract_specs_{stamp}.json", artifact,
+                              args.out_dir)
+        print(f"REFUSED — {mismatch}", file=sys.stderr)
+        print(f"artifact: {path}")
+        return 4
+
     specs: dict[str, dict] = {}
     errors: dict[str, str] = {}
     for sym in UNIVERSE:
@@ -117,7 +147,8 @@ def main() -> int:
                 "mt5-api must expose GET /api/v1/symbol_info — see "
                 "docs/mt5_api_additions.md"
             )
-            path = write_artifact(f"d1_contract_specs_{stamp}.json", artifact)
+            path = write_artifact(f"d1_contract_specs_{stamp}.json", artifact,
+                              args.out_dir)
             print(f"BLOCKED — {exc}", file=sys.stderr)
             print(f"artifact: {path}")
             return 3
@@ -137,9 +168,11 @@ def main() -> int:
         "symbols_with_missing_fields": incomplete,
     }
 
-    path = write_artifact(f"d1_contract_specs_{stamp}.json", artifact)
+    path = write_artifact(f"d1_contract_specs_{stamp}.json", artifact,
+                              args.out_dir)
     print(json.dumps({
         "status": artifact["status"],
+        "server": artifact["broker"].get("server"),
         "n_specs": len(specs),
         "n_errors": len(errors),
         "symbols_without_ioc": no_ioc,

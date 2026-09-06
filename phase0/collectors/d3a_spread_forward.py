@@ -32,6 +32,7 @@ from pathlib import Path
 
 from phase0.collectors._client import (
     UNIVERSE,
+    broker_context,
     EndpointMissing,
     MT5Unavailable,
     get,
@@ -76,30 +77,6 @@ def in_rollover_window(ts: datetime) -> bool:
     """Within +/- ROLLOVER_MINUTES of the daily rollover hour."""
     minutes = (ts.hour - ROLLOVER_UTC_HOUR) * 60 + ts.minute
     return abs(minutes) <= ROLLOVER_MINUTES or abs(minutes + 1440) <= ROLLOVER_MINUTES
-
-
-def broker_context() -> dict:
-    """Identify the trade server this run is sampling.
-
-    Load-bearing. The D1/D3a/D3b runs of 2026-09-01 were labelled
-    "Pepperstone (demo)" on the strength of the container's name; the terminal
-    was in fact authorized on MetaQuotes-Demo, and nothing in the output
-    recorded otherwise, so the mislabel survived into a committed snapshot and
-    into conclusions about filling modes and spreads. A sample with no broker
-    on it is not a measurement of anything.
-
-    Records ``server`` and ``trade_mode`` only. ``login`` and ``name`` are
-    account identity and are deliberately dropped rather than collected.
-    """
-    try:
-        payload = get("/api/v1/account").payload
-    except (MT5Unavailable, EndpointMissing) as exc:
-        return {"server": None, "trade_mode": None, "error": str(exc)}
-    return {
-        "server": payload.get("server"),
-        "trade_mode": payload.get("trade_mode"),
-        "currency": payload.get("currency"),
-    }
 
 
 def warm_up(symbols: tuple[str, ...]) -> int:
