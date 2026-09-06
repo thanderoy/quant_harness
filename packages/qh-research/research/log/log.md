@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 88
+- **Entries:** 89
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (88 entries)
+- **Hash chain:** OK — chain ok (89 entries)
 
 ## Principles
 
@@ -1515,3 +1515,21 @@ CONSEQUENCE FOR D4: all nine candidate symbols resolve on the live terminal, AUD
 GENERALISATION: a stated dependency is a claim, and this one was never checked against the host that runs the system. Any future BLOCKED record must name the host it was evaluated on.
 
 _hash_: `d52b582c214c409d…` · _prev_: `8e19240d8e347ea2…`
+
+### seq 88 · 2026-09-06T20:29:57Z · audit · `record:phase0-broker-mislabel-20260906`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `affected_tasks`=['D1', 'D3a', 'D3b'], `correct_server`=PepperstoneKE-MT5-Live01, `eurusd_zero_spread_fraction`=0.862, `reversed`=['ioc_assumption_generalises', 'volume_max', 'metals_tick_value'], `survived`=['tick_value_embeds_fx_rate'], `voided`=['all_spread_medians_before_20260906'], `wrong_server`=MetaQuotes-Demo
+
+> The 2026-09-01 D1, D3a and D3b runs were labelled 'Pepperstone (demo)' on the strength of the container's name. The terminal in mt5-test was authorized on MetaQuotes-Demo and synchronized with MetaQuotes Ltd.; its 20260901.log contains no Pepperstone authorization at all. No collector recorded the trade server, so nothing contradicted the assumption and it reached a committed snapshot (pepperstone_demo_20260901.json).
+
+WHAT REVERSES. The guard result 'filling_mode is 1 (FOK only) for six of nine symbols, so the repo-wide ORDER_FILLING_IOC rule does not generalise' was MetaQuotes' configuration. Re-run against PepperstoneKE-MT5-Live01 on 2026-09-06 returns filling_mode 2 (IOC) for all nine: ioc_assumption_generalises is TRUE and the IOC rule HOLDS. volume_max is 100 not 500 for FX; metals tick_value differs 10x.
+
+WHAT SURVIVES. tick_value embeds the capture-time spot rate, now confirmed exactly on Pepperstone: contract_size * tick_size / tick_value reproduces the live ask to the last digit (USDJPY 156.255, USDCHF 0.81005, USDCAD 1.38388). XAUUSD's implied rate is 1.00000, so the 'metals off by 10x' note was itself a MetaQuotes artifact. The sizer's choice to derive value from contract_size rather than tick_value stands, now on real venue data.
+
+SEPARATELY VOID. The D3b spread census excluded every non-positive spread. Measured directly against MT5 on Pepperstone 2026-09-04 13:00-14:00: EURUSD n=5192, crossed=0, zero=4476 (86%); XAUUSD n=15461, crossed=0, zero=0. Zero spreads are genuine raw-feed quotes and the marked-up metal has none. The exclusion discarded 86% of EURUSD's observations and reported median 1e-05 for a pair whose true median is 0.0, with the real cost in the separately-charged commission. Every spread figure from before 2026-09-06 is void.
+
+MECHANISM. One unverified inference (container name => broker) survived because no output recorded provenance. Fixed: all three collectors now stamp the trade server and accept --expect-server, refusing to collect on a mismatch.
+
+_hash_: `11aef2c5580a7cda…` · _prev_: `d52b582c214c409d…`
