@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -69,6 +70,11 @@ CHUNK_TIMEOUT_S = 900.0
 #: spreads is an EXACT representation of the distribution at a fraction of the
 #: memory. Holding millions of floats per session bucket per symbol is what
 #: made the first run unrunnable; this makes the quantiles exact and cheap.
+#: Backoff between consecutive unreachable chunks, so a source that is being
+#: repaired is not mistaken for one that is gone.
+RETRY_BACKOFF_BASE_S = 15
+RETRY_BACKOFF_MAX_S = 120
+
 SPREAD_ROUND_DP = 8
 
 
@@ -134,7 +140,8 @@ class SymbolAccumulator:
         self.overall: Counter = Counter()
         self.n_returned = 0
         self.n_parsed = 0
-        self.n_nonpositive = 0
+        self.n_zero = 0
+        self.n_crossed = 0
         self.first_ts: datetime | None = None
         self.last_ts: datetime | None = None
         self.truncated_chunks = 0
@@ -158,12 +165,24 @@ class SymbolAccumulator:
                 self.last_ts = ts
 
             spread = round(ask - bid, SPREAD_ROUND_DP)
-            if spread <= 0:
-                # Counted, not dropped: the rate is a data-quality signal, and
-                # a non-positive spread was never quotable so it must not enter
-                # the distribution the cost estimate is taken from.
-                self.n_nonpositive += 1
+
+            # A CROSSED quote (ask < bid) is impossible and is excluded.
+            # A ZERO spread is not: on a raw-spread account it is a genuine
+            # quote, and excluding it is a measurement error, not hygiene.
+            #
+            # Measured on PepperstoneKE-MT5-Live01, 2026-09-04 13:00-14:00:
+            # EURUSD 4,476 of 5,192 ticks quote exactly 0.0 and none are
+            # crossed, while XAUUSD -- which carries a markup -- has zero of
+            # them across 15,461 ticks. That is the signature of a raw feed,
+            # not of bad data. The earlier rule discarded 86% of EURUSD's real
+            # observations and reported a median of 1e-05 for a pair whose
+            # true median spread is 0.0, with the actual cost sitting in the
+            # separately-charged commission.
+            if spread < 0:
+                self.n_crossed += 1
                 continue
+            if spread == 0:
+                self.n_zero += 1
             self.by_session.setdefault(session_bucket(ts), Counter())[spread] += 1
             self.overall[spread] += 1
             if in_rollover_window(ts):
@@ -181,7 +200,10 @@ class SymbolAccumulator:
         return {
             "n_ticks_returned": self.n_returned,
             "n_ticks_parsed": self.n_parsed,
-            "n_nonpositive_spreads_excluded": self.n_nonpositive,
+            "n_zero_spreads_included": self.n_zero,
+            "n_crossed_spreads_excluded": self.n_crossed,
+            "zero_spread_fraction": (round(self.n_zero / self.n_parsed, 4)
+                                     if self.n_parsed else None),
             "chunks_truncated": self.truncated_chunks,
             "by_session": {s: self._stats(c)
                            for s, c in sorted(self.by_session.items())},
@@ -218,6 +240,12 @@ def main() -> int:
     ap.add_argument("--atr", type=str, default="",
                     help='JSON of {symbol: {M15: x, H1: y, H4: z}} median ATR, '
                          'from D2. Omitted -> ATR ratios reported as null.')
+    ap.add_argument("--retry-backoff-base", type=int,
+                    default=RETRY_BACKOFF_BASE_S,
+                    help=f"seconds before retrying after the first "
+                         f"unreachable chunk, doubling to "
+                         f"{RETRY_BACKOFF_MAX_S}s (default "
+                         f"{RETRY_BACKOFF_BASE_S}; 0 disables the wait)")
     ap.add_argument("--expect-server", default=None,
                     help="refuse to collect unless the terminal's trade "
                          "server contains this substring (case-insensitive)")
@@ -301,6 +329,21 @@ def main() -> int:
                 # Recorded so obtained depth is not overstated.
                 chunk_errors.append(f"{c_start.date()}..{c_end.date()}: {exc}")
                 consecutive_unavailable += 1
+                # Back off before the next chunk. Without this the ten
+                # attempts are spent in seconds, so a source that is being
+                # repaired -- the mt5 supervisor takes ~31s to restart and
+                # reconnect a terminal after an OOM -- is declared dead while
+                # the repair is still in progress. That is exactly what ended
+                # the 2026-09-06 19:12 run at two symbols.
+                backoff = min(
+                    args.retry_backoff_base * (2 ** (consecutive_unavailable - 1)),
+                    RETRY_BACKOFF_MAX_S,
+                )
+                print(f"  [{sym}] unreachable ({consecutive_unavailable}/"
+                      f"{max_consecutive}) — waiting {backoff}s",
+                      file=sys.stderr)
+                if backoff:
+                    time.sleep(backoff)
                 if consecutive_unavailable >= max_consecutive:
                     aborted_reason = (
                         f"source unreachable for {consecutive_unavailable} "
@@ -341,12 +384,28 @@ def main() -> int:
         artifact["per_symbol"] = per_symbol
         artifact["errors"] = errors
         artifact["status"] = "IN_PROGRESS"
+        # An IN_PROGRESS artifact left by a SIGKILLed run is otherwise
+        # indistinguishable from one that is still being written — the process
+        # gets no chance to record that it died. The 2026-09-06 run was killed
+        # at 137 on XAUUSD and left seven complete symbols under a status that
+        # reads as "still going". Naming what is done, what is outstanding and
+        # when the file last moved makes an abandoned run self-describing.
+        artifact["updated_at_utc"] = now_iso()
+        artifact["symbols_requested"] = list(args.symbols)
+        artifact["symbols_completed"] = list(per_symbol)
+        artifact["symbols_remaining"] = [x for x in args.symbols
+                                         if x not in per_symbol]
         write_artifact(f"d3b_spread_history_{stamp}.json", artifact, args.out_dir)
         print(f"  [{sym}] done — {stats['overall']['n']} spreads, "
               f"median {stats['overall']['median_spread']}", file=sys.stderr)
 
     artifact["per_symbol"] = per_symbol
     artifact["errors"] = errors
+    artifact["updated_at_utc"] = now_iso()
+    artifact["symbols_requested"] = list(args.symbols)
+    artifact["symbols_completed"] = list(per_symbol)
+    artifact["symbols_remaining"] = [x for x in args.symbols
+                                     if x not in per_symbol]
 
     shortfalls = [s for s, v in per_symbol.items() if v["depth_shortfall"]]
     artifact["depth_shortfalls"] = shortfalls

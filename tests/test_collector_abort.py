@@ -131,7 +131,7 @@ def test_d3b_aborts_mid_run_and_records_unattempted_symbols(dying_server, tmp_pa
 
     proc = _run("phase0.collectors.d3b_spread_history", url,
                 "--months", "1", "--chunk-days", "5",
-                "--max-consecutive-failures", "3",
+                "--max-consecutive-failures", "3", "--retry-backoff-base", "0",
                 "--symbols", "EURUSD", "GBPUSD", "USDJPY",
                 "--out-dir", str(tmp_path))
 
@@ -236,3 +236,51 @@ def test_d3b_refuses_a_server_mismatch(dying_server, tmp_path):
     artifact = json.loads(sorted(tmp_path.glob("d3b_*.json"))[-1].read_text())
     assert artifact["status"] == "REFUSED_SERVER_MISMATCH"
     assert artifact["broker"]["server"] == "PepperstoneKE-MT5-Live01"
+
+
+def test_d3b_counts_zero_spreads_and_excludes_only_crossed():
+    """A zero spread is a genuine raw-feed quote; a crossed one is impossible.
+
+    Measured on PepperstoneKE-MT5-Live01: EURUSD quotes exactly 0.0 on 86% of
+    ticks with none crossed, while XAUUSD has none at all. Excluding the zeros
+    discarded most of the real distribution and reported a median of 1e-05 for
+    a pair whose true median spread is 0.0.
+    """
+    from phase0.collectors.d3b_spread_history import SymbolAccumulator
+
+    acc = SymbolAccumulator()
+    acc.add([
+        {"time": "2026-09-04T13:00:00Z", "bid": 1.16170, "ask": 1.16170},  # zero
+        {"time": "2026-09-04T13:00:01Z", "bid": 1.16170, "ask": 1.16170},  # zero
+        {"time": "2026-09-04T13:00:02Z", "bid": 1.16170, "ask": 1.16171},  # 1pt
+        {"time": "2026-09-04T13:00:03Z", "bid": 1.16172, "ask": 1.16170},  # crossed
+    ], truncated=False)
+
+    r = acc.result()
+    assert r["n_zero_spreads_included"] == 2
+    assert r["n_crossed_spreads_excluded"] == 1
+    assert r["overall"]["n"] == 3          # zeros are in the distribution
+    assert r["overall"]["median_spread"] == 0.0
+    assert r["zero_spread_fraction"] == 0.5
+
+
+def test_d3b_artifact_names_what_is_outstanding(dying_server, tmp_path):
+    """A killed run must not leave an artifact that reads as still-running.
+
+    The 2026-09-06 run was SIGKILLed on XAUUSD with seven symbols complete and
+    left status IN_PROGRESS, which is indistinguishable from a run still being
+    written. The process gets no chance to record its own death, so the
+    incremental write has to name what is outstanding.
+    """
+    url = dying_server(ok_calls=1)
+
+    proc = _run("phase0.collectors.d3b_spread_history", url,
+                "--months", "1", "--chunk-days", "5",
+                "--max-consecutive-failures", "2", "--retry-backoff-base", "0",
+                "--symbols", "EURUSD", "GBPUSD", "--out-dir", str(tmp_path))
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    artifact = json.loads(sorted(tmp_path.glob("d3b_*.json"))[-1].read_text())
+    assert artifact["symbols_requested"] == ["EURUSD", "GBPUSD"]
+    assert artifact["symbols_remaining"] == ["EURUSD", "GBPUSD"]
+    assert artifact["updated_at_utc"]

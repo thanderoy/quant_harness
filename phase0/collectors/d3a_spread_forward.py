@@ -156,11 +156,13 @@ def sample_once(symbols: tuple[str, ...], server: str | None = None) -> list[dic
                 "spread": spread,
                 "tick_time": payload.get("time"),
                 "ok": True,
-                # A non-positive spread is not tradeable and is never a real
-                # quote. Flagged rather than dropped: the rate at which it
-                # occurs is itself a data-quality signal, and dropping rows
-                # would hide a degrading feed.
-                "suspect_zero_spread": spread <= 0.0,
+                # A zero spread is a genuine quote on a raw-spread account
+                # (measured: 86% of Pepperstone EURUSD ticks, and none on
+                # marked-up XAUUSD), so it is recorded as an ordinary
+                # observation. A CROSSED quote is impossible and is what
+                # actually warrants suspicion.
+                "zero_spread": spread == 0.0,
+                "crossed": spread < 0.0,
                 # The endpoint returns the last known tick whether or not the
                 # market is open, so a closed market yields the same Friday
                 # quote every round. Over one weekend that is ~26,000 identical
@@ -228,7 +230,8 @@ def main() -> int:
 
     rounds = 0
     ok_rows = 0
-    suspect = 0
+    zero = 0
+    crossed = 0
     consecutive_dead_rounds = 0
     stale = 0
     aborted = False
@@ -238,7 +241,8 @@ def main() -> int:
         rounds += 1
         round_ok = sum(1 for r in rows if r.get("ok"))
         ok_rows += round_ok
-        suspect += sum(1 for r in rows if r.get("suspect_zero_spread"))
+        zero += sum(1 for r in rows if r.get("zero_spread"))
+        crossed += sum(1 for r in rows if r.get("crossed"))
         stale += sum(1 for r in rows if r.get("stale"))
 
         # Rows are still recorded with their reason (see sample_once), but a
@@ -271,7 +275,8 @@ def main() -> int:
         "rounds": rounds,
         "rows_written": rounds * len(symbols),
         "rows_ok": ok_rows,
-        "rows_suspect_zero_spread": suspect,
+        "rows_zero_spread": zero,
+        "rows_crossed": crossed,
         "rows_stale": stale,
         "server": server,
         "consecutive_dead_rounds_at_exit": consecutive_dead_rounds,
