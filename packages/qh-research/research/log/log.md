@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 89
+- **Entries:** 91
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (89 entries)
+- **Hash chain:** OK — chain ok (91 entries)
 
 ## Principles
 
@@ -1533,3 +1533,37 @@ SEPARATELY VOID. The D3b spread census excluded every non-positive spread. Measu
 MECHANISM. One unverified inference (container name => broker) survived because no output recorded provenance. Fixed: all three collectors now stamp the trade server and accept --expect-server, refusing to collect on a mismatch.
 
 _hash_: `11aef2c5580a7cda…` · _prev_: `d52b582c214c409d…`
+
+### seq 89 · 2026-09-07T09:02:57Z · audit · `record:spread-estimator-weighting-20260907`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `cost_gate_estimator`=entry_conditional, `crossed_excluded`=0, `estimators`=['tick_weighted', 'time_weighted', 'entry_conditional'], `eurusd_london_median_tick_weighted`=0.0, `eurusd_london_median_time_weighted`=0.0001, `months_per_symbol`=11.9, `symbols`=9, `total_spreads`=448777747, `xauusd_agreement`=live 0.19 vs history 0.18-0.19
+
+> The D3 census (448,777,747 spreads, 9 symbols, ~11.9 months, PepperstoneKE-MT5-Live01) reports EURUSD London median 0.0 and p95 1e-05. Concurrent D3a live sampling of the same session reports median 1.0e-04 — about 10x wider. Both are correct measurements.
+
+D3b is TICK-WEIGHTED: it reads every historical tick, and ticks burst precisely when the book is active and the spread is momentarily zero. D3a's periodic series is TIME-WEIGHTED: one sample a minute lands on ordinary moments, which are wider. The two agree closely on XAUUSD (live 0.19 vs history 0.18-0.19) because a near-constant spread cannot be re-weighted, which is the control that identifies the mechanism. Live FX medians are also suspiciously uniform at 1.0-1.2 pips across every pair while history varies sub-pip per symbol — the signature of sampling ordinary moments rather than active ones.
+
+CONSEQUENCE. A tick-weighted median is not an execution-cost estimate. Using D3b's 0.0 as the EURUSD cost flatters it by roughly an order of magnitude.
+
+AND NEITHER IS THE RIGHT ESTIMATOR. A strategy evaluating a closed H1 bar acts at HH:00:00 plus its wake/fetch/decide latency. That instant is neither a random tick nor a random moment; it is the only spread the strategy will ever pay. The ENTRY-CONDITIONAL estimator is the one a cost gate needs, and it did not exist until D3a gained bar-boundary sampling on 2026-09-07 (sample_kind='bar_boundary', default H1 and M15, 750ms latency offset).
+
+The Asia tail finding is unaffected: it is a ratio computed within a single method. USDCHF p95 3e-05 -> 4.4e-04 (15x), GBPUSD 9x, EURUSD 6x, while AUDUSD barely moves because Asia is its liquid session.
+
+_hash_: `8bd6aa55de6dec5b…` · _prev_: `11aef2c5580a7cda…`
+
+### seq 90 · 2026-09-07T09:02:57Z · audit · `record:d3b-terminal-recovery-20260907`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `collector_exit`=137, `collector_memory_needed_metals_gb`=3, `recoveries`=26, `recoveries_after_pull`=0, `recovery_seconds`=60-90, `safe_chunk_days_metals`=1, `symbols_preserved_by_incremental_writes`=7
+
+> Collecting 12 months of tick history for 9 symbols OOM-killed the mt5 container 26 times over ~5 hours. Every one was recovered automatically in 60-90s by the supervisor (wine-mt5-python-setup 10-supervise.sh) and zero recoveries have occurred in the 5 hours since the pull ended, so the OOMs are entirely D3b-induced.
+
+PRECONDITIONS, all three required. (1) mem_limit on the mt5 service so the kill lands in the cgroup rather than at host level — without it, on 2026-09-01, the kernel killed the Wine tree, s6 survived as PID 1, Docker reported the container Up with RestartCount=0, and the healthcheck failed 14,425 consecutive times with nothing acting on it. (2) A supervisor that treats a disconnected terminal as unhealthy: the API answers 200 with mt5_connected False and does not re-establish the link itself, so health-as-responding would have seen nothing wrong. (3) Backoff between unreachable chunks in D3b — without it ten attempts are spent in seconds and the collector declares a source dead while its repair is in progress, which is exactly how the 19:12 run ended at two symbols.
+
+SEPARATE DEFECT. The collector holds an entire chunk's parsed JSON; a 2M-tick XAUUSD response exceeded its own 1 GB cap and it was SIGKILLed at 137. Seven completed symbols survived because writes are incremental per symbol. Metals re-ran at 1-day chunks with 3 GB and completed OK with no depth shortfall.
+
+LIVE-ACCOUNT NOTE. This ran against the live trading terminal, so there were 26 windows in which a strategy could not have reached MT5. Nothing was trading (sync_trades succeeded at 01:00, 02:00, 03:00 with zero positions and no 503s), but that is timing, not a property of the arrangement. A future full pull should either run against a separate Pepperstone terminal or be scheduled outside market hours.
+
+_hash_: `f4fcd8de42231d97…` · _prev_: `8bd6aa55de6dec5b…`
