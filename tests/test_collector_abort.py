@@ -14,6 +14,7 @@ were reading", which is the case that actually occurred.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 import threading
@@ -83,6 +84,20 @@ def dying_server():
         srv.shutdown()
 
 
+def _last_json(stdout: str) -> dict:
+    """Parse the final JSON object printed to stdout.
+
+    The collector prints a start-up line, optionally a schedule line, then the
+    run summary. Locating the summary by counting braces broke the moment a
+    line was added ahead of it, so decode from the end instead.
+    """
+    dec = json.JSONDecoder()
+    starts = [m.start() for m in re.finditer(r"^\{", stdout, re.MULTILINE)]
+    assert starts, f"no JSON object in stdout: {stdout!r}"
+    obj, _ = dec.raw_decode(stdout[starts[-1]:])
+    return obj
+
+
 def _run(module: str, url: str, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, "-m", module, *args],
@@ -101,7 +116,7 @@ def test_d3a_aborts_when_every_symbol_stops_answering(dying_server, tmp_path):
                 "--symbols", "EURUSD", "--out", str(out))
 
     assert proc.returncode == 2, proc.stderr
-    summary = json.loads(proc.stdout[proc.stdout.index("{", proc.stdout.index("}")):])
+    summary = _last_json(proc.stdout)
     assert summary["aborted_source_unreachable"] is True
     assert summary["consecutive_dead_rounds_at_exit"] == 3
 
@@ -121,7 +136,7 @@ def test_d3a_resets_the_counter_on_a_good_round(dying_server, tmp_path):
                 "--symbols", "EURUSD", "--out", str(out))
 
     assert proc.returncode == 0, proc.stderr
-    summary = json.loads(proc.stdout[proc.stdout.index("{", proc.stdout.index("}")):])
+    summary = _last_json(proc.stdout)
     assert summary["aborted_source_unreachable"] is False
     assert summary["consecutive_dead_rounds_at_exit"] == 0
 
@@ -284,3 +299,45 @@ def test_d3b_artifact_names_what_is_outstanding(dying_server, tmp_path):
     assert artifact["symbols_requested"] == ["EURUSD", "GBPUSD"]
     assert artifact["symbols_remaining"] == ["EURUSD", "GBPUSD"]
     assert artifact["updated_at_utc"]
+
+
+def test_next_boundary_lands_just_after_the_bar_close():
+    """The entry-conditional estimator is only meaningful at the boundary.
+
+    R7: a strategy acting on a closed H1 bar pays the spread at HH:00:00 plus
+    its own wake/fetch/decide latency, and never the spread at an arbitrary
+    moment. Sampling has to hit that instant, not the nearest convenient one.
+    """
+    from datetime import datetime, timezone
+    from phase0.collectors.d3a_spread_forward import (
+        next_boundary, TIMEFRAME_SECONDS,
+    )
+
+    now = datetime(2026, 9, 7, 10, 17, 33, tzinfo=timezone.utc)
+
+    h1 = next_boundary(now, TIMEFRAME_SECONDS["H1"], 0.75)
+    assert (h1.hour, h1.minute, h1.second) == (11, 0, 0)
+    assert h1.microsecond == 750_000
+
+    m15 = next_boundary(now, TIMEFRAME_SECONDS["M15"], 0.75)
+    assert (m15.hour, m15.minute, m15.second) == (10, 30, 0)
+
+    # Immediately after a boundary fires, the next one is a full period away
+    # rather than the same instant again.
+    after = next_boundary(h1, TIMEFRAME_SECONDS["H1"], 0.75)
+    assert (after - h1).total_seconds() == 3600
+
+
+def test_d3a_labels_the_schedule_that_produced_each_row(dying_server, tmp_path):
+    """Time-weighted and entry-conditional samples must not be poolable."""
+    url = dying_server(ok_calls=10_000)
+    out = tmp_path / "samples.jsonl"
+
+    proc = _run("phase0.collectors.d3a_spread_forward", url,
+                "--interval", "0.1", "--once", "--symbols", "EURUSD",
+                "--out", str(out))
+
+    assert proc.returncode == 0, proc.stderr
+    row = json.loads(out.read_text().splitlines()[0])
+    assert row["sample_kind"] == "periodic"
+    assert row["bar_timeframe"] is None
