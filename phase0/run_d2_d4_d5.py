@@ -35,22 +35,52 @@ ATR_PERIOD = 14
 MEDIAN_ATR_MONTHS = 24
 CORR_YEARS = 5
 
-# --- HAND_ENTERED contract specs (D1 is BLOCKED) --------------------------
-# Standard retail FX/metals values. NOT broker-confirmed.
-SPECS = {
-    "EURUSD": dict(contract_size=100_000, min_lot=0.01, quote_ccy="USD", base_ccy="EUR"),
-    "GBPUSD": dict(contract_size=100_000, min_lot=0.01, quote_ccy="USD", base_ccy="GBP"),
-    "USDJPY": dict(contract_size=100_000, min_lot=0.01, quote_ccy="JPY", base_ccy="USD"),
-    "USDCHF": dict(contract_size=100_000, min_lot=0.01, quote_ccy="CHF", base_ccy="USD"),
-    "USDCAD": dict(contract_size=100_000, min_lot=0.01, quote_ccy="CAD", base_ccy="USD"),
-    "XAUUSD": dict(contract_size=100,     min_lot=0.01, quote_ccy="USD", base_ccy="XAU"),
-    "XAGUSD": dict(contract_size=5_000,   min_lot=0.01, quote_ccy="USD", base_ccy="XAG"),
-}
-MISSING = ["AUDUSD", "NZDUSD"]
+# --- Contract specs, broker-confirmed --------------------------------------
+# Loaded from the pinned D1 snapshot rather than hand-entered. The previous
+# run stamped PROVISIONAL_SPECS because D1 was BLOCKED; D1 has since run
+# against PepperstoneKE-MT5-Live01, so these are MT5_SYMBOL_INFO.
+#
+# Derived from contract_size, never tick_value: tick_value embeds the
+# capture-time spot rate (contract_size * tick_size / tick_value reproduces
+# the live ask to the last digit), so it is not a constant and must not be
+# used as one.
+SNAPSHOT = (Path(__file__).resolve().parents[1] / "packages" / "qh-resources"
+            / "resources" / "instruments" / "snapshots"
+            / "pepperstone_live_20260906.json")
+
+
+def load_specs(path: Path = SNAPSHOT) -> tuple[dict, dict]:
+    payload = json.loads(path.read_text())
+    specs = {}
+    for sym, f in payload["instruments"].items():
+        quote = f["currency_profit"]
+        specs[sym] = dict(
+            contract_size=f["contract_size"],
+            min_lot=f["volume_min"],
+            quote_ccy=quote,
+            base_ccy=f["currency_margin"],
+        )
+    return specs, payload
+
+
+SPECS, SNAPSHOT_META = load_specs()
+SPEC_PROVENANCE = SNAPSHOT_META["provenance"]
+SPEC_SNAPSHOT_ID = SNAPSHOT_META["snapshot_id"]
+SPEC_SERVER = SNAPSHOT_META["server"]
 
 # Sign adjustment for D4: +1 where the quote is USD (return = base vs USD),
 # -1 where USD is the base, so every series measures "foreign vs USD".
 SIGN = {s: (1.0 if v["quote_ccy"] == "USD" else -1.0) for s, v in SPECS.items()}
+
+
+def missing_data(tf: str = "H1") -> list[str]:
+    """Universe members with no local OHLCV. Derived, never a hardcoded list.
+
+    The previous run carried MISSING = ["AUDUSD", "NZDUSD"] as a constant, so
+    the PARTIAL_UNIVERSE stamp could not clear itself once the history was
+    pulled.
+    """
+    return [s for s in SPECS if not (DATA / f"{s}_{tf}.csv").exists()]
 
 
 def load(sym: str, tf: str = "H1") -> pd.DataFrame | None:
@@ -123,9 +153,11 @@ def run_d2(frames: dict) -> dict:
                 "tradable_at_capital": bool(pct <= TARGET_RISK_PCT),
             })
     return {
-        "provenance": "PROVISIONAL_SPECS",
+        "provenance": SPEC_PROVENANCE,
+        "spec_snapshot": SPEC_SNAPSHOT_ID,
+        "spec_server": SPEC_SERVER,
         "universe_status": "PARTIAL_UNIVERSE",
-        "missing_instruments": MISSING,
+        "missing_instruments": missing_data(),
         "account_equity_usd": ACCOUNT_EQUITY,
         "target_risk_pct": TARGET_RISK_PCT,
         "stop_atr_multiplier": STOP_ATR_MULT,
@@ -166,7 +198,7 @@ def run_d4(frames: dict) -> dict:
     metals = [s for s in ["XAUUSD", "XAGUSD"] if s in corr.columns]
     return {
         "universe_status": "PARTIAL_UNIVERSE",
-        "missing_instruments": MISSING,
+        "missing_instruments": missing_data(),
         "note": ("AUDUSD and NZDUSD absent. They correlate strongly with each "
                  "other and with the commodity complex, so every effective-N "
                  "below is an UPPER BOUND on true breadth."),
@@ -204,7 +236,7 @@ def run_d5(frames: dict) -> dict:
     port_sr = float(port.mean() / port.std(ddof=1) * np.sqrt(252))
     return {
         "universe_status": "PARTIAL_UNIVERSE",
-        "missing_instruments": MISSING,
+        "missing_instruments": missing_data(),
         "rf_rate": 0.0,
         "annualisation_factor": 252,
         "note": ("SR* for DSR. Long-only buy-and-hold, zero risk-free rate. "
@@ -217,6 +249,71 @@ def run_d5(frames: dict) -> dict:
             "n_days": int(len(port)),
             "sharpe_annualised": port_sr,
         },
+    }
+
+
+#: D3b artifacts, newest last. The census ran in two parts: seven symbols in
+#: one run and the two metals in another, after the first was SIGKILLed on
+#: XAUUSD's tick volume.
+D3B_ARTIFACTS = ("d3b_spread_history_20260906T203136Z.json",
+                 "d3b_spread_history_20260907T004320Z.json")
+
+
+def run_d3() -> dict:
+    """D3 spread cost, assembled from the committed census artifacts.
+
+    Reads rather than recomputes: the census is 448M spreads pulled over
+    hours against a live terminal and is not something to re-derive on every
+    run of this script.
+    """
+    per_symbol: dict[str, dict] = {}
+    sources, server = [], None
+    for name in D3B_ARTIFACTS:
+        path = OUT / name
+        if not path.exists():
+            continue
+        payload = json.loads(path.read_text())
+        server = server or payload.get("broker", {}).get("server")
+        sources.append(name)
+        for sym, v in payload["per_symbol"].items():
+            per_symbol[sym] = {
+                "n_spreads": v["overall"]["n"],
+                "obtained_months": v["obtained_months"],
+                "median_spread": v["overall"]["median_spread"],
+                "p95_spread": v["overall"]["p95_spread"],
+                "zero_spread_fraction": v["zero_spread_fraction"],
+                "n_crossed_excluded": v["n_crossed_spreads_excluded"],
+                "by_session": {k: {"median_spread": x["median_spread"],
+                                   "p95_spread": x["p95_spread"]}
+                               for k, x in v["by_session"].items()},
+            }
+    missing = [s for s in SPECS if s not in per_symbol]
+    return {
+        "status": "BLOCKED" if missing else "OK",
+        "provenance": "MT5_TICK_HISTORY",
+        "server": server,
+        "source_artifacts": sources,
+        "missing_instruments": missing,
+        "d3b_historical": per_symbol,
+        "d3a_forward_collector": {
+            "status": "RUNNING",
+            "host": "ganymede",
+            "started_utc": "2026-09-06T17:12:00Z",
+            "schedules": ["periodic 60s (time-weighted)",
+                          "bar_boundary H1 and M15 +750ms (entry-conditional)"],
+            "note": ("Not yet a result. The entry-conditional series began "
+                     "2026-09-07 and needs a Friday close, a Sunday open and "
+                     "full NY/overlap sessions before it can carry a cost "
+                     "gate; O1 veto decision held to 2026-09-14."),
+        },
+        "estimator_warning": (
+            "median_spread here is TICK-WEIGHTED and is not an execution-cost "
+            "estimate. Ticks burst when the spread is momentarily zero, so a "
+            "tick-weighted median understates what a strategy entering at an "
+            "arbitrary moment pays — measured at ~10x on London FX against "
+            "D3a's time-weighted series. Use the entry-conditional series for "
+            "a cost gate. See research log seq=89."
+        ),
     }
 
 
@@ -234,23 +331,19 @@ def main() -> None:
         "task": "phase0_universe",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "generator": "phase0/run_d2_d4_d5.py",
-        "stamps": ["PARTIAL_UNIVERSE", "PROVISIONAL_SPECS"],
+        "stamps": (["PARTIAL_UNIVERSE"] if missing_data() else []),
         "d1_contract_specs": {
-            "status": "BLOCKED",
-            "dependency": "MT5 terminal unavailable (mt5 / mt5-test containers down)",
-            "provenance": "HAND_ENTERED",
+            "status": "OK",
+            "provenance": SPEC_PROVENANCE,
+            "snapshot": SPEC_SNAPSHOT_ID,
+            "server": SPEC_SERVER,
             "specs_used": SPECS,
-            "note": ("Standard retail values, NOT broker-confirmed. Registry.load() "
-                     "must refuse these without allow_provisional=True (T1)."),
+            "note": ("Broker-confirmed against PepperstoneKE-MT5-Live01 on "
+                     "2026-09-06. The PROVISIONAL_SPECS stamp is cleared: "
+                     "Registry.load() no longer needs allow_provisional=True."),
         },
         "d2_granularity": run_d2(frames),
-        "d3_spread_cost": {
-            "status": "BLOCKED",
-            "d3a_forward_collector": "not started — requires live MT5",
-            "d3b_historical": "not attempted — requires copy_ticks_range",
-            "note": ("Local CSVs are Date;Open;High;Low;Close;Volume with no "
-                     "spread column, so no spread statistic is derivable offline."),
-        },
+        "d3_spread_cost": run_d3(),
         "d4_correlation": run_d4(frames),
         "d5_benchmark_sharpe": run_d5(frames),
     }

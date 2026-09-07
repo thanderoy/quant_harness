@@ -1,0 +1,848 @@
+{
+  "task": "phase0_universe",
+  "generated_at_utc": "2026-09-07T10:16:27.131524+00:00",
+  "generator": "phase0/run_d2_d4_d5.py",
+  "stamps": [],
+  "d1_contract_specs": {
+    "status": "OK",
+    "provenance": "MT5_SYMBOL_INFO",
+    "snapshot": "pepperstone_live_20260906",
+    "server": "PepperstoneKE-MT5-Live01",
+    "specs_used": {
+      "EURUSD": {
+        "contract_size": 100000.0,
+        "min_lot": 0.01,
+        "quote_ccy": "USD",
+        "base_ccy": "EUR"
+      },
+      "GBPUSD": {
+        "contract_size": 100000.0,
+        "min_lot": 0.01,
+        "quote_ccy": "USD",
+        "base_ccy": "GBP"
+      },
+      "USDJPY": {
+        "contract_size": 100000.0,
+        "min_lot": 0.01,
+        "quote_ccy": "JPY",
+        "base_ccy": "USD"
+      },
+      "USDCHF": {
+        "contract_size": 100000.0,
+        "min_lot": 0.01,
+        "quote_ccy": "CHF",
+        "base_ccy": "USD"
+      },
+      "USDCAD": {
+        "contract_size": 100000.0,
+        "min_lot": 0.01,
+        "quote_ccy": "CAD",
+        "base_ccy": "USD"
+      },
+      "AUDUSD": {
+        "contract_size": 100000.0,
+        "min_lot": 0.01,
+        "quote_ccy": "USD",
+        "base_ccy": "AUD"
+      },
+      "NZDUSD": {
+        "contract_size": 100000.0,
+        "min_lot": 0.01,
+        "quote_ccy": "USD",
+        "base_ccy": "NZD"
+      },
+      "XAUUSD": {
+        "contract_size": 100.0,
+        "min_lot": 0.01,
+        "quote_ccy": "USD",
+        "base_ccy": "XAU"
+      },
+      "XAGUSD": {
+        "contract_size": 5000.0,
+        "min_lot": 0.01,
+        "quote_ccy": "USD",
+        "base_ccy": "USD"
+      }
+    },
+    "note": "Broker-confirmed against PepperstoneKE-MT5-Live01 on 2026-09-06. The PROVISIONAL_SPECS stamp is cleared: Registry.load() no longer needs allow_provisional=True."
+  },
+  "d2_granularity": {
+    "provenance": "MT5_SYMBOL_INFO",
+    "spec_snapshot": "pepperstone_live_20260906",
+    "spec_server": "PepperstoneKE-MT5-Live01",
+    "universe_status": "PARTIAL_UNIVERSE",
+    "missing_instruments": [],
+    "account_equity_usd": 100.0,
+    "target_risk_pct": 0.02,
+    "stop_atr_multiplier": 1.5,
+    "atr_period": 14,
+    "median_window_months": 24,
+    "rows": [
+      {
+        "symbol": "EURUSD",
+        "timeframe": "H1",
+        "median_atr_24m": 0.0012924841611820386,
+        "stop_distance_price": 0.001938726241773058,
+        "median_price": 1.152795,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 1.938726241773058,
+        "min_position_risk_pct_of_100": 0.019387262417730578,
+        "tradable_at_capital": true
+      },
+      {
+        "symbol": "EURUSD",
+        "timeframe": "H4",
+        "median_atr_24m": 0.0027624790135981443,
+        "stop_distance_price": 0.004143718520397216,
+        "median_price": 1.15283,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 4.143718520397216,
+        "min_position_risk_pct_of_100": 0.04143718520397216,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "GBPUSD",
+        "timeframe": "H1",
+        "median_atr_24m": 0.0015945458049685902,
+        "stop_distance_price": 0.0023918187074528853,
+        "median_price": 1.33531,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 2.3918187074528854,
+        "min_position_risk_pct_of_100": 0.023918187074528852,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "GBPUSD",
+        "timeframe": "H4",
+        "median_atr_24m": 0.0033495729002367635,
+        "stop_distance_price": 0.005024359350355145,
+        "median_price": 1.33531,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 5.024359350355145,
+        "min_position_risk_pct_of_100": 0.050243593503551454,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "USDJPY",
+        "timeframe": "H1",
+        "median_atr_24m": 0.22219776970999744,
+        "stop_distance_price": 0.33329665456499613,
+        "median_price": 153.372,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 2.173125828475837,
+        "min_position_risk_pct_of_100": 0.02173125828475837,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "USDJPY",
+        "timeframe": "H4",
+        "median_atr_24m": 0.4858915296467632,
+        "stop_distance_price": 0.7288372944701448,
+        "median_price": 153.36950000000002,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 4.752165811782295,
+        "min_position_risk_pct_of_100": 0.047521658117822954,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "USDCHF",
+        "timeframe": "H1",
+        "median_atr_24m": 0.0010595910931717324,
+        "stop_distance_price": 0.0015893866397575986,
+        "median_price": 0.80746,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 1.9683781732316137,
+        "min_position_risk_pct_of_100": 0.019683781732316136,
+        "tradable_at_capital": true
+      },
+      {
+        "symbol": "USDCHF",
+        "timeframe": "H4",
+        "median_atr_24m": 0.002258417424684956,
+        "stop_distance_price": 0.003387626137027434,
+        "median_price": 0.80742,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 4.195618311445634,
+        "min_position_risk_pct_of_100": 0.04195618311445634,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "USDCAD",
+        "timeframe": "H1",
+        "median_atr_24m": 0.0011795228548684203,
+        "stop_distance_price": 0.0017692842823026304,
+        "median_price": 1.38648,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 1.276097947538104,
+        "min_position_risk_pct_of_100": 0.01276097947538104,
+        "tradable_at_capital": true
+      },
+      {
+        "symbol": "USDCAD",
+        "timeframe": "H4",
+        "median_atr_24m": 0.002415909871700022,
+        "stop_distance_price": 0.003623864807550033,
+        "median_price": 1.38648,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 2.6137158902761186,
+        "min_position_risk_pct_of_100": 0.026137158902761186,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "AUDUSD",
+        "timeframe": "H1",
+        "median_atr_24m": 0.0010366059529166478,
+        "stop_distance_price": 0.0015549089293749718,
+        "median_price": 0.658515,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 1.5549089293749718,
+        "min_position_risk_pct_of_100": 0.015549089293749718,
+        "tradable_at_capital": true
+      },
+      {
+        "symbol": "AUDUSD",
+        "timeframe": "H4",
+        "median_atr_24m": 0.0021875325368956337,
+        "stop_distance_price": 0.0032812988053434505,
+        "median_price": 0.658455,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 3.2812988053434506,
+        "min_position_risk_pct_of_100": 0.03281298805343451,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "NZDUSD",
+        "timeframe": "H1",
+        "median_atr_24m": 0.0009449318863419074,
+        "stop_distance_price": 0.001417397829512861,
+        "median_price": 0.5851850000000001,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 1.417397829512861,
+        "min_position_risk_pct_of_100": 0.014173978295128611,
+        "tradable_at_capital": true
+      },
+      {
+        "symbol": "NZDUSD",
+        "timeframe": "H4",
+        "median_atr_24m": 0.0019944836252469463,
+        "stop_distance_price": 0.0029917254378704194,
+        "median_price": 0.58515,
+        "min_lot": 0.01,
+        "contract_size": 100000.0,
+        "min_position_risk_usd": 2.9917254378704192,
+        "min_position_risk_pct_of_100": 0.029917254378704194,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "XAUUSD",
+        "timeframe": "H1",
+        "median_atr_24m": 7.024803060299054,
+        "stop_distance_price": 10.537204590448582,
+        "median_price": 2678.265,
+        "min_lot": 0.01,
+        "contract_size": 100.0,
+        "min_position_risk_usd": 10.537204590448582,
+        "min_position_risk_pct_of_100": 0.10537204590448582,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "XAUUSD",
+        "timeframe": "H4",
+        "median_atr_24m": 14.190635307800207,
+        "stop_distance_price": 21.28595296170031,
+        "median_price": 2678.715,
+        "min_lot": 0.01,
+        "contract_size": 100.0,
+        "min_position_risk_usd": 21.28595296170031,
+        "min_position_risk_pct_of_100": 0.2128595296170031,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "XAGUSD",
+        "timeframe": "H1",
+        "median_atr_24m": 0.2146101164104296,
+        "stop_distance_price": 0.3219151746156444,
+        "median_price": 39.103,
+        "min_lot": 0.01,
+        "contract_size": 5000.0,
+        "min_position_risk_usd": 16.09575873078222,
+        "min_position_risk_pct_of_100": 0.1609575873078222,
+        "tradable_at_capital": false
+      },
+      {
+        "symbol": "XAGUSD",
+        "timeframe": "H4",
+        "median_atr_24m": 0.4094783080994029,
+        "stop_distance_price": 0.6142174621491043,
+        "median_price": 39.37,
+        "min_lot": 0.01,
+        "contract_size": 5000.0,
+        "min_position_risk_usd": 30.710873107455217,
+        "min_position_risk_pct_of_100": 0.30710873107455217,
+        "tradable_at_capital": false
+      }
+    ]
+  },
+  "d3_spread_cost": {
+    "status": "OK",
+    "provenance": "MT5_TICK_HISTORY",
+    "server": "PepperstoneKE-MT5-Live01",
+    "source_artifacts": [
+      "d3b_spread_history_20260906T203136Z.json",
+      "d3b_spread_history_20260907T004320Z.json"
+    ],
+    "missing_instruments": [],
+    "d3b_historical": {
+      "EURUSD": {
+        "n_spreads": 37626621,
+        "obtained_months": 11.93,
+        "median_spread": 0.0,
+        "p95_spread": 2e-05,
+        "zero_spread_fraction": 0.7828,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 0.0,
+            "p95_spread": 0.00012
+          },
+          "london": {
+            "median_spread": 0.0,
+            "p95_spread": 1e-05
+          },
+          "ny": {
+            "median_spread": 0.0,
+            "p95_spread": 1e-05
+          },
+          "offhours": {
+            "median_spread": 0.0,
+            "p95_spread": 2e-05
+          },
+          "overlap": {
+            "median_spread": 0.0,
+            "p95_spread": 2e-05
+          }
+        }
+      },
+      "GBPUSD": {
+        "n_spreads": 56436858,
+        "obtained_months": 11.93,
+        "median_spread": 1e-05,
+        "p95_spread": 4e-05,
+        "zero_spread_fraction": 0.1555,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 2e-05,
+            "p95_spread": 0.00036
+          },
+          "london": {
+            "median_spread": 1e-05,
+            "p95_spread": 4e-05
+          },
+          "ny": {
+            "median_spread": 1e-05,
+            "p95_spread": 4e-05
+          },
+          "offhours": {
+            "median_spread": 1e-05,
+            "p95_spread": 5e-05
+          },
+          "overlap": {
+            "median_spread": 1e-05,
+            "p95_spread": 4e-05
+          }
+        }
+      },
+      "USDJPY": {
+        "n_spreads": 51726040,
+        "obtained_months": 11.93,
+        "median_spread": 0.002,
+        "p95_spread": 0.005,
+        "zero_spread_fraction": 0.0953,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 0.002,
+            "p95_spread": 0.007
+          },
+          "london": {
+            "median_spread": 0.002,
+            "p95_spread": 0.005
+          },
+          "ny": {
+            "median_spread": 0.002,
+            "p95_spread": 0.005
+          },
+          "offhours": {
+            "median_spread": 0.002,
+            "p95_spread": 0.006
+          },
+          "overlap": {
+            "median_spread": 0.002,
+            "p95_spread": 0.005
+          }
+        }
+      },
+      "USDCHF": {
+        "n_spreads": 35779674,
+        "obtained_months": 11.93,
+        "median_spread": 1e-05,
+        "p95_spread": 3e-05,
+        "zero_spread_fraction": 0.2281,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 1e-05,
+            "p95_spread": 0.00044
+          },
+          "london": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          },
+          "ny": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          },
+          "offhours": {
+            "median_spread": 1e-05,
+            "p95_spread": 4e-05
+          },
+          "overlap": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          }
+        }
+      },
+      "USDCAD": {
+        "n_spreads": 38210849,
+        "obtained_months": 11.93,
+        "median_spread": 2e-05,
+        "p95_spread": 5e-05,
+        "zero_spread_fraction": 0.0206,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 3e-05,
+            "p95_spread": 9e-05
+          },
+          "london": {
+            "median_spread": 3e-05,
+            "p95_spread": 5e-05
+          },
+          "ny": {
+            "median_spread": 2e-05,
+            "p95_spread": 4e-05
+          },
+          "offhours": {
+            "median_spread": 2e-05,
+            "p95_spread": 6e-05
+          },
+          "overlap": {
+            "median_spread": 2e-05,
+            "p95_spread": 5e-05
+          }
+        }
+      },
+      "AUDUSD": {
+        "n_spreads": 44663775,
+        "obtained_months": 11.93,
+        "median_spread": 1e-05,
+        "p95_spread": 3e-05,
+        "zero_spread_fraction": 0.3005,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 1e-05,
+            "p95_spread": 4e-05
+          },
+          "london": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          },
+          "ny": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          },
+          "offhours": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          },
+          "overlap": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          }
+        }
+      },
+      "NZDUSD": {
+        "n_spreads": 17642206,
+        "obtained_months": 11.93,
+        "median_spread": 2e-05,
+        "p95_spread": 4e-05,
+        "zero_spread_fraction": 0.0,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 2e-05,
+            "p95_spread": 0.00032
+          },
+          "london": {
+            "median_spread": 2e-05,
+            "p95_spread": 4e-05
+          },
+          "ny": {
+            "median_spread": 2e-05,
+            "p95_spread": 4e-05
+          },
+          "offhours": {
+            "median_spread": 2e-05,
+            "p95_spread": 4e-05
+          },
+          "overlap": {
+            "median_spread": 2e-05,
+            "p95_spread": 4e-05
+          }
+        }
+      },
+      "XAUUSD": {
+        "n_spreads": 117393857,
+        "obtained_months": 11.9,
+        "median_spread": 0.17,
+        "p95_spread": 0.33,
+        "zero_spread_fraction": 0.0,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 0.19,
+            "p95_spread": 0.36
+          },
+          "london": {
+            "median_spread": 0.18,
+            "p95_spread": 0.33
+          },
+          "ny": {
+            "median_spread": 0.16,
+            "p95_spread": 0.3
+          },
+          "offhours": {
+            "median_spread": 0.17,
+            "p95_spread": 0.33
+          },
+          "overlap": {
+            "median_spread": 0.17,
+            "p95_spread": 0.3
+          }
+        }
+      },
+      "XAGUSD": {
+        "n_spreads": 49297867,
+        "obtained_months": 11.9,
+        "median_spread": 0.043,
+        "p95_spread": 0.077,
+        "zero_spread_fraction": 0.0,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 0.049,
+            "p95_spread": 0.087
+          },
+          "london": {
+            "median_spread": 0.043,
+            "p95_spread": 0.08
+          },
+          "ny": {
+            "median_spread": 0.04,
+            "p95_spread": 0.068
+          },
+          "offhours": {
+            "median_spread": 0.043,
+            "p95_spread": 0.076
+          },
+          "overlap": {
+            "median_spread": 0.041,
+            "p95_spread": 0.07
+          }
+        }
+      }
+    },
+    "d3a_forward_collector": {
+      "status": "RUNNING",
+      "host": "ganymede",
+      "started_utc": "2026-09-06T17:12:00Z",
+      "schedules": [
+        "periodic 60s (time-weighted)",
+        "bar_boundary H1 and M15 +750ms (entry-conditional)"
+      ],
+      "note": "Not yet a result. The entry-conditional series began 2026-09-07 and needs a Friday close, a Sunday open and full NY/overlap sessions before it can carry a cost gate; O1 veto decision held to 2026-09-14."
+    },
+    "estimator_warning": "median_spread here is TICK-WEIGHTED and is not an execution-cost estimate. Ticks burst when the spread is momentarily zero, so a tick-weighted median understates what a strategy entering at an arbitrary moment pays \u2014 measured at ~10x on London FX against D3a's time-weighted series. Use the entry-conditional series for a cost gate. See research log seq=89."
+  },
+  "d4_correlation": {
+    "universe_status": "PARTIAL_UNIVERSE",
+    "missing_instruments": [],
+    "note": "AUDUSD and NZDUSD absent. They correlate strongly with each other and with the commodity complex, so every effective-N below is an UPPER BOUND on true breadth.",
+    "window_years": 5,
+    "window_start": "2025-01-23",
+    "window_end": "2025-12-31",
+    "n_observations": 221,
+    "sign_adjustment": {
+      "EURUSD": 1.0,
+      "GBPUSD": 1.0,
+      "USDJPY": -1.0,
+      "USDCHF": -1.0,
+      "USDCAD": -1.0,
+      "AUDUSD": 1.0,
+      "NZDUSD": 1.0,
+      "XAUUSD": 1.0,
+      "XAGUSD": 1.0
+    },
+    "correlation_matrix": {
+      "EURUSD": {
+        "EURUSD": 1.0,
+        "GBPUSD": 0.785805,
+        "USDJPY": 0.685752,
+        "USDCHF": 0.822426,
+        "USDCAD": 0.564203,
+        "AUDUSD": 0.56934,
+        "NZDUSD": 0.666569,
+        "XAUUSD": 0.382396,
+        "XAGUSD": 0.188332
+      },
+      "GBPUSD": {
+        "EURUSD": 0.785805,
+        "GBPUSD": 1.0,
+        "USDJPY": 0.606637,
+        "USDCHF": 0.610782,
+        "USDCAD": 0.52757,
+        "AUDUSD": 0.658326,
+        "NZDUSD": 0.72706,
+        "XAUUSD": 0.369344,
+        "XAGUSD": 0.19852
+      },
+      "USDJPY": {
+        "EURUSD": 0.685752,
+        "GBPUSD": 0.606637,
+        "USDJPY": 1.0,
+        "USDCHF": 0.719692,
+        "USDCAD": 0.420223,
+        "AUDUSD": 0.364714,
+        "NZDUSD": 0.462344,
+        "XAUUSD": 0.313775,
+        "XAGUSD": 0.009513
+      },
+      "USDCHF": {
+        "EURUSD": 0.822426,
+        "GBPUSD": 0.610782,
+        "USDJPY": 0.719692,
+        "USDCHF": 1.0,
+        "USDCAD": 0.481747,
+        "AUDUSD": 0.354711,
+        "NZDUSD": 0.484183,
+        "XAUUSD": 0.355675,
+        "XAGUSD": 0.080808
+      },
+      "USDCAD": {
+        "EURUSD": 0.564203,
+        "GBPUSD": 0.52757,
+        "USDJPY": 0.420223,
+        "USDCHF": 0.481747,
+        "USDCAD": 1.0,
+        "AUDUSD": 0.689999,
+        "NZDUSD": 0.673403,
+        "XAUUSD": 0.270051,
+        "XAGUSD": 0.241055
+      },
+      "AUDUSD": {
+        "EURUSD": 0.56934,
+        "GBPUSD": 0.658326,
+        "USDJPY": 0.364714,
+        "USDCHF": 0.354711,
+        "USDCAD": 0.689999,
+        "AUDUSD": 1.0,
+        "NZDUSD": 0.914684,
+        "XAUUSD": 0.344985,
+        "XAGUSD": 0.380138
+      },
+      "NZDUSD": {
+        "EURUSD": 0.666569,
+        "GBPUSD": 0.72706,
+        "USDJPY": 0.462344,
+        "USDCHF": 0.484183,
+        "USDCAD": 0.673403,
+        "AUDUSD": 0.914684,
+        "NZDUSD": 1.0,
+        "XAUUSD": 0.326711,
+        "XAGUSD": 0.312855
+      },
+      "XAUUSD": {
+        "EURUSD": 0.382396,
+        "GBPUSD": 0.369344,
+        "USDJPY": 0.313775,
+        "USDCHF": 0.355675,
+        "USDCAD": 0.270051,
+        "AUDUSD": 0.344985,
+        "NZDUSD": 0.326711,
+        "XAUUSD": 1.0,
+        "XAGUSD": 0.551097
+      },
+      "XAGUSD": {
+        "EURUSD": 0.188332,
+        "GBPUSD": 0.19852,
+        "USDJPY": 0.009513,
+        "USDCHF": 0.080808,
+        "USDCAD": 0.241055,
+        "AUDUSD": 0.380138,
+        "NZDUSD": 0.312855,
+        "XAUUSD": 0.551097,
+        "XAGUSD": 1.0
+      }
+    },
+    "majors_available_only": {
+      "instruments": [
+        "EURUSD",
+        "GBPUSD",
+        "USDJPY",
+        "USDCHF",
+        "USDCAD"
+      ],
+      "k": 5,
+      "avg_pairwise_abs_rho": 0.6224838004360442,
+      "avg_pairwise_signed_rho": 0.6224838004360442,
+      "effective_n_from_abs_rho": 1.4326913569917095,
+      "effective_n_from_signed_rho": 1.4326913569917095
+    },
+    "majors_plus_metals": {
+      "instruments": [
+        "EURUSD",
+        "GBPUSD",
+        "USDJPY",
+        "USDCHF",
+        "USDCAD",
+        "XAUUSD",
+        "XAGUSD"
+      ],
+      "k": 7,
+      "avg_pairwise_abs_rho": 0.4374001818295319,
+      "avg_pairwise_signed_rho": 0.4374001818295319,
+      "effective_n_from_abs_rho": 1.9313535738156116,
+      "effective_n_from_signed_rho": 1.9313535738156116
+    }
+  },
+  "d5_benchmark_sharpe": {
+    "universe_status": "PARTIAL_UNIVERSE",
+    "missing_instruments": [],
+    "rf_rate": 0.0,
+    "annualisation_factor": 252,
+    "note": "SR* for DSR. Long-only buy-and-hold, zero risk-free rate. Near-zero for FX majors is the expected and desirable result; the metals values are not, which is why gold results must be re-evaluated against a non-zero SR* (spec T8).",
+    "per_instrument": [
+      {
+        "symbol": "EURUSD",
+        "start": "2013-10-09",
+        "end": "2026-08-28",
+        "n_days": 3346,
+        "mean_daily_log_return": -4.737654405781623e-05,
+        "daily_vol": 0.004787207463730372,
+        "buy_and_hold_sharpe_annualised": -0.15710188602146175
+      },
+      {
+        "symbol": "GBPUSD",
+        "start": "2013-10-09",
+        "end": "2026-08-28",
+        "n_days": 3346,
+        "mean_daily_log_return": -5.157542805005097e-05,
+        "daily_vol": 0.005583913590901901,
+        "buy_and_hold_sharpe_annualised": -0.14662378365360754
+      },
+      {
+        "symbol": "USDJPY",
+        "start": "2013-10-09",
+        "end": "2026-08-28",
+        "n_days": 3347,
+        "mean_daily_log_return": 0.00015001204482094268,
+        "daily_vol": 0.005618100966129868,
+        "buy_and_hold_sharpe_annualised": 0.4238740812811316
+      },
+      {
+        "symbol": "USDCHF",
+        "start": "2013-10-08",
+        "end": "2026-08-28",
+        "n_days": 3346,
+        "mean_daily_log_return": -3.282379208482527e-05,
+        "daily_vol": 0.005423446493529235,
+        "buy_and_hold_sharpe_annualised": -0.09607572348633131
+      },
+      {
+        "symbol": "USDCAD",
+        "start": "2013-10-09",
+        "end": "2026-08-28",
+        "n_days": 3346,
+        "mean_daily_log_return": 8.769087987027089e-05,
+        "daily_vol": 0.004369048118547477,
+        "buy_and_hold_sharpe_annualised": 0.31861621216793967
+      },
+      {
+        "symbol": "AUDUSD",
+        "start": "2017-10-25",
+        "end": "2026-08-28",
+        "n_days": 2297,
+        "mean_daily_log_return": -3.574432787560944e-05,
+        "daily_vol": 0.006175072784723533,
+        "buy_and_hold_sharpe_annualised": -0.09188938071205295
+      },
+      {
+        "symbol": "NZDUSD",
+        "start": "2025-01-23",
+        "end": "2026-09-01",
+        "n_days": 417,
+        "mean_daily_log_return": 0.00010378761259164435,
+        "daily_vol": 0.005968914836878541,
+        "buy_and_hold_sharpe_annualised": 0.2760262656689613
+      },
+      {
+        "symbol": "XAUUSD",
+        "start": "2004-06-14",
+        "end": "2025-12-31",
+        "n_days": 5515,
+        "mean_daily_log_return": 0.0004387539518003802,
+        "daily_vol": 0.010980184450098008,
+        "buy_and_hold_sharpe_annualised": 0.634324777595297
+      },
+      {
+        "symbol": "XAGUSD",
+        "start": "2009-08-19",
+        "end": "2026-08-28",
+        "n_days": 4388,
+        "mean_daily_log_return": 0.00035557971403600867,
+        "daily_vol": 0.020030159174919536,
+        "buy_and_hold_sharpe_annualised": 0.2818076940027677
+      }
+    ],
+    "equal_risk_weighted_panel": {
+      "weights": {
+        "EURUSD": 0.1346603955479777,
+        "GBPUSD": 0.15061401691801596,
+        "USDJPY": 0.10772146951599382,
+        "USDCHF": 0.11583691220518462,
+        "USDCAD": 0.19725418439924447,
+        "AUDUSD": 0.108760794052421,
+        "NZDUSD": 0.11032054467716935,
+        "XAUUSD": 0.042781601289421295,
+        "XAGUSD": 0.03205008139457174
+      },
+      "n_days": 221,
+      "sharpe_annualised": 1.9475510734042827
+    }
+  }
+}
