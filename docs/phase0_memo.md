@@ -1,10 +1,142 @@
 # Phase 0 memo — universe diagnostic
 
-**Date:** 2026-08-31 · **Repos:** WMPS `3db869a` (dirty), `quant_harness` `cb48e00`
-**Artifact:** `phase0/phase0_universe_20260831.json`
-**Stamps:** `PARTIAL_UNIVERSE`, `PROVISIONAL_SPECS`
+**Closed:** 2026-09-07 · **Artifact:** `phase0/phase0_universe_20260907.json` · **Stamps:** none
+**Specs:** `pepperstone_live_20260906` (`MT5_SYMBOL_INFO`, `PepperstoneKE-MT5-Live01`)
 
-Status: **D6, D7, D8, D9 complete. D2, D4, D5 complete but stamped. D3a RUNNING. D1 and D3b BLOCKED on two missing `mt5-api` endpoints — not on hardware (corrected, log seq=87).**
+Status: **CLOSED. D1–D9 complete, no task BLOCKED, no stamp outstanding.**
+
+Sections 1–10 are the working record and exceed the two-page limit; **§0 below is the memo the
+acceptance criterion asks for.** Where §0 and a later section disagree, §0 is current — the later
+text was written while D1 and D3 were blocked and is kept for the reasoning, not the numbers.
+
+---
+
+## 0. Phase 0 closure (the two-page memo)
+
+### Verdict
+
+Phase 0 confirms the diagnosis that motivated the rewrite and sharpens it in four places, one of
+which overturns a declared prior and one of which was only visible after real broker data arrived.
+
+**Breadth is worse than assumed.** Five available majors give **1.43 effective bets**, not the
+~1.9 estimated; with metals, **1.93** across seven. Adding AUDUSD and NZDUSD *lowered* the majors
+figure rather than raising it, because they correlate with each other and with the commodity
+block. Phase 2b's target of effective N ≥ 4 needs mean |ρ| ≤ 0.25 against a measured 0.44–0.62,
+and no combination of these nine reaches it. Escaping that ceiling needs a different input, not
+another instrument from this list.
+
+**Granularity points the opposite way to the spec's expectation.** At $100 with a 2% budget and a
+1.5×ATR stop, **H4 is strictly worse than H1**, not better: minimum lot is fixed, so a wider stop
+raises risk per trade rather than lowering it. Five of eighteen cells are tradable and **all five
+are H1** — EURUSD 1.94%, USDCHF 1.97%, USDCAD 1.28%, AUDUSD 1.55%, NZDUSD 1.42%. Every H4 cell
+fails. Two of the five clear by under 10 basis points, so this verdict is not robust to a modest
+change in equity or stop multiple.
+
+**The benchmark correction bites harder than anticipated.** Gold's own buy-and-hold Sharpe is
+**+0.634**, above the entire observed OOS range of the shelved mechanisms (0.27–0.41). Against a
+correct SR\*, those mechanisms did not merely fail significance — they underperformed holding the
+asset.
+
+**Spread is not one number, and the obvious one is the wrong one.** The D3 census covers
+**448,777,747 spreads** over ~11.9 months on all nine symbols, with **zero crossed quotes**. Its
+medians are TICK-WEIGHTED and are *not* execution-cost estimates: ticks burst when the spread is
+momentarily zero, so the tick-weighted median understates what a strategy entering at an arbitrary
+moment pays — measured at roughly **10× on London FX** against a concurrent time-weighted series.
+The estimator a cost gate needs is entry-conditional, and it did not exist until 2026-09-07.
+
+### Shortlist
+
+Tradable at $100, all H1: **EURUSD, USDCHF, USDCAD, AUDUSD, NZDUSD**. Metals are out on
+granularity alone — XAUUSD H1 needs 10.5% of equity per trade, XAGUSD 16.1%.
+
+The shortlist is five instruments carrying **1.43 effective bets**. The executable universe is
+still effectively one to two instruments; five names does not change that.
+
+### Effective breadth (D4)
+
+| group | k | mean abs rho | effective N |
+|---|---|---|---|
+| majors available | 5 | 0.622 | **1.43** |
+| majors + metals | 7 | 0.437 | **1.93** |
+
+### Benchmark Sharpe (D5, SR\*)
+
+| symbol | SR\* | window |
+|---|---|---|
+| XAUUSD | **+0.634** | 2004-06-14 → 2025-12-31 |
+| USDJPY | +0.424 | 2013-10-09 → 2026-08-28 |
+| USDCAD | +0.319 | 2013-10-09 → 2026-08-28 |
+| XAGUSD | +0.282 | 2009-08-19 → 2026-08-28 |
+| NZDUSD | +0.276 | 2025-01-23 → 2026-09-01 |
+| USDCHF | −0.096 | 2013-10-08 → 2026-08-28 |
+| AUDUSD | −0.092 | 2017-10-25 → 2026-08-28 |
+| GBPUSD | −0.147 | 2013-10-09 → 2026-08-28 |
+| EURUSD | −0.157 | 2013-10-09 → 2026-08-28 |
+| **panel** | **+1.948** | equal-risk-weighted |
+
+**NZDUSD's window is 417 days against 12+ years for the majors.** Its D2 row is sound; its SR\*
+and its weight in the D4 panel are not comparable to the others and should not be treated as
+equal-quality inputs.
+
+### Spread census (D3b), tick-weighted — see the warning above
+
+| symbol | spreads | zero% | median | p95 | asia p95 |
+|---|---|---|---|---|---|
+| EURUSD | 37,626,621 | 78.3 | 0.0 | 2e-05 | 1.2e-04 |
+| GBPUSD | 56,436,858 | 15.6 | 1e-05 | 4e-05 | 3.6e-04 |
+| USDJPY | 51,726,040 | 9.5 | 0.002 | 0.005 | 0.007 |
+| USDCHF | 35,779,674 | 22.8 | 1e-05 | 3e-05 | 4.4e-04 |
+| USDCAD | 38,210,849 | 2.1 | 2e-05 | 5e-05 | 9e-05 |
+| AUDUSD | 44,663,775 | 30.0 | 1e-05 | 3e-05 | 4e-05 |
+| NZDUSD | 17,642,206 | 0.0 | 2e-05 | 4e-05 | 3.2e-04 |
+| XAUUSD | 117,393,857 | 0.0 | 0.17 | 0.33 | 0.36 |
+| XAGUSD | 49,297,867 | 0.0 | 0.043 | 0.077 | 0.087 |
+
+Medians sit at or near the tick floor everywhere, so **all the cost information is in the tail**,
+and the Asia tail is not uniform: USDCHF p95 widens **15×**, GBPUSD 9×, EURUSD 6×, while AUDUSD
+barely moves because Asia is its liquid session. A median-based cost model shows none of this.
+
+The zero-spread fractions are the evidence that those zeros are real broker pricing rather than a
+storage artifact: 78.3% on EURUSD, exactly 0.0% on NZDUSD, and exactly 0.0% on both marked-up
+metals, all through one code path.
+
+### Acceptance criteria
+
+| criterion | status |
+|---|---|
+| `phase0_universe_<date>.json` with D1–D5 | **PASS**, with a path deviation — written to `phase0/`, not `research/artifacts/`, which no longer exists under the four-package layout |
+| Memo ≤2 pages, shortlist / granularity / breadth / SR\* | **PASS** as §0; §§1–10 retained as the working record |
+| D6 table at `docs/hardcoded_audit.md` | **PASS** |
+| D7 baseline as an `AUDIT` log entry | **PASS** — seq=84 |
+| D8 fixtures + generator + WMPS SHA | **PASS** — `packages/qh-resources/tests/fixtures/`, generator pinned to WMPS `3db869a`; note `wmps_repo_dirty: true` at capture |
+| D9 migration plan written and dry-run | **PASS** — `docs/d9_migration_plan.md` |
+| BLOCKED items carry dependency, collector, re-run command | **N/A** — nothing is BLOCKED |
+| **Zero changes to production code** | **FAIL, sanctioned.** See below |
+
+**The production-code criterion was not met, and that is a deviation rather than a pass.** D1 and
+D3b required two `mt5-api` endpoints (`/api/v1/symbol_info`, `/api/v1/ticks`) that did not exist;
+the freeze was lifted explicitly to add them. Separately, the census OOM-killed the live terminal
+26 times, which required a supervisor and a `mem_limit` in `docker-compose.yml`. Both changes are
+in WMPS, both were authorised, and neither touches a numerical module — so D8's fixtures and T11's
+parity are unaffected. Recorded here rather than absorbed, because "zero changes" was the criterion
+and it did not hold.
+
+### Log integrity at closure
+
+`verify()` → `chain ok (91 entries)`; `trial_count()` → **26**, unchanged from the D7 baseline at
+seq=84, as required. Four `AUDIT` records were added during Phase 0 (seq=84, 87, 88, 89, 90) and
+none counts as a trial.
+
+### What is not closed
+
+**D3a is still collecting and its entry-conditional series is one day old.** It needs a Friday
+close, a Sunday open and full NY/overlap sessions before it can carry a cost gate. **The O1 veto
+decision is held to 2026-09-14** rather than taken when the data merely looks ready.
+
+**The Razor commission schedule is still `HAND_ENTERED` at $7.00/lot round turn.** On a raw account
+whose median FX spread is genuinely at or near zero, that hand-entered figure is most of the cost
+model. It is an account document, obtainable today, and it is the largest unsourced number left in
+Phase 0.
 
 ---
 
@@ -354,7 +486,7 @@ constraints it is not.
 
 ## 7. D8 — golden fixtures (complete)
 
-Generated by `phase0/generate_d8_fixtures.py` into `phase0/d8_fixtures/`, pinned to WMPS
+Generated by `phase0/generate_d8_fixtures.py` into `packages/qh-resources/tests/fixtures/` (moved there at closure, per Phase 0.5 acceptance item 5), pinned to WMPS
 `3db869a` with all three source files **verified clean at HEAD** and sha256-recorded.
 
 | Fixture | Content |
@@ -438,11 +570,20 @@ terminal. `mt5` and `mt5-test` had been healthy on `ganymede` for ~2 months; the
 being run from a laptop that has no MT5 and never had one, so they faithfully reported the
 environment they ran in rather than the one that exists. Corrected at log seq=87.
 
-| Task | Status | Real dependency | Collector |
-|---|---|---|---|
-| D1 contract specs | **BLOCKED** | `mt5-api` exposes no `symbol_info` endpoint — host-independent, real | Written, committed, unrun |
-| D3a forward spread collector | **RUNNING since 2026-09-01** | none — `/api/v1/tick` existed throughout | Written and collecting on ganymede |
-| D3b historical spread | **BLOCKED** | `mt5-api` exposes no `copy_ticks_range` endpoint | Written, committed, unrun |
+**All three resolved on 2026-09-06/07. The table below is the state as it stood, kept because the
+diagnosis in it was wrong twice and that is the part worth remembering.**
+
+| Task | Status as recorded | Resolution |
+|---|---|---|
+| D1 contract specs | **BLOCKED** — `mt5-api` exposes no `symbol_info` endpoint | Endpoint added under lifted freeze; ran against `PepperstoneKE-MT5-Live01`, 9/9 specs, `MT5_SYMBOL_INFO` |
+| D3a forward spread collector | **RUNNING since 2026-09-01** | Was collecting from **MetaQuotes-Demo**, not Pepperstone (seq=88). Restarted against the live terminal 2026-09-06 17:12Z; gained entry-conditional sampling 2026-09-07 |
+| D3b historical spread | **BLOCKED** — no `copy_ticks_range` endpoint | Endpoint added; census complete, 448,777,747 spreads, 9/9 symbols |
+
+**A third error sat underneath the two below.** The D1/D3a/D3b runs of 2026-09-01 were labelled
+Pepperstone on the strength of the container's name; the terminal was on MetaQuotes-Demo, and no
+collector recorded its trade server, so nothing contradicted the assumption. It reached a committed
+snapshot and inverted the IOC guard result. All three collectors now stamp the server and refuse to
+collect on an `--expect-server` mismatch (seq=88).
 
 **Cost of the error: ~2 months of forward spread data that cannot be recovered.** D3a needed
 nothing that did not already exist. A stated dependency is a claim; this one was never checked

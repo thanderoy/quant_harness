@@ -1,6 +1,6 @@
 {
   "task": "phase0_universe",
-  "generated_at_utc": "2026-09-07T09:15:17.984134+00:00",
+  "generated_at_utc": "2026-09-07T10:16:27.131524+00:00",
   "generator": "phase0/run_d2_d4_d5.py",
   "stamps": [],
   "d1_contract_specs": {
@@ -297,10 +297,297 @@
     ]
   },
   "d3_spread_cost": {
-    "status": "BLOCKED",
-    "d3a_forward_collector": "not started \u2014 requires live MT5",
-    "d3b_historical": "not attempted \u2014 requires copy_ticks_range",
-    "note": "Local CSVs are Date;Open;High;Low;Close;Volume with no spread column, so no spread statistic is derivable offline."
+    "status": "OK",
+    "provenance": "MT5_TICK_HISTORY",
+    "server": "PepperstoneKE-MT5-Live01",
+    "source_artifacts": [
+      "d3b_spread_history_20260906T203136Z.json",
+      "d3b_spread_history_20260907T004320Z.json"
+    ],
+    "missing_instruments": [],
+    "d3b_historical": {
+      "EURUSD": {
+        "n_spreads": 37626621,
+        "obtained_months": 11.93,
+        "median_spread": 0.0,
+        "p95_spread": 2e-05,
+        "zero_spread_fraction": 0.7828,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 0.0,
+            "p95_spread": 0.00012
+          },
+          "london": {
+            "median_spread": 0.0,
+            "p95_spread": 1e-05
+          },
+          "ny": {
+            "median_spread": 0.0,
+            "p95_spread": 1e-05
+          },
+          "offhours": {
+            "median_spread": 0.0,
+            "p95_spread": 2e-05
+          },
+          "overlap": {
+            "median_spread": 0.0,
+            "p95_spread": 2e-05
+          }
+        }
+      },
+      "GBPUSD": {
+        "n_spreads": 56436858,
+        "obtained_months": 11.93,
+        "median_spread": 1e-05,
+        "p95_spread": 4e-05,
+        "zero_spread_fraction": 0.1555,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 2e-05,
+            "p95_spread": 0.00036
+          },
+          "london": {
+            "median_spread": 1e-05,
+            "p95_spread": 4e-05
+          },
+          "ny": {
+            "median_spread": 1e-05,
+            "p95_spread": 4e-05
+          },
+          "offhours": {
+            "median_spread": 1e-05,
+            "p95_spread": 5e-05
+          },
+          "overlap": {
+            "median_spread": 1e-05,
+            "p95_spread": 4e-05
+          }
+        }
+      },
+      "USDJPY": {
+        "n_spreads": 51726040,
+        "obtained_months": 11.93,
+        "median_spread": 0.002,
+        "p95_spread": 0.005,
+        "zero_spread_fraction": 0.0953,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 0.002,
+            "p95_spread": 0.007
+          },
+          "london": {
+            "median_spread": 0.002,
+            "p95_spread": 0.005
+          },
+          "ny": {
+            "median_spread": 0.002,
+            "p95_spread": 0.005
+          },
+          "offhours": {
+            "median_spread": 0.002,
+            "p95_spread": 0.006
+          },
+          "overlap": {
+            "median_spread": 0.002,
+            "p95_spread": 0.005
+          }
+        }
+      },
+      "USDCHF": {
+        "n_spreads": 35779674,
+        "obtained_months": 11.93,
+        "median_spread": 1e-05,
+        "p95_spread": 3e-05,
+        "zero_spread_fraction": 0.2281,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 1e-05,
+            "p95_spread": 0.00044
+          },
+          "london": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          },
+          "ny": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          },
+          "offhours": {
+            "median_spread": 1e-05,
+            "p95_spread": 4e-05
+          },
+          "overlap": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          }
+        }
+      },
+      "USDCAD": {
+        "n_spreads": 38210849,
+        "obtained_months": 11.93,
+        "median_spread": 2e-05,
+        "p95_spread": 5e-05,
+        "zero_spread_fraction": 0.0206,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 3e-05,
+            "p95_spread": 9e-05
+          },
+          "london": {
+            "median_spread": 3e-05,
+            "p95_spread": 5e-05
+          },
+          "ny": {
+            "median_spread": 2e-05,
+            "p95_spread": 4e-05
+          },
+          "offhours": {
+            "median_spread": 2e-05,
+            "p95_spread": 6e-05
+          },
+          "overlap": {
+            "median_spread": 2e-05,
+            "p95_spread": 5e-05
+          }
+        }
+      },
+      "AUDUSD": {
+        "n_spreads": 44663775,
+        "obtained_months": 11.93,
+        "median_spread": 1e-05,
+        "p95_spread": 3e-05,
+        "zero_spread_fraction": 0.3005,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 1e-05,
+            "p95_spread": 4e-05
+          },
+          "london": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          },
+          "ny": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          },
+          "offhours": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          },
+          "overlap": {
+            "median_spread": 1e-05,
+            "p95_spread": 3e-05
+          }
+        }
+      },
+      "NZDUSD": {
+        "n_spreads": 17642206,
+        "obtained_months": 11.93,
+        "median_spread": 2e-05,
+        "p95_spread": 4e-05,
+        "zero_spread_fraction": 0.0,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 2e-05,
+            "p95_spread": 0.00032
+          },
+          "london": {
+            "median_spread": 2e-05,
+            "p95_spread": 4e-05
+          },
+          "ny": {
+            "median_spread": 2e-05,
+            "p95_spread": 4e-05
+          },
+          "offhours": {
+            "median_spread": 2e-05,
+            "p95_spread": 4e-05
+          },
+          "overlap": {
+            "median_spread": 2e-05,
+            "p95_spread": 4e-05
+          }
+        }
+      },
+      "XAUUSD": {
+        "n_spreads": 117393857,
+        "obtained_months": 11.9,
+        "median_spread": 0.17,
+        "p95_spread": 0.33,
+        "zero_spread_fraction": 0.0,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 0.19,
+            "p95_spread": 0.36
+          },
+          "london": {
+            "median_spread": 0.18,
+            "p95_spread": 0.33
+          },
+          "ny": {
+            "median_spread": 0.16,
+            "p95_spread": 0.3
+          },
+          "offhours": {
+            "median_spread": 0.17,
+            "p95_spread": 0.33
+          },
+          "overlap": {
+            "median_spread": 0.17,
+            "p95_spread": 0.3
+          }
+        }
+      },
+      "XAGUSD": {
+        "n_spreads": 49297867,
+        "obtained_months": 11.9,
+        "median_spread": 0.043,
+        "p95_spread": 0.077,
+        "zero_spread_fraction": 0.0,
+        "n_crossed_excluded": 0,
+        "by_session": {
+          "asia": {
+            "median_spread": 0.049,
+            "p95_spread": 0.087
+          },
+          "london": {
+            "median_spread": 0.043,
+            "p95_spread": 0.08
+          },
+          "ny": {
+            "median_spread": 0.04,
+            "p95_spread": 0.068
+          },
+          "offhours": {
+            "median_spread": 0.043,
+            "p95_spread": 0.076
+          },
+          "overlap": {
+            "median_spread": 0.041,
+            "p95_spread": 0.07
+          }
+        }
+      }
+    },
+    "d3a_forward_collector": {
+      "status": "RUNNING",
+      "host": "ganymede",
+      "started_utc": "2026-09-06T17:12:00Z",
+      "schedules": [
+        "periodic 60s (time-weighted)",
+        "bar_boundary H1 and M15 +750ms (entry-conditional)"
+      ],
+      "note": "Not yet a result. The entry-conditional series began 2026-09-07 and needs a Friday close, a Sunday open and full NY/overlap sessions before it can carry a cost gate; O1 veto decision held to 2026-09-14."
+    },
+    "estimator_warning": "median_spread here is TICK-WEIGHTED and is not an execution-cost estimate. Ticks burst when the spread is momentarily zero, so a tick-weighted median understates what a strategy entering at an arbitrary moment pays \u2014 measured at ~10x on London FX against D3a's time-weighted series. Use the entry-conditional series for a cost gate. See research log seq=89."
   },
   "d4_correlation": {
     "universe_status": "PARTIAL_UNIVERSE",

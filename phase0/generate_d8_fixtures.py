@@ -28,7 +28,12 @@ import pandas as pd
 
 WMPS = Path.home() / "Local" / "wine-mt5-python-setup"
 STRATEGIES = WMPS / "backend" / "trading" / "app" / "quant" / "strategies"
-OUT = Path(__file__).resolve().parent / "d8_fixtures"
+# Phase 0.5 acceptance places the golden fixtures inside the package whose
+# tests consume them, not beside the generator. Keeping a second copy under
+# phase0/ would mean two sources of truth for a file whose whole purpose is to
+# be the single pinned reference.
+OUT = (Path(__file__).resolve().parents[1] / "packages" / "qh-resources"
+       / "tests" / "fixtures")
 
 sys.path.insert(0, str(STRATEGIES))
 

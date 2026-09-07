@@ -252,6 +252,71 @@ def run_d5(frames: dict) -> dict:
     }
 
 
+#: D3b artifacts, newest last. The census ran in two parts: seven symbols in
+#: one run and the two metals in another, after the first was SIGKILLed on
+#: XAUUSD's tick volume.
+D3B_ARTIFACTS = ("d3b_spread_history_20260906T203136Z.json",
+                 "d3b_spread_history_20260907T004320Z.json")
+
+
+def run_d3() -> dict:
+    """D3 spread cost, assembled from the committed census artifacts.
+
+    Reads rather than recomputes: the census is 448M spreads pulled over
+    hours against a live terminal and is not something to re-derive on every
+    run of this script.
+    """
+    per_symbol: dict[str, dict] = {}
+    sources, server = [], None
+    for name in D3B_ARTIFACTS:
+        path = OUT / name
+        if not path.exists():
+            continue
+        payload = json.loads(path.read_text())
+        server = server or payload.get("broker", {}).get("server")
+        sources.append(name)
+        for sym, v in payload["per_symbol"].items():
+            per_symbol[sym] = {
+                "n_spreads": v["overall"]["n"],
+                "obtained_months": v["obtained_months"],
+                "median_spread": v["overall"]["median_spread"],
+                "p95_spread": v["overall"]["p95_spread"],
+                "zero_spread_fraction": v["zero_spread_fraction"],
+                "n_crossed_excluded": v["n_crossed_spreads_excluded"],
+                "by_session": {k: {"median_spread": x["median_spread"],
+                                   "p95_spread": x["p95_spread"]}
+                               for k, x in v["by_session"].items()},
+            }
+    missing = [s for s in SPECS if s not in per_symbol]
+    return {
+        "status": "BLOCKED" if missing else "OK",
+        "provenance": "MT5_TICK_HISTORY",
+        "server": server,
+        "source_artifacts": sources,
+        "missing_instruments": missing,
+        "d3b_historical": per_symbol,
+        "d3a_forward_collector": {
+            "status": "RUNNING",
+            "host": "ganymede",
+            "started_utc": "2026-09-06T17:12:00Z",
+            "schedules": ["periodic 60s (time-weighted)",
+                          "bar_boundary H1 and M15 +750ms (entry-conditional)"],
+            "note": ("Not yet a result. The entry-conditional series began "
+                     "2026-09-07 and needs a Friday close, a Sunday open and "
+                     "full NY/overlap sessions before it can carry a cost "
+                     "gate; O1 veto decision held to 2026-09-14."),
+        },
+        "estimator_warning": (
+            "median_spread here is TICK-WEIGHTED and is not an execution-cost "
+            "estimate. Ticks burst when the spread is momentarily zero, so a "
+            "tick-weighted median understates what a strategy entering at an "
+            "arbitrary moment pays — measured at ~10x on London FX against "
+            "D3a's time-weighted series. Use the entry-conditional series for "
+            "a cost gate. See research log seq=89."
+        ),
+    }
+
+
 def main() -> None:
     frames = {}
     for sym in SPECS:
@@ -278,13 +343,7 @@ def main() -> None:
                      "Registry.load() no longer needs allow_provisional=True."),
         },
         "d2_granularity": run_d2(frames),
-        "d3_spread_cost": {
-            "status": "BLOCKED",
-            "d3a_forward_collector": "not started — requires live MT5",
-            "d3b_historical": "not attempted — requires copy_ticks_range",
-            "note": ("Local CSVs are Date;Open;High;Low;Close;Volume with no "
-                     "spread column, so no spread statistic is derivable offline."),
-        },
+        "d3_spread_cost": run_d3(),
         "d4_correlation": run_d4(frames),
         "d5_benchmark_sharpe": run_d5(frames),
     }
