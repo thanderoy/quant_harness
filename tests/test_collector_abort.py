@@ -262,3 +262,25 @@ def test_d3b_counts_zero_spreads_and_excludes_only_crossed():
     assert r["overall"]["n"] == 3          # zeros are in the distribution
     assert r["overall"]["median_spread"] == 0.0
     assert r["zero_spread_fraction"] == 0.5
+
+
+def test_d3b_artifact_names_what_is_outstanding(dying_server, tmp_path):
+    """A killed run must not leave an artifact that reads as still-running.
+
+    The 2026-09-06 run was SIGKILLed on XAUUSD with seven symbols complete and
+    left status IN_PROGRESS, which is indistinguishable from a run still being
+    written. The process gets no chance to record its own death, so the
+    incremental write has to name what is outstanding.
+    """
+    url = dying_server(ok_calls=1)
+
+    proc = _run("phase0.collectors.d3b_spread_history", url,
+                "--months", "1", "--chunk-days", "5",
+                "--max-consecutive-failures", "2", "--retry-backoff-base", "0",
+                "--symbols", "EURUSD", "GBPUSD", "--out-dir", str(tmp_path))
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    artifact = json.loads(sorted(tmp_path.glob("d3b_*.json"))[-1].read_text())
+    assert artifact["symbols_requested"] == ["EURUSD", "GBPUSD"]
+    assert artifact["symbols_remaining"] == ["EURUSD", "GBPUSD"]
+    assert artifact["updated_at_utc"]

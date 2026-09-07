@@ -384,12 +384,28 @@ def main() -> int:
         artifact["per_symbol"] = per_symbol
         artifact["errors"] = errors
         artifact["status"] = "IN_PROGRESS"
+        # An IN_PROGRESS artifact left by a SIGKILLed run is otherwise
+        # indistinguishable from one that is still being written — the process
+        # gets no chance to record that it died. The 2026-09-06 run was killed
+        # at 137 on XAUUSD and left seven complete symbols under a status that
+        # reads as "still going". Naming what is done, what is outstanding and
+        # when the file last moved makes an abandoned run self-describing.
+        artifact["updated_at_utc"] = now_iso()
+        artifact["symbols_requested"] = list(args.symbols)
+        artifact["symbols_completed"] = list(per_symbol)
+        artifact["symbols_remaining"] = [x for x in args.symbols
+                                         if x not in per_symbol]
         write_artifact(f"d3b_spread_history_{stamp}.json", artifact, args.out_dir)
         print(f"  [{sym}] done — {stats['overall']['n']} spreads, "
               f"median {stats['overall']['median_spread']}", file=sys.stderr)
 
     artifact["per_symbol"] = per_symbol
     artifact["errors"] = errors
+    artifact["updated_at_utc"] = now_iso()
+    artifact["symbols_requested"] = list(args.symbols)
+    artifact["symbols_completed"] = list(per_symbol)
+    artifact["symbols_remaining"] = [x for x in args.symbols
+                                     if x not in per_symbol]
 
     shortfalls = [s for s, v in per_symbol.items() if v["depth_shortfall"]]
     artifact["depth_shortfalls"] = shortfalls
