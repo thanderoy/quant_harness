@@ -27,7 +27,7 @@ import json
 import signal
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from phase0.collectors._client import (
@@ -79,6 +79,33 @@ def in_rollover_window(ts: datetime) -> bool:
     return abs(minutes) <= ROLLOVER_MINUTES or abs(minutes + 1440) <= ROLLOVER_MINUTES
 
 
+#: Bar lengths, in seconds, that a strategy may close a bar on. A strategy
+#: evaluating H1 acts at HH:00:00 plus however long it takes to wake, fetch and
+#: decide; that instant is the only one whose spread it will ever pay.
+TIMEFRAME_SECONDS: dict[str, int] = {
+    "M1": 60, "M5": 300, "M15": 900, "M30": 1800,
+    "H1": 3600, "H4": 14400, "D1": 86400,
+}
+
+#: Default delay after the boundary. A Celery beat task does not fire at
+#: exactly HH:00:00 — it wakes, queues, fetches rates and only then reads a
+#: price. 750ms is a deliberately conservative stand-in for that path; the
+#: offset is recorded per row so a better figure can be applied later without
+#: re-collecting.
+DEFAULT_BAR_LATENCY_MS = 750
+
+
+def now_utc() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def next_boundary(now: datetime, period_s: int, latency_s: float) -> datetime:
+    """The next sampling instant for a bar of ``period_s`` seconds."""
+    epoch = now.timestamp() - latency_s
+    nxt = (int(epoch) // period_s + 1) * period_s
+    return datetime.fromtimestamp(nxt + latency_s, tz=timezone.utc)
+
+
 def warm_up(symbols: tuple[str, ...]) -> int:
     """Touch every symbol once and discard the result.
 
@@ -126,7 +153,9 @@ def _is_stale(age: float | None) -> bool:
     return age is not None and age > STALE_TICK_SECONDS
 
 
-def sample_once(symbols: tuple[str, ...], server: str | None = None) -> list[dict]:
+def sample_once(symbols: tuple[str, ...], server: str | None = None,
+                sample_kind: str = "periodic",
+                bar_timeframe: str | None = None) -> list[dict]:
     rows: list[dict] = []
     for sym in symbols:
         ts = datetime.now(timezone.utc)
@@ -137,6 +166,13 @@ def sample_once(symbols: tuple[str, ...], server: str | None = None) -> list[dic
             # different terminal; a run-level header would silently cover rows
             # it never described.
             "server": server,
+            # Which schedule produced this row. The periodic series is
+            # time-weighted and answers "what is the spread at an arbitrary
+            # moment"; the bar-boundary series is entry-conditional and
+            # answers "what does a strategy acting on a closed bar actually
+            # pay". They are different estimators and must not be pooled.
+            "sample_kind": sample_kind,
+            "bar_timeframe": bar_timeframe,
             "sampled_at_utc": ts.isoformat(),
             "session": session_bucket(ts),
             "rollover_window": in_rollover_window(ts),
@@ -193,6 +229,15 @@ def main() -> int:
                     help="take a single round and exit")
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
     ap.add_argument("--symbols", nargs="*", default=list(UNIVERSE))
+    ap.add_argument("--bar-timeframes", nargs="*", default=["H1", "M15"],
+                    choices=sorted(TIMEFRAME_SECONDS),
+                    help="also sample just after each of these bar closes "
+                         "(default H1 M15; pass with no values to disable)")
+    ap.add_argument("--bar-latency-ms", type=int,
+                    default=DEFAULT_BAR_LATENCY_MS,
+                    help="delay after the bar boundary, standing in for the "
+                         f"wake/fetch/decide path (default "
+                         f"{DEFAULT_BAR_LATENCY_MS})")
     ap.add_argument("--expect-server", default=None,
                     help="refuse to run unless the terminal's trade server "
                          "contains this substring (case-insensitive). Use it "
@@ -228,7 +273,20 @@ def main() -> int:
                       "broker": broker,
                       "note": "first touch discarded — see warm_up()"}))
 
+    latency_s = args.bar_latency_ms / 1000.0
+    pending: dict[str, datetime] = {
+        tf: next_boundary(now_utc(), TIMEFRAME_SECONDS[tf], latency_s)
+        for tf in args.bar_timeframes
+    }
+    if pending:
+        print(json.dumps({
+            "bar_boundary_schedule": {tf: w.isoformat()
+                                      for tf, w in pending.items()},
+            "bar_latency_ms": args.bar_latency_ms,
+        }))
+
     rounds = 0
+    bar_rounds = 0
     ok_rows = 0
     zero = 0
     crossed = 0
@@ -266,14 +324,48 @@ def main() -> int:
 
         if args.once:
             break
-        slept = 0.0
-        while slept < args.interval and not _stop:
-            time.sleep(min(1.0, args.interval - slept))
-            slept += 1.0
+
+        # Sleep until whichever comes first: the next periodic sample or the
+        # next bar boundary. Sleeping a fixed interval and checking afterwards
+        # would put the boundary sample late by up to a full interval, which
+        # for the one instant the estimator exists to measure is the whole
+        # error.
+        next_periodic = now_utc() + timedelta(seconds=args.interval)
+        while not _stop:
+            now = now_utc()
+            due_tf = None
+            target = next_periodic
+            for tf, when in list(pending.items()):
+                if when < target:
+                    target, due_tf = when, tf
+            wait = (target - now).total_seconds()
+            if wait <= 0:
+                break
+            time.sleep(min(1.0, wait))
+            now = now_utc()
+            fired = [tf for tf, when in pending.items() if when <= now]
+            if fired:
+                # Boundary samples are taken here, inline, so the periodic
+                # cadence never displaces them.
+                for tf in fired:
+                    brows = sample_once(symbols, server, "bar_boundary", tf)
+                    append(args.out, brows)
+                    rounds += 1
+                    ok_rows += sum(1 for r in brows if r.get("ok"))
+                    zero += sum(1 for r in brows if r.get("zero_spread"))
+                    crossed += sum(1 for r in brows if r.get("crossed"))
+                    stale += sum(1 for r in brows if r.get("stale"))
+                    bar_rounds += 1
+                    pending[tf] = next_boundary(
+                        now_utc(), TIMEFRAME_SECONDS[tf], latency_s)
+            if now_utc() >= next_periodic:
+                break
 
     print(json.dumps({
         "rounds": rounds,
+        "bar_boundary_rounds": bar_rounds,
         "rows_written": rounds * len(symbols),
+        "bar_timeframes": list(args.bar_timeframes),
         "rows_ok": ok_rows,
         "rows_zero_spread": zero,
         "rows_crossed": crossed,
