@@ -133,29 +133,90 @@ def warm_up(symbols: tuple[str, ...]) -> int:
 STALE_TICK_SECONDS = 300
 
 
-def tick_age_seconds(tick_time: str | None, sampled_at: datetime) -> float | None:
-    """Age of the broker's tick at sampling time, in seconds."""
-    if not tick_time:
+#: Offsets a broker server plausibly runs at. Pepperstone's MT5 server is
+#: EET/EEST, i.e. UTC+2 or UTC+3. The range is deliberately wider than that,
+#: but narrow enough that a stale weekend tick cannot masquerade as one.
+PLAUSIBLE_OFFSET_HOURS = range(-12, 15)
+
+#: How close the freshest tick must be to a whole-hour offset before that
+#: offset is believed.
+OFFSET_TOLERANCE_S = 120
+
+
+def detect_server_utc_offset(symbols: tuple[str, ...]) -> int | None:
+    """Whole-hour offset between broker server time and UTC, or None.
+
+    mt5-api returns tick timestamps as naive broker server time. Treating
+    them as UTC was wrong by the offset itself: on Pepperstone (UTC+3) it
+    produced tick_age_s of -10799 on a tick that was 750ms old, which left
+    `stale` unable to fire until a tick was over three hours out of date.
+
+    Detected rather than configured, so a DST change corrects itself. The
+    freshest tick across the universe is the reference: during an open market
+    it is seconds old, so its lag is the offset plus a rounding error. A
+    closed market makes every tick hours or days stale, which falls outside
+    PLAUSIBLE_OFFSET_HOURS and returns None — an unknown offset, reported as
+    an unknown age, rather than a confident wrong one.
+    """
+    now = datetime.now(timezone.utc)
+    lags: list[float] = []
+    for sym in symbols:
+        try:
+            payload = get("/api/v1/tick", {"symbol": sym}).payload
+        except (MT5Unavailable, EndpointMissing):
+            continue
+        raw = payload.get("time")
+        if not raw:
+            continue
+        try:
+            ts = datetime.fromisoformat(str(raw))
+        except (TypeError, ValueError):
+            continue
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        lags.append((ts - now).total_seconds())
+
+    if not lags:
+        return None
+    freshest = max(lags)
+    hours = round(freshest / 3600)
+    if hours not in PLAUSIBLE_OFFSET_HOURS:
+        return None
+    if abs(freshest - hours * 3600) > OFFSET_TOLERANCE_S:
+        return None
+    return hours
+
+
+def tick_age_seconds(tick_time: str | None, sampled_at: datetime,
+                     server_utc_offset_hours: int | None = 0) -> float | None:
+    """Age of the broker's tick at sampling time, in seconds.
+
+    Returns None when the offset is unknown: an age computed against an
+    unknown timezone is not a measurement.
+    """
+    if not tick_time or server_utc_offset_hours is None:
         return None
     try:
-        ts = datetime.fromisoformat(tick_time)
+        ts = datetime.fromisoformat(str(tick_time))
     except (TypeError, ValueError):
         return None
     if ts.tzinfo is None:
-        # mt5-api returns broker server time without an offset. Treated as UTC
-        # for age purposes only; the raw value is kept in `tick_time` so a
-        # later correction does not need re-collection.
         ts = ts.replace(tzinfo=timezone.utc)
+    ts -= timedelta(hours=server_utc_offset_hours)
     return (sampled_at - ts).total_seconds()
 
 
-def _is_stale(age: float | None) -> bool:
-    return age is not None and age > STALE_TICK_SECONDS
+def _is_stale(age: float | None) -> bool | None:
+    """None when the age is unknown — not False, which asserts freshness."""
+    if age is None:
+        return None
+    return age > STALE_TICK_SECONDS
 
 
 def sample_once(symbols: tuple[str, ...], server: str | None = None,
                 sample_kind: str = "periodic",
-                bar_timeframe: str | None = None) -> list[dict]:
+                bar_timeframe: str | None = None,
+                offset_hours: int | None = 0) -> list[dict]:
     rows: list[dict] = []
     for sym in symbols:
         ts = datetime.now(timezone.utc)
@@ -166,6 +227,10 @@ def sample_once(symbols: tuple[str, ...], server: str | None = None,
             # different terminal; a run-level header would silently cover rows
             # it never described.
             "server": server,
+            # Naive broker timestamps are server time, so every age depends on
+            # this. Recorded per row: it is detected, not configured, and a
+            # DST change moves it mid-file.
+            "server_utc_offset_hours": offset_hours,
             # Which schedule produced this row. The periodic series is
             # time-weighted and answers "what is the spread at an arbitrary
             # moment"; the bar-boundary series is entry-conditional and
@@ -184,7 +249,7 @@ def sample_once(symbols: tuple[str, ...], server: str | None = None,
             spread = ask - bid
             # Computed before the update: inside a dict literal, row.get()
             # would still be reading the dict as it was before this call.
-            age = tick_age_seconds(payload.get("time"), ts)
+            age = tick_age_seconds(payload.get("time"), ts, offset_hours)
             row.update({
                 "tick_age_s": age,
                 "bid": bid,
@@ -269,8 +334,10 @@ def main() -> int:
             return 3
 
     warmed = warm_up(symbols)
+    offset_hours = detect_server_utc_offset(symbols)
     print(json.dumps({"warm_up_symbols_ok": warmed,
                       "broker": broker,
+                      "server_utc_offset_hours": offset_hours,
                       "note": "first touch discarded — see warm_up()"}))
 
     latency_s = args.bar_latency_ms / 1000.0
@@ -294,7 +361,7 @@ def main() -> int:
     stale = 0
     aborted = False
     while not _stop:
-        rows = sample_once(symbols, server)
+        rows = sample_once(symbols, server, "periodic", None, offset_hours)
         append(args.out, rows)
         rounds += 1
         round_ok = sum(1 for r in rows if r.get("ok"))
@@ -348,7 +415,7 @@ def main() -> int:
                 # Boundary samples are taken here, inline, so the periodic
                 # cadence never displaces them.
                 for tf in fired:
-                    brows = sample_once(symbols, server, "bar_boundary", tf)
+                    brows = sample_once(symbols, server, "bar_boundary", tf, offset_hours)
                     append(args.out, brows)
                     rounds += 1
                     ok_rows += sum(1 for r in brows if r.get("ok"))
@@ -371,6 +438,7 @@ def main() -> int:
         "rows_crossed": crossed,
         "rows_stale": stale,
         "server": server,
+        "server_utc_offset_hours": offset_hours,
         "consecutive_dead_rounds_at_exit": consecutive_dead_rounds,
         "aborted_source_unreachable": aborted,
         "out": str(args.out),

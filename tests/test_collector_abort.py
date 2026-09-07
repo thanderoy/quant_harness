@@ -32,6 +32,12 @@ class _DyingHandler(BaseHTTPRequestHandler):
     ok_calls = 0
     calls = 0
     tick_time = "2026-09-01T00:00:00"
+    # Serve `tick_time` for the first `switch_after` data calls, then
+    # `tick_time_after`. Offset detection reads the freshest tick before
+    # sampling begins, so a test needs a fresh tick during detection and a
+    # stale one during sampling — the same sequence a real open market gives.
+    tick_time_after = None
+    switch_after = 0
 
     def log_message(self, *args) -> None:  # noqa: ANN002 — silence the server
         pass
@@ -56,7 +62,10 @@ class _DyingHandler(BaseHTTPRequestHandler):
         if self.path.startswith("/api/v1/account"):
             return {"server": "PepperstoneKE-MT5-Live01", "trade_mode": 0,
                     "currency": "USD", "login": 123, "name": "someone"}
-        return {"bid": 1.1, "ask": 1.1001, "time": self.tick_time}
+        tt = self.tick_time
+        if self.tick_time_after and type(self).calls > self.switch_after:
+            tt = self.tick_time_after
+        return {"bid": 1.1, "ask": 1.1001, "time": tt}
 
     def _send(self, status: int, payload: dict) -> None:
         body = json.dumps(payload).encode()
@@ -69,10 +78,14 @@ class _DyingHandler(BaseHTTPRequestHandler):
 
 @pytest.fixture
 def dying_server():
-    def _start(ok_calls: int, tick_time: str | None = None) -> str:
+    def _start(ok_calls: int, tick_time: str | None = None,
+               tick_time_after: str | None = None,
+               switch_after: int = 0) -> str:
         handler = type("H", (_DyingHandler,),
                        {"ok_calls": ok_calls, "calls": 0,
-                        "tick_time": tick_time or _DyingHandler.tick_time})
+                        "tick_time": tick_time or _DyingHandler.tick_time,
+                        "tick_time_after": tick_time_after,
+                        "switch_after": switch_after})
         srv = HTTPServer(("127.0.0.1", 0), handler)
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         _start.servers.append(srv)
@@ -199,7 +212,16 @@ def test_d3a_flags_a_stale_tick(dying_server, tmp_path):
     carrying the wide at-the-close spread. Recorded, but flagged, so they
     cannot dominate a median computed over the file.
     """
-    url = dying_server(ok_calls=10_000, tick_time="2026-09-04T23:54:58")
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc)
+    fresh = now.replace(tzinfo=None).isoformat()
+    old_tick = (now - timedelta(hours=2)).replace(tzinfo=None).isoformat()
+
+    # Fresh while the collector establishes context, stale once sampling
+    # starts. Three calls precede the first sample: /api/v1/account for the
+    # broker stamp, the warm-up touch, and offset detection.
+    url = dying_server(ok_calls=10_000, tick_time=fresh,
+                       tick_time_after=old_tick, switch_after=3)
     out = tmp_path / "samples.jsonl"
 
     proc = _run("phase0.collectors.d3a_spread_forward", url,
@@ -208,6 +230,7 @@ def test_d3a_flags_a_stale_tick(dying_server, tmp_path):
 
     assert proc.returncode == 0, proc.stderr
     row = json.loads(out.read_text().splitlines()[0])
+    assert row["server_utc_offset_hours"] == 0
     assert row["stale"] is True
     assert row["tick_age_s"] > 300
     # Flagged, never dropped: the spread is still recorded.
@@ -341,3 +364,46 @@ def test_d3a_labels_the_schedule_that_produced_each_row(dying_server, tmp_path):
     row = json.loads(out.read_text().splitlines()[0])
     assert row["sample_kind"] == "periodic"
     assert row["bar_timeframe"] is None
+
+
+def test_tick_age_uses_the_broker_offset():
+    """Broker tick timestamps are naive SERVER time, not UTC.
+
+    Treating them as UTC understated every age by the offset. On Pepperstone
+    (UTC+3) a tick 750ms old reported tick_age_s of -10799, which left `stale`
+    unable to fire until a tick was more than three hours out of date.
+    """
+    from datetime import datetime, timezone
+    from phase0.collectors.d3a_spread_forward import tick_age_seconds, _is_stale
+
+    sampled = datetime(2026, 9, 7, 9, 15, 0, 750000, tzinfo=timezone.utc)
+
+    # Server is UTC+3, so 12:15:00 server == 09:15:00 UTC: a 0.75s old tick.
+    age = tick_age_seconds("2026-09-07T12:15:00", sampled, 3)
+    assert abs(age - 0.75) < 0.01
+    assert _is_stale(age) is False
+
+    # The old behaviour, for contrast.
+    assert tick_age_seconds("2026-09-07T12:15:00", sampled, 0) < -10_000
+
+    # A genuinely stale tick still trips, now at the right threshold.
+    assert _is_stale(tick_age_seconds("2026-09-07T11:15:00", sampled, 3)) is True
+
+    # Unknown offset yields an unknown age, not a confident wrong one, and
+    # `stale` is None rather than False — False would assert freshness.
+    assert tick_age_seconds("2026-09-07T12:15:00", sampled, None) is None
+    assert _is_stale(None) is None
+
+
+def test_detect_server_offset_refuses_a_closed_market(dying_server):
+    """Every tick stale by days must not be read as an exotic timezone."""
+    from phase0.collectors._client import UNIVERSE
+    import subprocess, sys as _sys
+
+    # tick_time two days behind: no plausible offset explains it.
+    url = dying_server(ok_calls=10_000, tick_time="2026-09-05T09:15:00")
+    proc = _run("phase0.collectors.d3a_spread_forward", url,
+                "--interval", "0.1", "--once", "--symbols", "EURUSD",
+                "--out", "/dev/null")
+    assert proc.returncode == 0, proc.stderr
+    assert '"server_utc_offset_hours": null' in proc.stdout
