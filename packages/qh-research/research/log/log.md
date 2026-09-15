@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 91
+- **Entries:** 93
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (91 entries)
+- **Hash chain:** OK — chain ok (93 entries)
 
 ## Principles
 
@@ -1567,3 +1567,39 @@ SEPARATE DEFECT. The collector holds an entire chunk's parsed JSON; a 2M-tick XA
 LIVE-ACCOUNT NOTE. This ran against the live trading terminal, so there were 26 windows in which a strategy could not have reached MT5. Nothing was trading (sync_trades succeeded at 01:00, 02:00, 03:00 with zero positions and no 503s), but that is timing, not a property of the arrangement. A future full pull should either run against a separate Pepperstone terminal or be scheduled outside market hours.
 
 _hash_: `f4fcd8de42231d97…` · _prev_: `8bd6aa55de6dec5b…`
+
+### seq 91 · 2026-09-15T07:33:02Z · audit · `d3a-entry-conditional-resolves-r7`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `bar_boundary_rounds_per_symbol`=616, `commission_provenance`=HAND_ENTERED, `estimator_outlier`=tick_weighted, `estimators_agreeing`=time_weighted == entry_conditional, `eurusd_p50_spread_entry_conditional_h1`=0.0001, `eurusd_p50_spread_entry_conditional_m15`=0.0001, `eurusd_p50_spread_tick_weighted_d3b`=0.0, `eurusd_p50_spread_time_weighted`=0.0001, `periodic_rounds_per_symbol`=7391, `round_turn_bps_p50`={'AUDUSD': 2.5, 'EURUSD': 1.46, 'GBPUSD': 1.4, 'NZDUSD': 3.25, 'USDCAD': 1.57, 'USDCHF': 2.06, 'USDJPY': 1.55, 'XAGUSD': 5.67, 'XAUUSD': 0.62}, `server`=PepperstoneKE-MT5-Live01, `stamps`=['PROVISIONAL_COSTS'], `window_utc`=2026-09-07/2026-09-12T12:30Z
+
+> D3a ran dual schedules against PepperstoneKE-MT5-Live01 from 2026-09-07 to 2026-09-12T12:30Z: periodic (60s, time-weighted) and bar-boundary (H1 and M15 close + 750ms, entry-conditional). 7,391 periodic and 616 boundary rounds per symbol.
+
+The two estimators agree to the tick across all nine symbols at p50, p75 and p90. EURUSD reads 1.0 pip on both. The D3b tick-weighted census reads 0.0 for the same instrument over the same broker.
+
+So R7's premise holds -- the three estimators are different numbers -- but the split is 2:1, not 1:1:1. Tick-weighting is the outlier, and it is the artifact: quote updates burst while the spread is momentarily zero, so counting ticks counts the moments nobody trades rather than the moments a bar-close entry fires. 78.3% of EURUSD ticks carry a zero spread and none of them is reachable by a strategy that acts on a closed bar.
+
+Consequence: the cost gate uses the time-weighted series, and the entry-conditional series is now a check on it rather than a separate input. A cost model built on the D3b medians would have understated FX spread by roughly 10x. No result has been produced on that basis; run_d3() already carried the estimator warning, and D2 is a granularity test that does not read spread at all.
+
+Round-turn cost at these spreads, with commission still HAND_ENTERED at $7.00/lot: XAUUSD 0.62 bps, GBPUSD 1.40, EURUSD 1.46, USDJPY 1.55, USDCAD 1.57, USDCHF 2.06, AUDUSD 2.50, NZDUSD 3.25, XAGUSD 5.67. Commission is 41% of the EURUSD figure and is the largest unsourced number remaining, so every row is provisional on it.
+
+_hash_: `4e406325f952aecc…` · _prev_: `f4fcd8de42231d97…`
+
+### seq 92 · 2026-09-15T07:33:02Z · audit · `d3a-scheduler-spin-2026-09-12`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `bar_boundary_rows_written`=5553, `buckets_covered`=['ny_session', 'london_ny_overlap', 'friday_close'], `buckets_missed`=['sunday_open'], `defect`=boundary due before the sleep decision was skipped, not fired, `detection_rule`=per-schedule row rate vs specified cadence, not process liveness, `entry_conditional_series_ended_utc`=2026-09-12T12:30:00Z, `file_bytes`=8497697753, `observed_cadence_s`=0.32, `periodic_rows_written`=19612557, `restarted_utc`=2026-09-15T07:18Z, `specified_cadence_s`=60
+
+> D3a's wait loop chose the nearest of the periodic and bar-boundary targets and broke out when that target was already past -- without sampling it. Nothing then advanced the pending time, so the same stale boundary was selected on every pass: the loop never slept, never took another boundary sample, and ran the periodic schedule at request rate.
+
+It triggers when a round outlasts the gap to the next bar close, which nine symbols against a loaded terminal do routinely. Live it fired at 2026-09-12T12:30Z and produced 19.6M periodic rows (8.5 GB) over the following three days at ~3 samples/second against the live terminal.
+
+What it cost: the entry-conditional window covers full NY sessions, the London/NY overlap and the Friday 2026-09-11 close, but stops before the Sunday 2026-09-13 open -- one of the two buckets the window was specified to capture. The time-weighted series is unaffected and runs to 2026-09-15.
+
+Detection is the transferable part. Process liveness, line count and file growth all read healthier than ever while the series that mattered was dead: the file grew 190x faster than specified. This is the same failure shape as the mt5-test collector that wrote 65,228 error rows while looking alive, and the same shape as the D3b container that exited five days before it was noticed. The check that would have caught all three is per-schedule row rate against its specified cadence, not liveness.
+
+Fixed in fix/d3a-boundary-scheduler with a regression test that reproduces the straddle; collection restarted 2026-09-15T07:18Z on the fixed code and the 07:30:00.750Z M15 boundary fired for all nine symbols. The 8.5 GB file is retained unmodified.
+
+_hash_: `6d28cceca03225c6…` · _prev_: `4e406325f952aecc…`
