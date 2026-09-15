@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import time
 import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -407,3 +408,66 @@ def test_detect_server_offset_refuses_a_closed_market(dying_server):
                 "--out", "/dev/null")
     assert proc.returncode == 0, proc.stderr
     assert '"server_utc_offset_hours": null' in proc.stdout
+
+
+def test_d3a_keeps_sampling_bar_boundaries_after_one_comes_due_late(
+        dying_server, tmp_path, monkeypatch, capsys):
+    """A boundary that falls due mid-round must still fire, and only once.
+
+    Regression for the production spin: the wait loop picked the nearest
+    target and broke out when it was already past, without firing it.
+    pending[tf] never advanced, so the same stale boundary was re-selected
+    forever -- no further entry-conditional sample was ever taken and the
+    periodic schedule ran flat out. Live, that stopped the bar-boundary
+    series at 2026-09-12T12:30Z and wrote 19.6M periodic rows behind it.
+    """
+    import threading
+    from phase0.collectors import d3a_spread_forward as d3a
+
+    monkeypatch.setitem(d3a.TIMEFRAME_SECONDS, "S2", 2)
+
+    # A round that outlasts the bar period is what triggered it live: nine
+    # symbols against a loaded terminal took longer than the gap to the next
+    # M15 close, so the boundary was already past when the wait loop ran.
+    # The stub answers in milliseconds, so the delay is added here.
+    real_sample_once = d3a.sample_once
+
+    def slow_sample_once(*a, **kw):
+        rows = real_sample_once(*a, **kw)
+        time.sleep(2.5)
+        return rows
+
+    monkeypatch.setattr(d3a, "sample_once", slow_sample_once)
+    url = dying_server(ok_calls=1_000_000)
+    out = tmp_path / "samples.jsonl"
+    # _client binds the base URL as a default argument at import time, so
+    # setting MT5_API_URL here would be too late to reach it.
+    import functools
+    from phase0.collectors import _client
+    pinned = functools.partial(_client.get.__wrapped__
+                               if hasattr(_client.get, "__wrapped__")
+                               else _client.get, base_url=url)
+    monkeypatch.setattr(d3a, "get", pinned)
+    monkeypatch.setattr(_client, "get", pinned)
+    monkeypatch.setattr(d3a, "_stop", False)
+    monkeypatch.setattr(sys, "argv", [
+        "d3a", "--interval", "1", "--symbols", "EURUSD",
+        "--bar-timeframes", "S2", "--bar-latency-ms", "0",
+        "--out", str(out)])
+
+    stopper = threading.Timer(14.0, lambda: setattr(d3a, "_stop", True))
+    stopper.start()
+    try:
+        d3a.main()
+    finally:
+        stopper.cancel()
+
+    kinds = [json.loads(line)["sample_kind"]
+             for line in out.read_text().splitlines()]
+    boundary = kinds.count("bar_boundary")
+    periodic = kinds.count("periodic")
+
+    # Rounds cost 2.5s, so over ~14s both schedules get a few turns. Under
+    # the bug the boundary series stopped dead and periodic ran unbounded.
+    assert boundary >= 2, f"boundary series stalled: {boundary} samples"
+    assert periodic <= 10, f"periodic schedule spun: {periodic} samples"
