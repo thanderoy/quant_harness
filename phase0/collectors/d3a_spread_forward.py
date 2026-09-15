@@ -399,34 +399,36 @@ def main() -> int:
         # error.
         next_periodic = now_utc() + timedelta(seconds=args.interval)
         while not _stop:
+            # Service every boundary that is already due BEFORE deciding how
+            # long to sleep. The earlier shape chose the nearest target, and
+            # broke out of the wait loop when that target was already past --
+            # without firing it. Nothing then advanced pending[tf], so the
+            # stale boundary was re-selected on every pass, the loop never
+            # slept, and the periodic schedule ran at request rate. In
+            # production that ended the entry-conditional series at
+            # 2026-09-12T12:30Z and wrote 19.6M periodic rows in its place.
+            fired = [tf for tf, when in pending.items() if when <= now_utc()]
+            for tf in fired:
+                brows = sample_once(symbols, server, "bar_boundary", tf, offset_hours)
+                append(args.out, brows)
+                rounds += 1
+                ok_rows += sum(1 for r in brows if r.get("ok"))
+                zero += sum(1 for r in brows if r.get("zero_spread"))
+                crossed += sum(1 for r in brows if r.get("crossed"))
+                stale += sum(1 for r in brows if r.get("stale"))
+                bar_rounds += 1
+                # Recomputed from the clock, not from the boundary that just
+                # fired, so a stall skips ahead rather than replaying a burst.
+                pending[tf] = next_boundary(
+                    now_utc(), TIMEFRAME_SECONDS[tf], latency_s)
+
             now = now_utc()
-            due_tf = None
-            target = next_periodic
-            for tf, when in list(pending.items()):
-                if when < target:
-                    target, due_tf = when, tf
+            if now >= next_periodic:
+                break
+            target = min([next_periodic, *pending.values()])
             wait = (target - now).total_seconds()
-            if wait <= 0:
-                break
-            time.sleep(min(1.0, wait))
-            now = now_utc()
-            fired = [tf for tf, when in pending.items() if when <= now]
-            if fired:
-                # Boundary samples are taken here, inline, so the periodic
-                # cadence never displaces them.
-                for tf in fired:
-                    brows = sample_once(symbols, server, "bar_boundary", tf, offset_hours)
-                    append(args.out, brows)
-                    rounds += 1
-                    ok_rows += sum(1 for r in brows if r.get("ok"))
-                    zero += sum(1 for r in brows if r.get("zero_spread"))
-                    crossed += sum(1 for r in brows if r.get("crossed"))
-                    stale += sum(1 for r in brows if r.get("stale"))
-                    bar_rounds += 1
-                    pending[tf] = next_boundary(
-                        now_utc(), TIMEFRAME_SECONDS[tf], latency_s)
-            if now_utc() >= next_periodic:
-                break
+            if wait > 0:
+                time.sleep(min(1.0, wait))
 
     print(json.dumps({
         "rounds": rounds,
