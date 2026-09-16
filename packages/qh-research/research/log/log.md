@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 95
+- **Entries:** 96
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (95 entries)
+- **Hash chain:** OK — chain ok (96 entries)
 
 ## Principles
 
@@ -1637,3 +1637,17 @@ This entry records the defect, not a re-decision. Re-evaluating requires the ori
 benchmark_from_d5() reads the figure straight out of the Phase 0 artifact and converts it once. The plausibility guard cannot help here: 0.6343 is a perfectly reasonable per-observation Sharpe, so an annualised value passed by hand is accepted while being ~16x too large. That is pinned as a known limitation.
 
 _hash_: `2cf8807104f6fee3…` · _prev_: `cfc1d0b738fc6382…`
+
+### seq 95 · 2026-09-16T08:27:38Z · parity_fixture · `record:t9a-flood_tide_h1-mask-off`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `counts_as_trial`=False, `horizon_unit`=tradable_bars, `layers_checked`=7, `layers_passed`=7, `mode`=mask_off, `passed`=True, `reference_artifact`=flood_tide_h1_seq31_p1_20260706T075247Z.json, `stopped_at`=None
+
+> Re-ran the seq=31 E-Ratio pipeline and compared five layers in dependency order: PASS.
+
+This is a migration test of an already-adjudicated mechanism, not a new trial. flood_tide_h1's verdict (SHELVE_INSUFFICIENT_SIGNIFICANCE) is untouched and is not reopened by reproducing it.
+
+Horizons count tradable bars (R4). Mask-off only: the mask-on comparison has two independent channels — the signal set and the ATR normaliser — and is left for its own piece of work rather than half-reported here.
+
+_hash_: `edf45fbac56d8b35…` · _prev_: `2cf8807104f6fee3…`
