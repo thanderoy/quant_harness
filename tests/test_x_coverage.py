@@ -68,6 +68,12 @@ CI_LIMITED: dict[str, str] = {
              "repo; on a runner those tests skip and only the committed "
              "fixture is validated against the adjudicated artifact. Set "
              "$QH_PARITY_DATA_DIR to exercise the full check."),
+    "X17": ("behaviour-neutrality is proven two ways and CI sees one of "
+            "them. The commit-vs-parent comparison cannot be re-run from a "
+            "later commit, so it is recorded in the seq=96 metrics; the "
+            "recomputation needs the same out-of-repo CSVs as X15a and "
+            "skips on a runner. What CI asserts is that the pinned fixture "
+            "still loads and still matches the seq=31 artifact."),
 }
 
 

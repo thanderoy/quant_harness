@@ -226,9 +226,45 @@ def test_the_parity_fixture_still_reproduces():
     """
     from research.parity import t9a_flood_tide as t9a
 
+    if not t9a.source_data_available():
+        pytest.skip(
+            "seq=31 OHLC inputs are not in this repo; set $QH_PARITY_DATA_DIR "
+            "to exercise the recomputation. The fixture check below runs "
+            "either way.")
     report = t9a.check_mask_off()
     failed = [layer for layer in report.layers if not layer.passed]
     assert not failed, f"parity layers failed after the move: {failed}"
+
+
+@pytest.mark.x("X17")
+def test_the_moved_modules_still_load_the_pinned_fixture():
+    """The CI-runnable half of X17, and the reason it exists.
+
+    The test above needs price files that live outside this repository, so on
+    a runner it skips — and a skip is not evidence. This asserts what can be
+    asserted from the repo alone: the committed fixture is still readable
+    through the moved modules and still names the artifact it was adjudicated
+    against.
+
+    Guarding the import-and-read path matters more than it looks. The first
+    version of the test above called check_mask_off() unconditionally and
+    failed CI with a FileNotFoundError pointing at an absolute path on one
+    laptop — the identical mistake T9a itself shipped with, made again in the
+    commit that was supposed to prove nothing had broken.
+    """
+    from research.parity import t9a_flood_tide as t9a
+
+    fixture = t9a._load_fixture()
+    assert fixture is not None, "the committed parity fixture is missing"
+
+    reference = t9a.load_reference()
+    assert fixture["ohlc_hash"] == "a8cd64270c5376ca"
+    assert fixture["signal_hash"] == "3b8c71ccadf15320"
+    assert fixture["n_long_signals"] == 1669
+    assert fixture["seq"] == 31
+    assert fixture["reference_artifact"] == t9a.REFERENCE_ARTIFACT.name
+    assert reference["hypothesis_id"] == fixture["hypothesis_id"]
+    assert reference["seq"] == fixture["seq"]
 
 
 @pytest.mark.x("X17")
