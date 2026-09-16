@@ -14,8 +14,8 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 sys.path.insert(0, str(Path.home() / "Local" / "quant_harness"))
 
-from qhf.engines.btpy_runner import run_backtest                 # noqa: E402
-from qhf.engines.strategies.ebb_n_flow import EbbNFlow           # noqa: E402
+from research.engines.btpy_runner import run_backtest                 # noqa: E402
+from research.engines.strategies.ebb_n_flow import EbbNFlow           # noqa: E402
 
 from research.post.sweeps import ebb_engine as E                 # noqa: E402
 from research.post.sweeps.data import load                       # noqa: E402

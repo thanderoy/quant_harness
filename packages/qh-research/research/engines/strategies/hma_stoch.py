@@ -1,4 +1,4 @@
-"""qhf.engines.strategies.hma_stoch — backtesting.py Strategy adapters.
+"""research.engines.strategies.hma_stoch — backtesting.py Strategy adapters.
 
 Faithful translation of HMAStoch1HStrategy (v1.1) and HMAStochM15Strategy
 (v1.1) into backtesting.py's Strategy interface.
@@ -37,8 +37,8 @@ import numpy as np
 import pandas as pd
 from backtesting import Strategy
 
-from qhf.engines.indicators import hma, stochastic, atr
-from qhf.engines.sizer import calculate_lot_size
+from research.engines.indicators import hma, stochastic, atr
+from research.engines.sizer import calculate_lot_size
 
 
 # ---------------------------------------------------------------------------

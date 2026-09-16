@@ -1,5 +1,5 @@
 def main():
-    print("Hello from qhf-harness!")
+    print("Hello from quant_harness!")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""qhf.data.cost_model — Pepperstone XAUUSD Razor cost model.
+"""research.datasets.cost_model — Pepperstone XAUUSD Razor cost model.
 
 Models the three components of round-trip cost on Pepperstone Razor
 account, MT5 platform:

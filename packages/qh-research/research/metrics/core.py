@@ -1,4 +1,4 @@
-"""qhf.metrics.core — basic backtest performance metrics.
+"""research.metrics.core — basic backtest performance metrics.
 
 All functions accept a 1-D pandas Series or numpy array of returns
 (simple, NOT log) and an explicit `periods_per_year` for annualisation.

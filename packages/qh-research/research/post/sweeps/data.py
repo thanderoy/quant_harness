@@ -9,7 +9,7 @@ from pytz.exceptions import AmbiguousTimeError as pytz_AmbiguousTimeError
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DATA_DIR = REPO_ROOT / "research" / "data"
 
-# Broker-history holes documented in qhf.engines.btpy_runner.
+# Broker-history holes documented in research.engines.btpy_runner.
 KNOWN_GAPS = [("2025-09-12", "2025-10-15"), ("2026-01-13", "2026-01-22")]
 
 TIMEFRAMES = {

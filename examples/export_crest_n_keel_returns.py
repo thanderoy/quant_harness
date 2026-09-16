@@ -29,14 +29,14 @@ warnings.filterwarnings("ignore")
 
 import pandas as pd
 
-from qhf.data import load_bars, PepperstoneXAUUSDCostModel
-from qhf.engines import (
+from research.datasets import load_bars, PepperstoneXAUUSDCostModel
+from research.engines import (
     run_walk_forward,
     HMAStoch1H,
     PEPPERSTONE_XAUUSD_KNOWN_GAPS,
 )
 
-DATA_ROOT = Path("qhf/data/raw")
+DATA_ROOT = Path("packages/qh-research/research/data")
 
 
 def _export(wf, label: str, out_dir: Path) -> Path:

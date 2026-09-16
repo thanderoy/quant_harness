@@ -1,4 +1,4 @@
-"""qhf.metrics.deflated — Probabilistic & Deflated Sharpe Ratios.
+"""research.metrics.deflated — Probabilistic & Deflated Sharpe Ratios.
 
 Implements
 ----------
@@ -43,7 +43,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from qhf.metrics.core import _to_array, sharpe_ratio
+from research.metrics.core import _to_array, sharpe_ratio
 
 
 _EULER_MASCHERONI = 0.5772156649015328606

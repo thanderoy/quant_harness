@@ -24,13 +24,13 @@ warnings.filterwarnings("ignore")
 
 import pandas as pd
 
-from qhf.data import load_bars, PepperstoneXAUUSDCostModel
-from qhf.engines import run_walk_forward, PEPPERSTONE_XAUUSD_KNOWN_GAPS
-from qhf.engines.strategies.zlch import ZeroLagChandelier
-from qhf.metrics import dsr
-from qhf.reports import evaluate, Thresholds
+from research.datasets import load_bars, PepperstoneXAUUSDCostModel
+from research.engines import run_walk_forward, PEPPERSTONE_XAUUSD_KNOWN_GAPS
+from research.engines.strategies.zlch import ZeroLagChandelier
+from research.metrics import dsr
+from research.reports import evaluate, Thresholds
 
-DATA_ROOT = Path("qhf/data/raw")
+DATA_ROOT = Path("packages/qh-research/research/data")
 
 CONFIGS = {
     "both":  {"enable_long": True,  "enable_short": True},
@@ -73,7 +73,7 @@ def main() -> int:
     params = dict(CONFIGS[args.config])
     params["chand_atr_mult"] = args.chand_mult
 
-    print(f"qhf walk-forward — ZeroLag Chandelier  [config={args.config}, "
+    print(f"quant_harness walk-forward — ZeroLag Chandelier  [config={args.config}, "
           f"chand_mult={args.chand_mult}]")
     print(f"Gaps excluded: {PEPPERSTONE_XAUUSD_KNOWN_GAPS}")
     print("Loading M15 bars ...", end=" ")

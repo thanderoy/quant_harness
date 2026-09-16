@@ -1,7 +1,7 @@
 """research.post.sweeps.run_parity — validate the fast engine against the harness.
 
 The sweep is only trustworthy if research.post.sweeps.zlch_engine reproduces
-qhf.engines.strategies.zlch.ZeroLagChandelier under qhf.engines.btpy_runner.
+research.engines.strategies.zlch.ZeroLagChandelier under research.engines.btpy_runner.
 This compares trade sets and metrics across a spread of configs/timeframes.
 
 Usage:  python -m research.post.sweeps.run_parity
@@ -18,8 +18,8 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 sys.path.insert(0, str(Path.home() / "Local" / "quant_harness"))
 
-from qhf.engines.btpy_runner import run_backtest              # noqa: E402
-from qhf.engines.strategies.zlch import ZeroLagChandelier      # noqa: E402
+from research.engines.btpy_runner import run_backtest              # noqa: E402
+from research.engines.strategies.zlch import ZeroLagChandelier      # noqa: E402
 
 from research.post.sweeps import zlch_engine as E              # noqa: E402
 from research.post.sweeps.data import load                     # noqa: E402

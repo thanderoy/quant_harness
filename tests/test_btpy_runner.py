@@ -20,17 +20,17 @@ from backtesting import Strategy
 
 warnings.filterwarnings("ignore")
 
-from qhf.engines.btpy_runner import (
+from research.engines.btpy_runner import (
     run_backtest, run_walk_forward,
     BtRunResult, WalkForwardResult,
     _commission_callable, _spread_fraction, _apply_swap,
     PEPPERSTONE_XAUUSD_KNOWN_GAPS,
 )
-from qhf.engines.sizer import calculate_lot_size
-from qhf.data.cost_model import PepperstoneXAUUSDCostModel
-from qhf.engines.strategies import HMAStoch1H, HMAStochM15
-from qhf.engines.indicators import hma, stochastic, atr as calc_atr
-from qhf.reports.scorecard import evaluate, Thresholds
+from research.engines.sizer import calculate_lot_size
+from research.datasets.cost_model import PepperstoneXAUUSDCostModel
+from research.engines.strategies import HMAStoch1H, HMAStochM15
+from research.engines.indicators import hma, stochastic, atr as calc_atr
+from research.reports.scorecard import evaluate, Thresholds
 
 
 # ---------------------------------------------------------------------------
@@ -208,7 +208,7 @@ class TestPipelineFlow(unittest.TestCase):
 
     def test_cost_model_commission_applied(self):
         # With zero commission, commissions in trade DF should be 0.
-        from qhf.data.cost_model import PepperstoneXAUUSDCostModel
+        from research.datasets.cost_model import PepperstoneXAUUSDCostModel
         free_cost = PepperstoneXAUUSDCostModel(
             spread_usd_per_oz=0.0,
             commission_per_lot_round_turn=0.0,
@@ -322,7 +322,7 @@ class TestSessionFilter(unittest.TestCase):
         }, index=idx)
 
     def test_session_filter_removes_outside_hours(self):
-        from qhf.engines.btpy_runner import _apply_session_filter
+        from research.engines.btpy_runner import _apply_session_filter
         bars = self._make_all_hours()
         filtered = _apply_session_filter(bars, session_hours=(8, 17))
         hours = filtered.index.hour
@@ -330,13 +330,13 @@ class TestSessionFilter(unittest.TestCase):
         self.assertTrue((hours < 17).all())
 
     def test_no_session_filter_returns_unchanged(self):
-        from qhf.engines.btpy_runner import _apply_session_filter
+        from research.engines.btpy_runner import _apply_session_filter
         bars = self._make_all_hours()
         result = _apply_session_filter(bars, session_hours=None)
         self.assertEqual(len(result), len(bars))
 
     def test_session_filter_reduces_bar_count(self):
-        from qhf.engines.btpy_runner import _apply_session_filter
+        from research.engines.btpy_runner import _apply_session_filter
         bars = self._make_all_hours()
         filtered = _apply_session_filter(bars, session_hours=(8, 17))
         # 9 session hours vs 24 total: ~37.5% of bars kept
@@ -350,7 +350,7 @@ class TestSessionFilter(unittest.TestCase):
         self.assertIsInstance(r, BtRunResult)
 
     def test_invalid_session_raises(self):
-        from qhf.engines.btpy_runner import _apply_session_filter
+        from research.engines.btpy_runner import _apply_session_filter
         bars = self._make_all_hours()
         # Hours 2-3 UTC: no bars will pass weekday-h filter for this data.
         # Actually let's test with impossible hours
@@ -364,7 +364,7 @@ class TestSpreadStress(unittest.TestCase):
         self.bars = _make_bars(n=252 * 24 * 7, seed=3)
 
     def test_returns_stress_result_type(self):
-        from qhf.engines import run_spread_stress, SpreadStressResult
+        from research.engines import run_spread_stress, SpreadStressResult
         stress = run_spread_stress(
             self.bars, _TrivialStrategy,
             multipliers=[1.0, 1.5],
@@ -374,7 +374,7 @@ class TestSpreadStress(unittest.TestCase):
         self.assertIsInstance(stress, SpreadStressResult)
 
     def test_result_count_matches_multipliers(self):
-        from qhf.engines import run_spread_stress
+        from research.engines import run_spread_stress
         stress = run_spread_stress(
             self.bars, _TrivialStrategy,
             multipliers=[1.0, 1.5, 2.0],
@@ -385,7 +385,7 @@ class TestSpreadStress(unittest.TestCase):
 
     def test_higher_spread_increases_costs(self):
         """Wider spread should reduce or maintain OOS profit factor."""
-        from qhf.engines import run_spread_stress
+        from research.engines import run_spread_stress
         stress = run_spread_stress(
             self.bars, _TrivialStrategy,
             multipliers=[1.0, 2.0],
@@ -399,7 +399,7 @@ class TestSpreadStress(unittest.TestCase):
             self.assertLessEqual(pf_2x, pf_1x + 0.01)  # small tolerance
 
     def test_summary_str_contains_multipliers(self):
-        from qhf.engines import run_spread_stress
+        from research.engines import run_spread_stress
         stress = run_spread_stress(
             self.bars, _TrivialStrategy,
             multipliers=[1.0, 1.5],

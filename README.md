@@ -1,4 +1,4 @@
-# qhf — Quant Harness for Forex
+# quant_harness — symbol-agnostic research and execution harness
 
 A pre-registered, multiple-testing-aware validation harness for trading-strategy
 research. Built to enforce the discipline that prevents the most common retail
@@ -35,28 +35,30 @@ gap < 0.3, PBO < 0.3, DSR > 0.99, OOS DD < 15%, trades ≥ 100, PF ≥ 1.40.
 ## What's in the package
 
 ```
-qhf/
-├── metrics/
-│   ├── core.py          # Sharpe, Sortino, Calmar, max DD, profit factor, expectancy
-│   ├── deflated.py      # PSR & DSR (Bailey & López de Prado 2012, 2014)
-│   └── pbo.py           # Probability of Backtest Overfitting (BLDPZ 2017)
-├── validation/
-│   └── walk_forward.py  # Rolling/expanding splits with exclude_ranges + reporting
-├── reports/
-│   └── scorecard.py     # Pre-registered gate evaluator
-├── data/
-│   ├── csv_loader.py    # MT5/generic CSV loader with auto-sniff & gap detection
-│   └── cost_model.py    # Pepperstone XAUUSD Razor cost model
-└── engines/             # (Phase 2b — coming next)
-    └── (empty)
+packages/
+├── qh-resources/   → import `resources`
+│   └── instrument registry, tradability mask, panel, normalisation, sizing
+├── qh-strategies/  → import `strategies`
+│   └── instrument-neutral strategy definitions; emit risk units, never lots
+└── qh-research/    → import `research`
+    ├── log.py               # append-only, hash-chained hypothesis register
+    ├── pre/                 # signal_edge (E-Ratio), screens — before a backtest
+    ├── post/                # dsr, mintrl, sweeps — after the harness runs
+    ├── parity/              # migration parity fixtures (T9)
+    ├── metrics/             # Sharpe family, PSR/DSR twin, PBO
+    ├── validation/          # walk-forward split generators
+    ├── reports/             # pre-registered gate evaluator
+    ├── engines/             # backtesting.py wrapper and its strategy adapters
+    ├── datasets/            # CSV loader and broker cost models
+    └── data/                # OHLCV inputs
 
-examples/
-├── score_a_strategy.py  # Calibration demo: noise FAILs gates, alpha PASSes
-├── load_and_cost.py     # Loader + cost model end-to-end demo
-└── gap_report.py        # Diagnostic for data gaps in CSV files
-
-tests/                   # 53 tests, all passing
+examples/                    # runnable drivers for the above
+tests/                       # repo-level suite; each package also has its own
 ```
+
+The import-direction contract is `resources ← strategies ← research`, enforced
+at AST level in CI (X19). `resources` imports none of the others and is
+importable with no network and no Django settings.
 
 ---
 
@@ -104,9 +106,9 @@ and reports diagnostics including timeframe inference, gap detection, and OHLC
 sanity.
 
 ```python
-from qhf.data import load_bars
+from research.datasets import load_bars
 
-result = load_bars("data/raw/XAUUSD_H1.csv", expected_timeframe="H1")
+result = load_bars("packages/qh-research/research/data/XAUUSD_H1.csv", expected_timeframe="H1")
 print(result.summary_str())
 # rows, timeframe, span_years, gaps, warnings...
 
@@ -116,7 +118,7 @@ df = result.df  # DatetimeIndex'd OHLCV DataFrame
 ### Cost model
 
 ```python
-from qhf.data import PepperstoneXAUUSDCostModel
+from research.datasets import PepperstoneXAUUSDCostModel
 from datetime import datetime
 
 cost = PepperstoneXAUUSDCostModel()
@@ -135,7 +137,7 @@ for production accuracy. Pepperstone updates these weekly.
 ### Walk-forward splits with exclusion
 
 ```python
-from qhf.validation import (
+from research.validation import (
     rolling_splits, rolling_splits_with_report, SplitReport
 )
 
@@ -158,8 +160,8 @@ print(report.summary_str())
 ### Scoring against the gates
 
 ```python
-from qhf.metrics import dsr_from_trials, pbo
-from qhf.reports import Result, Thresholds, evaluate
+from research.metrics import dsr_from_trials, pbo
+from research.reports import Result, Thresholds, evaluate
 
 # returns_matrix: T x N DataFrame of per-period returns from a parameter sweep
 pbo_result = pbo(returns_matrix, S=16, periods_per_year=252)
@@ -240,7 +242,7 @@ The harness scores returns. It does not run strategies. The reason for the split
 is auditability:
 
 ```
-[Strategy code]  →  per-period returns series  →  [qhf]  →  pass/fail report
+[Strategy code]  →  per-period returns series  →  [research]  →  pass/fail report
                           (engine-agnostic)
 ```
 

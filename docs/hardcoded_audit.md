@@ -31,9 +31,9 @@ implementations:
 
 | Strategy | Sizing route | Sensitive to T5? |
 |---|---|---|
-| `hma_stoch` (crest_n_keel) | `qhf.engines.sizer.calculate_lot_size` | **Yes** |
-| `cnk_momentum` | `qhf.engines.sizer.calculate_lot_size` | **Yes** |
-| `zlch` | `qhf.engines.sizer.calculate_lot_size` | **Yes** |
+| `hma_stoch` (crest_n_keel) | `research.engines.sizer.calculate_lot_size` | **Yes** |
+| `cnk_momentum` | `research.engines.sizer.calculate_lot_size` | **Yes** |
+| `zlch` | `research.engines.sizer.calculate_lot_size` | **Yes** |
 | `ebb_n_flow` | `_size_oz()` — private reimplementation, `ebb_n_flow.py:131-137` | No |
 | `asq_safe_scalping` | inline `size = risk_amount / sl_dist`, `asq_safe_scalping.py:458` | No |
 
@@ -49,7 +49,7 @@ in the spec is a fact about code, and the fact is that the T9b fixture exercises
 
 ## FINDING 1 — the two `sizer.py` copies are numerically identical
 
-`WMPS backend/trading/app/quant/strategies/sizer.py` and `quant_harness qhf/engines/sizer.py`
+`WMPS backend/trading/app/quant/strategies/sizer.py` and `quant_harness research/engines/sizer.py`
 were compared with docstrings stripped via AST normalisation. The arithmetic is identical:
 same `effective_atr = max(atr_value, safety_floor_atr)`, same `risk_amount`, same
 `sl_distance`, same `math.floor` step-down, same clamp.
@@ -101,11 +101,11 @@ begins with it running and that should be a recorded fact rather than a surprise
 | 1 | `WMPS sizer.py:43` | `XAUUSD_POINT_VALUE_PER_LOT = 100.0` | `spec.contract_size` from registry | T1/T5 | RESOLVED |
 | 2 | `WMPS sizer.py:44-46` | `XAUUSD_MIN_LOT/MAX_LOT/LOT_STEP` = 0.01/0.10/0.01 | `spec.min_lot`, `spec.max_lot`, `spec.lot_step` | T1/T5 | RESOLVED |
 | 3 | `WMPS sizer.py:50` | `LOT_SAFETY_FLOOR_ATR = 0.10` (USD/oz) | Per-instrument floor in **tick units** from registry | T5 | RESOLVED |
-| 4 | `qhf/engines/sizer.py:16-20` | Duplicate of rows 1–3 | Module deleted at Phase 3; `resources.risk.sizer` is sole implementation | T11/Ph3 | RESOLVED |
-| 5 | `qhf/data/cost_model.py:40` | `PEPPERSTONE_XAUUSD_CONTRACT_SIZE = 100.0` | `spec.contract_size` | T1 | RESOLVED |
-| 6 | `qhf/engines/strategies/ebb_n_flow.py:32,35` | `XAUUSD_CONTRACT = 100.0`, `DOLLARS_PER_OZ_PER_LOT` | `spec.contract_size`; delete `_size_oz`, call `size_position()` | T5 | RESOLVED |
+| 4 | `research/engines/sizer.py:16-20` | Duplicate of rows 1–3 | Module deleted at Phase 3; `resources.risk.sizer` is sole implementation | T11/Ph3 | RESOLVED |
+| 5 | `research/datasets/cost_model.py:40` | `PEPPERSTONE_XAUUSD_CONTRACT_SIZE = 100.0` | `spec.contract_size` | T1 | RESOLVED |
+| 6 | `research/engines/strategies/ebb_n_flow.py:32,35` | `XAUUSD_CONTRACT = 100.0`, `DOLLARS_PER_OZ_PER_LOT` | `spec.contract_size`; delete `_size_oz`, call `size_position()` | T5 | RESOLVED |
 | 7 | `WMPS asqs/strategy.py:100,618` | `XAUUSD_CONTRACT = 100.0`, `raw_lots = risk / (sl_dollars * XAUUSD_CONTRACT)` | `size_position()` | Ph3 | DEFERRED — asqs is falsified and disabled; migrate at execution merge |
-| 8 | `qhf/engines/btpy_runner.py:110,139` | `/ 100.0` twice — "1 lot = 100 oz" for commission and for `Size`→lots | `spec.contract_size` threaded through `BtRunResult` | T12 | RESOLVED |
+| 8 | `research/engines/btpy_runner.py:110,139` | `/ 100.0` twice — "1 lot = 100 oz" for commission and for `Size`→lots | `spec.contract_size` threaded through `BtRunResult` | T12 | RESOLVED |
 | 9 | `WMPS h1_momentum/strategy.py:298` | `lot * 100.0` in realised-risk calc | `spec.contract_size` | Ph3 | DEFERRED — live strategy, frozen under §1.3 |
 
 ### Symbol identity
@@ -124,8 +124,8 @@ begins with it running and that should be a recorded fact rather than a surprise
 | # | Location | Assumption | Generalised replacement | Task | Status |
 |---|---|---|---|---|---|
 | 16 | `WMPS mt5-api/main.py:776-780, 980-984` | Filling-mode branch exists but selection rule is fixed | Registry `filling_modes`; select per symbol | T1/Ph3 | RESOLVED — see FINDING 2 |
-| 17 | `qhf/engines/btpy_runner.py:413` | `margin = 1.0/400.0` — leverage assumed 1:400 for all instruments | Registry margin/leverage per symbol | T12 | RESOLVED |
-| 18 | `qhf/engines/btpy_runner.py:362,458` | `cash = 10_000` default vs $100 live account | Explicit per-run; granularity flag makes the gap visible | T5/T12 | RESOLVED |
+| 17 | `research/engines/btpy_runner.py:413` | `margin = 1.0/400.0` — leverage assumed 1:400 for all instruments | Registry margin/leverage per symbol | T12 | RESOLVED |
+| 18 | `research/engines/btpy_runner.py:362,458` | `cash = 10_000` default vs $100 live account | Explicit per-run; granularity flag makes the gap visible | T5/T12 | RESOLVED |
 | 19 | All strategies | Fill assumption is implicit (single path) | Four-config `SimulatedBroker` frontier | T12/X23 | RESOLVED |
 | 20 | Spread/commission | Cost model carries assumed spread | `PROVISIONAL_COSTS` stamp until D3 has real data | D3/T12 | DEFERRED — blocked on MT5 |
 

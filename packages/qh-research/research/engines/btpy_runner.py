@@ -1,4 +1,4 @@
-"""qhf.engines.btpy_runner — backtesting.py engine wrapper.
+"""research.engines.btpy_runner — backtesting.py engine wrapper.
 
 Provides two entry points:
 
@@ -61,12 +61,12 @@ import numpy as np
 import pandas as pd
 from backtesting import Backtest, Strategy
 
-from qhf.data.cost_model import PepperstoneXAUUSDCostModel
-from qhf.metrics.core import (
+from research.datasets.cost_model import PepperstoneXAUUSDCostModel
+from research.metrics.core import (
     sharpe_ratio, max_drawdown, profit_factor, cagr,
 )
-from qhf.reports.scorecard import Result
-from qhf.validation.walk_forward import (
+from research.reports.scorecard import Result
+from research.validation.walk_forward import (
     rolling_splits_with_report, SplitReport,
 )
 
@@ -297,7 +297,7 @@ class WalkForwardResult:
         sr_variance_annualised: Optional[float] = None,
         periods_per_year: int = 252,
     ) -> Result:
-        """Build a Result object ready for qhf.reports.scorecard.evaluate().
+        """Build a Result object ready for research.reports.scorecard.evaluate().
 
         Parameters
         ----------
@@ -371,7 +371,7 @@ def run_backtest(
     Parameters
     ----------
     bars : pd.DataFrame
-        OHLCV DataFrame from qhf.data.load_bars(). Index must be
+        OHLCV DataFrame from research.datasets.load_bars(). Index must be
         DatetimeIndex. Columns may be lowercase (open, high, low, close)
         or Title-Case — both are handled.
     strategy_cls : Type[Strategy]

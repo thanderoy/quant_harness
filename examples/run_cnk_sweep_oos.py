@@ -39,13 +39,13 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 
-from qhf.data import load_bars, PepperstoneXAUUSDCostModel
-from qhf.engines import run_walk_forward, PEPPERSTONE_XAUUSD_KNOWN_GAPS
-from qhf.engines.strategies.cnk_momentum import CrestNKeelMomentum
-from qhf.metrics import dsr
-from qhf.reports import evaluate, Thresholds
+from research.datasets import load_bars, PepperstoneXAUUSDCostModel
+from research.engines import run_walk_forward, PEPPERSTONE_XAUUSD_KNOWN_GAPS
+from research.engines.strategies.cnk_momentum import CrestNKeelMomentum
+from research.metrics import dsr
+from research.reports import evaluate, Thresholds
 
-DATA_ROOT = Path("qhf/data/raw")
+DATA_ROOT = Path("packages/qh-research/research/data")
 
 # Frozen from the seq=44 sweep leaders -- declared before this script was run.
 CONFIGS = {

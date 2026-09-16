@@ -14,7 +14,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from qhf.validation import (
+from research.validation import (
     rolling_splits,
     rolling_splits_with_report,
     expanding_splits,

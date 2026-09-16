@@ -1,9 +1,9 @@
 """research.post.sweeps.run_cnk_parity — validate cnk_engine against the harness.
 
 The sweep is only trustworthy if research.post.sweeps.cnk_engine reproduces
-qhf.engines.strategies.hma_stoch.HMAStoch1H (PULLBACK) and
-qhf.engines.strategies.cnk_momentum.CrestNKeelMomentum (MOMENTUM) running
-under qhf.engines.btpy_runner.
+research.engines.strategies.hma_stoch.HMAStoch1H (PULLBACK) and
+research.engines.strategies.cnk_momentum.CrestNKeelMomentum (MOMENTUM) running
+under research.engines.btpy_runner.
 
 Scope note: the canonical classes hardcode the 20/80 stochastic zones and are
 long+short (pullback) / long-only (momentum). Parity therefore covers the
@@ -25,9 +25,9 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 sys.path.insert(0, str(Path.home() / "Local" / "quant_harness"))
 
-from qhf.engines.btpy_runner import run_backtest                      # noqa: E402
-from qhf.engines.strategies.hma_stoch import HMAStoch1H               # noqa: E402
-from qhf.engines.strategies.cnk_momentum import CrestNKeelMomentum    # noqa: E402
+from research.engines.btpy_runner import run_backtest                      # noqa: E402
+from research.engines.strategies.hma_stoch import HMAStoch1H               # noqa: E402
+from research.engines.strategies.cnk_momentum import CrestNKeelMomentum    # noqa: E402
 
 from research.post.sweeps import cnk_engine as E                      # noqa: E402
 from research.post.sweeps.data import load                            # noqa: E402

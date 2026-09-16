@@ -1,4 +1,4 @@
-"""qhf.validation.walk_forward — rolling/expanding train-test split generators.
+"""research.validation.walk_forward — rolling/expanding train-test split generators.
 
 Two split types:
 - Rolling   : fixed-length training window slides forward.

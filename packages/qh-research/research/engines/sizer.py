@@ -1,4 +1,4 @@
-"""qhf.engines.sizer — position sizer for backtesting.py strategies.
+"""research.engines.sizer — position sizer for backtesting.py strategies.
 
 Mirrors the v1.1 sizer logic (sizer_v1_1_revised.py) used in the live
 strategies. Kept here as a standalone module so the engine layer has no

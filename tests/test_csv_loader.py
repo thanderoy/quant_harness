@@ -15,7 +15,7 @@ from io import StringIO
 import pandas as pd
 import numpy as np
 
-from qhf.data.csv_loader import (
+from research.datasets.csv_loader import (
     load_bars, BarLoadError,
     _sniff_delimiter, _normalise_headers, _infer_timeframe, _detect_gaps,
 )

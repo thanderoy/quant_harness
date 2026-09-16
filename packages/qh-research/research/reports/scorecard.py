@@ -1,4 +1,4 @@
-"""qhf.reports.scorecard — pre-registered gate evaluation.
+"""research.reports.scorecard — pre-registered gate evaluation.
 
 Pre-registration discipline: thresholds are defined here, in code,
 BEFORE inspecting any backtest's results. This is the same logic

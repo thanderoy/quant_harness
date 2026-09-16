@@ -25,7 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 ART = REPO_ROOT / "research" / "post" / "artifacts"
 
 # Survival gates, stated BEFORE looking at results. Aligned with
-# qhf.reports.scorecard.Thresholds where they apply, with a stricter trade
+# research.reports.scorecard.Thresholds where they apply, with a stricter trade
 # floor because this is a 21.6-year in-sample sweep and low-n configs are noise.
 GATES = {
     "n_trades_min": 100,

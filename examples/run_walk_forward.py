@@ -48,17 +48,17 @@ warnings.filterwarnings("ignore")
 
 import pandas as pd
 
-from qhf.data import load_bars, PepperstoneXAUUSDCostModel
-from qhf.engines import (
+from research.datasets import load_bars, PepperstoneXAUUSDCostModel
+from research.engines import (
     run_walk_forward,
     run_spread_stress,
     HMAStoch1H, HMAStochM15, ASQSafeScalping,
     PEPPERSTONE_XAUUSD_KNOWN_GAPS,
 )
-from qhf.metrics import dsr
-from qhf.reports import evaluate, Thresholds
+from research.metrics import dsr
+from research.reports import evaluate, Thresholds
 
-DATA_ROOT = Path("qhf/data/raw")
+DATA_ROOT = Path("packages/qh-research/research/data")
 
 STRATEGIES = {
     "h1": {
@@ -201,7 +201,7 @@ def main() -> int:
                         help="Skip spread stress test (faster).")
     args = parser.parse_args()
 
-    print("qhf walk-forward validation")
+    print("quant_harness walk-forward validation")
     print(f"Gaps excluded: {PEPPERSTONE_XAUUSD_KNOWN_GAPS}")
 
     for name in args.strategies:

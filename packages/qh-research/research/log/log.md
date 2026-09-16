@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 96
+- **Entries:** 97
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (96 entries)
+- **Hash chain:** OK — chain ok (97 entries)
 
 ## Principles
 
@@ -1651,3 +1651,36 @@ This is a migration test of an already-adjudicated mechanism, not a new trial. f
 Horizons count tradable bars (R4). Mask-off only: the mask-on comparison has two independent channels — the signal set and the ATR normaliser — and is left for its own piece of work rather than half-reported here.
 
 _hash_: `edf45fbac56d8b35…` · _prev_: `2cf8807104f6fee3…`
+
+### seq 96 · 2026-09-16T17:13:50Z · project_rename · `record:t10-qhf-package-split`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `commit`=9e334a6, `data_files_moved`=4, `duplicate_dropped`=XAUUSD_H1.csv, `modules_moved`=23, `namespace_old`=qhf, `namespaces_new`=research.metrics,research.validation,research.reports,research.engines,research.datasets, `packages_receiving`=qh-research, `parity_t9a_identical`=yes, `tests_after`=417, `tests_before`=417
+
+> MODULE PATH MAPPING -- apply when resolving any qhf.* module reference recorded before this entry.
+
+    qhf.metrics.*             ->  research.metrics.*
+    qhf.validation.*          ->  research.validation.*
+    qhf.reports.*             ->  research.reports.*
+    qhf.engines.*             ->  research.engines.*
+    qhf.data.csv_loader       ->  research.datasets.csv_loader
+    qhf.data.cost_model       ->  research.datasets.cost_model
+    qhf.data (package)        ->  research.datasets
+    qhf/data/raw/*.csv        ->  packages/qh-research/research/data/*.csv
+
+The package was SPLIT, not renamed, which is why this is a mapping and not a single old->new pair. seq=85 and seq=86 both said so at the time and deferred the mapping to the commit that landed the split; this is that commit (9e334a6).
+
+The whole of qhf landed in qh-research. resources, strategies and platform receive nothing here. That is a statement about where the code is today, not about where it belongs: engines/indicators.py and engines/sizer.py are the ports T11 reconciles against resources, and engines/strategies/ holds backtesting.py adapters that Phase 3 retires. Moving them now would have merged a rename with a parity task and made any deviation impossible to attribute to one or the other.
+
+NOT REWRITTEN, deliberately. Every qhf reference that records what a past run used stays as written:
+  - note strings in post/sweeps/{registration,cnk_registration,ebb_registration,asqs_registration,cnk_nested_registration}.py are verbatim in this chain; each was checked against entries.jsonl before being left alone. Rewriting them would leave those scripts unable to reproduce the entries they produced.
+  - the HTML report/narrative builders describe completed runs.
+  - data_manifest.GRANDFATHERED names a path at commit cb48e00.
+This follows seq=85: recorded references stay as written and resolve forward through the mapping.
+
+BEHAVIOUR. The T9a mask-off parity report is byte-identical before and after the move apart from its own timestamp -- ohlc_hash a8cd64270c5376ca, signal_hash 3b8c71ccadf15320, 1669 long signals, all five ordered layers passing on both sides. Suite 417 passed on both.
+
+CONSEQUENCE WORTH RECORDING. research/README.md justified two DSR implementations on the grounds that the harness lived in a separate repo and venv. It has lived here since seq=86 and now sits in the same package as research.post.dsr, so the justification has expired. The duplication is not collapsed here: research.metrics.deflated is what produced logged results, so retiring it needs the parity vectors re-run and any deviation logged as its own entry.
+
+_hash_: `c81846fbbb7c7cdb…` · _prev_: `edf45fbac56d8b35…`

@@ -51,12 +51,6 @@ DEFERRED: dict[str, tuple[str, str]] = {
     "X15b": ("post/ parity needs trade-for-trade records; the crest_n_keel "
              "walk-forward artifact stores fold boundaries and per-fold "
              "Sharpe but not individual trades", "T9b"),
-    "X16": ("rename completeness cannot be asserted before the rename",
-            "T10"),
-    "X17": ("rename behaviour-neutrality cannot be asserted before the "
-            "rename", "T10"),
-    "X18": ("log preservation across the rename cannot be asserted before "
-            "the rename", "T10"),
     "X22": ("ported-code parity against the D8 golden fixtures", "T11"),
     "X23": ("fill frontier completeness needs SimulatedBroker", "T12"),
     "X29": ("schedule-from-registry is execution-side; strategies.all_"
@@ -74,6 +68,12 @@ CI_LIMITED: dict[str, str] = {
              "repo; on a runner those tests skip and only the committed "
              "fixture is validated against the adjudicated artifact. Set "
              "$QH_PARITY_DATA_DIR to exercise the full check."),
+    "X17": ("behaviour-neutrality is proven two ways and CI sees one of "
+            "them. The commit-vs-parent comparison cannot be re-run from a "
+            "later commit, so it is recorded in the seq=96 metrics; the "
+            "recomputation needs the same out-of-repo CSVs as X15a and "
+            "skips on a runner. What CI asserts is that the pinned fixture "
+            "still loads and still matches the seq=31 artifact."),
 }
 
 
