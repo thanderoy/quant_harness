@@ -116,13 +116,22 @@ def test_the_sample_window_is_the_one_the_fixture_was_built_from(sample, manifes
 #: Columns whose fixture values are reproducible anywhere. Every one of these
 #: is computed by pandas rolling arithmetic in a fixed order, so the result is
 #: a property of the code and nothing else.
-EXACTLY_REPRODUCIBLE = ("wma_9", "stoch_k_14_3_3", "stoch_d_14_3_3", "atr_14")
+EXACTLY_REPRODUCIBLE = ("stoch_k_14_3_3", "stoch_d_14_3_3", "atr_14")
 
 #: Columns whose fixture values are not. See
 #: ``test_the_dot_product_columns_differ_only_in_the_last_bits`` for the
 #: measurement and the reason. The ceiling is stated in ULP because that is
 #: the unit the claim is actually in: "nothing but summation order".
-DOT_PRODUCT_COLUMNS = ("wma_20", "wma_55", "hma_21", "hma_55")
+#:
+#: ``wma_9`` is in this list because CI put it there. It reproduced exactly on
+#: the development machine, and the first version of this file listed it as
+#: exact on the reasoning that a 9-element window is too narrow for OpenBLAS
+#: to block. That reasoning was wrong: on the runner's CPU it misses on 1,090
+#: of 6,000 cells. The lesson is the general one — which kernel a reduction
+#: gets is not something this repository knows, so *no* ``np.dot`` column can
+#: be asserted exact, and the split here is by implementation rather than by
+#: what happened to match once.
+DOT_PRODUCT_COLUMNS = ("wma_9", "wma_20", "wma_55", "hma_21", "hma_55")
 ULP_CEILING = 16
 
 
@@ -180,7 +189,8 @@ def test_the_dot_product_columns_differ_only_in_the_last_bits(sample, manifest):
     the kernel selected for the CPU and on the library version — so the
     summation *order* is not a property of this source file. The fixture was
     generated on one such build in August; a different one gives a different
-    last bit. ``hma`` inherits it by being three ``wma`` calls.
+    last bit. ``hma`` inherits it by being three ``wma`` calls. Every window
+    width is affected, including the shortest — see ``DOT_PRODUCT_COLUMNS``.
 
     This was established, not assumed: running the unmodified WMPS module in
     this interpreter reproduces the port bit for bit and misses the fixture by
@@ -190,9 +200,11 @@ def test_the_dot_product_columns_differ_only_in_the_last_bits(sample, manifest):
 
     What is asserted instead is the thing that would still be true of a
     correct port anywhere: the difference never leaves the last handful of
-    bits. Measured here at 4 ULP and a relative error of 5.9e-16; the ceiling
-    is set well above that because it must hold on a CI runner's CPU too, and
-    well below anything that could be a real arithmetic error — an off-by-one
+    bits. Measured on the development machine at 4 ULP and a relative error
+    of 5.9e-16; the ceiling is set well above that because it must hold on a
+    CI runner's CPU too — not a hypothetical, since that is exactly where
+    ``wma_9`` turned out to differ — and well below anything that could be a
+    real arithmetic error — an off-by-one
     or a wrong seed moves a moving average by parts per thousand, not parts
     per quadrillion.
     """

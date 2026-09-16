@@ -69,9 +69,9 @@ CI_LIMITED: dict[str, str] = {
              "$QH_PARITY_DATA_DIR to exercise the full check."),
     "X22": ("the fixture is only bit-reproducible on the machine that made "
             "it. `wma` reduces its window with `np.dot`, so the summation "
-            "order comes from the OpenBLAS kernel, not from the source; the "
-            "four `wma`/`hma` columns land within 4 ULP rather than equal, "
-            "and `hma` inherits it. CI asserts the pandas-only columns "
+            "order comes from the OpenBLAS kernel, not from the source; all "
+            "five `wma`/`hma` columns land within a few ULP rather than "
+            "equal, and `hma` inherits it. CI asserts the pandas-only columns "
             "exactly, bounds the rest, and shows the difference cannot move a "
             "signal. The direct port-vs-WMPS comparison, which is exact on "
             "every column, needs the WMPS checkout and skips on a runner. Set "

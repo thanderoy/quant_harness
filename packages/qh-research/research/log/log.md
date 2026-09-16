@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 98
+- **Entries:** 99
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (98 entries)
+- **Hash chain:** OK — chain ok (99 entries)
 
 ## Principles
 
@@ -1714,3 +1714,21 @@ EFFECT ON THE T9 PARITY RUN: none. T9a recomputes the seq=31 flood_tide mask-off
 THREE COPIES REMAIN, DELIBERATELY. `resources`, `research.engines`, and a third in `research.post.sweeps.cnk_engine` documented there as a port of the second. T11 pins the relationships rather than collapsing them, for the same reason the DSR twin was left standing at T10: a module that produced a logged number cannot be edited into agreement with a newer one without the logged number quietly coming to mean something else. Deduplication is a separate decision with its own cost.
 
 _hash_: `5db2c486fa29e5e2…` · _prev_: `c81846fbbb7c7cdb…`
+
+### seq 98 · 2026-09-16T22:00:26Z · parity_fixture · `record:t11-ported-code-parity`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `ci_run`=35155150523, `corrects_seq`=97, `exact_columns`=['stoch_k_14_3_3', 'stoch_d_14_3_3', 'atr_14'], `ulp_bounded_columns`=['wma_9', 'wma_20', 'wma_55', 'hma_21', 'hma_55'], `unchanged`=['ulp_ceiling', 'decision_invariance', 'sizer_grid_classification', 'port_vs_wmps_bit_identical'], `wma_9_ci_cells_differing`=1090, `wma_9_dev_cells_differing`=0
+
+> Correction to seq=97. That entry reported `wma_9` as reproducing its D8 fixture exactly, and explained it as the window being too narrow to trigger OpenBLAS blocking. Both halves are wrong.
+
+CI failed on the first push of the T11 branch: `wma_9` misses on 1,090 of 6,000 cells on the GitHub runner's CPU, first at row 9 — golden 2071.9744444444445, computed 2071.974444444444. It reproduces on the development machine and not on the runner, which is the same environment dependence seq=97 documented for the wider windows, showing up in the one column that entry had used as the counter-example.
+
+The generalisation seq=97 should have drawn, and this entry draws instead: which reduction kernel `np.dot` gets is not knowable from this repository, so NO `np.dot` column can be asserted exact — not as a measured fact about particular widths, but as a property of dispatching the reduction to a library chosen at runtime. The split in the X22 test is now by implementation (pandas rolling vs `np.dot`) rather than by what happened to match on one machine. `wma_9` moves into the ULP-bounded group; the exact group is `stochastic` and `atr` only.
+
+This does not change any conclusion in seq=97. The bound, the measured magnitude, the decision-invariance result and the sizer classification all stand, and the direct port-versus-WMPS comparison remains bit-identical on all eight columns in a single interpreter. What changes is that the exact-comparison set is smaller by one column and rests on a reason rather than on an observation.
+
+Worth recording separately because seq=97's version was a plausible mechanism fitted to a single data point, and it survived being written down, reviewed and committed. The check that caught it was CI running on different hardware — the local run was green both before and after.
+
+_hash_: `04e5f9d7073a4222…` · _prev_: `5db2c486fa29e5e2…`
