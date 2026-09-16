@@ -64,9 +64,9 @@ def test_expected_max_sharpe_monotone_in_n():
 
 def test_more_trials_lower_dsr():
     r = _returns_with_exact_sharpe(n=1000, sr_per_obs=0.08, seed=1)
-    d1 = deflated_sharpe_ratio(r, n_trials=1).dsr
-    d10 = deflated_sharpe_ratio(r, n_trials=10).dsr
-    d100 = deflated_sharpe_ratio(r, n_trials=100).dsr
+    d1 = deflated_sharpe_ratio(r, benchmark_sharpe=0.0, n_trials=1).dsr
+    d10 = deflated_sharpe_ratio(r, benchmark_sharpe=0.0, n_trials=10).dsr
+    d100 = deflated_sharpe_ratio(r, benchmark_sharpe=0.0, n_trials=100).dsr
     assert d1 > d10 > d100
 
 
@@ -96,7 +96,7 @@ def test_negative_skew_lowers_psr():
 
 def test_strong_low_search_passes():
     r = _returns_with_exact_sharpe(n=1000, sr_per_obs=0.15, seed=2)
-    result = deflated_sharpe_ratio(r, n_trials=2)
+    result = deflated_sharpe_ratio(r, benchmark_sharpe=0.0, n_trials=2)
     assert result.passes
     assert result.dsr > 0.95
     # Annualisation is for display only — sanity-check it.
@@ -113,7 +113,7 @@ def test_marginal_under_heavy_search_fails():
     # large enough search space, even an annualised Sharpe ~2.4 fails DSR —
     # exactly the selection-bias correction the haircut exists to apply.
     r = _returns_with_exact_sharpe(n=1000, sr_per_obs=0.15, seed=2)
-    result = deflated_sharpe_ratio(r, n_trials=10_000)
+    result = deflated_sharpe_ratio(r, benchmark_sharpe=0.0, n_trials=10_000)
     assert not result.passes
     assert result.dsr < 0.95
 
@@ -125,12 +125,11 @@ def test_marginal_under_heavy_search_fails():
 def test_var_sr_source_precedence():
     r = _returns_with_exact_sharpe(n=500, sr_per_obs=0.05, seed=3)
 
-    res_override = deflated_sharpe_ratio(r, n_trials=10, var_sr=0.002)
+    res_override = deflated_sharpe_ratio(r, benchmark_sharpe=0.0, n_trials=10, var_sr=0.002)
     assert res_override.var_sr_source == "override"
     assert math.isclose(res_override.var_sr, 0.002)
 
-    res_emp = deflated_sharpe_ratio(
-        r, n_trials=10, trial_sharpes=np.array([0.02, 0.04, 0.06, 0.08, 0.10]),
+    res_emp = deflated_sharpe_ratio(r, benchmark_sharpe=0.0, n_trials=10, trial_sharpes=np.array([0.02, 0.04, 0.06, 0.08, 0.10]),
     )
     assert res_emp.var_sr_source == "empirical"
     assert math.isclose(
@@ -139,12 +138,12 @@ def test_var_sr_source_precedence():
         rel_tol=1e-12,
     )
 
-    res_est = deflated_sharpe_ratio(r, n_trials=10)
+    res_est = deflated_sharpe_ratio(r, benchmark_sharpe=0.0, n_trials=10)
     assert res_est.var_sr_source == "estimated"
     assert res_est.var_sr > 0.0
 
     with pytest.raises(ValueError, match="only one"):
-        deflated_sharpe_ratio(r, n_trials=10, var_sr=0.001,
+        deflated_sharpe_ratio(r, benchmark_sharpe=0.0, n_trials=10, var_sr=0.001,
                               trial_sharpes=[0.01, 0.02, 0.03])
 
 
@@ -158,7 +157,7 @@ def test_n_trials_defaults_to_log(tmp_path):
             hid, title=hid, mechanism="m", log_dir=tmp_path,
         )
     r = _returns_with_exact_sharpe(n=500, sr_per_obs=0.05, seed=4)
-    result = deflated_sharpe_ratio(r, log_dir=tmp_path)
+    result = deflated_sharpe_ratio(r, benchmark_sharpe=0.0, log_dir=tmp_path)
     assert result.n_trials == 7
     assert research_log.trial_count(log_dir=tmp_path) == 7
 
@@ -172,7 +171,7 @@ def test_rejects_annualised_input_leak():
     rng = np.random.default_rng(5)
     bad = rng.standard_normal(500) * 0.001 + 0.5    # SR ≈ 500
     with pytest.raises(ValueError, match="annualised"):
-        deflated_sharpe_ratio(bad, n_trials=10)
+        deflated_sharpe_ratio(bad, benchmark_sharpe=0.0, n_trials=10)
 
 
 # ---------------------------------------------------------------------------
@@ -186,7 +185,7 @@ def test_log_dsr_evaluation_preserves_trial_count(tmp_path):
     before = research_log.trial_count(log_dir=tmp_path)
 
     r = _returns_with_exact_sharpe(n=1000, sr_per_obs=0.12, seed=6)
-    result = deflated_sharpe_ratio(r, n_trials=5)
+    result = deflated_sharpe_ratio(r, benchmark_sharpe=0.0, n_trials=5)
     entry = log_dsr_evaluation("h1", result, log_dir=tmp_path)
 
     assert entry.event_type is research_log.EventType.UPDATE

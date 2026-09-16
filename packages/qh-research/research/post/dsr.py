@@ -65,6 +65,7 @@ Usage
 
 from __future__ import annotations
 
+import json
 import math
 import warnings
 from dataclasses import dataclass
@@ -81,6 +82,10 @@ __all__ = [
     "expected_max_sharpe",
     "deflated_sharpe_ratio",
     "log_dsr_evaluation",
+    "benchmark_from_registration",
+    "benchmark_from_d5",
+    "annualised_to_per_obs",
+    "MissingBenchmark",
     "MAX_PLAUSIBLE_PER_OBS_SR",
 ]
 
@@ -156,7 +161,12 @@ def _norm_ppf(p: float) -> float:
 class DSRResult:
     dsr: float
     psr_vs_zero: float
+    #: Total benchmark the Sharpe must beat: economic + selection.
     sr_star: float
+    #: The economic alternative (D5 buy-and-hold), per observation.
+    benchmark_sharpe: float
+    #: Selection inflation from searching n_trials times, per observation.
+    sr_star_selection: float
     sr_hat_per_obs: float
     sr_hat_annualised: float
     n_obs: int
@@ -251,6 +261,7 @@ def _sample_skew_kurt(returns: np.ndarray) -> tuple[float, float]:
 def deflated_sharpe_ratio(
     returns: "np.ndarray | Sequence[float]",
     *,
+    benchmark_sharpe: float,
     n_trials: Optional[int] = None,
     trial_sharpes: "np.ndarray | Sequence[float] | None" = None,
     var_sr: Optional[float] = None,
@@ -265,6 +276,18 @@ def deflated_sharpe_ratio(
     returns:
         1-D array of per-observation returns (daily, per-trade, etc.).
         Periodicity must match ``periods_per_year``.
+    benchmark_sharpe:
+        **Required.** The per-observation Sharpe of the economic alternative
+        — D5's buy-and-hold SR* for the instrument, from the hypothesis's
+        pre-registration (``benchmark_sharpe``, log schema v2). Use
+        :func:`benchmark_from_registration` to read it.
+
+        It has no default, deliberately. Every DSR before T8 was computed
+        against an implicit zero, which asks "did this beat nothing?" when
+        the question is "did this beat the alternative?". On XAUUSD those are
+        very different: buy-and-hold ran at 0.6343 annualised over the D5
+        window, so a zero benchmark handed gold strategies that entire Sharpe
+        for free. A default would preserve exactly that, silently.
     n_trials:
         Number of trials searched. If ``None``, reads the honest floor from
         ``research.log.trial_count()``.
@@ -296,6 +319,16 @@ def deflated_sharpe_ratio(
     """
     if trial_sharpes is not None and var_sr is not None:
         raise ValueError("Pass only one of trial_sharpes / var_sr, not both.")
+
+    benchmark_sharpe = float(benchmark_sharpe)
+    if abs(benchmark_sharpe) > MAX_PLAUSIBLE_PER_OBS_SR:
+        raise ValueError(
+            f"benchmark_sharpe |{benchmark_sharpe:.3f}| > "
+            f"{MAX_PLAUSIBLE_PER_OBS_SR} per observation. D5 reports SR* "
+            f"annualised; divide by sqrt(periods_per_year) before passing it. "
+            f"An annualised benchmark here makes the test unpassable rather "
+            f"than merely wrong, which at least fails loudly."
+        )
 
     r = np.asarray(returns, dtype=float)
     if r.ndim != 1 or r.size < 2:
@@ -331,7 +364,13 @@ def deflated_sharpe_ratio(
         var_sr_used = _estimated_var_sr(sr_hat_per_obs, n_obs, skew, kurtosis)
         var_sr_source = "estimated"
 
-    sr_star = expected_max_sharpe(n_trials, var_sr_used)
+    # Two separate things, kept separate in the result. The selection term
+    # is the inflation from searching n_trials times; the benchmark shifts
+    # where that search is centred. Reporting only the sum makes it
+    # impossible to tell a strategy beaten by the haircut from one beaten by
+    # the alternative it was supposed to improve on.
+    sr_star_selection = expected_max_sharpe(n_trials, var_sr_used)
+    sr_star = benchmark_sharpe + sr_star_selection
     dsr_value = psr(sr_hat_per_obs, sr_star, n_obs, skew, kurtosis)
     psr_zero = psr(sr_hat_per_obs, 0.0, n_obs, skew, kurtosis)
 
@@ -339,6 +378,8 @@ def deflated_sharpe_ratio(
         dsr=dsr_value,
         psr_vs_zero=psr_zero,
         sr_star=sr_star,
+        benchmark_sharpe=benchmark_sharpe,
+        sr_star_selection=sr_star_selection,
         sr_hat_per_obs=sr_hat_per_obs,
         sr_hat_annualised=sr_hat_per_obs * math.sqrt(periods_per_year),
         n_obs=n_obs,
@@ -355,6 +396,84 @@ def deflated_sharpe_ratio(
 # ---------------------------------------------------------------------------
 # Log integration
 # ---------------------------------------------------------------------------
+
+def annualised_to_per_obs(sr_annualised: float,
+                          periods_per_year: int = 252) -> float:
+    """Convert a D5-style annualised Sharpe to per-observation units.
+
+    D5 reports SR* annualised; every number inside the DSR math is
+    per-observation. The conversion is one division, and doing it by hand at
+    the call site is how the two get mixed up -- so it gets a name.
+
+    Note what the ``> MAX_PLAUSIBLE_PER_OBS_SR`` guard can and cannot do. It
+    catches an annualised Sharpe of 1.76. It does **not** catch XAUUSD's
+    0.6343, which is a perfectly plausible per-observation value and is
+    roughly 16x too large. There is no way to tell those apart from the
+    number alone, which is the whole argument for converting here rather than
+    trusting a call site to have remembered.
+    """
+    if periods_per_year < 1:
+        raise ValueError(f"periods_per_year must be >= 1; got {periods_per_year}")
+    return float(sr_annualised) / math.sqrt(periods_per_year)
+
+
+def benchmark_from_d5(
+    symbol: str,
+    artifact: "Path | str",
+    periods_per_year: int = 252,
+) -> float:
+    """Read one instrument's buy-and-hold SR* from a D5 artifact, in per-obs.
+
+    The path the benchmark is actually meant to travel: straight out of the
+    Phase 0 artifact, converted once, with the symbol named. Nothing is
+    retyped, so nothing is mistyped.
+    """
+    payload = json.loads(Path(artifact).read_text())
+    d5 = payload.get("d5_benchmark_sharpe")
+    if not d5:
+        raise KeyError(f"{artifact} has no d5_benchmark_sharpe block")
+    for row in d5.get("per_instrument", []):
+        if row.get("symbol") == symbol:
+            return annualised_to_per_obs(
+                row["buy_and_hold_sharpe_annualised"], periods_per_year)
+    available = sorted(r.get("symbol") for r in d5.get("per_instrument", []))
+    raise KeyError(f"{symbol!r} not in D5 artifact; have {available}")
+
+
+class MissingBenchmark(ValueError):
+    """A hypothesis has no ``benchmark_sharpe`` on its pre-registration.
+
+    Pre-v2 registrations carry no such field, so this is the expected answer
+    for every hypothesis registered before T6. Say the benchmark explicitly
+    at the call site in that case -- the point is that it is written down
+    somewhere, not that it comes from here.
+    """
+
+
+def benchmark_from_registration(
+    hypothesis_id: str,
+    log_dir: Path = research_log.DEFAULT_LOG_DIR,
+) -> float:
+    """Read ``benchmark_sharpe`` off the hypothesis's HYPOTHESIS event.
+
+    The benchmark belongs to the pre-registration, not to the evaluation. A
+    benchmark chosen when the result is already on the screen is chosen to be
+    cleared, which is the same failure the T6 fields exist to prevent; this
+    reads the one that was committed to beforehand.
+    """
+    for e in research_log.history(hypothesis_id, log_dir=log_dir):
+        if e.event_type != research_log.EventType.HYPOTHESIS:
+            continue
+        if e.benchmark_sharpe is None:
+            raise MissingBenchmark(
+                f"{hypothesis_id!r} was registered without benchmark_sharpe "
+                f"(schema v1). Pass the benchmark explicitly, and record "
+                f"where it came from."
+            )
+        return float(e.benchmark_sharpe)
+    raise MissingBenchmark(
+        f"{hypothesis_id!r} has no HYPOTHESIS event in the log.")
+
 
 def log_dsr_evaluation(
     hypothesis_id: str,
@@ -376,6 +495,8 @@ def log_dsr_evaluation(
         "dsr": round(result.dsr, 6),
         "psr_vs_zero": round(result.psr_vs_zero, 6),
         "sr_star_per_obs": round(result.sr_star, 6),
+        "benchmark_sharpe_per_obs": round(result.benchmark_sharpe, 6),
+        "sr_star_selection_per_obs": round(result.sr_star_selection, 6),
         "sr_hat_annualised": round(result.sr_hat_annualised, 4),
         "n_trials": result.n_trials,
         "n_obs": result.n_obs,
@@ -388,6 +509,8 @@ def log_dsr_evaluation(
         f"DSR evaluation at N={result.n_trials}: dsr={result.dsr:.4f} "
         f"(threshold={result.threshold}, "
         f"{'PASS' if result.passes else 'FAIL'}); "
+        f"SR*={result.sr_star:.6f} = benchmark {result.benchmark_sharpe:.6f} "
+        f"+ selection {result.sr_star_selection:.6f}; "
         f"var_sr_source={result.var_sr_source}."
     )
     return research_log.update_hypothesis(
