@@ -18,6 +18,15 @@ import numpy as np
 import pandas as pd
 
 from research.post.dsr import deflated_sharpe_ratio
+
+#: Economic benchmark for these historical XAUUSD runs, per observation.
+#: These analyses were produced before T8, against an implicit SR* of 0. The
+#: zero is kept here so the numbers still reproduce, but it is now written
+#: down instead of implied: D5 puts XAUUSD buy-and-hold at 0.6343 annualised
+#: (0.039959 per observation) over 2013-2026, so every DSR below is lenient
+#: by roughly that much. See research log seq=94.
+LEGACY_BENCHMARK_SHARPE = 0.0
+
 from research.post.sweeps import ebb_engine as E
 from research.post.sweeps.analyze import GATES
 from research.post.sweeps.control import buy_and_hold, matched_random_control
@@ -285,7 +294,9 @@ def main() -> int:
         ]
         out["dsr_variants"] = []
         for label, kw in variants:
-            res = deflated_sharpe_ratio(r, periods_per_year=ppy, **kw)
+            res = deflated_sharpe_ratio(
+                r, periods_per_year=ppy,
+                benchmark_sharpe=LEGACY_BENCHMARK_SHARPE, **kw)
             out["dsr_variants"].append({
                 "label": label, "n_trials": res.n_trials, "var_sr": res.var_sr,
                 "var_sr_source": res.var_sr_source, "sr_star": res.sr_star,

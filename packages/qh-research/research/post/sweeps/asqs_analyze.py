@@ -152,11 +152,21 @@ def neighbours(row: pd.Series, df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(out, ignore_index=True) if out else df.iloc[0:0]
 
 
+#: Economic benchmark for these historical XAUUSD runs, per observation.
+#: These analyses were produced before T8, against an implicit SR* of 0. The
+#: zero is kept here so the numbers still reproduce, but it is now written
+#: down instead of implied: D5 puts XAUUSD buy-and-hold at 0.6343 annualised
+#: (0.039959 per observation) over 2013-2026, so every DSR below is lenient
+#: by roughly that much. See research log seq=94.
+LEGACY_BENCHMARK_SHARPE = 0.0
+
+
 def dsr_at(returns, n_list, trial_sharpes=None) -> dict:
     res = {}
     for n in n_list:
         try:
             r = deflated_sharpe_ratio(returns, n_trials=int(n),
+                                      benchmark_sharpe=LEGACY_BENCHMARK_SHARPE,
                                       trial_sharpes=trial_sharpes)
             res[str(n)] = {"dsr": float(r.dsr), "var_sr_source": r.var_sr_source}
         except Exception as exc:                        # noqa: BLE001

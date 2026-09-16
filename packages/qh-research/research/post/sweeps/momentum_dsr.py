@@ -31,6 +31,15 @@ import pandas as pd
 
 from research.pre.feature_screen import build_features
 from research.post.dsr import deflated_sharpe_ratio
+
+#: Economic benchmark for these historical XAUUSD runs, per observation.
+#: These analyses were produced before T8, against an implicit SR* of 0. The
+#: zero is kept here so the numbers still reproduce, but it is now written
+#: down instead of implied: D5 puts XAUUSD buy-and-hold at 0.6343 annualised
+#: (0.039959 per observation) over 2013-2026, so every DSR below is lenient
+#: by roughly that much. See research log seq=94.
+LEGACY_BENCHMARK_SHARPE = 0.0
+
 from research.post.sweeps.data import load
 from research.post.sweeps.momentum_cost_stress import simulate_costed
 from research.post.sweeps.momentum_nested_wf import (
@@ -120,9 +129,13 @@ def main() -> int:
               f"sd={np.std(per_fold, ddof=1):.4f}")
         for n in (1, 21, 126, 276):
             try:
-                res = deflated_sharpe_ratio(r, n_trials=int(n))
-                emp = deflated_sharpe_ratio(r, n_trials=int(n),
-                                            trial_sharpes=per_fold)
+                res = deflated_sharpe_ratio(
+                    r, n_trials=int(n),
+                    benchmark_sharpe=LEGACY_BENCHMARK_SHARPE)
+                emp = deflated_sharpe_ratio(
+                    r, n_trials=int(n),
+                    benchmark_sharpe=LEGACY_BENCHMARK_SHARPE,
+                    trial_sharpes=per_fold)
                 d["dsr"][str(n)] = float(res.dsr)
                 d["dsr_empirical_var_sr"][str(n)] = float(emp.dsr)
                 flag = "" if n == 1 else "   <-- lenient branch" if res.dsr > emp.dsr else ""

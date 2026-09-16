@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 94
+- **Entries:** 95
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (94 entries)
+- **Hash chain:** OK — chain ok (95 entries)
 
 ## Principles
 
@@ -1617,3 +1617,23 @@ Every entry before this marker is to be read as universe: ["XAUUSD"] and selecti
 trial_count() now applies the accounting rule rather than counting rows: pooled and pre-specified cost one trial, a post-hoc selection over k instruments costs k. No pre-marker entry has a selection_rule, so all of them keep one-row-one-trial and the D7 baseline is unchanged across the boundary.
 
 _hash_: `cfc1d0b738fc6382…` · _prev_: `6d28cceca03225c6…`
+
+### seq 94 · 2026-09-16T08:05:23Z · audit · `record:t8-prior-dsr-used-zero-benchmark`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `change`=benchmark_sharpe is now a required argument, `d5_source_artifact`=phase0_universe_20260907.json, `entries_that_cleared_0_95_under_zero_benchmark`={'36': {'dsr': 1.0, 'id': 'crest_n_keel_momentum', 'n_trials': 1}, '40': {'dsr': 0.998, 'id': 'zlch_param_sweep', 'n_trials': 15}, '62': {'dsr': 0.9959, 'id': 'h1_momentum_nested_wf', 'n_trials': 1}}, `entries_with_dsr_metrics`=[29, 30, 36, 40, 43, 45, 46, 51, 56, 62, 63, 64, 65], `positive_control_seq_63_gold_bh_dsr`=0.8112, `prior_economic_benchmark`=0.0, `re_evaluated`=False, `verdicts_changed`=0, `xauusd_buy_and_hold_sharpe_annualised`=0.6343, `xauusd_buy_and_hold_sharpe_per_obs`=0.039959
+
+> T8 makes benchmark_sharpe a required argument to deflated_sharpe_ratio(). Before it, the only benchmark in the calculation was the selection term E[max SR] over N trials, which is derived under a null of ZERO true Sharpe. The economic alternative was therefore implicitly zero: the question asked was 'did this beat nothing?' rather than 'did this beat the alternative?'.
+
+On gold those are not close. D5 puts XAUUSD buy-and-hold at 0.6343 annualised (0.039959 per observation) over 2013-10 to 2026-08, a period in which gold rose roughly 12x. Every gold DSR in this log was handed that entire Sharpe for free.
+
+The clearest evidence is already in the log and was not read as such at the time. At seq=63 a positive control -- gold buy-and-hold itself -- scored DSR 0.8112 at N=126. A benchmark that nearly clears a test whose null is zero is a mis-specified null, not a strong benchmark.
+
+Thirteen entries carry DSR metrics (seq 29, 30, 36, 40, 43, 45, 46, 51, 56, 62, 63, 64, 65). Three cleared the 0.95 threshold under the lenient benchmark and are the ones whose verdicts could move: seq=36 crest_n_keel_momentum 1.0 at N=1; seq=40 zlch_param_sweep 0.998 at N=15; seq=62 h1_momentum_nested_wf 0.9959 at N=1. All three are low-N readings that were already discounted on other grounds, and none was promoted.
+
+This entry records the defect, not a re-decision. Re-evaluating requires the original OOS return streams, which is a separate piece of work; nothing above is restated as a new verdict. Historical sweep scripts now pass benchmark_sharpe=LEGACY_BENCHMARK_SHARPE = 0.0 explicitly, so their numbers still reproduce and the leniency is visible at the call site instead of implied by a default.
+
+benchmark_from_d5() reads the figure straight out of the Phase 0 artifact and converts it once. The plausibility guard cannot help here: 0.6343 is a perfectly reasonable per-observation Sharpe, so an annualised value passed by hand is accepted while being ~16x too large. That is pinned as a known limitation.
+
+_hash_: `2cf8807104f6fee3…` · _prev_: `cfc1d0b738fc6382…`
