@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -122,15 +123,44 @@ class ParityReport:
 # Recomputation                                                                #
 # --------------------------------------------------------------------------- #
 
+#: Override the location of seq=31's OHLC inputs.
+DATA_DIR_ENV = "QH_PARITY_DATA_DIR"
+
+
 def default_data_paths() -> tuple[Path, Path]:
     """Where seq=31's inputs live.
 
-    Recorded in the artifact as absolute paths into the WMPS repo, which is
-    where the CSVs still are. The artifact also carries their SHA-256, so a
-    moved or edited file is caught by check 1 rather than assumed away.
+    The artifact records absolute paths into the WMPS repo, which is where
+    the CSVs are on the machine that produced them and nowhere else — a CI
+    runner has no such directory, which is how the first CI run failed. The
+    artifact's own SHA-256 still guards the contents, so the path may move
+    freely as long as the bytes do not.
+
+    Resolution order: ``$QH_PARITY_DATA_DIR`` if set, else the path recorded
+    in the artifact.
     """
     ref = load_reference()
-    return Path(ref["inputs"]["h1_path"]), Path(ref["inputs"]["h4_path"])
+    h1 = Path(ref["inputs"]["h1_path"])
+    h4 = Path(ref["inputs"]["h4_path"])
+    override = os.environ.get(DATA_DIR_ENV)
+    if override:
+        d = Path(override)
+        return d / h1.name, d / h4.name
+    return h1, h4
+
+
+def source_data_available() -> bool:
+    """Whether the seq=31 inputs can be read from this machine.
+
+    Recomputation needs them; validating the committed fixture does not.
+    Kept as a predicate so the distinction is explicit at each call site
+    rather than expressed as a caught exception.
+    """
+    try:
+        h1, h4 = default_data_paths()
+    except ReferenceMissing:
+        return False
+    return h1.exists() and h4.exists()
 
 
 def load_reference(path: Path = REFERENCE_ARTIFACT) -> dict:

@@ -8,7 +8,25 @@ dependencies = [
     "ipython>=9.13.0",
 ]
 
+[dependency-groups]
+# Declared so CI installs exactly what the suite needs. Before this, pytest
+# was not named anywhere — the project could not be set up for testing from
+# a clean checkout, which is why there was no CI to notice.
+test = [
+    "pytest>=9.0",
+    "numpy>=2.0",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "backtesting>=0.6.5",
+]
+
 [tool.pytest.ini_options]
+markers = [
+    # Ties a test to the acceptance-criteria table in docs/REWRITE.md §7.
+    # A marker is a declaration; a mention in a docstring is prose. The
+    # coverage gate in tests/test_x_coverage.py reads only the markers.
+    "x(id): the X-numbered acceptance test this covers, e.g. x('X28')",
+]
 # Without these, a bare `pytest` at the repo root collects tests/ fine and then
 # fails the four package suites with ModuleNotFoundError — which reads as
 # broken code rather than a missing path. Same class of false alarm as running

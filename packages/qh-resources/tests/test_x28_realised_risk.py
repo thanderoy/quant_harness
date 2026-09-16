@@ -25,6 +25,11 @@ from resources.risk import (
     size_position,
 )
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X7"), pytest.mark.x("X8"), pytest.mark.x("X9"), pytest.mark.x("X26"), pytest.mark.x("X27"), pytest.mark.x("X28")]
+
+
 REAL = "pepperstone_demo_20260901.json"
 ACCOUNT_CCY = "USD"
 

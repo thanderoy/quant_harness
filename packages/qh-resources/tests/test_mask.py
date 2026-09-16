@@ -9,6 +9,11 @@ import pytest
 from resources.data import IndicatorClass, MaskReason, TradabilityMask, masked_rolling
 from resources.data.mask import UndeclaredIndicatorClass
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X3"), pytest.mark.x("X25")]
+
+
 
 def h1_index_with_weekend(n_before: int = 30, n_after: int = 30) -> pd.DatetimeIndex:
     """H1 bars up to a Friday close, then a 63h gap, then Monday open."""

@@ -28,6 +28,11 @@ from research.post.dsr import (
 )
 from research.log import SelectionRule
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X14"), pytest.mark.x("X15c")]
+
+
 #: D5, XAUUSD buy-and-hold, 2013-10 to 2026-08.
 XAUUSD_BH_ANNUALISED = 0.6343
 XAUUSD_BH_PER_OBS = XAUUSD_BH_ANNUALISED / math.sqrt(252)

@@ -21,6 +21,11 @@ from research.log import (
     Stage,
 )
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X11"), pytest.mark.x("X12")]
+
+
 REAL_LOG = log.DEFAULT_LOG_DIR
 
 

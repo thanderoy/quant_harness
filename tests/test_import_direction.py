@@ -17,6 +17,11 @@ from pathlib import Path
 
 import pytest
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X19"), pytest.mark.x("X32")]
+
+
 PACKAGES_DIR = Path(__file__).resolve().parents[1] / "packages"
 
 #: distribution directory -> import name

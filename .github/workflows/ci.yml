@@ -1,0 +1,93 @@
+name: CI
+
+# Phase 1 acceptance criterion 4 is "X1-X32 pass in CI". Until this file
+# existed there was no CI, so the criterion could not be met however green
+# the suite looked on a laptop. "372 tests pass on my machine" and "the build
+# is green" are different claims.
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+concurrency:
+  # A newer push to the same branch makes the older run irrelevant.
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The research log is a hash chain and tests/test_chain_integrity.py
+          # walks it. A shallow clone is fine for that — the chain lives in
+          # the file, not in git history — but fetch-depth 0 keeps the log's
+          # own provenance inspectable from a failing run.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        # The test group in pyproject.toml, not requirements.txt: the latter
+        # omits pytest, which is how the project reached this point with no
+        # reproducible way to run its own suite.
+        run: uv sync --group test
+
+      - name: Run the suite
+        # -rs prints the skip reasons. A test that skips on a runner because
+        # its input data lives outside the repo is not the same as a test that
+        # passed, and the run should say which happened.
+        run: uv run pytest -q -rs
+
+      - name: Acceptance coverage (X1-X32)
+        # Runs separately from the suite so its result is legible in the run
+        # summary rather than buried in a dot. It is the criterion-4 gate.
+        if: always()
+        run: uv run pytest tests/test_x_coverage.py -v
+
+      - name: Research log integrity
+        # verify() walks the hash chain and trial_count() is the DSR
+        # denominator. Both are cheap and both are catastrophic if they drift
+        # unnoticed, so they are asserted on every run, not only when a test
+        # that happens to touch the log is collected.
+        if: always()
+        run: |
+          uv run python - <<'PY'
+          import sys
+          sys.path.insert(0, "packages/qh-research")
+          from research import log
+
+          ok, msg = log.verify()
+          print(f"verify(): {msg}")
+          if not ok:
+              raise SystemExit(f"research log chain broken: {msg}")
+
+          n = log.trial_count()
+          print(f"trial_count(): {n}")
+          # The D7 baseline. It moves only when a genuine new trial is
+          # registered, which is a deliberate act — never a side effect of a
+          # refactor, a migration, or a parity fixture.
+          if n != 26:
+              raise SystemExit(
+                  f"trial_count() is {n}, expected the D7 baseline of 26. "
+                  "If a new hypothesis was registered on purpose, update this "
+                  "number and say so in the PR."
+              )
+          PY
