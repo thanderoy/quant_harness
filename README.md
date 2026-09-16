@@ -37,7 +37,8 @@ gap < 0.3, PBO < 0.3, DSR > 0.99, OOS DD < 15%, trades ≥ 100, PF ≥ 1.40.
 ```
 packages/
 ├── qh-resources/   → import `resources`
-│   └── instrument registry, tradability mask, panel, normalisation, sizing
+│   └── instrument registry, tradability mask, panel, normalisation,
+│       indicators, sizing, drawdown guard
 ├── qh-strategies/  → import `strategies`
 │   └── instrument-neutral strategy definitions; emit risk units, never lots
 └── qh-research/    → import `research`
