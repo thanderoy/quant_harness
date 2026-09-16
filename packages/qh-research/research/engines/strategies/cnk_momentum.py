@@ -1,4 +1,4 @@
-"""qhf.engines.strategies.cnk_momentum — Config A from the TradingView LAB.
+"""research.engines.strategies.cnk_momentum — Config A from the TradingView LAB.
 
 crest_n_keel MOMENTUM variant. Two changes vs the live HMAStoch1H:
   1. Entry: HMA-slope-flip momentum (trend-following), LONG-ONLY — replaces the
@@ -20,8 +20,8 @@ import numpy as np
 import pandas as pd
 from backtesting import Strategy
 
-from qhf.engines.indicators import hma, atr
-from qhf.engines.sizer import calculate_lot_size
+from research.engines.indicators import hma, atr
+from research.engines.sizer import calculate_lot_size
 
 
 class CrestNKeelMomentum(Strategy):

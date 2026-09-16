@@ -1,6 +1,6 @@
 """research.post.sweeps.asqs_engine — fast port of ASQSafeScalping v1.20.
 
-Mirrors qhf.engines.strategies.asq_safe_scalping closely enough to sweep it.
+Mirrors research.engines.strategies.asq_safe_scalping closely enough to sweep it.
 backtesting.py is a per-bar Python loop and cannot cover a grid this size.
 
 FIDELITY NOTES -- the places this is easy to get wrong

@@ -17,7 +17,7 @@ Design notes that matter for reading the output
    at a path-dependent point and making configs non-comparable. Drawdown is
    reported as a metric instead.
 3. Two return bases are reported and they are NOT interchangeable:
-     *_px   per-unit price return -- reproduces qhf.engines.btpy_runner
+     *_px   per-unit price return -- reproduces research.engines.btpy_runner
             exactly (validated to 0.0015 Sharpe by run_parity). Size-agnostic:
             position sizing has no effect on it.
      *_acct per-trade PnL / equity at entry -- the true account return,

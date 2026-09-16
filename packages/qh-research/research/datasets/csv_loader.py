@@ -1,4 +1,4 @@
-"""qhf.data.csv_loader — robust loader for MT5-style OHLCV CSV files.
+"""research.datasets.csv_loader — robust loader for MT5-style OHLCV CSV files.
 
 Handles:
 - Auto-sniffed delimiter (tab, comma, semicolon).

@@ -19,12 +19,12 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from qhf.metrics import (
+from research.metrics import (
     sharpe_ratio, max_drawdown, profit_factor, summarize,
     dsr, dsr_from_trials, pbo, expected_max_sharpe,
 )
-from qhf.validation import rolling_splits
-from qhf.reports import Result, Thresholds, evaluate
+from research.validation import rolling_splits
+from research.reports import Result, Thresholds, evaluate
 
 
 class TestCore(unittest.TestCase):

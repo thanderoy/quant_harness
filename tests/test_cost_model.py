@@ -5,7 +5,7 @@ from __future__ import annotations
 import unittest
 from datetime import datetime, timedelta
 
-from qhf.data.cost_model import (
+from research.datasets.cost_model import (
     PepperstoneXAUUSDCostModel, CostBreakdown,
     PEPPERSTONE_XAUUSD_RAZOR_MT5_COMMISSION_PER_LOT_RT,
 )

@@ -1,4 +1,4 @@
-"""qhf.metrics.pbo — Probability of Backtest Overfitting via CSCV.
+"""research.metrics.pbo — Probability of Backtest Overfitting via CSCV.
 
 Implements Combinatorially Symmetric Cross-Validation per
 Bailey, Borwein, Lopez de Prado, & Zhu (2017), "The Probability of

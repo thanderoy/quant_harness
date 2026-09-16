@@ -528,7 +528,7 @@ if __name__ == '__main__':
 
     # Try to load from the standard harness data location
     csv_candidates = [
-        os.path.expanduser('~/Downloads/qhf_harness/XAUUSD_M5.csv'),
+        os.path.expanduser('~/Downloads/quant_harness/XAUUSD_M5.csv'),
         os.path.expanduser('~/Downloads/XAUUSD_M5.csv'),
     ]
     df = None

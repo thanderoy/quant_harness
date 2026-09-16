@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from qhf.data import load_bars
+from research.datasets import load_bars
 
 
 # Known historical events worth flagging if a gap brushes them.

@@ -2,8 +2,8 @@
 
 Purpose
 -------
-Canonical implementations are ``qhf.engines.strategies.hma_stoch.HMAStoch1H``
-(PULLBACK mode) and ``qhf.engines.strategies.cnk_momentum.CrestNKeelMomentum``
+Canonical implementations are ``research.engines.strategies.hma_stoch.HMAStoch1H``
+(PULLBACK mode) and ``research.engines.strategies.cnk_momentum.CrestNKeelMomentum``
 (MOMENTUM mode), both running under ``backtesting.py``. Those are per-bar Python
 loops, far too slow for an exhaustive sweep. This module reimplements the SAME
 semantics as an event-driven loop and is validated against the canonical engines
@@ -56,7 +56,7 @@ _SCAN_BLOCK = 4096             # forward-scan block for the fixed-bracket exit
 
 
 # --------------------------------------------------------------------------- #
-# Indicators — exact ports of qhf.engines.indicators                           #
+# Indicators — exact ports of research.engines.indicators                           #
 # --------------------------------------------------------------------------- #
 def _wma(vals: np.ndarray, period: int) -> np.ndarray:
     """Linear WMA. NaN propagates through any window that touches one."""
@@ -73,7 +73,7 @@ def _wma(vals: np.ndarray, period: int) -> np.ndarray:
 def hma(close: np.ndarray, period: int) -> np.ndarray:
     """Hull MA = WMA(2*WMA(n/2) - WMA(n), round(sqrt(n))).
 
-    Mirrors qhf.engines.indicators.hma, including its integer half-period
+    Mirrors research.engines.indicators.hma, including its integer half-period
     (``period // 2``) and ``round(math.sqrt(period))`` smoothing length.
     """
     half = period // 2
@@ -124,7 +124,7 @@ def stochastic(high: np.ndarray, low: np.ndarray, close: np.ndarray,
 
 def atr(high: np.ndarray, low: np.ndarray, close: np.ndarray,
         period: int) -> np.ndarray:
-    """Wilder ATR, exact port of qhf.engines.indicators.atr.
+    """Wilder ATR, exact port of research.engines.indicators.atr.
 
     NOTE the seeding differs from research.post.sweeps.zlch_engine.wilder_atr:
     here the first value lands at index `period` (not period-1) and is seeded
@@ -155,7 +155,7 @@ def atr(high: np.ndarray, low: np.ndarray, close: np.ndarray,
 # --------------------------------------------------------------------------- #
 def _lot_size(equity: float, atr_value: float, risk_pct: float,
               sl_mult: float) -> tuple[float, float]:
-    """Port of qhf.engines.sizer.calculate_lot_size."""
+    """Port of research.engines.sizer.calculate_lot_size."""
     effective_atr = max(atr_value, LOT_SAFETY_FLOOR_ATR)
     risk_amount = equity * risk_pct
     sl_distance = effective_atr * sl_mult
@@ -409,7 +409,7 @@ def simulate(bars: Bars, mode: str, hma_v: np.ndarray, atr_v: np.ndarray,
 def metrics(sim: dict, basis: str = "account") -> dict:
     """basis="account" -> PnL/equity_at_entry (economically correct).
     basis="price" -> per-unit price return, reproducing what
-    qhf.engines.btpy_runner feeds its metrics (position-size agnostic).
+    research.engines.btpy_runner feeds its metrics (position-size agnostic).
     Both are reported; they are NOT interchangeable.
     """
     r = sim["px_returns"] if basis == "price" else sim["returns"]

@@ -1,4 +1,4 @@
-"""qhf.engines.indicators — self-contained indicator implementations.
+"""research.engines.indicators — self-contained indicator implementations.
 
 Exact copies of the user's app.quant.strategies.indicators module so the
 harness has no dependency on the live-trading app. Any change to the live

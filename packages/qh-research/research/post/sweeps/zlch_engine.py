@@ -2,7 +2,7 @@
 
 Purpose
 -------
-The canonical implementation is ``qhf.engines.strategies.zlch.ZeroLagChandelier``
+The canonical implementation is ``research.engines.strategies.zlch.ZeroLagChandelier``
 running under ``backtesting.py``. That engine is a per-bar Python loop and takes
 tens of seconds per config on M15 — far too slow for an exhaustive parameter
 sweep (~10^4 configs x 5 timeframes).
@@ -46,7 +46,7 @@ TRIPLE_SWAP_WEEKDAY = 2        # Wednesday
 # --------------------------------------------------------------------------- #
 def wilder_atr(high: pd.Series, low: pd.Series, close: pd.Series,
                period: int) -> np.ndarray:
-    """Wilder ATR (RMA). Matches qhf.engines.indicators.atr."""
+    """Wilder ATR (RMA). Matches research.engines.indicators.atr."""
     h, l, c = high.to_numpy(float), low.to_numpy(float), close.to_numpy(float)
     prev_c = np.concatenate(([np.nan], c[:-1]))
     tr = np.maximum(h - l, np.maximum(np.abs(h - prev_c), np.abs(l - prev_c)))
@@ -101,7 +101,7 @@ def chandelier_direction(high: pd.Series, low: pd.Series, close: pd.Series,
                          atr_period: int, atr_mult: float) -> np.ndarray:
     """Ratcheting Chandelier direction (+1/-1), seed +1.
 
-    Faithful port of qhf.engines.strategies.zlch._chandelier_direction.
+    Faithful port of research.engines.strategies.zlch._chandelier_direction.
     Optimised with list access; the recursion is genuinely sequential.
     """
     atr_vals = wilder_atr(high, low, close, atr_period)
@@ -385,7 +385,7 @@ def simulate(bars: Bars, direction: np.ndarray, atr_vals: np.ndarray,
 
 
 # --------------------------------------------------------------------------- #
-# Metrics (mirror qhf.metrics.core)                                            #
+# Metrics (mirror research.metrics.core)                                            #
 # --------------------------------------------------------------------------- #
 def metrics(sim: dict, basis: str = "account") -> dict:
     """Compute metrics.
@@ -393,7 +393,7 @@ def metrics(sim: dict, basis: str = "account") -> dict:
     basis="account"  -> per-trade PnL / equity_at_entry. Economically correct:
                         reflects position sizing and compounding.
     basis="price"    -> per-unit price return, reproducing what
-                        qhf.engines.btpy_runner feeds its metrics. Size-agnostic.
+                        research.engines.btpy_runner feeds its metrics. Size-agnostic.
     Both are reported by the sweep; they are NOT interchangeable.
     """
     r = sim["px_returns"] if basis == "price" else sim["returns"]

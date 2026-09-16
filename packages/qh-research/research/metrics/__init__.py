@@ -1,6 +1,6 @@
-"""qhf.metrics — performance metrics with multiple-testing corrections."""
+"""research.metrics — performance metrics with multiple-testing corrections."""
 
-from qhf.metrics.core import (
+from research.metrics.core import (
     sharpe_ratio,
     sortino_ratio,
     max_drawdown,
@@ -13,13 +13,13 @@ from qhf.metrics.core import (
     summarize,
     equity_curve,
 )
-from qhf.metrics.deflated import (
+from research.metrics.deflated import (
     psr,
     expected_max_sharpe,
     dsr,
     dsr_from_trials,
 )
-from qhf.metrics.pbo import pbo
+from research.metrics.pbo import pbo
 
 __all__ = [
     "sharpe_ratio", "sortino_ratio", "max_drawdown", "calmar_ratio",

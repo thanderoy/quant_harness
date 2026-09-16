@@ -17,11 +17,11 @@ real strategy returns.
 import numpy as np
 import pandas as pd
 
-from qhf.metrics.core import sharpe_ratio, summarize
-from qhf.metrics.deflated import dsr_from_trials
-from qhf.metrics.pbo import pbo
-from qhf.reports.scorecard import Result, Thresholds, evaluate
-from qhf.validation.walk_forward import rolling_splits
+from research.metrics.core import sharpe_ratio, summarize
+from research.metrics.deflated import dsr_from_trials
+from research.metrics.pbo import pbo
+from research.reports.scorecard import Result, Thresholds, evaluate
+from research.validation.walk_forward import rolling_splits
 
 
 PERIODS_PER_YEAR_DAILY = 252

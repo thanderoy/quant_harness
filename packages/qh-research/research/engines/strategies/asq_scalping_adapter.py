@@ -1,5 +1,5 @@
 """
-qhf/engines/strategies/asq_scalping_adapter.py
+research/engines/strategies/asq_scalping_adapter.py
 ===============================================
 QHF harness adapter for ASQ SafeScalping v1.20.
 
@@ -7,16 +7,16 @@ Mirrors the structure of hma_stoch.py so btpy_runner.py, run_walk_forward.py,
 and score_a_strategy.py can consume ASQ identically to HMAStoch1H / HMAStochM15.
 
 Drop this file into:
-    qhf/engines/strategies/asq_scalping_adapter.py
+    packages/qh-research/research/engines/strategies/asq_scalping_adapter.py
 
-And register in qhf/engines/strategies/__init__.py:
+And register in research/engines/strategies/__init__.py:
     from .asq_scalping_adapter import ASQScalpingM5
 
 Usage (mirrors existing examples):
-    from qhf.engines.strategies.asq_scalping_adapter import ASQScalpingM5
-    from qhf.engines.btpy_runner import run_backtest, run_spread_stress
-    from qhf.data.csv_loader import load_bars
-    from qhf.data.cost_model import pepperstone_razor
+    from research.engines.strategies.asq_scalping_adapter import ASQScalpingM5
+    from research.engines.btpy_runner import run_backtest, run_spread_stress
+    from research.datasets.csv_loader import load_bars
+    from research.datasets.cost_model import pepperstone_razor
 
     df   = load_csv('XAUUSD_M5.csv')
     cost = pepperstone_razor()
@@ -31,7 +31,7 @@ from typing import Optional
 import pandas as pd
 
 # Strategy class lives alongside this adapter in the strategies package
-from qhf.engines.strategies.asq_safe_scalping import ASQSafeScalping, attach_h1_mtf   # noqa: E402
+from research.engines.strategies.asq_safe_scalping import ASQSafeScalping, attach_h1_mtf   # noqa: E402
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -253,8 +253,8 @@ def run_asq_walk_forward(df           : pd.DataFrame,
         WalkForwardResult (same type as HMAStoch outputs).
     """
     # Import here to avoid circular deps at module load time
-    from qhf.engines.btpy_runner import run_walk_forward         # noqa: PLC0415
-    from qhf.data.cost_model import PepperstoneXAUUSDCostModel  # noqa: PLC0415
+    from research.engines.btpy_runner import run_walk_forward         # noqa: PLC0415
+    from research.datasets.cost_model import PepperstoneXAUUSDCostModel  # noqa: PLC0415
 
     if params is None:
         params = ASQParams.phase1_baseline()

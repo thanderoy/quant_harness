@@ -1,7 +1,7 @@
 """research.post.sweeps.ebb_engine — fast vectorised backtest for ebb_n_flow.
 
-Canonical implementation is qhf.engines.strategies.ebb_n_flow.EbbNFlow run under
-qhf.engines.btpy_runner. That is a per-bar Python loop; this module reimplements
+Canonical implementation is research.engines.strategies.ebb_n_flow.EbbNFlow run under
+research.engines.btpy_runner. That is a per-bar Python loop; this module reimplements
 the same semantics as an event loop over entry candidates so an exhaustive grid
 is tractable. Validated by run_ebb_parity.py -- if the two disagree, the harness
 is right.
@@ -36,7 +36,7 @@ MIN_LOT, MAX_LOT = 0.01, 0.10
 
 
 # --------------------------------------------------------------------------- #
-# Indicators — ported verbatim from qhf.engines.strategies.ebb_n_flow          #
+# Indicators — ported verbatim from research.engines.strategies.ebb_n_flow          #
 # --------------------------------------------------------------------------- #
 def bollinger(close: np.ndarray, n: int, k: float):
     s = pd.Series(close)

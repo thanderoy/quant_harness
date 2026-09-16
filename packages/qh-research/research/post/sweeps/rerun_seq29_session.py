@@ -27,9 +27,9 @@ sys.path.insert(0, str(Path.home() / "Local" / "quant_harness"))
 
 import numpy as np
 
-from qhf.data import PepperstoneXAUUSDCostModel                       # noqa: E402
-from qhf.engines import run_walk_forward, PEPPERSTONE_XAUUSD_KNOWN_GAPS  # noqa: E402
-from qhf.engines.strategies.hma_stoch import HMAStoch1H               # noqa: E402
+from research.datasets import PepperstoneXAUUSDCostModel                       # noqa: E402
+from research.engines import run_walk_forward, PEPPERSTONE_XAUUSD_KNOWN_GAPS  # noqa: E402
+from research.engines.strategies.hma_stoch import HMAStoch1H               # noqa: E402
 
 from research.post.sweeps.data import load                            # noqa: E402
 

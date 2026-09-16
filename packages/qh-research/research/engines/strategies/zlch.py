@@ -1,4 +1,4 @@
-"""qhf.engines.strategies.zlch — ZeroLag Chandelier (research/pre hypothesis).
+"""research.engines.strategies.zlch — ZeroLag Chandelier (research/pre hypothesis).
 
 M15 Chandelier direction-flip entry, gated by an H4 ZLSMA slope bias, with a
 pure chandelier-flip exit (flat when the chandelier direction turns against the
@@ -36,8 +36,8 @@ import numpy as np
 import pandas as pd
 from backtesting import Strategy
 
-from qhf.engines.indicators import atr
-from qhf.engines.sizer import calculate_lot_size
+from research.engines.indicators import atr
+from research.engines.sizer import calculate_lot_size
 
 
 # --------------------------------------------------------------------------- #

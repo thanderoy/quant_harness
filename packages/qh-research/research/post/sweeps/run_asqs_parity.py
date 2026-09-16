@@ -1,4 +1,4 @@
-"""research.post.sweeps.run_asqs_parity — asqs_engine vs qhf btpy_runner.
+"""research.post.sweeps.run_asqs_parity — asqs_engine vs research.engines.btpy_runner.
 
 Both sides are fed bars loaded with the DEFAULT tz ("legacy_utc"), i.e. broker
 server time relabelled as UTC. That is deliberate: the harness assumes its
@@ -22,8 +22,8 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 sys.path.insert(0, str(Path.home() / "Local" / "quant_harness"))
 
-from qhf.engines.btpy_runner import run_backtest                        # noqa: E402
-from qhf.engines.strategies.asq_safe_scalping import ASQSafeScalping    # noqa: E402
+from research.engines.btpy_runner import run_backtest                        # noqa: E402
+from research.engines.strategies.asq_safe_scalping import ASQSafeScalping    # noqa: E402
 
 from research.post.sweeps import asqs_engine as A                       # noqa: E402
 from research.post.sweeps.data import load                              # noqa: E402

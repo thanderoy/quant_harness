@@ -1,6 +1,6 @@
-"""qhf.validation — split generators, exclusion-aware reporting, and (Phase 2) stress tests."""
+"""research.validation — split generators, exclusion-aware reporting, and (Phase 2) stress tests."""
 
-from qhf.validation.walk_forward import (
+from research.validation.walk_forward import (
     # Plain backwards-compatible API
     rolling_splits,
     expanding_splits,

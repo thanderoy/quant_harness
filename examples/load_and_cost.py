@@ -20,7 +20,7 @@ from io import StringIO
 import numpy as np
 import pandas as pd
 
-from qhf.data import load_bars, PepperstoneXAUUSDCostModel
+from research.datasets import load_bars, PepperstoneXAUUSDCostModel
 
 
 def _make_synthetic_h1() -> str:

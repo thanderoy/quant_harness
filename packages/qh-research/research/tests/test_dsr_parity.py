@@ -1,7 +1,7 @@
 """Cross-repo parity contract for the Deflated Sharpe Ratio.
 
 `research.post.dsr` is the **canonical** DSR implementation for this repo. The
-walk-forward harness ships its own twin at `qhf/metrics/deflated.py` (separate
+walk-forward harness ships its own twin at `research/metrics/deflated.py` (separate
 repo, separate venv) so it can deflate Sharpe inline without importing this
 package. Two implementations means they can silently drift.
 
@@ -13,7 +13,7 @@ expected values are reproducible byte-for-byte across implementations:
   - ``expected_max_sharpe(n_trials, var_sr)``        — deflated benchmark
 
 If you change the math in either repo, these values must move together. The
-same table is published in ``research/README.md`` as the qhf-side obligation.
+same table is published in ``research/README.md`` as the harness-side obligation.
 Bump both deliberately; never let one side drift unannounced.
 """
 
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from research.post.dsr import expected_max_sharpe, psr
 
-# Locked outputs of research.post.dsr — the contract qhf/metrics/deflated.py
+# Locked outputs of research.post.dsr — the contract research/metrics/deflated.py
 # must reproduce. (inputs) -> expected output.
 PSR_GOLDEN = [
     # (sr_hat, sr_star, n_obs, skew, kurtosis) -> psr
