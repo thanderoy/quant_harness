@@ -24,6 +24,11 @@ from research.post.mintrl import (
     sharpe_variance_factor,
 )
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X31")]
+
+
 
 # -- the inversion ---------------------------------------------------------
 

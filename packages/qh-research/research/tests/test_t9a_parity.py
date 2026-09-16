@@ -15,6 +15,11 @@ import pytest
 from research import log as research_log
 from research.parity import t9a_flood_tide as t9a
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X15a"), pytest.mark.x("X15d")]
+
+
 
 @pytest.fixture(scope="module")
 def report():

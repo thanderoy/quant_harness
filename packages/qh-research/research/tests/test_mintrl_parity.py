@@ -19,6 +19,11 @@ import pytest
 
 from research.post.mintrl import min_decidable_sharpe, min_trl
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X13")]
+
+
 MIN_TRL_GOLDEN = [
     # (sr_hat, sr_star, skew, kurtosis) -> min_trl
     ((0.05, 0.00, 0.0, 3.0), 1084.570150970246),

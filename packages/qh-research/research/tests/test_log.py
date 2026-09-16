@@ -24,6 +24,11 @@ from research.log import (
     RENDERED_FILENAME,
 )
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X10"), pytest.mark.x("X21")]
+
+
 
 def test_register_and_read_back(tmp_path):
     register_hypothesis(

@@ -19,6 +19,11 @@ from resources.instruments import (
     UnknownInstrument,
 )
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X24")]
+
+
 SNAPSHOT = "provisional_20260901.json"
 
 

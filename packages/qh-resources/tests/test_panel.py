@@ -14,6 +14,11 @@ import pytest
 from resources.data.mask import MaskReason, TradabilityMask
 from resources.data.panel import Panel, PanelAlignmentError
 
+#: Acceptance coverage (docs/REWRITE.md §7). Read by
+#: tests/test_x_coverage.py — keep in step with what this file asserts.
+pytestmark = [pytest.mark.x("X4")]
+
+
 
 def _frame(times, close_start=1.0):
     idx = pd.DatetimeIndex(times, tz="UTC")
