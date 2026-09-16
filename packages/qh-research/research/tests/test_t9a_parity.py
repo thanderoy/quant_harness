@@ -21,17 +21,32 @@ pytestmark = [pytest.mark.x("X15a"), pytest.mark.x("X15d")]
 
 
 
+#: Recomputation needs seq=31's OHLC CSVs. They live in the WMPS repo and are
+#: not in this one, so on a CI runner they are simply absent — which is how
+#: the first CI run failed with a FileNotFoundError on an absolute path from
+#: my laptop. Those tests skip; the fixture-validation tests below do not,
+#: so X15a keeps a real assertion in CI rather than disappearing from it.
+needs_source_data = pytest.mark.skipif(
+    not t9a.source_data_available(),
+    reason=(f"seq=31 OHLC inputs not present; set ${t9a.DATA_DIR_ENV} to the "
+            f"directory holding XAUUSD_H1.csv and XAUUSD_H4.csv"))
+
+
 @pytest.fixture(scope="module")
 def report():
+    if not t9a.source_data_available():
+        pytest.skip("seq=31 OHLC inputs not present")
     return t9a.check_mask_off()
 
 
+@needs_source_data
 def test_mask_off_parity_holds(report):
     assert report.passed, (
         f"stopped at {report.stopped_at}: "
         f"{[l.detail for l in report.layers if not l.passed]}")
 
 
+@needs_source_data
 def test_every_layer_the_spec_names_is_checked(report):
     layers = [l.layer for l in report.layers]
     assert layers[:4] == [
@@ -39,17 +54,20 @@ def test_every_layer_the_spec_names_is_checked(report):
     assert {"e_ratio_h20", "e_ratio_h50", "e_ratio_h100"} <= set(layers)
 
 
+@needs_source_data
 def test_the_layers_are_checked_in_dependency_order(report):
     orders = [l.order for l in report.layers]
     assert orders == sorted(orders)
 
 
+@needs_source_data
 def test_the_signal_count_is_the_adjudicated_one(report):
     n = next(l for l in report.layers if l.layer == "n_long_signals")
     assert n.expected == 1669
     assert n.actual == 1669
 
 
+@needs_source_data
 def test_e_ratios_match_at_float_equality(report):
     ref = t9a.load_reference()
     want = {int(r["horizon"]): r["e_ratio"] for r in ref["results_by_horizon"]}
@@ -59,6 +77,7 @@ def test_e_ratios_match_at_float_equality(report):
         assert isinstance(layer.actual, float)
 
 
+@needs_source_data
 def test_horizons_are_recorded_as_tradable_bars(report):
     """R4. Mask-off it makes no difference; recorded so it isn't inferred."""
     assert report.horizon_unit == "tradable_bars"
@@ -86,6 +105,7 @@ def _stub(monkeypatch, **overrides):
     monkeypatch.setattr(t9a, "recompute", fake)
 
 
+@needs_source_data
 def test_a_data_loader_break_reports_nothing_downstream(monkeypatch):
     """If the OHLC moved, the signal hash differing tells you nothing new."""
     _stub(monkeypatch, ohlc_hash="deadbeefdeadbeef")
@@ -95,6 +115,7 @@ def test_a_data_loader_break_reports_nothing_downstream(monkeypatch):
     assert len(r.layers) == 1
 
 
+@needs_source_data
 def test_a_signal_break_stops_before_the_e_ratios(monkeypatch):
     _stub(monkeypatch, signal_hash="0000000000000000")
     r = t9a.check_mask_off()
@@ -103,6 +124,7 @@ def test_a_signal_break_stops_before_the_e_ratios(monkeypatch):
     assert [l.layer for l in r.layers] == ["ohlc_hash", "signal_hash"]
 
 
+@needs_source_data
 def test_a_count_break_is_separated_from_a_shift(monkeypatch):
     """Both break the hash; they want different investigations."""
     _stub(monkeypatch, n_long_signals=1670)
@@ -111,6 +133,7 @@ def test_a_count_break_is_separated_from_a_shift(monkeypatch):
     assert r.layers[-1].expected == 1669
 
 
+@needs_source_data
 def test_a_shifted_timestamp_names_the_index(monkeypatch):
     fx = json.loads(t9a.FIXTURE.read_text())
     shifted = list(fx["signal_timestamps"])
@@ -121,6 +144,7 @@ def test_a_shifted_timestamp_names_the_index(monkeypatch):
     assert "index 7" in r.layers[-1].detail
 
 
+@needs_source_data
 def test_an_e_ratio_break_names_the_horizon(monkeypatch):
     ref = t9a.load_reference()
     e = {int(x["horizon"]): x["e_ratio"] for x in ref["results_by_horizon"]}
@@ -132,6 +156,7 @@ def test_an_e_ratio_break_names_the_horizon(monkeypatch):
 
 # -- the log event ---------------------------------------------------------
 
+@needs_source_data
 def test_the_fixture_event_never_counts_as_a_trial(tmp_path, report):
     research_log.register_hypothesis("seed", title="t", mechanism="m",
                                      log_dir=tmp_path)
@@ -144,7 +169,41 @@ def test_the_fixture_event_never_counts_as_a_trial(tmp_path, report):
     assert ok, msg
 
 
+@needs_source_data
 def test_the_event_says_the_verdict_is_not_reopened(tmp_path, report):
     entry = t9a.log_parity_fixture(report, log_dir=tmp_path)
     assert "not reopened" in entry.note or "not a new trial" in entry.note
     assert entry.metrics["mode"] == "mask_off"
+
+
+# -- runnable without the source data -------------------------------------
+# These validate the committed fixture against the committed reference
+# artifact. No CSV, no recomputation — so X15a is still genuinely asserted on
+# a runner, rather than skipped into a green tick that means nothing.
+
+
+def test_the_fixture_agrees_with_the_adjudicated_artifact():
+    fx = json.loads(t9a.FIXTURE.read_text())
+    meta = t9a.load_reference()["edge_report_metadata"]
+    assert fx["ohlc_hash"] == meta["ohlc_hash"]
+    assert fx["signal_hash"] == meta["signal_hash"]
+    assert fx["n_long_signals"] == int(meta["n_long_signals"]) == 1669
+
+
+def test_the_fixture_pins_every_horizon_at_float_equality():
+    fx = json.loads(t9a.FIXTURE.read_text())
+    want = {str(r["horizon"]): r["e_ratio"]
+            for r in t9a.load_reference()["results_by_horizon"]}
+    assert fx["e_ratios"] == want
+
+
+def test_the_fixture_timestamp_count_matches_the_signal_count():
+    fx = json.loads(t9a.FIXTURE.read_text())
+    assert len(fx["signal_timestamps"]) == fx["n_long_signals"]
+    assert fx["signal_timestamps"] == sorted(fx["signal_timestamps"])
+
+
+def test_the_fixture_records_the_horizon_convention():
+    fx = json.loads(t9a.FIXTURE.read_text())
+    assert fx["horizon_unit"] == "tradable_bars"
+    assert fx["mode"] == "mask_off"

@@ -51,7 +51,10 @@ jobs:
         run: uv sync --group test
 
       - name: Run the suite
-        run: uv run pytest -q
+        # -rs prints the skip reasons. A test that skips on a runner because
+        # its input data lives outside the repo is not the same as a test that
+        # passed, and the run should say which happened.
+        run: uv run pytest -q -rs
 
       - name: Acceptance coverage (X1-X32)
         # Runs separately from the suite so its result is legible in the run

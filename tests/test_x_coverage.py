@@ -69,6 +69,18 @@ DEFERRED: dict[str, tuple[str, str]] = {
 }
 
 
+#: X id -> what CI cannot exercise, and why. Coverage that depends on data
+#: outside this repository is real on a developer machine and absent on a
+#: runner, and a green tick that hides that is exactly the reassurance this
+#: file exists to refuse.
+CI_LIMITED: dict[str, str] = {
+    "X15a": ("recomputation needs seq=31's OHLC CSVs, which live in the WMPS "
+             "repo; on a runner those tests skip and only the committed "
+             "fixture is validated against the adjudicated artifact. Set "
+             "$QH_PARITY_DATA_DIR to exercise the full check."),
+}
+
+
 def _marked_ids() -> dict[str, set[str]]:
     """X ids declared by a marker, mapped to the files declaring them.
 
@@ -162,6 +174,26 @@ def test_acceptance_criterion_four_is_not_yet_met():
         "now met — delete this test and say so in the log.")
     blocking = sorted({task for _, task in DEFERRED.values()})
     assert blocking  # the tasks that stand between here and criterion 4
+
+
+def test_ci_limitations_name_real_covered_ids(marked):
+    """A limitation on an id that is deferred or absent is a stale note."""
+    for x in CI_LIMITED:
+        assert x in marked, (
+            f"{x} is listed in CI_LIMITED but has no covering test")
+        assert x not in DEFERRED, (
+            f"{x} cannot be both deferred and CI-limited")
+
+
+def test_partially_exercised_coverage_is_declared_not_implied():
+    """X15a is the current case: green in CI does not mean fully checked.
+
+    Recorded so the distinction survives being forgotten. If the data ever
+    becomes available to CI, delete the entry — the test above will not let
+    it linger on an id that stopped needing it.
+    """
+    assert "X15a" in CI_LIMITED
+    assert "QH_PARITY_DATA_DIR" in CI_LIMITED["X15a"]
 
 
 def test_markers_are_registered_so_they_cannot_be_typos():
