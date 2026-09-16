@@ -1,7 +1,7 @@
 """
 research/engines/strategies/asq_scalping_adapter.py
 ===============================================
-QHF harness adapter for ASQ SafeScalping v1.20.
+research.engines harness adapter for ASQ SafeScalping v1.20.
 
 Mirrors the structure of hma_stoch.py so btpy_runner.py, run_walk_forward.py,
 and score_a_strategy.py can consume ASQ identically to HMAStoch1H / HMAStochM15.

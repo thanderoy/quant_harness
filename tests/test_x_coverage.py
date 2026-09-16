@@ -51,12 +51,6 @@ DEFERRED: dict[str, tuple[str, str]] = {
     "X15b": ("post/ parity needs trade-for-trade records; the crest_n_keel "
              "walk-forward artifact stores fold boundaries and per-fold "
              "Sharpe but not individual trades", "T9b"),
-    "X16": ("rename completeness cannot be asserted before the rename",
-            "T10"),
-    "X17": ("rename behaviour-neutrality cannot be asserted before the "
-            "rename", "T10"),
-    "X18": ("log preservation across the rename cannot be asserted before "
-            "the rename", "T10"),
     "X22": ("ported-code parity against the D8 golden fixtures", "T11"),
     "X23": ("fill frontier completeness needs SimulatedBroker", "T12"),
     "X29": ("schedule-from-registry is execution-side; strategies.all_"

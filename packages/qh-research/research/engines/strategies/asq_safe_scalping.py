@@ -2,7 +2,7 @@
 ASQ SafeScalping v1.20 — backtesting.py Adapter
 ================================================
 Source  : mql5.com/en/code/71189 (AlgoSphere Quant / Robin2.0)
-Adapter : QHF harness, compatible with btpy_runner.py
+Adapter : research.engines harness, compatible with btpy_runner.py
 
 BUG FIXES vs MQL5 original
 ───────────────────────────
