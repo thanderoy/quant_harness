@@ -28,6 +28,14 @@ Design rules
 - ``counts_as_trial`` defaults to True for HYPOTHESIS, False for UPDATE.
   Setting it True on an UPDATE is the explicit signal "this is a materially
   different re-test, count it." Be generous: the floor is a floor.
+- **The trial count is arithmetic, not a row count** (schema v2, T6). A
+  pooled or pre-specified result costs one trial; a best-of-N chosen after
+  seeing all N costs N. :func:`trial_breakdown` says where the number came
+  from, so a jump in it can be attributed rather than argued about.
+- **Fields added after an entry was written are omitted from its payload.**
+  :func:`verify` recomputes each hash from the dataclass, so a new field that
+  always serialised would re-serialise every older entry and break the whole
+  chain at once. This is what makes a schema extension additive in fact.
 
 Usage
 -----
@@ -57,11 +65,14 @@ from pathlib import Path
 from typing import Optional
 
 __all__ = [
-    "EventType", "Stage", "Verdict", "EdgeGateRole",
+    "EventType", "Stage", "Verdict", "EdgeGateRole", "SelectionRule",
     "LogEntry", "PRINCIPLES",
-    "register_hypothesis", "update_hypothesis",
-    "trial_count", "history", "current_state",
+    "register_hypothesis", "update_hypothesis", "append_record",
+    "migrate_schema", "schema_migrated",
+    "trial_count", "trial_breakdown", "history", "current_state",
     "verify", "render_markdown",
+    "PerInstrumentTuningError", "SchemaFieldsRequired",
+    "SCHEMA_MIGRATION_ID", "SCHEMA_V2_FIELDS",
     "DEFAULT_LOG_DIR", "ENTRIES_FILENAME", "RENDERED_FILENAME",
 ]
 
@@ -130,6 +141,48 @@ class Verdict(str, Enum):
     DEPLOYED = "deployed"
 
 
+class SelectionRule(str, Enum):
+    """How the instruments behind a result were chosen — the trial multiplier.
+
+    This is the field that decides the multiple-testing tax, so it is an enum
+    rather than prose. The arithmetic is in :func:`trial_count`.
+    """
+
+    #: One mechanism, one parameter set, every instrument, pooled result.
+    POOLED_ALL = "pooled_all"
+    #: A subset fixed by a rule written down before any result was seen.
+    PRE_SPECIFIED_SUBSET = "pre_specified_subset"
+    #: Best-of-N picked after seeing the results. Costs N trials, not one.
+    POST_HOC_SELECTION = "post_hoc_selection"
+
+
+class PerInstrumentTuningError(ValueError):
+    """A registration carried a parameter set keyed by instrument.
+
+    Refused at registration rather than caught at review. Per-instrument
+    tuning turns k instruments into k searches while reporting one result,
+    and there is no honest trial count that repairs it afterwards.
+    """
+
+
+class SchemaFieldsRequired(ValueError):
+    """A post-migration registration omitted a now-mandatory field."""
+
+
+#: ``record_id`` of the marker that makes the v2 fields mandatory.
+SCHEMA_MIGRATION_ID = "record:t6-log-schema-v2"
+
+#: Fields added by T6. Optional before the marker, required after it.
+SCHEMA_V2_FIELDS: tuple[str, ...] = (
+    "universe",
+    "selection_rule",
+    "null_baseline_structure",
+    "benchmark_sharpe",
+    "min_decidable_sharpe",
+    "registry_snapshot",
+)
+
+
 class EdgeGateRole(str, Enum):
     """How the E-Ratio signal-edge gate applies to this hypothesis."""
     HARD_GATE = "hard_gate"     # breakout/continuation: kill on flat E-Ratio
@@ -192,6 +245,19 @@ class LogEntry:
     # multiple-testing accounting
     counts_as_trial: bool = True
 
+    # --- T6 schema v2 ------------------------------------------------------
+    # Optional before the SCHEMA_MIGRATION marker, mandatory after it. Every
+    # one defaults to None and is OMITTED from the stored payload when None,
+    # so an entry written under v1 serialises byte-identically to the line it
+    # was written as and its hash still reproduces. See _entry_to_payload.
+    universe: Optional[list[str]] = None
+    selection_rule: Optional[SelectionRule] = None
+    null_baseline_structure: Optional[str] = None
+    benchmark_sharpe: Optional[float] = None
+    min_decidable_sharpe: Optional[float] = None
+    registry_snapshot: Optional[str] = None
+    parameters: Optional[dict] = None
+
 
 # ---------------------------------------------------------------------------
 # Serialisation + hashing
@@ -202,23 +268,39 @@ _ENUM_FIELDS = {
     "edge_gate_role": EdgeGateRole,
     "stage": Stage,
     "verdict": Verdict,
+    "selection_rule": SelectionRule,
 }
+
+#: Fields introduced after the first entries were written. Omitted from the
+#: payload when None so that adding them does not change how an older entry
+#: serialises.
+_V2_OPTIONAL = (*SCHEMA_V2_FIELDS, "parameters")
 
 
 def _entry_to_payload(entry: LogEntry) -> dict:
-    """Serialisable dict for storage — enums become their .value strings."""
+    """Serialisable dict for storage — enums become their .value strings.
+
+    Fields added after an entry was written are dropped when unset. This is
+    what makes the T6 extension additive in fact and not just in intent:
+    ``verify()`` recomputes each hash from the dataclass, so a new field that
+    always serialised would silently re-serialise all 93 pre-existing entries
+    and break every hash in the chain at once.
+    """
     d = asdict(entry)
     for name in _ENUM_FIELDS:
-        v = d[name]
+        v = d.get(name)
         if isinstance(v, Enum):
             d[name] = v.value
+    for name in _V2_OPTIONAL:
+        if d.get(name) is None:
+            d.pop(name, None)
     return d
 
 
 def _payload_to_entry(payload: dict) -> LogEntry:
     p = dict(payload)
     for name, enum_cls in _ENUM_FIELDS.items():
-        if name in p and not isinstance(p[name], Enum):
+        if p.get(name) is not None and not isinstance(p[name], Enum):
             p[name] = enum_cls(p[name])
     return LogEntry(**p)
 
@@ -289,14 +371,35 @@ def register_hypothesis(
     edge_gate_role: EdgeGateRole = EdgeGateRole.UNSET,
     predictions: Optional[list[str]] = None,
     note: str = "",
+    universe: Optional[list[str]] = None,
+    selection_rule: Optional[SelectionRule] = None,
+    null_baseline_structure: Optional[str] = None,
+    benchmark_sharpe: Optional[float] = None,
+    min_decidable_sharpe: Optional[float] = None,
+    registry_snapshot: Optional[str] = None,
+    parameters: Optional[dict] = None,
     log_dir: Path = DEFAULT_LOG_DIR,
 ) -> LogEntry:
-    """Append a new HYPOTHESIS event. Counts as a trial.
+    """Append a new HYPOTHESIS event. Counts as at least one trial.
+
+    After the schema v2 marker every field in :data:`SCHEMA_V2_FIELDS` is
+    mandatory. They are demanded here, at registration, because each one is
+    only honest before a result is seen: a null baseline chosen afterwards is
+    chosen to be beaten, and a selection rule named afterwards is named to be
+    cheap.
+
+    ``parameters`` is the single parameter set the mechanism uses across the
+    whole universe. Keying it by instrument is refused -- see
+    :class:`PerInstrumentTuningError`.
 
     Raises
     ------
     ValueError
         If ``hypothesis_id`` already has a HYPOTHESIS event in the log.
+    SchemaFieldsRequired
+        If a v2 field is missing after the migration marker.
+    PerInstrumentTuningError
+        If ``parameters`` is keyed by instrument.
     """
     entries = _read_all(log_dir)
     if any(e.event_type == EventType.HYPOTHESIS and e.hypothesis_id == hypothesis_id
@@ -305,6 +408,28 @@ def register_hypothesis(
             f"hypothesis_id {hypothesis_id!r} already registered; "
             f"use update_hypothesis() to record progress."
         )
+
+    universe = list(universe) if universe else None
+    _reject_per_instrument_tuning(hypothesis_id, universe, parameters)
+
+    if any(e.event_type == EventType.SCHEMA_MIGRATION
+           and e.hypothesis_id == SCHEMA_MIGRATION_ID for e in entries):
+        supplied = {
+            "universe": universe,
+            "selection_rule": selection_rule,
+            "null_baseline_structure": null_baseline_structure,
+            "benchmark_sharpe": benchmark_sharpe,
+            "min_decidable_sharpe": min_decidable_sharpe,
+            "registry_snapshot": registry_snapshot,
+        }
+        missing = [k for k in SCHEMA_V2_FIELDS if supplied[k] is None]
+        if missing:
+            raise SchemaFieldsRequired(
+                f"{hypothesis_id!r}: schema v2 requires {missing}. These are "
+                f"demanded before the test because each is only honest "
+                f"before a result exists -- a null baseline chosen afterwards "
+                f"is chosen to be beaten. Pass them to register_hypothesis()."
+            )
 
     seq, prev_hash = _next_seq_and_prev_hash(entries)
     entry = LogEntry(
@@ -315,10 +440,47 @@ def register_hypothesis(
         predictions=list(predictions) if predictions else [],
         stage=Stage.HYPOTHESIS, verdict=Verdict.OPEN, metrics={}, note=note,
         counts_as_trial=True,
+        universe=universe, selection_rule=selection_rule,
+        null_baseline_structure=null_baseline_structure,
+        benchmark_sharpe=benchmark_sharpe,
+        min_decidable_sharpe=min_decidable_sharpe,
+        registry_snapshot=registry_snapshot,
+        parameters=dict(parameters) if parameters else None,
     )
     entry.entry_hash = _hash(_entry_to_payload(entry))
     _append(log_dir, entry)
     return entry
+
+
+def _reject_per_instrument_tuning(
+        hypothesis_id: str, universe: Optional[list[str]],
+        parameters: Optional[dict]) -> None:
+    """Refuse a parameter set keyed by instrument.
+
+    One mechanism across k instruments is one search. The same mechanism with
+    a different parameter set per instrument is k searches reported as one,
+    and no trial count applied afterwards repairs it -- the selection already
+    happened, invisibly, inside the parameterisation.
+
+    The check is deliberately shallow: a dict whose keys look like the
+    universe. That catches the shape people actually write. It cannot catch
+    tuning hidden behind an opaque object, which is why the rule is stated in
+    the error rather than only enforced by it.
+    """
+    if not parameters:
+        return
+    keys = {str(k) for k in parameters}
+    uni = {str(u) for u in (universe or [])}
+    overlap = keys & uni
+    if overlap and len(uni) > 1:
+        raise PerInstrumentTuningError(
+            f"{hypothesis_id!r}: parameters are keyed by instrument "
+            f"({sorted(overlap)}), which is per-instrument tuning. That is k "
+            f"searches over {sorted(uni)} reported as one result, and the "
+            f"trial count cannot repair it after the fact. Pass one "
+            f"parameter set that applies to the whole universe, or register "
+            f"each instrument as its own hypothesis and accept the count."
+        )
 
 
 def update_hypothesis(
@@ -427,9 +589,118 @@ def history(hypothesis_id: str, log_dir: Path = DEFAULT_LOG_DIR) -> list[LogEntr
     return [e for e in _read_all(log_dir) if e.hypothesis_id == hypothesis_id]
 
 
+def _trials_for(entry: "LogEntry") -> int:
+    """How many trials one entry costs.
+
+    Counting rows understates the tax whenever one logged result was chosen
+    from several. The rule:
+
+    ``POOLED_ALL``
+        One mechanism, one parameter set, every instrument, one pooled
+        number. One search, one trial.
+    ``PRE_SPECIFIED_SUBSET``
+        The subset was fixed by a rule written down before any result was
+        seen, so no selection happened at read time. One trial.
+    ``POST_HOC_SELECTION``
+        The best of N was kept after seeing all N. That is N searches
+        reported as one, and it costs ``len(universe)`` trials.
+
+    An entry written before the schema marker has no ``selection_rule`` and
+    keeps the original one-row-one-trial arithmetic, which is what holds the
+    D7 baseline fixed across the migration.
+    """
+    if not entry.counts_as_trial:
+        return 0
+    if entry.selection_rule is SelectionRule.POST_HOC_SELECTION:
+        return max(1, len(entry.universe or []))
+    return 1
+
+
 def trial_count(log_dir: Path = DEFAULT_LOG_DIR) -> int:
-    """Sum of counts_as_trial across all entries — the floor N for DSR."""
-    return sum(1 for e in _read_all(log_dir) if e.counts_as_trial)
+    """The floor N for DSR, computed by the trial-accounting rule.
+
+    Not a row count: a post-hoc selection over k instruments contributes k.
+    """
+    return sum(_trials_for(e) for e in _read_all(log_dir))
+
+
+def trial_breakdown(log_dir: Path = DEFAULT_LOG_DIR) -> dict:
+    """Where the trial count comes from, so a jump in N can be attributed."""
+    out: dict = {"total": 0, "by_rule": {}, "entries": []}
+    for e in _read_all(log_dir):
+        n = _trials_for(e)
+        if not n:
+            continue
+        rule = e.selection_rule.value if e.selection_rule else "unspecified_v1"
+        out["total"] += n
+        out["by_rule"][rule] = out["by_rule"].get(rule, 0) + n
+        if n > 1:
+            out["entries"].append(
+                {"seq": e.seq, "hypothesis_id": e.hypothesis_id,
+                 "rule": rule, "trials": n,
+                 "universe": list(e.universe or [])})
+    return out
+
+
+# ---------------------------------------------------------------------------
+# T6 schema migration
+# ---------------------------------------------------------------------------
+
+def schema_migrated(log_dir: Path = DEFAULT_LOG_DIR) -> bool:
+    """True once the v2 marker has been appended."""
+    return any(e.event_type == EventType.SCHEMA_MIGRATION
+               and e.hypothesis_id == SCHEMA_MIGRATION_ID
+               for e in _read_all(log_dir))
+
+
+def migrate_schema(log_dir: Path = DEFAULT_LOG_DIR) -> LogEntry:
+    """Append the marker that makes the v2 fields mandatory.
+
+    One event, appended. No prior entry is touched: the statement that every
+    earlier entry is ``universe: ["XAUUSD"]`` and
+    ``selection_rule: POOLED_ALL`` is recorded here rather than written into
+    93 lines, because rewriting them would break the chain that makes the
+    count worth anything.
+    """
+    entries = _read_all(log_dir)
+    if any(e.event_type == EventType.SCHEMA_MIGRATION
+           and e.hypothesis_id == SCHEMA_MIGRATION_ID for e in entries):
+        raise ValueError("schema v2 migration marker is already present")
+
+    terminal = entries[-1].entry_hash if entries else ""
+    return append_record(
+        EventType.SCHEMA_MIGRATION,
+        record_id=SCHEMA_MIGRATION_ID,
+        title="Log schema v2 — universe, selection rule and trial arithmetic",
+        note=(
+            "Additive extension (T6). Registrations appended after this "
+            "marker must carry universe, selection_rule, "
+            "null_baseline_structure, benchmark_sharpe, "
+            "min_decidable_sharpe and registry_snapshot.\n\n"
+            "Every entry before this marker is to be read as "
+            "universe: [\"XAUUSD\"] and selection_rule: POOLED_ALL. Those "
+            "entries are NOT rewritten and carry no such fields on disk; "
+            "this event is where that reading is recorded. Rewriting them "
+            "would break the hash chain, and the chain is the only reason "
+            "the trial count means anything.\n\n"
+            "trial_count() now applies the accounting rule rather than "
+            "counting rows: pooled and pre-specified cost one trial, a "
+            "post-hoc selection over k instruments costs k. No pre-marker "
+            "entry has a selection_rule, so all of them keep one-row-one-"
+            "trial and the D7 baseline is unchanged across the boundary."
+        ),
+        metrics={
+            "schema_version": 2,
+            "terminal_hash_before_migration": terminal,
+            "entries_before_migration": len(entries),
+            "new_fields": list(SCHEMA_V2_FIELDS),
+            "prior_entries_read_as": {"universe": ["XAUUSD"],
+                                      "selection_rule": "pooled_all"},
+            "prior_entries_rewritten": False,
+            "trial_count_before_migration": trial_count(log_dir),
+        },
+        log_dir=log_dir,
+    )
 
 
 def current_state(log_dir: Path = DEFAULT_LOG_DIR) -> dict[str, LogEntry]:

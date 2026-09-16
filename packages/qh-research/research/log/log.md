@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 93
+- **Entries:** 94
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (93 entries)
+- **Hash chain:** OK — chain ok (94 entries)
 
 ## Principles
 
@@ -1603,3 +1603,17 @@ Detection is the transferable part. Process liveness, line count and file growth
 Fixed in fix/d3a-boundary-scheduler with a regression test that reproduces the straddle; collection restarted 2026-09-15T07:18Z on the fixed code and the 07:30:00.750Z M15 boundary fired for all nine symbols. The 8.5 GB file is retained unmodified.
 
 _hash_: `6d28cceca03225c6…` · _prev_: `4e406325f952aecc…`
+
+### seq 93 · 2026-09-16T07:02:35Z · schema_migration · `record:t6-log-schema-v2`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `entries_before_migration`=93, `new_fields`=['universe', 'selection_rule', 'null_baseline_structure', 'benchmark_sharpe', 'min_decidable_sharpe', 'registry_snapshot'], `prior_entries_read_as`={'selection_rule': 'pooled_all', 'universe': ['XAUUSD']}, `prior_entries_rewritten`=False, `schema_version`=2, `terminal_hash_before_migration`=6d28cceca03225c61a99c3af5d35fa96ab55d7e119012cb25b26f690972bffea, `trial_count_before_migration`=26
+
+> Additive extension (T6). Registrations appended after this marker must carry universe, selection_rule, null_baseline_structure, benchmark_sharpe, min_decidable_sharpe and registry_snapshot.
+
+Every entry before this marker is to be read as universe: ["XAUUSD"] and selection_rule: POOLED_ALL. Those entries are NOT rewritten and carry no such fields on disk; this event is where that reading is recorded. Rewriting them would break the hash chain, and the chain is the only reason the trial count means anything.
+
+trial_count() now applies the accounting rule rather than counting rows: pooled and pre-specified cost one trial, a post-hoc selection over k instruments costs k. No pre-marker entry has a selection_rule, so all of them keep one-row-one-trial and the D7 baseline is unchanged across the boundary.
+
+_hash_: `cfc1d0b738fc6382…` · _prev_: `6d28cceca03225c6…`
