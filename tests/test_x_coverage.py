@@ -51,7 +51,6 @@ DEFERRED: dict[str, tuple[str, str]] = {
     "X15b": ("post/ parity needs trade-for-trade records; the crest_n_keel "
              "walk-forward artifact stores fold boundaries and per-fold "
              "Sharpe but not individual trades", "T9b"),
-    "X22": ("ported-code parity against the D8 golden fixtures", "T11"),
     "X23": ("fill frontier completeness needs SimulatedBroker", "T12"),
     "X29": ("schedule-from-registry is execution-side; strategies.all_"
             "strategies() is deliberately not verdict-aware, so nothing yet "
@@ -68,6 +67,15 @@ CI_LIMITED: dict[str, str] = {
              "repo; on a runner those tests skip and only the committed "
              "fixture is validated against the adjudicated artifact. Set "
              "$QH_PARITY_DATA_DIR to exercise the full check."),
+    "X22": ("the fixture is only bit-reproducible on the machine that made "
+            "it. `wma` reduces its window with `np.dot`, so the summation "
+            "order comes from the OpenBLAS kernel, not from the source; the "
+            "four `wma`/`hma` columns land within 4 ULP rather than equal, "
+            "and `hma` inherits it. CI asserts the pandas-only columns "
+            "exactly, bounds the rest, and shows the difference cannot move a "
+            "signal. The direct port-vs-WMPS comparison, which is exact on "
+            "every column, needs the WMPS checkout and skips on a runner. Set "
+            "$QH_WMPS_DIR to run it."),
     "X17": ("behaviour-neutrality is proven two ways and CI sees one of "
             "them. The commit-vs-parent comparison cannot be re-run from a "
             "later commit, so it is recorded in the seq=96 metrics; the "
