@@ -48,10 +48,6 @@ ALL_X_IDS: tuple[str, ...] = (
 #: Every entry here is a known hole in Phase 1 acceptance, stated rather than
 #: quietly absent. Removing an entry is how the phase closes.
 DEFERRED: dict[str, tuple[str, str]] = {
-    "X5": ("Chan look-ahead truncation needs a strategy to truncate; no "
-           "strategy module exists yet", "qh-strategies"),
-    "X6": ("iloc[-2] discipline is a property of signal generation, which "
-           "lives in strategies", "qh-strategies"),
     "X15b": ("post/ parity needs trade-for-trade records; the crest_n_keel "
              "walk-forward artifact stores fold boundaries and per-fold "
              "Sharpe but not individual trades", "T9b"),
@@ -63,9 +59,9 @@ DEFERRED: dict[str, tuple[str, str]] = {
             "the rename", "T10"),
     "X22": ("ported-code parity against the D8 golden fixtures", "T11"),
     "X23": ("fill frontier completeness needs SimulatedBroker", "T12"),
-    "X29": ("schedule-from-registry is execution-side", "T12 / Phase 3"),
-    "X30": ("entry vs position management is a strategy-layer distinction",
-            "qh-strategies"),
+    "X29": ("schedule-from-registry is execution-side; strategies.all_"
+            "strategies() is deliberately not verdict-aware, so nothing yet "
+            "refuses to schedule a SHELVED mechanism", "T12 / Phase 3"),
 }
 
 

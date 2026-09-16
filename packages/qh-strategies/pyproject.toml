@@ -1,0 +1,20 @@
+[project]
+name = "qh-strategies"
+version = "0.1.0"
+description = "quant_harness — instrument-neutral strategy definitions; emit risk units, never lots"
+requires-python = ">=3.12"
+dependencies = [
+    "qh-resources",
+    "pandas>=2.0",
+    "numpy>=1.24",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["strategies"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
