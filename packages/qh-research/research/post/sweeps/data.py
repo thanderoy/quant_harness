@@ -4,7 +4,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-from pytz.exceptions import AmbiguousTimeError as pytz_AmbiguousTimeError
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DATA_DIR = REPO_ROOT / "research" / "data"
@@ -69,7 +68,12 @@ def _apply_tz(idx: pd.DatetimeIndex, tz: str) -> pd.DatetimeIndex:
     try:
         out = idx.tz_localize(SERVER_TZ, ambiguous="infer",
                               nonexistent="shift_forward")
-    except (pytz_AmbiguousTimeError, ValueError):
+    # pandas 3 dropped its pytz dependency and raises a plain ValueError here.
+    # The import this replaced was never declared anywhere, so the module could
+    # not be imported at all in this repo's environment; and pytz's own
+    # AmbiguousTimeError subclasses ValueError, so naming it bought nothing
+    # even when it was importable.
+    except ValueError:
         out = idx.tz_localize(SERVER_TZ, ambiguous=False,
                               nonexistent="shift_forward")
     return out.tz_convert("UTC")

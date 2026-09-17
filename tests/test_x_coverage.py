@@ -47,11 +47,7 @@ ALL_X_IDS: tuple[str, ...] = (
 #: X id -> (why it is not covered, the task that unblocks it).
 #: Every entry here is a known hole in Phase 1 acceptance, stated rather than
 #: quietly absent. Removing an entry is how the phase closes.
-DEFERRED: dict[str, tuple[str, str]] = {
-    "X15b": ("post/ parity needs trade-for-trade records; the crest_n_keel "
-             "walk-forward artifact stores fold boundaries and per-fold "
-             "Sharpe but not individual trades", "T9b"),
-}
+DEFERRED: dict[str, tuple[str, str]] = {}
 
 
 #: X id -> what CI cannot exercise, and why. Coverage that depends on data
@@ -160,20 +156,21 @@ def test_the_covered_set_is_what_we_think_it_is(marked):
         "A new marker is good news — update this expectation and DEFERRED.")
 
 
-def test_acceptance_criterion_four_is_not_yet_met():
-    """Criterion 4 is "X1-X32 pass in CI". It does not pass. Recorded here.
+def test_acceptance_criterion_four_is_met():
+    """Criterion 4 is "X1-X32 pass in CI". Every X id now has a covering test.
 
-    This test passes while the phase is incomplete and fails the moment
-    DEFERRED empties — at which point it is deleted and criterion 4 is
-    genuinely met. An acceptance criterion that quietly stays unmet is worse
-    than one that fails loudly; this makes the gap a visible, named state
-    rather than an omission nobody is tracking.
+    Its predecessor asserted the opposite and was written to fail the moment
+    DEFERRED emptied, so the phase could not quietly be declared complete. T9b
+    emptied it. What is left to say is narrower and still worth pinning: the
+    criterion is about CI, so an id covered only by a test that skips on a
+    runner has not met it — CI_LIMITED is where that distinction is kept
+    honest, and it is not empty.
     """
-    assert DEFERRED, (
-        "DEFERRED is empty: every X id is covered. Acceptance criterion 4 is "
-        "now met — delete this test and say so in the log.")
-    blocking = sorted({task for _, task in DEFERRED.values()})
-    assert blocking  # the tasks that stand between here and criterion 4
+    assert not DEFERRED, f"still deferred: {sorted(DEFERRED)}"
+    assert CI_LIMITED, (
+        "CI_LIMITED is empty. Either every check really does run on a runner — "
+        "in which case say so and delete this assertion — or a limitation was "
+        "dropped without being resolved.")
 
 
 def test_ci_limitations_name_real_covered_ids(marked):
