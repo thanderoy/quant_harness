@@ -39,10 +39,11 @@ prevent.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from enum import Enum
 from typing import Protocol, runtime_checkable
 
 import pandas as pd
+
+from resources.side import Side
 
 __all__ = [
     "Side",
@@ -54,15 +55,6 @@ __all__ = [
     "run",
     "HOLD",
 ]
-
-
-class Side(Enum):
-    LONG = 1
-    SHORT = -1
-
-    @property
-    def sign(self) -> int:
-        return self.value
 
 
 @dataclass(frozen=True)
