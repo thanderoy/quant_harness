@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 100
+- **Entries:** 101
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (100 entries)
+- **Hash chain:** OK — chain ok (101 entries)
 
 ## Principles
 
@@ -1803,3 +1803,23 @@ comparable legs, verdict NO_EDGE_AT_ANY_CONFIG - consistent with crest_n_keel
 being edgeless. That run is a wiring check on 9 trades, not a result.
 
 _hash_: `46cff738150143fb…` · _prev_: `04e5f9d7073a4222…`
+
+### seq 100 · 2026-09-17T11:31:55Z · audit · `t9b-post-parity-and-criterion-four`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `acceptance_criterion_4`=met, `counts_as_trial`=False, `fixture_provenance`=REGENERATED_FROM, `max_ulp_observed_local`=0, `parity_folds`=33, `parity_layers`=6, `parity_trade_records`=5277, `price_comparisons`=15831, `tests_passed_local`=506, `trade_field_comparisons`=26385, `ulp_tolerance`=64, `x_coverage_covered`=35, `x_coverage_total`=35, `x_deferred`=0
+
+> T9b closes X15b, the last entry in the Phase 1 DEFERRED manifest, and with it acceptance criterion 4 — every X id from X1 to X32 now has a covering test.
+
+X15b asserts trade-for-trade parity of the rewritten post/ path against the seq=49 crest_n_keel nested walk-forward. It was deferred because nothing recorded trades: an inventory of every JSON and CSV artifact in both repositories found no trade-for-trade record anywhere, so the assertion had nothing to assert against. The reference was regenerated under a gate that refused to write on any mismatch, and passed — 33 folds across H1 and H4, every fold boundary and every recorded statistic identical under float equality, for the selected arm and for the selection-independent fixed arm. 5,277 trade records.
+
+Two limits are stamped into the fixture rather than left to be discovered. The generating module was UNTRACKED when the artifact was written on 2026-08-23 (first committed nine days later) and its virtualenv is gone, so there is no recorded frozen stack to re-run and a match is de facto equivalence, not proven identity. And selection was not reproduced — configs were read back from stored labels rather than re-derived by re-running the 30,132-config grid per fold. What is verified is the simulation path, which is what X15b asserts on.
+
+The parity check runs six layers in dependency order and stops at the first failure. Timestamps, direction and volume are compared exactly; prices and Sharpe carry a 64-ulp bound, because hma reduces each window with np.dot and the summation order belongs to the CPU's BLAS kernel rather than to the source. That distinction was learned at T11, where wma_9 reproduced its fixture locally and missed on 1,090 of 6,000 cells on the runner. The volume assertion is why X15b was not relaxed to fold-level statistics: without it a T5 sizing regression would never surface, and T9c would have come back as mandatory work.
+
+crest_n_keel's verdict is untouched and is not reopened by reproducing it. This is a migration test of an adjudicated mechanism, not a trial.
+
+Also fixed: the ported research.post.sweeps.data imported pytz for one exception class, undeclared anywhere, and pandas 3 no longer supplies it — the module could not be imported in this repo at all. pytz's own AmbiguousTimeError subclasses ValueError, which the handler already caught, so removing the import changes no behaviour.
+
+_hash_: `dab35c88b13deb65…` · _prev_: `46cff738150143fb…`
