@@ -245,13 +245,21 @@ def simulate(bars: Bars, mode: str, hma_v: np.ndarray, atr_v: np.ndarray,
              sl_mult: float, tp_mult: float, trail_mult: float,
              risk_pct: float, min_atr: float,
              cash: float = 10_000.0, max_dd_halt: float = 1.0,
-             sl_checked_from_fill_bar: bool = True) -> dict:
+             sl_checked_from_fill_bar: bool = True,
+             record_trades: bool = False) -> dict:
     """Event-driven simulation over trade events.
 
     `max_dd_halt` defaults to 1.0 (effectively off). The harness's 0.30 halt is
     an ABSORBING barrier — once tripped it truncates the record at a
     path-dependent point, which makes cross-config comparison meaningless.
     The sweep disables it on both sides and reports drawdown as a metric.
+
+    `record_trades` adds a `records` key holding one dict per closed trade --
+    entry and exit price, direction, volume, the ATR the size was derived from,
+    the bracket levels and the pnl decomposition. T9b's trade-for-trade parity
+    needs all of that; nothing else does, and a 150,660-config sweep should not
+    pay to build 5,000 dicts per config, so it is opt-in. It appends only, and
+    touches no value any metric is computed from.
     """
     n = bars.n
     op, hi, lo, cl = bars.open, bars.high, bars.low, bars.close
@@ -269,7 +277,7 @@ def simulate(bars: Bars, mode: str, hma_v: np.ndarray, atr_v: np.ndarray,
     entry_bars = np.flatnonzero(entry_mask)
     empty = {"n_trades": 0, "returns": np.array([]), "px_returns": np.array([]),
              "pnls": np.array([]), "entry_ts": [], "exit_ts": [],
-             "equity_final": cash}
+             "equity_final": cash, "records": []}
     if entry_bars.size == 0:
         return empty
 
@@ -277,6 +285,7 @@ def simulate(bars: Bars, mode: str, hma_v: np.ndarray, atr_v: np.ndarray,
     equity = cash
     peak = cash
     rets, pnls, px_rets, entry_ts, exit_ts = [], [], [], [], []
+    rec: list[dict] = []
     lo_l, hi_l, op_l, atr_l = lo.tolist(), hi.tolist(), op.tolist(), atr_v.tolist()
     t_ptr, n_entries = 0, entry_bars.size
 
@@ -385,6 +394,15 @@ def simulate(bars: Bars, mode: str, hma_v: np.ndarray, atr_v: np.ndarray,
         pnls.append(pnl)
         entry_ts.append(idx[f])
         exit_ts.append(idx[exit_bar])
+        if record_trades:
+            rec.append({"entry_ts": str(idx[f]), "exit_ts": str(idx[exit_bar]),
+                        "direction": "long" if is_long else "short",
+                        "entry_px": entry_px, "exit_px": exit_px,
+                        "lots": lots, "size_oz": size_oz,
+                        "effective_atr": eff_atr, "sl": sl,
+                        "tp": (tp if not is_mom else None),
+                        "pnl": pnl, "pnl_bt": pnl_bt,
+                        "commission": commission, "swap": swap})
         cash_bt += pnl_bt
         equity += pnl
 
@@ -400,6 +418,7 @@ def simulate(bars: Bars, mode: str, hma_v: np.ndarray, atr_v: np.ndarray,
         "entry_ts": entry_ts,
         "exit_ts": exit_ts,
         "equity_final": equity,
+        "records": rec,
     }
 
 
