@@ -1,0 +1,84 @@
+{
+  "account_currency": "USD",
+  "as_of_utc": "2026-09-07T00:43:20.708696+00:00",
+  "broker": "PepperstoneKE-MT5-Live01",
+  "note": "Spreads are full bid-ask widths in price units, measured from copy_ticks_range. Consumers charge half to each side.",
+  "provenance": "MEASURED",
+  "snapshot_id": "d3b_20260907",
+  "source_artifact": "d3b_spread_history_20260907T004320Z.json",
+  "symbols": {
+    "XAGUSD": {
+      "by_session": {
+        "asia": {
+          "median_spread": 0.049,
+          "n_ticks": 11345987,
+          "p95_spread": 0.087
+        },
+        "london": {
+          "median_spread": 0.043,
+          "n_ticks": 9852195,
+          "p95_spread": 0.08
+        },
+        "ny": {
+          "median_spread": 0.04,
+          "n_ticks": 14540310,
+          "p95_spread": 0.068
+        },
+        "offhours": {
+          "median_spread": 0.043,
+          "n_ticks": 5459753,
+          "p95_spread": 0.076
+        },
+        "overlap": {
+          "median_spread": 0.041,
+          "n_ticks": 8099622,
+          "p95_spread": 0.07
+        }
+      },
+      "median_spread": 0.043,
+      "n_ticks": 49297867,
+      "obtained_months": 11.9,
+      "p95_spread": 0.077,
+      "zero_spread_fraction": 0.0
+    },
+    "XAUUSD": {
+      "by_session": {
+        "asia": {
+          "median_spread": 0.19,
+          "n_ticks": 27526233,
+          "p95_spread": 0.36
+        },
+        "london": {
+          "median_spread": 0.18,
+          "n_ticks": 23969849,
+          "p95_spread": 0.33
+        },
+        "ny": {
+          "median_spread": 0.16,
+          "n_ticks": 33361233,
+          "p95_spread": 0.3
+        },
+        "offhours": {
+          "median_spread": 0.17,
+          "n_ticks": 12736353,
+          "p95_spread": 0.33
+        },
+        "overlap": {
+          "median_spread": 0.17,
+          "n_ticks": 19800189,
+          "p95_spread": 0.3
+        }
+      },
+      "median_spread": 0.17,
+      "n_ticks": 117393857,
+      "obtained_months": 11.9,
+      "p95_spread": 0.33,
+      "zero_spread_fraction": 0.0
+    }
+  },
+  "task": "D3b",
+  "window_requested": {
+    "from": "2025-09-12T00:43:20.708675+00:00",
+    "to": "2026-09-07T00:43:20.708675+00:00"
+  }
+}

@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 99
+- **Entries:** 100
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (99 entries)
+- **Hash chain:** OK — chain ok (100 entries)
 
 ## Principles
 
@@ -1732,3 +1732,74 @@ This does not change any conclusion in seq=97. The bound, the measured magnitude
 Worth recording separately because seq=97's version was a plausible mechanism fitted to a single data point, and it survived being written down, reviewed and committed. The check that caught it was CI running on different hardware — the local run was green both before and after.
 
 _hash_: `04e5f9d7073a4222…` · _prev_: `5db2c486fa29e5e2…`
+
+### seq 99 · 2026-09-17T07:05:46Z · audit · `t12-broker-port-and-fill-frontier`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `sample_cost_to_atr_xauusd_h1`=0.0297, `schedulable_mechanisms`=0, `slip_provenance`=HAND_ENTERED, `spread_snapshot`=spreads_d3b_20260907, `spread_symbols_measured`=2, `tests_passed_ci_rehearsal`=481, `tests_passed_local`=496, `x_coverage_covered`=34, `x_coverage_total`=35, `x_deferred`=X15b
+
+> T12 lands the broker port, SimulatedBroker and the four-configuration fill
+frontier (X23), plus the verdict-aware strategy registry (X29). Coverage moves
+31 -> 34 of 35; only X15b remains deferred.
+
+WHAT THE FRONTIER IS NOT. The four configurations are not a monotone
+best-to-worst ladder, and asserting that they were would have been a false
+tightening. IDEAL is a different *timing*, not an optimistic price: on a
+gapping bar it can fill a long better or worse than NEXT_OPEN. Only the last
+three share a timing and differ purely by cost, so only they are asserted to
+decline. The test that pins this uses a deliberately gapping fixture where
+IDEAL's price is below NEXT_OPEN's at identical zero cost.
+
+SPREAD PROVENANCE, AND A REFUSAL. NEXT_OPEN_SPREAD and REALISTIC are defined
+against measured spreads, and D3b's artifact is gitignored, so it was distilled
+into a committed snapshot (spreads_d3b_20260907, MEASURED, PepperstoneKE-MT5-
+Live01, 167M ticks). It covers XAUUSD and XAGUSD only. Every other symbol
+RAISES UnmeasuredSpread rather than defaulting to zero. Defaulting would make
+the REALISTIC leg silently identical to NEXT_OPEN, so a mechanism would appear
+to survive a cost it was never charged — and it would do so precisely on a
+newly added instrument, where the reassurance is least earned. The two costless
+legs remain available on unmeasured symbols, so adding an instrument blocks two
+legs rather than the whole frontier.
+
+CONVENTION. The port treats bars as mid and charges half a measured bid-ask
+width per side; backtesting.py's `spread` is a fraction of price applied whole.
+Conflating them doubles the modelled cost. The conversion happens in exactly one
+function, _fill_parameters, and is asserted there.
+
+SLIP IS NOT MEASURED. REALISTIC adds one tick of latency-adverse slip, stamped
+HAND_ENTERED. Nothing here has measured the latency between a beat tick firing
+and a Pepperstone fill. It carries the same status as the $7.00/lot commission
+and should be measured for the same reason; the stamp exists so a REALISTIC
+result cannot be read as though the slip were sourced.
+
+RECORDED RESULTS ARE UNTOUCHED. run_backtest gains fill_config, defaulting to
+None, which reproduces the pre-T12 cost path exactly. Every Sharpe already in
+this chain was produced that way, and changing the default would have quietly
+restated all of them. A test pins the legacy path.
+
+X29 — THE GAP, NOT THE ARTEFACTS. At seq=65 a killed mechanism kept running.
+The log's verdict was right and the beat schedule was right; the gap between
+them was the defect, and no test of either alone could find it. The schedule is
+now *generated* from strategies/registry.py, and schedule_entry() raises rather
+than filters for a KILLED or SHELVED lifecycle, because filtering is something
+a caller can forget. SHADOW is scheduled, evaluated and mute. The generated
+schedule is currently EMPTY: flood_tide_h1 is SHELVED on seq=31-34 and nothing
+else has cleared a gate. That is the honest state, and the test asserting it
+should fail loudly the day something earns a schedule.
+
+VOCABULARY. Lifecycle duplicates KILLED/SHELVED from log.Verdict rather than
+importing it, because strategies may not import research (X19) and the two
+adjudicate different things — Verdict covers hypotheses that were never
+strategies. A parity test asserts the shared members keep identical values so
+the duplication cannot drift. Side moved down into resources and is now one
+enum shared by strategies and the broker; two equal-valued enums with different
+identity compare unequal, which surfaces as a position that never closes.
+
+VERIFIED. 496 passed, 1 skipped locally; 481 passed, 16 skipped with both
+out-of-repo data doors hidden. End-to-end frontier on 4,000 H1 bars gives
+cost_to_atr 0.0297 and Sharpe -2.230 / -2.255 / -2.281 across the three
+comparable legs, verdict NO_EDGE_AT_ANY_CONFIG - consistent with crest_n_keel
+being edgeless. That run is a wiring check on 9 trades, not a result.
+
+_hash_: `46cff738150143fb…` · _prev_: `04e5f9d7073a4222…`

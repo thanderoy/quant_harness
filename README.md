@@ -38,9 +38,10 @@ gap < 0.3, PBO < 0.3, DSR > 0.99, OOS DD < 15%, trades ≥ 100, PF ≥ 1.40.
 packages/
 ├── qh-resources/   → import `resources`
 │   └── instrument registry, tradability mask, panel, normalisation,
-│       indicators, sizing, drawdown guard
+│       indicators, sizing, drawdown guard, broker port
 ├── qh-strategies/  → import `strategies`
-│   └── instrument-neutral strategy definitions; emit risk units, never lots
+│   ├── instrument-neutral strategy definitions; emit risk units, never lots
+│   └── registry.py          # lifecycle; a beat schedule is generated, not written
 └── qh-research/    → import `research`
     ├── log.py               # append-only, hash-chained hypothesis register
     ├── pre/                 # signal_edge (E-Ratio), screens — before a backtest

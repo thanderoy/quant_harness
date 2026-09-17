@@ -77,6 +77,13 @@ PEPPERSTONE_XAUUSD_KNOWN_GAPS = [
 ]
 
 # OHLCV columns that backtesting.py requires (case-sensitive).
+from resources.execution import (
+    FRONTIER,
+    FillConfig,
+    SlipModel,
+    load_spreads,
+)
+
 _REQUIRED_COLS = {"Open", "High", "Low", "Close"}
 
 
@@ -113,6 +120,45 @@ def _commission_callable(
         return abs(size_oz) * per_oz_per_side
 
     return _commission
+
+
+def _fill_parameters(
+    fill_config: Optional[FillConfig],
+    cost_model: "PepperstoneXAUUSDCostModel",
+    symbol: str,
+    approx_price: float,
+    slip: "SlipModel",
+) -> tuple[bool, float]:
+    """Translate one :class:`FillConfig` into backtesting.py's parameters.
+
+    This is the single place where the port's convention is converted to the
+    engine's, as ``resources.execution.broker`` promises. The two differ and
+    must not be conflated: the port treats bars as mid and charges *half* a
+    measured bid-ask width per side, while backtesting.py's ``spread`` is a
+    fraction of price applied whole. Halving happens here, once.
+
+    ``fill_config=None`` reproduces the pre-T12 behaviour exactly — the
+    cost model's own full spread, filled at the next bar's open. Every
+    Sharpe already in the research log was produced that way, and changing
+    the default would quietly restate all of them.
+    """
+    if fill_config is None:
+        return False, _spread_fraction(cost_model, approx_price)
+
+    trade_on_close = fill_config.fills_on_signal_bar
+    adverse = 0.0
+    if fill_config.charges_spread:
+        stats = load_spreads()[symbol]
+        full = stats.p95 if fill_config is FillConfig.REALISTIC else stats.median
+        adverse += full / 2.0
+    if fill_config.charges_slip:
+        adverse += slip.ticks * _tick_size(symbol)
+    return trade_on_close, adverse / approx_price
+
+
+def _tick_size(symbol: str) -> float:
+    from resources.instruments.registry import Registry
+    return Registry.load("pepperstone_live_20260906.json").specs[symbol].tick_size
 
 
 def _spread_fraction(cost_model: PepperstoneXAUUSDCostModel,
@@ -223,6 +269,11 @@ class BtRunResult:
     trades: pd.DataFrame            # trade-level data with swap applied
     equity_curve: pd.DataFrame      # from stats._equity_curve
     return_pct_series: pd.Series    # per-trade ReturnPct for harness metrics
+
+    #: Which execution assumption produced this result. ``None`` means the
+    #: pre-T12 legacy cost model, kept so every Sharpe already in the
+    #: research log continues to mean exactly what it meant when recorded.
+    fill_config: Optional[FillConfig] = None
 
     # Computed from trade-level returns
     sharpe: float = float("nan")
@@ -365,6 +416,9 @@ def run_backtest(
     periods_per_year: Optional[int] = None,
     approx_gold_price: float = 2400.0,
     session_hours: Optional[tuple] = None,
+    fill_config: Optional[FillConfig] = None,
+    symbol: str = "XAUUSD",
+    slip: Optional[SlipModel] = None,
 ) -> BtRunResult:
     """Run a single-period backtest with full cost modeling.
 
@@ -398,6 +452,11 @@ def run_backtest(
     """
     if cost_model is None:
         cost_model = PepperstoneXAUUSDCostModel()
+    if slip is None:
+        slip = SlipModel()
+
+    trade_on_close, spread_fraction = _fill_parameters(
+        fill_config, cost_model, symbol, approx_gold_price, slip)
 
     bars = _apply_session_filter(bars, session_hours)
     bt_df = _build_bt_df(bars)
@@ -408,10 +467,10 @@ def run_backtest(
             bt_df,
             strategy_cls,
             cash=cash,
-            spread=_spread_fraction(cost_model, approx_gold_price),
+            spread=spread_fraction,
             commission=_commission_callable(cost_model),
             margin=1.0 / 400.0,
-            trade_on_close=False,
+            trade_on_close=trade_on_close,
             exclusive_orders=True,
             finalize_trades=finalize_trades,
         )
@@ -436,6 +495,7 @@ def run_backtest(
         trades=trades,
         equity_curve=equity_curve,
         return_pct_series=ret_pct,
+        fill_config=fill_config,
     )
     result._compute_metrics(periods_per_year)
     return result
