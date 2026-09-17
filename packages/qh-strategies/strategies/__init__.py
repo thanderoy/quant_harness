@@ -18,6 +18,14 @@ from .base import (
     run,
 )
 from .flood_tide import FloodTide, FloodTideParams
+from .registry import (
+    Lifecycle,
+    NotSchedulable,
+    Registration,
+    registered,
+    schedule_entries,
+    schedule_entry,
+)
 
 def all_strategies() -> list[Strategy]:
     """Fresh instances of every strategy defined here, on default parameters.
@@ -26,16 +34,23 @@ def all_strategies() -> list[Strategy]:
     parametrised over this rather than over a hand-listed pair — a new
     strategy inherits the look-ahead tests by existing.
 
-    Deliberately not the verdict-aware registry X29 calls for: that one has to
-    refuse to schedule a KILLED or SHELVED mechanism, which is an execution
-    concern and belongs to T12 / Phase 3. This list makes no claim about
-    whether anything in it should be traded. Nothing in it should.
+    Deliberately not verdict-aware, which is now a division of labour
+    rather than a gap: :mod:`strategies.registry` carries the lifecycle and
+    refuses to schedule a KILLED or SHELVED mechanism (X29). This list makes
+    no claim about whether anything in it should be traded — ask
+    ``registry.schedule_entries()``, which currently returns nothing.
     """
     return [FloodTide()]
 
 
 __all__ = [
     "HOLD",
+    "Lifecycle",
+    "NotSchedulable",
+    "Registration",
+    "registered",
+    "schedule_entries",
+    "schedule_entry",
     "all_strategies",
     "ClosedBars",
     "EntryIntent",
