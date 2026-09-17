@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 97
+- **Entries:** 99
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (97 entries)
+- **Hash chain:** OK — chain ok (99 entries)
 
 ## Principles
 
@@ -1684,3 +1684,51 @@ BEHAVIOUR. The T9a mask-off parity report is byte-identical before and after the
 CONSEQUENCE WORTH RECORDING. research/README.md justified two DSR implementations on the grounds that the harness lived in a separate repo and venv. It has lived here since seq=86 and now sits in the same package as research.post.dsr, so the justification has expired. The duplication is not collapsed here: research.metrics.deflated is what produced logged results, so retiring it needs the parity vectors re-run and any deviation logged as its own entry.
 
 _hash_: `c81846fbbb7c7cdb…` · _prev_: `edf45fbac56d8b35…`
+
+### seq 97 · 2026-09-16T21:54:04Z · parity_fixture · `record:t11-ported-code-parity`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `deferred_after`=['X15b', 'X23', 'X29'], `engines_sizer_vs_d8_grid_diffs`=0, `exact_columns`=['stoch_k_14_3_3', 'stoch_d_14_3_3', 'atr_14', 'wma_9'], `fixture_cells_differing`={'hma_21': 1204, 'hma_55': 2392, 'wma_20': 1528, 'wma_55': 2637}, `hma_cross_disagreements`=0, `hma_crossings_both_sides`=326, `max_abs_diff`=1.364e-12, `max_rel_diff`=5.9e-16, `port_vs_wmps_same_interpreter`=bit-identical on all 8 columns, `sizer_cells_over_budget_after`=0, `sizer_cells_over_budget_before`=125, `sizer_grid_classification`={'EXACT': 96, 'REFUSAL': 123, 'STOP_FLOOR': 90, 'VOLUME_MAX': 171}, `stochastic_divergence_rows`=2-14 inclusive (13 bars), `t9a_ohlc_hash`=a8cd64270c5376ca, `t9a_signal_hash`=3b8c71ccadf15320, `ulp_bounded_columns`={'hma_21': 3, 'hma_55': 4, 'wma_20': 3, 'wma_55': 4}, `ulp_ceiling_asserted`=16, `x_coverage`=32 of 35
+
+> T11 ports wma, hma, stochastic, atr, PeakStore and DrawdownGuard from WMPS into `resources`, and gates them against the D8 golden fixtures (X22). The numerical bodies are copied without change; the parity work was in establishing what "exactly" can mean here, and it turned out not to mean the same thing for all six.
+
+WHAT REPRODUCES EXACTLY. `stochastic`, `atr` and `DrawdownGuard` reproduce their fixtures cell for cell, compared as shortest-round-trip float64 strings with no tolerance. So do the 96 of 480 sizer grid cells where no T5 deviation applies.
+
+WHAT DOES NOT, AND WHY IT IS NOT A PORT BUG. The four `wma`/`hma` fixture columns do not reproduce: 1,528 of 6,000 cells for wma_20, 2,637 for wma_55, 1,204 and 2,392 for hma_21 and hma_55. `wma` reduces its window with `np.dot`, which dispatches to OpenBLAS; the reduction is blocked and vectorised by a kernel chosen for the CPU, so the summation order is not a property of the source file. `hma` is three `wma` calls and inherits it.
+
+This was established, not inferred. Running the unmodified WMPS `indicators.py` in the current interpreter reproduces the port bit for bit on every column AND misses the fixture by the identical 1,528 cells; and no Python-level summation order — `sum(x*w)`, `math.fsum`, a naive loop — reproduces the fixture either. The best any of them manages is 4,526 of 5,981 rows. The divergence therefore sits below the source line and no edit to this repository closes it. wma_9 does reproduce, consistent with the window being too narrow to trigger blocking.
+
+MAGNITUDE, MEASURED: 4 ULP worst case, maximum absolute difference 1.364e-12 on prices near 2,000, maximum relative error 5.9e-16. And it is incapable of moving a decision: across 5,940 defined bars the fixture and the port never disagree about whether HMA(21) is above HMA(55), with 326 crossings on each side.
+
+CONSEQUENCE FOR X22. Acceptance criterion 4 requires X22 in CI, and the spec requires float equality rather than approx. CI now asserts exact equality on the columns that can satisfy it, bounds the dot-product columns at 16 ULP with the reasoning stated, and asserts decision-invariance. The direct port-versus-WMPS comparison, which IS exact on all eight columns, requires the WMPS checkout and skips on a runner; X22 is declared CI-limited rather than being reported as fully exercised. The open question this leaves — regenerate the D8 wma/hma columns in a pinned environment, or accept the bound — is a decision for the repository owner and is NOT taken here. Regenerating would replace a Phase 0 reference with a Phase 1 one, which is the sort of thing that should be chosen rather than done in passing.
+
+SIZER: DEVIATION, NOT PARITY. `calculate_lot_size` is not ported. T5 replaced it with `size_position`, whose three documented changes make exact reproduction impossible by design, and asserting it would be asserting the old bug back in. The 480-cell grid is classified instead, through a test-only adapter: 96 EXACT, 90 STOP_FLOOR (the ATR floor is now per-instrument and applies to the stop, not the ATR), 123 REFUSAL (a minimum position exceeding the budget is refused rather than clamped to min_lot), 171 VOLUME_MAX (the 0.10-lot cap was a capital-level constant, not a contract fact; the registry says 50.0). No cell is unclassified and there is no "other" bucket. The counts are pinned, so a fourth reason fails rather than being absorbed. All 125 cells the old sizer put over their own budget are now either refused or inside budget, and no cell in the grid exceeds its budget.
+
+ENGINE RECONCILIATION. `research.engines.indicators` agrees with the port bit for bit on wma, hma and atr, and `research.engines.sizer` still reproduces all 480 D8 sizer cells exactly. Both facts are now assertions rather than claims. The single disagreement is `stochastic`: the engines write `.where(hl_range > 0, 50.0)`, and a NaN comparison is False, so the entire %K warm-up is filled with a fabricated neutral 50.0 where the ported version — and the live WMPS code, and therefore D8 — leaves NaN. Bounded to rows 2-14 inclusive and nowhere else. Rows 2-12 are exactly 50.0; rows 13 and 14 are blends, because %K is a 3-bar mean and the invented values are still inside the smoothing window for two bars after the warm-up ends. The fabrication leaks past its own boundary into bars that look fully warmed up.
+
+NOTHING IS CHANGED TO RESOLVE THAT. The fill-to-50 reading was adopted deliberately during the crest_n_keel sweep parity work to match the canonical btpy_runner strategies, and every recorded harness result carries it. Editing it now would silently change what a logged Sharpe refers to. The direction of the disagreement is worth stating plainly, though: the backtest trades 13 bars the live strategy would skip. Small, and the kind of small that stops being small inside a short walk-forward window.
+
+EFFECT ON THE T9 PARITY RUN: none. T9a recomputes the seq=31 flood_tide mask-off signal, which uses Donchian channels, a Kaufman efficiency ratio and an HTF EMA, and touches none of the six ported functions. Verified: ohlc_hash a8cd64270c5376ca and signal_hash 3b8c71ccadf15320 are unchanged, 1,669 long signals, all five layers passing.
+
+THREE COPIES REMAIN, DELIBERATELY. `resources`, `research.engines`, and a third in `research.post.sweeps.cnk_engine` documented there as a port of the second. T11 pins the relationships rather than collapsing them, for the same reason the DSR twin was left standing at T10: a module that produced a logged number cannot be edited into agreement with a newer one without the logged number quietly coming to mean something else. Deduplication is a separate decision with its own cost.
+
+_hash_: `5db2c486fa29e5e2…` · _prev_: `c81846fbbb7c7cdb…`
+
+### seq 98 · 2026-09-16T22:00:26Z · parity_fixture · `record:t11-ported-code-parity`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `ci_run`=35155150523, `corrects_seq`=97, `exact_columns`=['stoch_k_14_3_3', 'stoch_d_14_3_3', 'atr_14'], `ulp_bounded_columns`=['wma_9', 'wma_20', 'wma_55', 'hma_21', 'hma_55'], `unchanged`=['ulp_ceiling', 'decision_invariance', 'sizer_grid_classification', 'port_vs_wmps_bit_identical'], `wma_9_ci_cells_differing`=1090, `wma_9_dev_cells_differing`=0
+
+> Correction to seq=97. That entry reported `wma_9` as reproducing its D8 fixture exactly, and explained it as the window being too narrow to trigger OpenBLAS blocking. Both halves are wrong.
+
+CI failed on the first push of the T11 branch: `wma_9` misses on 1,090 of 6,000 cells on the GitHub runner's CPU, first at row 9 — golden 2071.9744444444445, computed 2071.974444444444. It reproduces on the development machine and not on the runner, which is the same environment dependence seq=97 documented for the wider windows, showing up in the one column that entry had used as the counter-example.
+
+The generalisation seq=97 should have drawn, and this entry draws instead: which reduction kernel `np.dot` gets is not knowable from this repository, so NO `np.dot` column can be asserted exact — not as a measured fact about particular widths, but as a property of dispatching the reduction to a library chosen at runtime. The split in the X22 test is now by implementation (pandas rolling vs `np.dot`) rather than by what happened to match on one machine. `wma_9` moves into the ULP-bounded group; the exact group is `stochastic` and `atr` only.
+
+This does not change any conclusion in seq=97. The bound, the measured magnitude, the decision-invariance result and the sizer classification all stand, and the direct port-versus-WMPS comparison remains bit-identical on all eight columns in a single interpreter. What changes is that the exact-comparison set is smaller by one column and rests on a reason rather than on an observation.
+
+Worth recording separately because seq=97's version was a plausible mechanism fitted to a single data point, and it survived being written down, reviewed and committed. The check that caught it was CI running on different hardware — the local run was green both before and after.
+
+_hash_: `04e5f9d7073a4222…` · _prev_: `5db2c486fa29e5e2…`
