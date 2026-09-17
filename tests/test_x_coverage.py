@@ -51,10 +51,6 @@ DEFERRED: dict[str, tuple[str, str]] = {
     "X15b": ("post/ parity needs trade-for-trade records; the crest_n_keel "
              "walk-forward artifact stores fold boundaries and per-fold "
              "Sharpe but not individual trades", "T9b"),
-    "X23": ("fill frontier completeness needs SimulatedBroker", "T12"),
-    "X29": ("schedule-from-registry is execution-side; strategies.all_"
-            "strategies() is deliberately not verdict-aware, so nothing yet "
-            "refuses to schedule a SHELVED mechanism", "T12 / Phase 3"),
 }
 
 
