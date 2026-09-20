@@ -63,7 +63,7 @@ Every string in all 82 entries (pre-halt) was scanned for file-like references (
 
 | Reference | Resolves to |
 |---|---|
-| `qhf/data/csv_loader.py` | the harness repo → becomes `resources` |
+| `qhf/data/csv_loader.py` | the harness repo → **landed in `research.datasets`**, not `resources` |
 | `quant_harness/examples/run_cnk_sweep_oos.py` | the harness repo → `research` examples |
 
 Both point into `quant_harness`, which is itself being absorbed. They resolve through the

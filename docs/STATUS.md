@@ -1,10 +1,18 @@
-# qhf — Project Status
+# quant_harness — Project Status
 
-A living record of phases, decisions made, and open items. Updated at the end
-of each work session.
+A living record of where the rewrite stands. The authority on *what* is being
+built is `docs/REWRITE.md`; the authority on *what was found* is the research
+log (`packages/qh-research/research/log/`). This file is the short answer to
+"where are we".
 
-**Last updated:** Phase 2b underway — `engines.btpy_runner` complete and tested;
-backtesting.py strategy adapters (HMA+Stoch, ASQ SafeScalping, Ebb-n-Flow) landed.
+**Last updated:** 2026-09-20 — Phase 1 complete: all ten acceptance criteria met.
+
+> **Note on this file's history.** Until 2026-09-20 it described the
+> pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
+> the rewrite replaced with Phase 0/1/2 *project* numbering. It had not been
+> updated since the T10 rename, so it reported 82 tests and a next-session
+> queue long since done. It is rewritten rather than patched because nothing
+> in it still described this repository.
 
 ---
 
@@ -12,145 +20,86 @@ backtesting.py strategy adapters (HMA+Stoch, ASQ SafeScalping, Ebb-n-Flow) lande
 
 | Metric | Value |
 |---|---|
-| Tests passing | **82 / 82** |
-| Source files | 14 modules (6 sub-packages) |
-| Lines of code | ~4,500 (incl. tests, excl. blank/comments) |
-| Calibration | Verified: noise FAILs gates, real alpha PASSes |
-| Real-data verified against | 5 timeframes × 21.6 years XAUUSD (1.4M+ M5 bars) |
+| Tests passing | **524 passed, 25 skipped** on CI; 548 passed, 1 skipped locally with the out-of-repo data present |
+| Packages | 3 built — `qh-resources`, `qh-strategies`, `qh-research`. `qh-platform` is in the spec and the pytest path list but does not exist yet |
+| Acceptance tests | 35 of 35 X ids covered; 3 CI-limited and declared |
+| Research log | 105 entries, chain verified; `trial_count()` = 26 |
+| Instruments | 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching |
 
 ---
 
 ## Phase progress
 
-| Phase | Module | Status | Tests |
-|---|---|---|---:|
-| 1 | metrics.core (Sharpe, Sortino, Calmar, MDD, PF, expectancy, CAGR) | ✅ done | included |
-| 1 | metrics.deflated (PSR, DSR, expected_max_sharpe) | ✅ done | included |
-| 1 | metrics.pbo (CSCV) | ✅ done | included |
-| 1 | validation.walk_forward (rolling/expanding splits) | ✅ done | included |
-| 1 | reports.scorecard (gates, Result, Thresholds) | ✅ done | 16 |
-| 2a | data.csv_loader (auto-sniff, MT5 format, gap detection) | ✅ done | 12 |
-| 2a | data.cost_model (Pepperstone Razor MT5) | ✅ done | 13 |
-| 2a | walk_forward.exclude_ranges + SplitReport + align_data_files | ✅ done | 12 |
-| 2a | examples/gap_report.py diagnostic | ✅ done | — |
-| 2b | engines.btpy_runner (backtesting.py wrapper) | ✅ done | 29 |
-| 2b | engines.indicators + engines.sizer (shared scaffolding) | ✅ done | included |
-| 2b | engines.strategies.hma_stoch (HMAStoch1H / HMAStochM15) | ✅ done | included |
-| 2b | engines.strategies.asq_safe_scalping + asq_scalping_adapter | ✅ done | included |
-| 2b | engines.strategies.ebb_n_flow (Bollinger mean-reversion, regime-gated) | ✅ done | included |
-| 2c | validation.stress (spread shock + parameter sensitivity) | ⏭ next | — |
-| 3 | engines.vbt_runner (VectorBT parameter-sweep wrapper) | ⏭ later | — |
-| 3 | reports.tearsheet (HTML/PDF strategy report) | ⏭ later | — |
+| Phase | Scope | Status |
+|---|---|---|
+| 0 | Diagnostic — D1-D9, no code changes | ✅ done (`docs/phase0_memo.md`) |
+| 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
+| 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ⏭ next |
+| 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ after 2 |
+| 3+ | Execution merge, live path | ⏭ not entered until a mechanism survives 2b |
+
+### Phase 1 acceptance criteria
+
+All ten hold. The three that took the most work:
+
+- **#2 mask-off parity** — T9a reproduces the seq=31 E-Ratio artifact and T9b
+  is trade-for-trade identical against seq=49, the latter against a
+  `REGENERATED_FROM` fixture because no artifact anywhere held trade records.
+- **#3 mask-on attribution** — T9a splits the divergence into signal-set and
+  normaliser channels; T9b traces every differing trade to a named flag and a
+  named mechanism. Zero unattributed. (seq=103, seq=104)
+- **#8 D8 fixtures** — met by *exact* reproduction rather than a logged
+  deviation, after `wma` moved off `np.dot`. (seq=102)
 
 ---
 
-## Decisions made (chronological)
+## Open items
 
-| # | Decision | Rationale |
-|---|---|---|
-| 1 | Build the harness FIRST, then re-validate existing strategies, then generate new ones | The "disciplined path." Without DSR/PBO/walk-forward, any backtest is just an equity curve. |
-| 2 | Use both VectorBT (parameter sweeps) and backtesting.py (path-dependent fills) | Different jobs: breadth vs depth. |
-| 3 | Linux dev box, Windows VPS for live MT5 only | MT5 Python lib is Windows-only. CSV-based pipeline avoids the OS lock-in. |
-| 4 | Validate all three strategies (1H HMA+Stoch, M15 HMA+Stoch, ASQ SafeScalping) | Same data, same gates — only valid comparison. |
-| 5 | Income target reframed: KES 1M/yr from $100 = 14yr horizon at 15% CAGR + $100/mo DCA | Original 6M/yr target was 462× starting capital — mathematically impossible. |
-| 6 | Strategy targets: 20% CAGR, Sharpe > 1.5, max DD 30% portfolio / 20% acceptable | Defensible vs hedge-fund history; consistent with risk profile. |
-| 7 | "20% gain per trade" rejected; per-trade gains scale 0.3–3% by horizon | Per-trade % of account at 20% requires 40:1 leverage and assumed 50%+ hit rate on coin-flip moves. |
-| 8 | H1 strategy v1.1 patches: sane `safety_floor_atr=0.10` (numerical only), explicit `min_atr_for_signal` (regime filter), persistent peak-equity drawdown guard | Three real bugs in v1.0; signal filter and sizer floor were conflated in one constant. |
-| 9 | M15 v1.1: keep `min_atr_for_signal=5.0` (preserves v1.0 behaviour) | M15 had the right structure already — only the implementation location moves to strategy.py. |
-| 10 | H1 v1.1: new default `min_atr_for_signal=1.0` — small behaviour change vs v1.0 | Documented; v1.0 backtest baseline preservable via git tag for comparison. |
-| 11 | ASQ SafeScalping parked until original .mq5 source is in hand | Python class is entries-only; full strategy lives in MT5 OnTick handler we don't have. |
-| 12 | Stay on pip+venv (not uv) for now | Minimum moving parts; revisit if dependency surface expands. |
-| 13 | Build the exclusion mechanism in walk_forward; defer truncation decision | Keep validation infrastructure flexible; data quality choices come later. |
-| 14 | Default research thresholds: gap < 0.5, PBO < 0.5, DSR > 0.95, OOS DD < 30%, trades ≥ 30, PF ≥ 1.20 | Production: 0.3 / 0.3 / 0.99 / 0.15 / 100 / 1.40 (tighter for live capital). |
+### Needs the user
 
----
-
-## Bugs found and fixed
-
-| # | Where | What | Severity | Fix |
-|---|---|---|---|---|
-| B1 | sizer.py | `XAUUSD_MIN_ATR=5.0` distorted normal H1 sizing — over 60% of bars affected | 🔴 high | New `LOT_SAFETY_FLOOR_ATR=0.10` (numerical safety only); regime filter moved to strategy |
-| B2 | sizer ↔ strategy | Sizer used floored ATR; broker SL placement used raw ATR — risk-target mismatch | 🔴 high | Sizer returns `(lots, effective_atr)`; caller uses `effective_atr` for SL too |
-| B3 | strategy.py | "10% drawdown guard" was actually `equity < balance * 0.90` (open-P&L only check) | 🔴 high | New `DrawdownGuard` with persistent peak-equity tracking via JSON file |
-| B4 | gap_report.py | f-string `{ts:<19}` parsed as datetime format spec, not width | 🟡 med | Pre-stringify timestamps with `strftime` |
-| B5 | strategy.py (ASQ) | `_daily_trades` lives in instance attrs — lost on process restart | 🔴 high (deferred) | Same fix pattern as B3; not applied (ASQ parked) |
-| B6 | strategy.py (ASQ) | `_check_drawdown` has same bug class as B3 | 🔴 high (deferred) | Same fix pattern; not applied (ASQ parked) |
-| B7 | strategy.py (ASQ) | H1 confirmation fetch on order-placement path adds 50–500ms latency | 🟡 med (deferred) | Move H1 fetch upstream of M5 evaluation; cache per bar |
-| B8 | strategy.py (ASQ) | Session timezone hardcoded to UTC; original EA uses MT5 server time | 🟡 med (deferred) | Document; choose convention before backtest |
-
----
-
-## Data quality findings
-
-| Finding | Affects | Disposition |
-|---|---|---|
-| 32-day gap **2025-09-12 → 2025-10-15** in all 5 timeframes (broker history hole) | All TFs, recent OOS | Mechanism in place: `exclude_ranges=[("2025-09-12", "2025-10-15")]` |
-| 9-day gap **2026-01-13 → 2026-01-22** in H4/M5/D1 only | TFs ending Jan 2026 | Same mechanism: `exclude_ranges=[..., ("2026-01-13", "2026-01-22")]` |
-| File end-dates differ: H1, M15 → 2025-12-31; H4, M5, D1 → 2026-01-30 | Multi-TF parallel analysis | `align_data_files()` helper available |
-| Bar coverage 92–101% of theoretical (M5 92% / H4 101%) | All | Acceptable; normal forex closure pattern |
-| Top 10 gaps in H1 (excl. the 32-day) are all US holiday closures (Thanksgiving / Labor Day / Christmas / Presidents Day) | All TFs | Harmless for bar-close strategies |
-| Total missing rows 4–14% by timeframe (D1: 4.3%, M5: 13.6%) | All | Mostly small holiday holes |
-
----
-
-## Open / pending items
-
-### Required before next session
-
-| Item | Owner | Notes |
-|---|---|---|
-| Apply v1.1 patches to live H1 + M15 strategies | You | git tag `HMA1H-v1.0` and `HMAM15-v1.0` first, then apply patches as separate commits. M15 keeps `min_atr_for_signal=5.0`; H1 takes new default `1.0`. |
-| Decide on data: re-export, truncate, or keep with exclusions | You | Mechanism handles all three. Re-export is the cleanest. |
-
-### Useful but not blocking
-
-| Item | Owner | Notes |
-|---|---|---|
-| Get current Pepperstone XAUUSD swap rates from MT5 | You | Override placeholders in `cost_model.py` for production accuracy. ~30 seconds in MT5 Symbol Specifications. |
-| Get Pepperstone XAUUSD Stops level value | You | Currently assumed at $0.10/oz floor; verify against MT5 Symbol Specifications. |
-| Locate original ASQ .mq5 source | You | Required before ASQ revalidation. Possibly download from mql5.com/en/code/71189 if still available. |
-
-### My queue for next session
-
-| Item | When |
+| Item | Why it is blocked |
 |---|---|
-| Write `qhf.engines.btpy_runner` (backtesting.py wrapper) | Next session start |
-| Write strategy adapter that wraps live H1 / M15 strategy classes for backtesting.py | Next session |
-| Run H1 v1.0 baseline + H1 v1.1 + M15 v1.0 + M15 v1.1 through harness | Next session |
-| Generate scorecard reports for all four | Next session |
+| Commission: does it apply to XAUUSD on MT5? | Two Pepperstone sources contradict each other. One read of the `commission` field on a real deal (`/api/v1/deals`) settles it — refused as a production read, needs authorisation. (seq=101) |
+| Slip is `HAND_ENTERED` at 1 tick | The only cost input with no source at all, and no document can supply it — only a real fill measures it. |
+| Branch protection | CI runs again; making it required to merge is a repo setting. |
+| Workstation disk | 92% used, ~9 GB free. A nine-symbol panel run will not like it. |
+
+### Known and carried
+
+| Item | Notes |
+|---|---|
+| D3b covers 2 of 9 symbols | The frontier cannot fully cost the other seven. |
+| Three copies of the indicator arithmetic | `resources`, `research.engines`, `cnk_engine`. The first two are held together by T11's bit-for-bit test; the third is frozen as a parity generator. |
+| DSR twin duplication | `research/post/dsr.py` is canonical; the harness twin must reproduce the parity vectors. |
+| `research.engines.strategies` vs top-level `strategies` | Name overlap, not yet resolved. |
+| Scan/position visualisation | Parked, unpublished (VortexEdge + Astra Terminal concept). |
 
 ---
 
 ## Architecture invariants
 
-These hold throughout the project. If a future change would break them, that's
-the moment to stop and reconsider.
+These hold throughout. If a change would break one, that is the moment to stop.
 
 1. **The harness scores returns; it does not run strategies.** Engine-agnostic.
-2. **Pre-registered gates only.** Threshold changes go through `Thresholds.production()` or a documented override — not silent in-code edits.
-3. **`num_trials` is honest.** Every parameter sweep cell counts. Not "number of variants in the final run."
-4. **Bar-close evaluation only.** No look-ahead through intra-bar prices, no decisions on the currently-forming bar.
-5. **The MT5 live path is deterministic.** No LLM in the order-placing path, ever. The harness validates the deterministic strategy; LLM agents only ever advise upstream of orders.
-6. **All strategies share the same scaffolding.** Same indicators module, same sizer module, same drawdown guard. Bug fixes propagate to all consumers.
+2. **Pre-registered gates only.** Threshold changes go through a documented
+   override, never a silent in-code edit.
+3. **`trial_count()` is honest.** Every sweep cell counts. Parity fixtures and
+   audits do not (X15d).
+4. **Bar-close evaluation only.** No look-ahead through intra-bar prices, no
+   decision on the forming bar.
+5. **The MT5 live path is deterministic.** No LLM in the order-placing path.
+6. **One definition of each formula**, with any duplicate held to it by a test.
+7. **A sweep describes a surface; its leader is not a candidate.** Proven twice
+   (seq=49, seq=68). Only a nested walk-forward with the pool control is
+   evidence of generalisation.
+8. **WMPS is frozen** under spec §1.3 — mirrored bug fixes only.
 
 ---
 
-## Cumulative session count
+## What "done" looks like for Phase 2
 
-| # | Focus | Outcome |
-|---|---|---|
-| 1 | Agentic AI research, scope, harness Phase 1 | Research report, harness math primitives |
-| 2 | Phase 1 setup, data loading, strategy spec extraction | All three strategies audited; H1+M15 patched; ASQ parked |
-| 3 | Phase 2a build (loader, costs, exclusions, gap report) | 53/53 tests; data quality mapped |
-
----
-
-## What "done" looks like
-
-Validated H1 and M15 strategies with all gates passing on real Pepperstone XAUUSD
-data, with full DSR / PBO / walk-forward reports generated, baseline (v1.0) vs
-patched (v1.1) comparisons quantified. Engine wrapper drives both VectorBT
-(breadth) and backtesting.py (depth). ASQ comes back later with .mq5 source.
-After validation, MQL5 translation of the surviving strategies for live demo
-deployment, with the deterministic-strategy-core / read-only-monitoring-agent
-architecture from the original report.
+`signal_edge` running per-instrument across the FX majors from one strategy
+module, producing per-instrument results with no symbol-specific branching
+anywhere in the call path — which Phase 1 criterion 5 already demonstrates on
+synthetic bars. Phase 2 is that same claim against real data, on the panel,
+with costs that are measured rather than assumed.

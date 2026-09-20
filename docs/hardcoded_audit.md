@@ -158,7 +158,9 @@ begins with it running and that should be a recorded fact rather than a surprise
 
 ## Summary
 
-- **30 rows.** 17 RESOLVED, 13 DEFERRED — every deferral names its phase and reason.
+- **30 rows.** 19 RESOLVED, 11 DEFERRED — every deferral names its phase and reason.
+  (Was stated as 17/13 until 2026-09-20; two rows had since been resolved and
+  the summary was not re-counted.)
 - No row is left unclassified, satisfying Phase 1 acceptance criterion 6 in advance of the work.
 - Three findings recorded that were not assumptions: identical sizer copies (lowers T11 risk),
   filling mode already generalised (lowers Phase 3 scope), and a live strategy on demo at

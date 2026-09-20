@@ -67,22 +67,37 @@ importable with no network and no Django settings.
 ## Quick start
 
 ```bash
-# Setup
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+# Setup — uv manages the environment and the four workspace packages
+uv sync --group test
 
 # Verify on your machine
-python -m unittest discover tests -v
-# expected: Ran 53 tests in [time]s — OK
+uv run pytest -q
+# expected: 548 passed, 1 skipped
 
 # Calibration check (synthetic data)
-python -m examples.score_a_strategy
+PYTHONPATH=packages/qh-resources:packages/qh-strategies:packages/qh-research \
+  uv run python -m examples.score_a_strategy
 # expected: Demo 1 (noise) FAILs gates; Demo 2 (alpha) PASSes
 ```
 
-If 53/53 tests pass and the calibration demo behaves as described, the harness
+If the suite passes and the calibration demo behaves as described, the harness
 is trustworthy on your machine.
+
+Two things worth knowing before the commands surprise you:
+
+- **`PYTHONPATH` is needed outside pytest.** The four package paths are set in
+  `[tool.pytest.ini_options] pythonpath`, so pytest finds them and nothing else
+  does — `examples/` fails with `ModuleNotFoundError: No module named
+  'research'` without the prefix above.
+- **The skip count depends on data you may not have.** Some parity checks read
+  OHLC CSVs and a WMPS checkout that live outside this repo; without them the
+  run is 524 passed, 25 skipped, which is what CI sees. `CI_LIMITED` in
+  `tests/test_x_coverage.py` names every such case and why.
+
+> Until 2026-09-20 this section said `pip install -r requirements.txt`,
+> `python -m unittest discover tests -v` and "Ran 53 tests — OK". Following it
+> gave 7 errors on 19 collected tests, and the calibration demo failed to
+> import at all.
 
 ---
 
@@ -225,7 +240,7 @@ Cost model defaults are documented Pepperstone values as of 2025–2026:
 | Contract size | 100 oz / lot | Pepperstone docs |
 | Min lot | 0.01 | Pepperstone docs |
 | Lot step | 0.01 | Pepperstone docs |
-| Commission (MT5 Razor) | $7 round-turn / lot ($0.07 per 0.01 lot) | Pepperstone docs |
+| Commission (MT5 Razor) | $7 round-turn / lot ($0.07 per 0.01 lot) | Pepperstone Costs and Charges — **but see below** |
 | Spread (typical) | ~$0.22 / oz | User-observed; Pepperstone-published range $0.05–$0.30 |
 | Triple-swap day | Wednesday rollover | Pepperstone docs |
 | Server rollover | 5pm New York / 23:59 server time | Pepperstone docs |
@@ -235,6 +250,20 @@ Cost model defaults are documented Pepperstone values as of 2025–2026:
 Practical implication: a 0.01 lot intraday round-trip costs roughly $0.29. With
 2% risk on a $100 account = $2 per trade, costs are ~14% of risk. Strategy must
 overcome this drag before any losses to be profitable.
+
+**The commission row is contested for gold** (seq=101). Pepperstone's Costs and
+Charges document says commission is "charged on all FX trades" and that on both
+MetaTrader and cTrader the commission on metals "are reflected in the spread
+with no separate commission charge" — which would mean XAUUSD carries none of
+the $7, and every backtest here over-costs it. Their Razor Gold product page
+says the opposite. The value is deliberately left in place: both readings err
+the same way, so results are under-stated rather than flattered, and changing
+it would silently re-price every metric in the research log. Two further
+caveats: the document is Pepperstone **Limited**, while the live account is
+**PepperstoneKE**, a different entity; and the $7 is keyed on the **account**
+currency, not the traded pair's base currency, so it needs no per-symbol FX
+conversion on MT5 (the cTrader schedule differs and does). One read of the
+`commission` field on a real deal settles all of it.
 
 ---
 
@@ -256,14 +285,19 @@ truth — is interchangeable. Only the returns matter to the gates.
 
 ## What's coming
 
-| Phase | Module | Status |
+Phases are the rewrite's (`docs/REWRITE.md` §7), not the old per-module
+numbering — that table described the pre-rewrite package layout and had been
+stale since the T10 rename replaced it.
+
+| Phase | Scope | Status |
 |---|---|---|
-| 1 | metrics, walk_forward, scorecard | ✅ done |
-| 2a | csv_loader, cost_model, exclude_ranges, gap_report | ✅ done |
-| 2b | engines.btpy_runner (backtesting.py wrapper, path-dependent) | ⏭ next |
-| 2c | validation.stress (spread shock + parameter sensitivity) | ⏭ after 2b |
-| 3 | engines.vbt_runner (VectorBT for parameter sweeps) | ⏭ later |
-| 3 | reports.tearsheet (HTML/PDF strategy report) | ⏭ later |
+| 0 | Diagnostic — D1-D9, no code changes | ✅ done |
+| 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ done — 10/10 criteria |
+| 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ⏭ next |
+| 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ after 2 |
+| 3+ | Execution merge, live path | ⏭ not until a mechanism survives 2b |
+
+`docs/STATUS.md` carries the current snapshot and the open items.
 
 ---
 
