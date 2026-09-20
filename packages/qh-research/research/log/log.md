@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 106
+- **Entries:** 107
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (106 entries)
+- **Hash chain:** OK — chain ok (107 entries)
 
 ## Principles
 
@@ -1873,3 +1873,13 @@ _Metrics_: `constant_changed`=False, `constant_usd_per_lot_rt`=7.0, `gold_disput
 > The resolver named at seq=101 was run with the user's authorisation: every deal on PepperstoneKE-MT5-Live01 via /api/v1/deals. RESULT: 358 trade deals across five symbols (XAUUSD 226, EURUSD 42, GBPUSD 32, AUDUSD 30, NZDUSD 28) over 2025-02-10..2026-04-13 carry commission of exactly 0.00. Not gold alone — the four FX majors too, where the published Razor schedule is unambiguous. IT IS NOT A REPORTING ARTIFACT. swap is populated on 24 of the same deals, so the MT5 field plumbing works; twelve deals are 0.03 lots, where a Razor charge would be $0.105 a side, far too large to round to 0.00 at two decimals; and both legs are present (179 DEAL_ENTRY_IN, 179 DEAL_ENTRY_OUT), so it is not being booked on the other side. CONCLUSION: the finding is about the ACCOUNT, not the instrument. This account pays no separate commission on anything, which is what a Standard account does — the cost sits in a marked-up spread instead. That dissolves the seq=101 gold dispute rather than settling it: 'does commission apply to metals on Razor' is moot on an account that is not Razor. The entity question is likewise moot. THE CONSTANT IS UNCHANGED AT 7.0 and is now a known over-cost. Two reasons for not zeroing it here. First, zeroing improves every metric already recorded, and a change in the flattering direction deserves the most scrutiny, not the least. Second, it is only half the change: D3b measured XAUUSD median spread at 0.17 USD/oz over 117M ticks FROM THIS SAME ACCOUNT, so that spread already carries whatever markup pays for the absent commission, while the model uses an assumed 0.22. Zeroing commission without settling which spread the model should use would swap an over-cost for an under-cost. The pairing is a user decision. Recorded in code as COMMISSION_MEASURED beside the superseded COMMISSION_PROVENANCE. Slip remains unmeasured — the deal records carry fill prices but not the requested price, so they cannot measure it without the order records alongside. Not a trial: this is provenance of an input.
 
 _hash_: `340979fac021997a…` · _prev_: `c4c957ed0505b516…`
+
+### seq 106 · 2026-09-20T18:14:45Z · audit · `record:o1-timeframe-ruling`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `capital_for_h1_at_2pct_usd`=527, `capital_for_h4_at_2pct_usd`=1064, `closed_on`=2026-09-20, `cost_to_atr_h1_conservative`=0.0859, `cost_to_atr_h1_measured`=0.0504, `cost_to_atr_h4_conservative`=0.0418, `cost_to_atr_h4_measured`=0.0245, `days_late`=6, `decision`=H1, `h4_cost_advantage_ratio`=2.06, `instruments_tradable_h1`=3, `instruments_tradable_h4`=0, `min_position_risk_pct_h1`=10.54, `min_position_risk_pct_h4`=21.29, `overturned_by`=capital above ~$1,100, `veto_date_pinned`=2026-09-14
+
+> O1 (REWRITE.md section 10.2) picks the timeframe for the first Phase 2 panel run. Its veto date was pinned to 2026-09-14 to stop it drifting, and it drifted — closed now, six days late, with both legs measured rather than one assumed. COST-TO-ATR, the leg that was blocked on D3 and the only one still favouring H4: now measured. Using the MEASURED cost scenario (spread 0.17 USD/oz, commission 0.00) against median ATR(14), H1 is 0.0504 and H4 is 0.0245. H4 is 2.06x cheaper relative to the move it is trying to capture. The original prior's claim was therefore correct on this leg, and is now evidence rather than expectation. GRANULARITY, the leg that inverted at 2026-08-31: D2 measured the minimum XAUUSD position at 10.54% of a $100 account at H1 and 21.29% at H4, against a 2% budget. Zero instruments are tradable at H4; three are at H1. RULING: H1. A cost advantage on a position that cannot be placed is not an advantage. Granularity is a hard constraint — minimum lot is fixed at 0.01 and no fraction of it can be bought — while cost-to-ATR is a preference between placeable alternatives. At $100 the H4 column is empty, so its 2x cost advantage has nothing to apply to. WHAT WOULD OVERTURN IT, stated so the ruling is not permanent by default: capital. The H4 minimum position needs about $1,064 to fit a 2% budget and H1 about $527. Above roughly $1,100 both timeframes become expressible, the granularity leg stops binding, and the measured 2x cost advantage should decide — at which point O1 flips to H4 on the same evidence that rules H1 today. Not a trial: a timeframe ruling tests no hypothesis.
+
+_hash_: `8e336b78999449f4…` · _prev_: `340979fac021997a…`
