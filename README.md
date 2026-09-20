@@ -251,7 +251,20 @@ Practical implication: a 0.01 lot intraday round-trip costs roughly $0.29. With
 2% risk on a $100 account = $2 per trade, costs are ~14% of risk. Strategy must
 overcome this drag before any losses to be profitable.
 
-**The commission row is contested for gold** (seq=101). Pepperstone's Costs and
+**Measured 2026-09-20: this account pays no commission at all** (seq=105).
+Every one of 358 deals on the live account — five symbols, fourteen months,
+including four FX majors where the Razor schedule is unambiguous — carries
+commission of exactly 0.00. It is not a reporting artifact: `swap` populates
+on the same deals, and 0.03-lot deals would owe $0.105 a side. The account is
+not on the Razor schedule, so the $7 row above describes a schedule this
+account is not billed under, and the gold dispute below is moot rather than
+settled. The constant is deliberately still 7.0: zeroing it improves every
+recorded metric, and the measured spread that would pay for the missing
+commission (0.17 USD/oz) is not the 0.22 the model assumes, so the two have to
+change together or not at all.
+
+The dispute that prompted the measurement, retained for the record:
+Pepperstone's Costs and
 Charges document says commission is "charged on all FX trades" and that on both
 MetaTrader and cTrader the commission on metals "are reflected in the spread
 with no separate commission charge" — which would mean XAUUSD carries none of

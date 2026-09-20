@@ -59,7 +59,7 @@ All ten hold. The three that took the most work:
 
 | Item | Why it is blocked |
 |---|---|
-| Commission: does it apply to XAUUSD on MT5? | Two Pepperstone sources contradict each other. One read of the `commission` field on a real deal (`/api/v1/deals`) settles it — refused as a production read, needs authorisation. (seq=101) |
+| Commission: zero it, and with which spread? | **Measured at 0.00 on all 358 live deals** — the account is not on the Razor schedule (seq=105). The $7.00 constant is a known over-cost, left in place because zeroing it flatters every recorded metric and because the measured spread (0.17 USD/oz) differs from the model's assumed 0.22. The two must move together. |
 | Slip is `HAND_ENTERED` at 1 tick | The only cost input with no source at all, and no document can supply it — only a real fill measures it. |
 | Branch protection | CI runs again; making it required to merge is a repo setting. |
 | Workstation disk | 92% used, ~9 GB free. A nine-symbol panel run will not like it. |
