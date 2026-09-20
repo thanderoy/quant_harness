@@ -49,7 +49,7 @@ import pandas as pd
 
 def pbo(returns_matrix: pd.DataFrame,
         S: int = 16,
-        periods_per_year: int = 252,
+        periods_per_year: 'int | float | None' = None,
         return_distribution: bool = False) -> dict:
     """Compute the Probability of Backtest Overfitting via CSCV.
 
@@ -96,6 +96,13 @@ def pbo(returns_matrix: pd.DataFrame,
     all_idx = list(range(S))
     combos = list(itertools.combinations(all_idx, half))
 
+    if periods_per_year is None:
+        raise ValueError(
+            "pbo: periods_per_year is required. It used to default to "
+            "252, which is right for daily bars and wrong for every "
+            "other frequency this repo uses — and nothing said which "
+            "you had. A returns MATRIX cannot carry frequency the way "
+            "a Returns series does, so here it must be stated.")
     sqrt_K = math.sqrt(periods_per_year)
     logits = np.empty(len(combos), dtype=float)
     n_overfit = 0

@@ -56,6 +56,7 @@ The implementation pins these in :func:`test_dsr.test_worked_anchor`.
 Usage
 -----
 >>> import numpy as np
+
 >>> from research.post.dsr import deflated_sharpe_ratio
 >>> rng = np.random.default_rng(0)
 >>> r = rng.normal(0.001, 0.01, 1000)
@@ -71,6 +72,8 @@ import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Sequence
+
+from research.metrics.returns import resolve_periods_per_year
 
 import numpy as np
 
@@ -265,7 +268,7 @@ def deflated_sharpe_ratio(
     n_trials: Optional[int] = None,
     trial_sharpes: "np.ndarray | Sequence[float] | None" = None,
     var_sr: Optional[float] = None,
-    periods_per_year: int = 252,
+    periods_per_year: 'int | float | None' = None,
     threshold: float = DEFAULT_DSR_THRESHOLD,
     log_dir: Path = research_log.DEFAULT_LOG_DIR,
 ) -> DSRResult:
@@ -330,7 +333,8 @@ def deflated_sharpe_ratio(
             f"than merely wrong, which at least fails loudly."
         )
 
-    r = np.asarray(returns, dtype=float)
+    r, periods_per_year = resolve_periods_per_year(
+        returns, periods_per_year, caller="deflated_sharpe_ratio")
     if r.ndim != 1 or r.size < 2:
         raise ValueError(f"returns must be 1-D with >= 2 obs; got shape {r.shape}")
 
@@ -398,7 +402,7 @@ def deflated_sharpe_ratio(
 # ---------------------------------------------------------------------------
 
 def annualised_to_per_obs(sr_annualised: float,
-                          periods_per_year: int = 252) -> float:
+                          periods_per_year: 'int | float | None' = None) -> float:
     """Convert a D5-style annualised Sharpe to per-observation units.
 
     D5 reports SR* annualised; every number inside the DSR math is
@@ -412,6 +416,10 @@ def annualised_to_per_obs(sr_annualised: float,
     number alone, which is the whole argument for converting here rather than
     trusting a call site to have remembered.
     """
+    if periods_per_year is None:
+        raise ValueError(
+            "annualised_to_per_obs: periods_per_year is required. The "
+            "old default of 252 silently assumed daily bars.")
     if periods_per_year < 1:
         raise ValueError(f"periods_per_year must be >= 1; got {periods_per_year}")
     return float(sr_annualised) / math.sqrt(periods_per_year)
@@ -420,7 +428,7 @@ def annualised_to_per_obs(sr_annualised: float,
 def benchmark_from_d5(
     symbol: str,
     artifact: "Path | str",
-    periods_per_year: int = 252,
+    periods_per_year: 'int | float | None' = None,
 ) -> float:
     """Read one instrument's buy-and-hold SR* from a D5 artifact, in per-obs.
 
@@ -428,6 +436,9 @@ def benchmark_from_d5(
     Phase 0 artifact, converted once, with the symbol named. Nothing is
     retyped, so nothing is mistyped.
     """
+    if periods_per_year is None:
+        raise ValueError(
+            "benchmark_from_d5: periods_per_year is required — D5 reports SR* annualised and the DSR math is per-observation, so the conversion needs the frequency of YOUR returns, not a default.")
     payload = json.loads(Path(artifact).read_text())
     d5 = payload.get("d5_benchmark_sharpe")
     if not d5:
