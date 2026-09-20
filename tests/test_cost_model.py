@@ -14,7 +14,7 @@ from research.datasets.cost_model import (
 class TestSpread(unittest.TestCase):
 
     def test_spread_at_typical(self):
-        m = PepperstoneXAUUSDCostModel()
+        m = PepperstoneXAUUSDCostModel.for_scenario("conservative")
         # 0.22 USD/oz * 0.10 lots * 100 oz/lot = $2.20
         self.assertAlmostEqual(m.spread_cost_usd(0.10), 2.20, places=4)
 
@@ -26,12 +26,12 @@ class TestSpread(unittest.TestCase):
 class TestCommission(unittest.TestCase):
 
     def test_one_lot_round_turn(self):
-        m = PepperstoneXAUUSDCostModel()
+        m = PepperstoneXAUUSDCostModel.for_scenario("conservative")
         self.assertEqual(m.commission_round_turn_usd(1.0),
                          PEPPERSTONE_XAUUSD_RAZOR_MT5_COMMISSION_PER_LOT_RT)
 
     def test_pro_rata_for_micro(self):
-        m = PepperstoneXAUUSDCostModel()
+        m = PepperstoneXAUUSDCostModel.for_scenario("conservative")
         # $7 RT per lot, scaled to 0.01 = $0.07
         self.assertAlmostEqual(m.commission_round_turn_usd(0.01), 0.07, places=4)
 

@@ -31,6 +31,7 @@ distance of 0.10 USD/oz as a safety floor in backtests.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from datetime import datetime
 from typing import Optional
 
@@ -163,6 +164,52 @@ PEPPERSTONE_XAUUSD_SWAP_SHORT_USD_PER_LOT_NIGHT = -2.0    # placeholder
 PEPPERSTONE_XAUUSD_STOPS_LEVEL_FLOOR_USD_PER_OZ = 0.10
 
 
+# -- Cost scenarios ---------------------------------------------------------
+#
+# Cost uncertainty is an axis, not a hidden multiplier. Keeping a known-false
+# 7.00 in the model "for conservatism" put a wrong number where a reader sees
+# a documented constant, with the reasoning in a README rather than in the
+# code that returns it — the same defect class as a seeded Sharpe, differing
+# only in pointing somewhere safe.
+#
+# So the measured values are the model's, and conservatism becomes a declared
+# scenario. Nothing is silently re-priced, because every result carries the
+# scenario that produced it, and MEASURED and CONSERVATIVE can be reported
+# side by side.
+
+
+class CostScenario(str, Enum):
+    """Which cost assumptions a result was produced under."""
+
+    #: What this account actually pays. Commission measured at 0.00 across 358
+    #: live deals (seq=105); spread measured at 0.17 USD/oz median over 117M
+    #: XAUUSD ticks (D3b). The two belong together: the account is not on the
+    #: Razor schedule, and its spread already carries whatever markup pays for
+    #: the absent commission.
+    MEASURED = "measured"
+
+    #: The published Razor schedule plus the model's older assumed spread.
+    #: This account is not billed under it, so it is a stress case rather than
+    #: a description — useful precisely because it over-costs.
+    CONSERVATIVE = "conservative"
+
+
+#: Measured, from the live account.
+MEASURED_COMMISSION_PER_LOT_RT = 0.0
+MEASURED_SPREAD_USD_PER_OZ = 0.17
+
+#: Conservative: the published MT5 Razor schedule and the older assumed spread.
+CONSERVATIVE_COMMISSION_PER_LOT_RT = 7.0
+CONSERVATIVE_SPREAD_USD_PER_OZ = 0.22
+
+SCENARIO_VALUES = {
+    CostScenario.MEASURED: (MEASURED_COMMISSION_PER_LOT_RT,
+                            MEASURED_SPREAD_USD_PER_OZ),
+    CostScenario.CONSERVATIVE: (CONSERVATIVE_COMMISSION_PER_LOT_RT,
+                                CONSERVATIVE_SPREAD_USD_PER_OZ),
+}
+
+
 # -- Data class for trade-level cost breakdown ------------------------------
 
 
@@ -174,6 +221,9 @@ class CostBreakdown:
     total_usd: float
     nights_held: int
     triple_swap_nights: int
+    #: Which assumptions produced this. Present so a figure cannot be quoted
+    #: without them.
+    scenario: str = CostScenario.MEASURED.value
 
 
 # -- Cost model -------------------------------------------------------------
@@ -192,10 +242,11 @@ class PepperstoneXAUUSDCostModel:
     swap rates with current MT5-displayed values for accuracy.
     """
     contract_size: float = PEPPERSTONE_XAUUSD_CONTRACT_SIZE
-    commission_per_lot_round_turn: float = (
-        PEPPERSTONE_XAUUSD_RAZOR_MT5_COMMISSION_PER_LOT_RT
-    )
-    spread_usd_per_oz: float = PEPPERSTONE_XAUUSD_SPREAD_USD_PER_OZ_TYPICAL
+    #: Defaults are MEASURED. The published-schedule figures are a scenario,
+    #: not the model — see CostScenario.
+    commission_per_lot_round_turn: float = MEASURED_COMMISSION_PER_LOT_RT
+    spread_usd_per_oz: float = MEASURED_SPREAD_USD_PER_OZ
+    scenario: CostScenario = CostScenario.MEASURED
     swap_long_per_lot_night: float = (
         PEPPERSTONE_XAUUSD_SWAP_LONG_USD_PER_LOT_NIGHT
     )
@@ -206,6 +257,19 @@ class PepperstoneXAUUSDCostModel:
         PEPPERSTONE_XAUUSD_STOPS_LEVEL_FLOOR_USD_PER_OZ
     )
     triple_swap_weekday: int = 2   # Wednesday (Mon=0, Sun=6) per Pepperstone
+
+    @classmethod
+    def for_scenario(cls, scenario: "CostScenario | str",
+                     **overrides) -> "PepperstoneXAUUSDCostModel":
+        """Build the model under a named cost scenario.
+
+        The way to get conservative costs is to ask for them by name, so the
+        result says which assumptions produced it.
+        """
+        sc = CostScenario(scenario)
+        commission, spread = SCENARIO_VALUES[sc]
+        return cls(commission_per_lot_round_turn=commission,
+                   spread_usd_per_oz=spread, scenario=sc, **overrides)
 
     # ----- Spread / commission ---------------------------------------------
 
@@ -284,6 +348,7 @@ class PepperstoneXAUUSDCostModel:
             commission_usd=commission,
             swap_usd=swap,
             total_usd=spread + commission + swap,
+            scenario=self.scenario.value,
             nights_held=nights,
             triple_swap_nights=triples,
         )
