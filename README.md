@@ -248,9 +248,20 @@ Cost model defaults are documented Pepperstone values as of 2025–2026:
 | Swap rates | floating, weekly-updated | Override from MT5 Symbol Specifications |
 | Stops level | floor at $0.10/oz (assumed) | Verify in MT5 |
 
-Practical implication: a 0.01 lot intraday round-trip costs roughly $0.29. With
-2% risk on a $100 account = $2 per trade, costs are ~14% of risk. Strategy must
-overcome this drag before any losses to be profitable.
+Practical implication, corrected 2026-09-20. **There is no $2 gold trade.** The
+old version divided a $0.29 round trip by a $2 risk budget and reported costs
+at ~14% of risk, but that budget is unreachable: D2 measured the *minimum*
+XAUUSD H1 position — 0.01 lot on a 1.5xATR stop — at **10.54% of a $100
+account**, corroborating spec section 1's "roughly 12%".
+
+Against the position you can actually place, costs are **2.8% of realised risk
+under the conservative scenario ($0.29) and 1.6% under the measured one
+($0.17, spread only, since commission is zero)**.
+
+So the cost figure was overstated while the more important fact was missing:
+the smallest expressible gold position risks **5.3x the intended 2% budget**.
+Cost drag is the smaller of the two problems, and no amount of cost reduction
+addresses the other one.
 
 **Measured 2026-09-20: this account pays no commission at all** (seq=105).
 Every one of 358 deals on the live account — five symbols, fourteen months,
