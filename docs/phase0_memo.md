@@ -138,6 +138,16 @@ whose median FX spread is genuinely at or near zero, that hand-entered figure is
 model. It is an account document, obtainable today, and it is the largest unsourced number left in
 Phase 0.
 
+> **Superseded 2026-09-20 (seq=101).** The $7.00 value is now sourced to
+> Pepperstone's own MT5 Razor schedule and carries `BROKER_PUBLISHED`
+> provenance for the FX majors. Two things this memo assumed settled are not:
+> whether the commission applies to **gold** on MetaTrader at all — two
+> Pepperstone sources contradict each other, so the constant is deliberately
+> left at 7.0 — and whether the **PepperstoneKE** entity uses the same
+> schedule as the Pepperstone Limited document it was read from. Slip, not
+> commission, is now the largest unsourced number. The paragraph above is left
+> as written: it is the Phase 0 record, and this was Phase 0's state.
+
 ---
 
 ## 1. Verdict in one paragraph
