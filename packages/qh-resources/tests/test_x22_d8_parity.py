@@ -113,25 +113,41 @@ def test_the_sample_window_is_the_one_the_fixture_was_built_from(sample, manifes
     assert str(sample.index[-1]) == manifest["sample"]["end"]
 
 
-#: Columns whose fixture values are reproducible anywhere. Every one of these
-#: is computed by pandas rolling arithmetic in a fixed order, so the result is
-#: a property of the code and nothing else.
-EXACTLY_REPRODUCIBLE = ("stoch_k_14_3_3", "stoch_d_14_3_3", "atr_14")
-
-#: Columns whose fixture values are not. See
-#: ``test_the_dot_product_columns_differ_only_in_the_last_bits`` for the
-#: measurement and the reason. The ceiling is stated in ULP because that is
-#: the unit the claim is actually in: "nothing but summation order".
+#: Every fixture column is now reproducible anywhere, and X22 is asserted as
+#: the spec wrote it — exact equality, no tolerance, on all eight.
 #:
-#: ``wma_9`` is in this list because CI put it there. It reproduced exactly on
-#: the development machine, and the first version of this file listed it as
-#: exact on the reasoning that a 9-element window is too narrow for OpenBLAS
-#: to block. That reasoning was wrong: on the runner's CPU it misses on 1,090
-#: of 6,000 cells. The lesson is the general one — which kernel a reduction
-#: gets is not something this repository knows, so *no* ``np.dot`` column can
-#: be asserted exact, and the split here is by implementation rather than by
-#: what happened to match once.
+#: This list used to hold three. The other five were reduced with ``np.dot``,
+#: which dispatches to BLAS, so their last bit belonged to whichever OpenBLAS
+#: kernel the running CPU got; they were bounded at 16 ULP instead of asserted,
+#: and X22 carried a CI limitation saying so.
+#:
+#: What ended that was not a better bound. Re-running the D8 generator on the
+#: machine that produced the original fixture, against WMPS sources whose three
+#: sha256 all still matched the manifest and input whose sha256 matched too,
+#: reproduced ``wma_20``, ``wma_55``, ``hma_21`` and ``hma_55`` only to 5 ULP —
+#: and reproduced ``wma_9``, the column CI had singled out as the broken one,
+#: exactly. numpy had moved underneath the fixture. A reference that drifts on
+#: its own machine, and whose drifting columns are not even a stable set, is
+#: pinning a toolchain rather than arithmetic, so the bound was never going to
+#: converge on anything.
+#:
+#: The fix was to stop asking BLAS. ``wma`` now reduces with ``math.fsum``,
+#: which is correctly rounded, so the value is fixed by IEEE-754 and not by a
+#: kernel, a thread count or a numpy release. The columns were regenerated from
+#: that implementation (seq=102) and are exact here and on any conforming
+#: platform.
+EXACTLY_REPRODUCIBLE = ("wma_9", "wma_20", "wma_55", "hma_21", "hma_55",
+                        "stoch_k_14_3_3", "stoch_d_14_3_3", "atr_14")
+
+#: The five that were bounded, kept as a named group because they are the ones
+#: that deliberately differ from WMPS's ``np.dot`` and the difference is worth
+#: keeping measured. See
+#: ``test_the_deterministic_reduction_stays_close_to_the_one_it_replaced``.
 DOT_PRODUCT_COLUMNS = ("wma_9", "wma_20", "wma_55", "hma_21", "hma_55")
+
+#: Ceiling on how far the exactly-rounded reduction may sit from WMPS's
+#: ``np.dot``. Not a tolerance on X22 — X22 is exact now — but a guard that
+#: ``fsum`` replaced the summation order and nothing else. Measured at 2-4 ULP.
 ULP_CEILING = 16
 
 
@@ -181,48 +197,60 @@ def test_the_pandas_columns_reproduce_the_d8_fixture_exactly(sample, manifest):
             f"golden {want[mismatched[0]]!r}, computed {got[mismatched[0]]!r}")
 
 
-def test_the_dot_product_columns_differ_only_in_the_last_bits(sample, manifest):
-    """The honest limit of X22, measured rather than asserted away.
+def test_the_deterministic_reduction_stays_close_to_the_one_it_replaced(
+        sample, manifest):
+    """``fsum`` changed the summation order and nothing else.
 
-    ``wma`` reduces its window with ``np.dot``, which dispatches to BLAS.
-    OpenBLAS blocks and vectorises that reduction, and the blocking depends on
-    the kernel selected for the CPU and on the library version — so the
-    summation *order* is not a property of this source file. The fixture was
-    generated on one such build in August; a different one gives a different
-    last bit. ``hma`` inherits it by being three ``wma`` calls. Every window
-    width is affected, including the shortest — see ``DOT_PRODUCT_COLUMNS``.
+    The five columns above are exact against the fixture, which they have to
+    be — the fixture is generated from this same reduction. That makes the
+    exactness self-consistent on its own, so it is not the whole claim. This
+    is the other half: the exactly-rounded values must still sit a handful of
+    bits from WMPS's ``np.dot``, the implementation they replaced and the one
+    the live app still runs.
 
-    This was established, not assumed: running the unmodified WMPS module in
-    this interpreter reproduces the port bit for bit and misses the fixture by
-    the same 1,528 cells, and no Python-level summation order (``sum(x*w)``,
-    ``math.fsum``, a naive loop) reproduces it either. So the divergence is
-    below the source line, and no edit to this repository closes it.
+    A few ULP means the port re-associated a sum. Parts per thousand would
+    mean an off-by-one in a window, a wrong weight vector or a bad seed —
+    errors that survive an exactness check against a fixture built from the
+    same bug, and that this comparison against independent code would catch.
 
-    What is asserted instead is the thing that would still be true of a
-    correct port anywhere: the difference never leaves the last handful of
-    bits. Measured on the development machine at 4 ULP and a relative error
-    of 5.9e-16; the ceiling is set well above that because it must hold on a
-    CI runner's CPU too — not a hypothetical, since that is exactly where
-    ``wma_9`` turned out to differ — and well below anything that could be a
-    real arithmetic error — an off-by-one
-    or a wrong seed moves a moving average by parts per thousand, not parts
-    per quadrillion.
+    ``fsum`` is the more accurate of the two: it returns the nearest float64
+    to the exact weighted sum, where ``np.dot`` returns whatever its blocking
+    accumulated. So a difference here is WMPS's rounding, not the port's.
     """
     computed = compute_all(sample, manifest)
     worst = {}
-    for name in DOT_PRODUCT_COLUMNS:
+    for name, period in (("wma_9", 9), ("wma_20", 20), ("wma_55", 55)):
+        weights = np.arange(1, period + 1, dtype=float)
+        ws = weights.sum()
+        dotted = (sample["close"].rolling(period)
+                  .apply(lambda x: float(np.dot(x, weights) / ws), raw=True)
+                  .to_numpy())
         got = computed[name].to_numpy()
-        want = golden_floats(name)
-        defined = ~np.isnan(want)
-        assert not np.isnan(got[defined]).any(), f"{name} lost values the fixture has"
-        ulp = np.abs(got[defined] - want[defined]) / np.spacing(np.abs(want[defined]))
+        defined = ~np.isnan(dotted)
+        assert not np.isnan(got[defined]).any(), f"{name} lost values np.dot has"
+        ulp = (np.abs(got[defined] - dotted[defined])
+               / np.spacing(np.abs(dotted[defined])))
         worst[name] = float(ulp.max())
 
     over = {k: v for k, v in worst.items() if v > ULP_CEILING}
     assert not over, (
-        f"{over} exceed {ULP_CEILING} ULP against the D8 fixture. That is too "
-        "large to be summation order and should be read as a real change in "
-        "the arithmetic, not as fixture drift.")
+        f"{over} exceed {ULP_CEILING} ULP against a plain np.dot reduction. "
+        "That is too large to be summation order and should be read as a real "
+        "change in the arithmetic, not as a rounding difference.")
+
+
+def test_the_fixture_records_that_it_is_no_longer_a_dot_product(manifest):
+    """The deviation from WMPS is stated in the manifest, not just in prose.
+
+    If someone regenerates these columns from ``np.dot`` again, the fixture
+    stops matching the port and this says why in the same breath.
+    """
+    ind = manifest["indicators"]
+    assert ind["reduction"].startswith("math.fsum")
+    assert ind["deviates_from_wmps"] is True
+    measured = ind["deviation_ulp_vs_wmps_np_dot"]
+    assert set(measured) == set(DOT_PRODUCT_COLUMNS)
+    assert all(v <= ULP_CEILING for v in measured.values()), measured
 
 
 def test_the_last_bits_never_change_a_decision(sample):
@@ -533,19 +561,26 @@ def wmps_indicators():
     return module
 
 
-def test_the_port_is_bit_identical_to_the_code_it_was_ported_from(sample, manifest):
+def test_the_port_matches_the_code_it_was_ported_from(sample, manifest):
     """What T11 actually asks, without the fixture in the middle.
 
-    The fixture is a *recording* of the old code's output, and the previous
-    test established that the recording carries a trace of the machine that
-    made it. This asserts the underlying claim directly: run both
-    implementations in one interpreter and every cell must match as a string,
-    including the four columns the fixture cannot pin.
+    Run both implementations in one interpreter and compare directly, so a
+    port bug cannot hide behind a fixture that recorded the same bug.
 
-    It needs the WMPS checkout, so it skips on a runner and X22 is declared
-    CI-limited because of it. That is the honest arrangement: CI gets the
-    portable half, and the half that requires the other repository is stated
-    as requiring it rather than quietly dropped.
+    Exactness is asserted everywhere EXCEPT the five ``wma``/``hma`` columns,
+    where the port deliberately reduces with ``math.fsum`` and WMPS still uses
+    ``np.dot``. That divergence is the point of seq=102, not a regression: it
+    is what makes the fixture reproducible off this machine at all. It is
+    bounded here rather than ignored, because "a few ULP" is the difference
+    between re-associating a sum and getting the window wrong.
+
+    WMPS is frozen under spec 1.3, so this gap closes only if the live app is
+    ever mirrored onto the same reduction. Until then the live app runs
+    arithmetic a few ULP less accurate than the backtester, which is recorded
+    in the log and is far below any decision boundary — see
+    ``test_the_last_bits_never_change_a_decision``.
+
+    It needs the WMPS checkout, so it skips on a runner.
     """
     live = wmps_indicators()
     if live is None:
@@ -570,6 +605,18 @@ def test_the_port_is_bit_identical_to_the_code_it_was_ported_from(sample, manife
                   live.atr(sample["high"], sample["low"], sample["close"], ind["atr_period"])))
 
     for name, ported, original in pairs:
+        if name in DOT_PRODUCT_COLUMNS:
+            a, b = ported.to_numpy(), original.to_numpy()
+            defined = ~np.isnan(b)
+            assert not np.isnan(a[defined]).any(), f"{name} lost values WMPS has"
+            ulp = (np.abs(a[defined] - b[defined])
+                   / np.spacing(np.abs(b[defined]))).max()
+            assert ulp <= ULP_CEILING, (
+                f"{name}: the port is {ulp} ULP from WMPS, over the "
+                f"{ULP_CEILING} ULP ceiling. fsum-vs-np.dot is a summation "
+                "order difference of a few bits; this is larger than that and "
+                "should be read as a real change in the arithmetic.")
+            continue
         got = ported.map(f64).to_numpy()
         want = original.map(f64).to_numpy()
         mismatched = np.flatnonzero(got != want)

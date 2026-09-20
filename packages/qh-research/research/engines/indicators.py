@@ -23,12 +23,19 @@ import pandas as pd
 
 
 def wma(series: pd.Series, period: int) -> pd.Series:
-    """Weighted Moving Average. Most-recent bar has highest weight."""
+    """Weighted Moving Average. Most-recent bar has highest weight.
+
+    Reduced with :func:`math.fsum` rather than ``np.dot``, so the result is
+    fixed by IEEE-754 instead of by whichever BLAS kernel and numpy build
+    happen to be present. See ``resources.indicators.moving_average.wma`` for
+    the reasoning; this copy must track it exactly, because T11 asserts the
+    two agree bit for bit.
+    """
     weights = np.arange(1, period + 1, dtype=float)
-    weight_sum = weights.sum()
+    weight_sum = float(weights.sum())
 
     def _apply(x: np.ndarray) -> float:
-        return float(np.dot(x, weights) / weight_sum)
+        return math.fsum(x * weights) / weight_sum
 
     return series.rolling(period).apply(_apply, raw=True)
 
