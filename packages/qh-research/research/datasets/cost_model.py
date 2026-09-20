@@ -79,11 +79,60 @@ from typing import Optional
 PEPPERSTONE_XAUUSD_CONTRACT_SIZE = 100.0       # oz per 1.0 lot
 PEPPERSTONE_XAUUSD_RAZOR_MT5_COMMISSION_PER_LOT_RT = 7.0   # USD round-turn
 
-#: The above as data, so a caller can assert on provenance rather than trust a
-#: comment to have been read. ``metals_applicability`` is the open question.
+#: MEASURED 2026-09-20 (seq=105) — and it does not match the constant.
+#:
+#: The resolver named below was finally run: every deal on the live account,
+#: `/api/v1/deals` on PepperstoneKE-MT5-Live01. **358 trade deals across five
+#: symbols over fourteen months carry commission exactly 0.00.** Not gold
+#: alone — EURUSD, GBPUSD, AUDUSD and NZDUSD too, where the published Razor
+#: schedule is unambiguous.
+#:
+#: It is not a reporting artifact:
+#:   - ``swap`` is populated on 24 of the same deals, so the field plumbing
+#:     from MT5 works;
+#:   - twelve deals are 0.03 lots, where a Razor charge would be $0.105 a
+#:     side — far too large to round to 0.00 at two decimal places;
+#:   - both DEAL_ENTRY_IN and DEAL_ENTRY_OUT legs are present, 179 each, so
+#:     commission is not simply being booked on the other side.
+#:
+#: The conclusion is about the ACCOUNT, not the instrument: this one pays no
+#: separate commission on anything, which is what a Standard account does —
+#: the cost is in a marked-up spread instead. That also dissolves the gold
+#: dispute below, which is a Razor-only question and moot here.
+#:
+#: **The constant is still 7.0 and this is now a known over-cost.** Zeroing it
+#: would improve every metric already recorded, which is the direction that
+#: deserves the most scrutiny, and it is only half the change: the D3b spread
+#: (XAUUSD median 0.17 USD/oz over 117M ticks) is measured from this same
+#: account and therefore already carries whatever markup pays for the missing
+#: commission, while backtests use the assumed 0.22. Setting commission to
+#: zero without settling which spread the model should use would under-cost
+#: rather than correct. That pairing is a decision for the user, recorded at
+#: seq=105 rather than taken here.
+COMMISSION_MEASURED = {
+    "measured_usd_per_lot_round_turn": 0.0,
+    "provenance": "MEASURED",
+    "source": "/api/v1/deals on PepperstoneKE-MT5-Live01",
+    "measured_on": "2026-09-20",
+    "n_trade_deals": 358,
+    "symbols": ["XAUUSD", "EURUSD", "GBPUSD", "AUDUSD", "NZDUSD"],
+    "span": "2025-02-10 .. 2026-04-13",
+    "non_zero_commission_deals": 0,
+    "non_zero_swap_deals": 24,
+    "largest_lot": 0.03,
+    "implies_account_type": "Standard (no separate commission)",
+    "constant_unchanged": True,
+    "why_unchanged": ("zeroing it flatters every recorded metric and is only "
+                      "half the change — the measured spread that would pay "
+                      "for it is 0.17 USD/oz where the model assumes 0.22"),
+}
+
+#: The published schedule, kept because it is what the constant still encodes.
+#: Superseded as a description of THIS account by COMMISSION_MEASURED above.
 COMMISSION_PROVENANCE = {
     "value_usd_per_lot_round_turn": 7.0,
     "provenance": "BROKER_PUBLISHED",
+    "superseded_by": "COMMISSION_MEASURED (seq=105)",
     "source": ("Pepperstone Costs and Charges, table 'MetaTrader 5 Razor "
                "Commissions': USD 3.50 (USD 7 round turn) per 1 lot"),
     "source_entity": "Pepperstone Limited (England & Wales, 08965105)",
