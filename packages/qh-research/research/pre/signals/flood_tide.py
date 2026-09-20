@@ -31,6 +31,12 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+from resources.data.mask import IndicatorClass, TradabilityMask, masked_rolling
+
+#: R3 class for the Donchian channels. Named once rather than repeated at four
+#: call sites, so the four cannot drift apart.
+_WINDOW = IndicatorClass.WINDOW
+
 __all__ = ["FloodTideParams", "generate_signals", "efficiency_ratio", "merge_htf_to_ltf"]
 
 
@@ -100,6 +106,7 @@ def generate_signals(
     h1: pd.DataFrame,
     h4: pd.DataFrame,
     params: FloodTideParams = FloodTideParams(),
+    mask: "TradabilityMask | pd.Series | None" = None,
 ) -> pd.DataFrame:
     """Compute flood_tide_h1 signals on the closed-bar (enter-next-open) convention.
 
@@ -112,6 +119,17 @@ def generate_signals(
         H4 OHLC(V) with tz-aware UTC ``DatetimeIndex``. Same schema.
     params : FloodTideParams
         Frozen params. Default matches seq=31.
+    mask : TradabilityMask | pd.Series | None
+        Optional tradability mask. ``None`` (the default) is the seq=31 path,
+        byte for byte — T9a's mask-off parity depends on that and asserts it.
+        When supplied, the Donchian channels become ``masked_rolling`` WINDOW
+        indicators per R3, so a channel whose lookback spans an untradable bar
+        is NaN rather than a level partly built from prices nobody could trade.
+        The H4 EMA and the Efficiency Ratio are deliberately left alone: the
+        EMA is an ACCUMULATOR whose state must advance across the gap, and ER
+        is computed on the H4 series, not the masked H1 one. Signals therefore
+        change only where a Donchian window was contaminated — which is what
+        makes T9a's signal-set channel attributable to a named flag.
 
     Returns
     -------
@@ -137,10 +155,22 @@ def generate_signals(
     low = h1["low"]
 
     # ---- Donchian channels — PRIOR-bar values (shift(1) excludes current) ----
-    upper_entry = high.rolling(params.entry_len, min_periods=params.entry_len).max().shift(1)
-    lower_entry = low.rolling(params.entry_len, min_periods=params.entry_len).min().shift(1)
-    lower_exit = low.rolling(params.exit_len, min_periods=params.exit_len).min().shift(1)
-    lower_stop = low.rolling(params.stop_len, min_periods=params.stop_len).min().shift(1)
+    if mask is None:
+        upper_entry = high.rolling(params.entry_len, min_periods=params.entry_len).max().shift(1)
+        lower_entry = low.rolling(params.entry_len, min_periods=params.entry_len).min().shift(1)
+        lower_exit = low.rolling(params.exit_len, min_periods=params.exit_len).min().shift(1)
+        lower_stop = low.rolling(params.stop_len, min_periods=params.stop_len).min().shift(1)
+    else:
+        # R3: a Donchian channel is a WINDOW indicator, so a window spanning an
+        # untradable bar is contaminated and reports NaN rather than a level
+        # built partly out of prices nobody could have traded at. The shift(1)
+        # is applied after, exactly as above, so the only difference between
+        # the two branches is which windows survive.
+        _w = _WINDOW
+        upper_entry = masked_rolling(high, mask, params.entry_len, max, _w).shift(1)
+        lower_entry = masked_rolling(low, mask, params.entry_len, min, _w).shift(1)
+        lower_exit = masked_rolling(low, mask, params.exit_len, min, _w).shift(1)
+        lower_stop = masked_rolling(low, mask, params.stop_len, min, _w).shift(1)
 
     # ---- H4 EMA(200), merged onto H1 without look-ahead ----------------------
     htf_ema_h4 = h4["close"].ewm(span=params.htf_ema_len, adjust=False).mean()

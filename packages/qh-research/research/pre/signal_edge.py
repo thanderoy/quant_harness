@@ -611,6 +611,7 @@ def signal_edge_report(
     n_permutations: int = 1000,
     random_seed: int = 42,
     eligible_pool: pd.Series | np.ndarray | None = None,
+    atr: pd.Series | None = None,
 ) -> SignalEdgeReport:
     """Measure raw signal edge before any exit logic exists.
 
@@ -642,6 +643,15 @@ def signal_edge_report(
         null instead of inflating the entry's measured E-Ratio. The *actual*
         signals are never restricted by this — only the null they are tested
         against.
+    atr:
+        Optional pre-computed ATR aligned to ``ohlc.index``, used instead of
+        the Wilder ATR this function would compute from ``atr_period``. Exists
+        for one purpose: T9a's normaliser channel has to measure how much of a
+        mask-on E-Ratio change comes from the *normaliser* rather than from the
+        signal set, which means running the identical set of signals under two
+        different ATRs. Passing an ATR computed some other way is otherwise a
+        good way to make two reports incomparable, so the default stays the
+        computed one and ``metadata['atr_source']`` records which was used.
 
     Returns
     -------
@@ -667,7 +677,15 @@ def signal_edge_report(
     close = ohlc["close"].to_numpy(dtype=float)
     n = len(close)
 
-    atr_series = wilder_atr(ohlc["high"], ohlc["low"], ohlc["close"], atr_period)
+    if atr is None:
+        atr_series = wilder_atr(ohlc["high"], ohlc["low"], ohlc["close"],
+                               atr_period)
+    else:
+        atr_series = atr.reindex(ohlc.index)
+        if atr_series.isna().all():
+            raise ValueError(
+                "the supplied atr does not overlap ohlc.index — it must be "
+                "aligned to the same bars, not merely the same length")
     atr_arr = atr_series.to_numpy(dtype=float)
 
     # Bars whose ATR is finite and above the floor — the only bars on which an
@@ -721,6 +739,10 @@ def signal_edge_report(
         "ohlc_end": index[-1].isoformat() if n else None,
         "n_bars": n,
         "atr_period": atr_period,
+        # Which normaliser produced these E-Ratios. Two reports are only
+        # comparable when this agrees, and T9a's whole normaliser channel is
+        # the case where it deliberately does not.
+        "atr_source": "computed" if atr is None else "supplied",
         "forward_windows": forward_windows,
         "n_permutations": n_permutations,
         "random_seed": random_seed,
