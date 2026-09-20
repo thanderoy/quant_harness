@@ -20,13 +20,23 @@ sqrt(q)`` — the familiar formula, which is therefore the *special case*, not
 the rule. Under **positive** autocorrelation the denominator grows and
 ``eta(q) < sqrt(q)``, so the naive factor **overstates** the annualised Sharpe.
 
-Why that matters here rather than in general: a trend position held 50 bars
-contributes 50 bar-returns that are positively autocorrelated by construction —
-they are fifty slices of one directional move. At H1 the naive factor is
-``sqrt(6048)`` ~ 77.8. If the true factor is even 15% lower, every Sharpe fed
-to the gates is ~15% too high, and it is too high *before* DSR applies its
-haircut and before PBO ranks anything. A gate cannot correct for an inflated
-input it is never told about.
+How much it matters here was assumed and then measured, and the assumption
+was wrong. The intuition — that a position held 50 bars contributes 50
+positively autocorrelated bar returns, being fifty slices of one directional
+move — is false. The position's *sign* persists, but a bar return is position
+times price increment, and gold's H1 increments are near-white. Persistence of
+the decision does not confer serial correlation on the returns; only serially
+correlated increments would.
+
+Measured on crest_n_keel H1 momentum, 55,149 bar-level returns while in
+position across 2,497 trades (median hold 18 bars, p90 45): ``rho_1 =
+-0.0389`` — **negative** — and naive annualisation overstates by **1.09x**, not
+the 2-3x the intuition implied. So bar-level annualisation at H1 is modestly
+optimistic, not badly so, and the bar-level path is documented as inferior
+rather than refused.
+
+The correction still matters where increments genuinely are autocorrelated,
+and the machinery below measures which case you are in instead of assuming.
 
 **Nothing here changes an existing number by default.** `sharpe_ratio` keeps
 its IID behaviour unless asked, for the same reason the cost constants are not

@@ -263,3 +263,56 @@ def test_small_near_independent_samples_are_not_refused(n):
 
 def test_the_guard_can_be_switched_off_deliberately():
     assert lo_eta(_blocks(50), 6048, check_bandwidth=False) > 0
+
+
+# -- the measured claim -----------------------------------------------------
+
+def test_holding_a_position_does_not_make_bar_returns_autocorrelated():
+    """The intuition this module was written on, measured and refuted.
+
+    "A position held 50 bars contributes 50 positively autocorrelated bar
+    returns" is false. The position's sign persists; a bar return is position
+    times price increment, and gold's H1 increments are near-white. Only
+    serially correlated increments would confer it.
+
+    Measured on crest_n_keel H1 momentum: rho_1 is NEGATIVE and naive
+    annualisation overstates by about 1.09x, not the 2-3x the intuition
+    implied. That is why the bar-level path is documented as inferior rather
+    than refused by default — the magnitude did not justify refusing.
+
+    Pinned because it is the number a deprecation decision rests on.
+    """
+    import pandas as pd
+    from research.post.sweeps import cnk_engine as engine
+    from research.post.sweeps import run_cnk_sweep as sweep
+    from research.post.sweeps.data import load
+
+    df = load("H1")
+    bars = engine.Bars(df)
+    hma_v = engine.hma(bars.close, 55)
+    atr_v = engine.atr(bars.high, bars.low, bars.close, 14)
+    lo, sh = engine.momentum_signals(bars, hma_v)
+    sim = engine.simulate(
+        bars, "momentum", hma_v, atr_v, lo, sh, enable_long=True,
+        enable_short=False, sl_mult=0.0, tp_mult=0.0, trail_mult=3.0,
+        risk_pct=sweep.RISK_PCT, min_atr=0.0, max_dd_halt=1.0,
+        record_trades=True)
+
+    close = np.asarray(bars.close, dtype=float)
+    pos_of = {pd.Timestamp(t): i for i, t in enumerate(df.index)}
+    pos = np.zeros(len(close))
+    for r in sim["records"]:
+        a = pos_of[pd.Timestamp(r["entry_ts"])]
+        b = pos_of[pd.Timestamp(r["exit_ts"])]
+        pos[a:b] = 1.0 if r["direction"] == "long" else -1.0
+
+    bar_ret = np.zeros(len(close))
+    bar_ret[1:] = pos[:-1] * np.diff(close) / close[:-1]
+    held = bar_ret[pos != 0]
+
+    assert held.size > 10_000, "expected a large held-bar sample"
+    rho = autocorrelations(held, 10)
+    assert rho[0] < 0.05, (
+        f"rho_1 = {rho[0]:+.4f}. The documented claim is that holding does "
+        "not confer positive autocorrelation; a strongly positive value here "
+        "would overturn it and the bar-level deprecation decision with it.")

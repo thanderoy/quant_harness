@@ -50,6 +50,7 @@ import pandas as pd
 from research.metrics.core import sharpe_ratio, summarize
 from research.metrics.deflated import dsr_from_trials
 from research.metrics.pbo import pbo
+from research.metrics.returns import Returns
 from research.reports.scorecard import Result, Thresholds, evaluate
 
 __all__ = [
@@ -62,6 +63,16 @@ __all__ = [
 
 #: Default injected levels. 0.0 is the false-positive row and is not optional.
 DEFAULT_LEVELS = (0.0, 0.3, 0.5, 0.8, 1.2, 1.5)
+
+#: The dimensions that matter are this repo's, not the calibration demo's.
+#: The demo used 2,000 observations; the real walk-forward folds carry a
+#: median of 114 OOS trades (H1, 17 folds, range 102-133) and 101 at H4. Power
+#: at n=2,000 says nothing about power at n=114, and a floor measured at the
+#: wrong sample size is a floor for a harness nobody has.
+REALISTIC_N_OBS = 114
+REALISTIC_SPAN_DAYS = 365.25      # one fold's test window
+#: The honest floor from the research log. DSR's haircut scales with it.
+REALISTIC_N_TRIALS = 26
 
 #: Gate labels, matched against the prose `evaluate` emits. Kept as a mapping
 #: rather than parsed loosely so a reworded failure message shows up as an
@@ -97,6 +108,20 @@ class PowerPoint:
     n_passed: int
     gate_failures: Counter = field(default_factory=Counter)
     winner_was_alpha: int = 0
+    n_obs: int = REALISTIC_N_OBS
+
+    def gate_pass_rate(self, gate: str) -> float:
+        """Fraction of trials this gate did NOT reject.
+
+        Recorded per gate over *all* trials, not just failed ones, because
+        both extremes are actionable and neither is visible from the joint
+        verdict: a gate rejecting ~90% of genuine alpha is a revision
+        candidate, and one rejecting ~0% at every level is doing nothing and
+        is false comfort inside a six-way AND.
+        """
+        if not self.n_trials:
+            return float("nan")
+        return 1.0 - self.gate_failures.get(gate, 0) / self.n_trials
 
     @property
     def pass_rate(self) -> float:
@@ -173,10 +198,12 @@ def _panel(rng, target_sharpe: float, T: int, n: int, ppy: int,
     return pd.DataFrame(data, columns=[f"s_{i:02d}" for i in range(n)])
 
 
-def _score_one(M: pd.DataFrame, ppy: int, thresholds: Thresholds):
+def _score_one(M: pd.DataFrame, ppy: int, thresholds: Thresholds,
+               n_trials_dsr: int = REALISTIC_N_TRIALS):
     """Run the stack exactly as an evaluation would, and return its verdict."""
     pbo_res = pbo(M, S=16, periods_per_year=ppy)
-    dsr_res = dsr_from_trials(M, periods_per_year=ppy)
+    dsr_res = dsr_from_trials(M, periods_per_year=ppy,
+                              extra_trials=max(n_trials_dsr - M.shape[1], 0))
     winner = dsr_res["winner"]
 
     wr = M[winner]
@@ -200,11 +227,12 @@ def _score_one(M: pd.DataFrame, ppy: int, thresholds: Thresholds):
 def power_curve(levels: Sequence[float] = DEFAULT_LEVELS,
                 n_trials: int = 100,
                 n_strategies: int = 20,
-                T: int = 2000,
-                periods_per_year: int = 252,
+                T: int = REALISTIC_N_OBS,
+                periods_per_year: int = int(REALISTIC_N_OBS),
                 sigma: float = 0.01,
                 thresholds: Optional[Thresholds] = None,
                 thresholds_name: str = "research",
+                n_trials_dsr: int = REALISTIC_N_TRIALS,
                 seed: int = 0) -> PowerCurve:
     """Measure pass rate against injected Sharpe."""
     t = thresholds or Thresholds()
@@ -215,13 +243,14 @@ def power_curve(levels: Sequence[float] = DEFAULT_LEVELS,
 
     for level in levels:
         point = PowerPoint(injected_sharpe=float(level), n_trials=n_trials,
-                           n_passed=0)
+                           n_passed=0, n_obs=T)
         for trial in range(n_trials):
             rng = np.random.default_rng(
                 seed + trial * 1000 + int(level * 100))
             M = _panel(rng, level, T, n_strategies, periods_per_year, sigma,
                        alpha_idx)
-            report, winner = _score_one(M, periods_per_year, t)
+            report, winner = _score_one(M, periods_per_year, t,
+                                        n_trials_dsr=n_trials_dsr)
             if winner == f"s_{alpha_idx:02d}":
                 point.winner_was_alpha += 1
             if report.passed:
