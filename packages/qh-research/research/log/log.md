@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 101
+- **Entries:** 102
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (101 entries)
+- **Hash chain:** OK — chain ok (102 entries)
 
 ## Principles
 
@@ -1823,3 +1823,13 @@ crest_n_keel's verdict is untouched and is not reopened by reproducing it. This 
 Also fixed: the ported research.post.sweeps.data imported pytz for one exception class, undeclared anywhere, and pandas 3 no longer supplies it — the module could not be imported in this repo at all. pytz's own AmbiguousTimeError subclasses ValueError, which the handler already caught, so removing the import changes no behaviour.
 
 _hash_: `dab35c88b13deb65…` · _prev_: `46cff738150143fb…`
+
+### seq 101 · 2026-09-20T07:11:10Z · audit · `record:cost-input-provenance`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `account_entity`=PepperstoneKE-MT5-Live01, `commission_keyed_on`=account_currency, `commission_provenance_after`=BROKER_PUBLISHED, `commission_provenance_before`=HAND_ENTERED, `commission_usd_per_lot_rt`=7.0, `fx_applicability`=CORROBORATED, `metals_applicability`=CONTESTED, `resolver`=/api/v1/deals commission field (live, blocked), `slip_provenance`=HAND_ENTERED, `slip_ticks`=1.0, `source_entity`=Pepperstone Limited (08965105), `tests_passed_local`=506, `value_changed`=False
+
+> Research into the two HAND_ENTERED cost inputs feeding the REALISTIC fill label. COMMISSION VALUE: corroborated. Pepperstone's Costs and Charges document, table 'MetaTrader 5 Razor Commissions', gives USD 3.50 per 1 lot per side (USD 7 round turn) for a USD account, keyed on the ACCOUNT currency rather than the traded pair's base currency, so no per-symbol FX conversion applies. The cTrader schedule is different (7 units of the instrument's base currency, converted); carrying that across to MetaTrader would misprice every non-USD-base pair, and does not apply here. Provenance raised HAND_ENTERED -> BROKER_PUBLISHED for the FX majors. GOLD APPLICABILITY: contested, and left unresolved rather than guessed. Costs and Charges section 1.3 says commission is 'charged on all FX trades' and that on both MetaTrader and cTrader 'the commission on index, metal, cryptocurrency and soft commodity markets are reflected in the spread with no separate commission charge' — which would mean MT5 gold carries no separate commission and every backtest in this repo over-costs XAUUSD by $7.00/lot round turn. The Razor Gold product page says the opposite: spot gold on Razor is commission-based from $3.50 per lot per side. The constant is deliberately UNCHANGED at 7.0: both readings err the same way (if gold is commission-free, recorded results are under-stated, never flattered), and flipping it on one source would silently re-price every metric already in the log. ENTITY CAVEAT: the document is Pepperstone Limited (England & Wales, 08965105); the live account is PepperstoneKE-MT5-Live01, a different entity. This is published evidence for a sibling entity, not the account's own document. SLIP: unchanged and still the weakest input. Nothing measured it, and nothing published can — a schedule states a commission, but slip is a property of this account's latency to this broker and only a real fill measures it. It is now the ONLY cost input with no source. RESOLVER for all three open points: the commission field on a real deal via /api/v1/deals on the live terminal settles the entity question, the gold question and (with requested-vs-fill price) slip in one read. That read was attempted and refused as a production read; it needs the user's authorisation. Not a trial: this records provenance of an input, tests no hypothesis.
+
+_hash_: `cb5cc076f8c2fe20…` · _prev_: `dab35c88b13deb65…`

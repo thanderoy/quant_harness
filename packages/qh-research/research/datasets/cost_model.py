@@ -36,9 +36,68 @@ from typing import Optional
 
 
 # -- Constants from Pepperstone published docs -------------------------------
+#
+# Provenance, sourced 2026-09-20 (research log seq=101):
+#
+# The $7.00 VALUE is corroborated. Pepperstone's "Costs and Charges" document,
+# table "MetaTrader 5 Razor Commissions", lists USD 3.50 per 1 lot per side —
+# "USD 3.50 (USD 7 round turn)" — for a USD trading account. The table is keyed
+# on the ACCOUNT currency, not on the traded pair's base currency, so the figure
+# needs no per-symbol FX conversion. The cTrader schedule is different: there it
+# is "7 units in the base currency of the instrument traded and converted to
+# your trading account currency". That conversion does NOT apply to MetaTrader,
+# and carrying it across would misprice every non-USD-base pair.
+#
+# Its APPLICABILITY TO GOLD is contested, and this constant is the contested
+# case. Two Pepperstone sources disagree:
+#
+#   - Costs and Charges §1.3: commission "is charged on all FX trades", and
+#     "For both MetaTrader and cTrader platforms the commission on index,
+#     metal, cryptocurrency and soft commodity markets are reflected in the
+#     spread with no separate commission charge." Metals includes XAUUSD, so
+#     under this reading MT5 gold carries no separate commission and every
+#     backtest here over-costs gold by $7.00/lot round turn.
+#   - The "Razor Gold" product page: spot gold on a Razor account is
+#     commission-based, "from $3.50 per lot, per side" — i.e. this constant.
+#
+# The value is deliberately LEFT UNCHANGED at 7.0 pending resolution. Both
+# readings err the same way: if gold is in fact commission-free, recorded
+# results are under-stated, never flattered. Flipping it on one source would
+# silently re-price every metric already in the log.
+#
+# Two caveats the citation does NOT clear:
+#   1. The document is Pepperstone Limited (England & Wales, 08965105). The
+#      live account is PepperstoneKE-MT5-Live01, a different entity whose
+#      schedule may differ. This is BROKER_PUBLISHED evidence for a sibling
+#      entity, not the account's own document.
+#   2. Nothing here is MEASURED. The resolver for both the entity question and
+#      the gold question is the `commission` field on a real deal from
+#      /api/v1/deals on the live terminal, which settles it in one read.
+#
+# Swap rates below remain placeholders and are NOT covered by this citation.
 
 PEPPERSTONE_XAUUSD_CONTRACT_SIZE = 100.0       # oz per 1.0 lot
 PEPPERSTONE_XAUUSD_RAZOR_MT5_COMMISSION_PER_LOT_RT = 7.0   # USD round-turn
+
+#: The above as data, so a caller can assert on provenance rather than trust a
+#: comment to have been read. ``metals_applicability`` is the open question.
+COMMISSION_PROVENANCE = {
+    "value_usd_per_lot_round_turn": 7.0,
+    "provenance": "BROKER_PUBLISHED",
+    "source": ("Pepperstone Costs and Charges, table 'MetaTrader 5 Razor "
+               "Commissions': USD 3.50 (USD 7 round turn) per 1 lot"),
+    "source_entity": "Pepperstone Limited (England & Wales, 08965105)",
+    "account_entity": "PepperstoneKE-MT5-Live01",
+    "keyed_on": "account_currency",
+    "fx_applicability": "CORROBORATED",
+    "metals_applicability": "CONTESTED",
+    "contested_because": (
+        "Costs and Charges §1.3 puts metal commission in the spread with no "
+        "separate charge; the Razor Gold product page prices spot gold at "
+        "$3.50 per lot per side"),
+    "resolver": "commission field on a real deal via /api/v1/deals (live)",
+    "sourced_on": "2026-09-20",
+}
 
 # Spread defaults for backtesting. These are intentionally conservative
 # (slightly above the average you reported, 0.22 USD/oz) so backtests don't
