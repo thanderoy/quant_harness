@@ -72,7 +72,8 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 548 passed, 1 skipped
+# expected: 548 passed, 1 skipped — with the out-of-repo data present.
+# Without it (and on CI): 524 passed, 25 skipped. See the note below.
 
 # Calibration check (synthetic data)
 PYTHONPATH=packages/qh-resources:packages/qh-strategies:packages/qh-research \
