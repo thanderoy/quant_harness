@@ -28,6 +28,7 @@ import numpy as np
 import pytest
 
 from research.metrics.autocorr import (
+    BandwidthTooShort,
     autocorrelations,
     compare_annualisation,
     lo_eta,
@@ -115,7 +116,10 @@ def test_a_longer_lag_can_be_requested():
     """Lags past the truncation are treated as zero, so a caller who knows the
     holding period exceeds it must be able to widen the window."""
     x = ar1(0.3)
-    assert lo_eta(x, 252, max_lag=5) != lo_eta(x, 252, max_lag=100)
+    # check_bandwidth=False: this tests that max_lag reaches the estimator,
+    # not whether either lag is sufficient — the guard has its own tests.
+    assert (lo_eta(x, 252, max_lag=5, check_bandwidth=False)
+            != lo_eta(x, 252, max_lag=100, check_bandwidth=False))
 
 
 # -- autocorrelations themselves --------------------------------------------
@@ -175,3 +179,87 @@ def test_it_refuses_a_degenerate_series_rather_than_returning_nan():
 def test_q_must_be_positive():
     with pytest.raises(ValueError):
         lo_eta(iid(1000), 0)
+
+
+# -- the bandwidth guard ----------------------------------------------------
+#
+# Added after the power test (below) showed the estimator was accurate under
+# the null and badly wrong under exactly the dependence it exists for.
+
+def _blocks(hold: int, n: int = 200_000, seed: int = 3) -> np.ndarray:
+    """One decision driving `hold` consecutive bar returns — a held position."""
+    rng = np.random.default_rng(seed)
+    return (np.repeat(rng.normal(0, 1, n // hold + 1), hold)[:n]
+            + rng.normal(0, 0.3, n))
+
+
+def _analytic_eta(phi: float, q: int) -> float:
+    k = np.arange(1, q)
+    return q / math.sqrt(q + 2.0 * float(np.sum((q - k) * phi ** k)))
+
+
+@pytest.mark.parametrize("phi", [0.05, 0.10, 0.20])
+@pytest.mark.parametrize("q", [252, 6048])
+def test_eta_recovers_the_analytic_value_when_dependence_is_present(phi, q):
+    """The power test, as distinct from the size test above.
+
+    Recovering sqrt(q) on IID draws shows the estimator is unbiased under the
+    null. It says nothing about whether it recovers the *right* eta when
+    autocorrelation is actually there, which is the only case it exists for.
+    AR(1) has rho_k = phi^k, so the analytic answer is known.
+    """
+    est = lo_eta(ar1(phi), q)
+    assert est == pytest.approx(_analytic_eta(phi, q), rel=0.02)
+
+
+@pytest.mark.parametrize("hold", [50, 200])
+def test_a_held_position_is_refused_at_the_default_bandwidth(hold):
+    """The finding that made the guard necessary.
+
+    A position held 50 bars has dependence out to lag 50, while the
+    rule-of-thumb bandwidth at n=200,000 is 21. Measured against the true eta
+    the default was 55% too high at hold=50 and 208% at hold=200 — biased
+    toward *no* correction, which is the flattering direction and
+    indistinguishable from a correct small one. Silently returning that number
+    is worse than refusing.
+    """
+    with pytest.raises(BandwidthTooShort):
+        lo_eta(_blocks(hold), 6048)
+
+
+def test_a_held_position_is_refused_even_with_the_holding_period_declared():
+    """The finding, not a gap in the implementation.
+
+    At q=6048 Lo's sum needs autocorrelations out to thousands of lags,
+    weighted by up to 6048, and their sampling error accumulates faster than
+    the bias they remove — on a process whose real dependence stops at lag 50
+    the estimated omitted contribution *grows* from 1.7% at lag 150 to 35% at
+    lag 5000. Declaring the hold makes the refusal specific; it does not make
+    the number obtainable. The correct response is to change the input to
+    trade-level returns, not to widen the window.
+    """
+    with pytest.raises(BandwidthTooShort):
+        lo_eta(_blocks(50), 6048, holding_period=50)
+
+
+@pytest.mark.parametrize("n", [150, 500, 2500])
+def test_small_near_independent_samples_are_not_refused(n):
+    """The guard's own failure mode, pinned.
+
+    Its first version compared the omitted tail against a significance floor
+    and then against its raw magnitude. Both made it measure its own
+    estimation noise: at n=150 the tail autocorrelations have SE ~0.08, the
+    weighted sum of them looks large, and every near-independent trade-level
+    series was refused. A guard that refuses everything is not a guard.
+    """
+    rng = np.random.default_rng(11)
+    e = rng.normal(0, 1, n)
+    x = np.empty(n)
+    x[0] = e[0]
+    for i in range(1, n):
+        x[i] = 0.02 * x[i - 1] + e[i]
+    assert lo_eta(x, 116) == pytest.approx(math.sqrt(116), rel=0.10)
+
+
+def test_the_guard_can_be_switched_off_deliberately():
+    assert lo_eta(_blocks(50), 6048, check_bandwidth=False) > 0

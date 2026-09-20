@@ -34,6 +34,16 @@ silently re-priced: a metric that quietly changes meaning makes every recorded
 result incomparable with every new one. What this module adds is the ability to
 *measure* the inflation and to declare which annualisation produced a figure.
 
+**A limit worth stating plainly: at bar-level frequencies this correction is
+not estimable, and the module refuses rather than pretending.** Lo's sum at
+``q=6048`` needs autocorrelations out to thousands of lags, weighted by up to
+6048. Their sampling error accumulates faster than the bias they remove: on a
+held-position process whose real dependence stops at lag 50, the estimated
+omitted contribution *grows* from 1.7% at lag 150 to 35% at lag 5000, which is
+noise, not structure. No bandwidth choice fixes it, so widening the window is
+not offered as a remedy. A declared ``holding_period`` therefore makes the
+refusal specific rather than making the number available.
+
 The better fix, where it is available, is upstream: **trade-level returns are
 close to independent** — one return per position, not fifty slices of one — so
 feeding those sidesteps the correction rather than applying it. This module
@@ -55,6 +65,8 @@ __all__ = [
     "compare_annualisation",
     "lo_eta",
     "newey_west_lag",
+    "BandwidthTooShort",
+    "bandwidth_diagnostic",
 ]
 
 
@@ -93,7 +105,85 @@ def newey_west_lag(n: int) -> int:
     return max(1, int(math.floor(4.0 * (n / 100.0) ** (2.0 / 9.0))))
 
 
-def lo_eta(returns, q: int, max_lag: Optional[int] = None) -> float:
+class BandwidthTooShort(ValueError):
+    """The truncation is cutting through live dependence.
+
+    Raised rather than returned, because the number the estimator would have
+    produced is not merely imprecise — it is biased toward *no correction*,
+    which is the flattering direction and indistinguishable from a correct
+    small correction.
+    """
+
+
+def bandwidth_diagnostic(returns, lag: int, q: int,
+                         tolerance: float = 0.01,
+                         n_sigma: float = 3.0) -> dict:
+    """Is the truncation past the dependence, or through it?
+
+    Two things had to be got right here, and the first attempt got both wrong.
+
+    **The test is the omitted tail's contribution, not its significance.** At
+    n=200,000 the noise floor is 0.0045, so a residual rho of 0.010 counts as
+    "significant" while moving eta by well under a percent. Judging by
+    significance refuses adequate bandwidths, and a guard that cries wolf gets
+    switched off.
+
+    **And the contribution must be measured against sampling noise.** Summing
+    the tail directly makes the diagnostic measure its own estimation error:
+    under no dependence each sample rho has variance ~1/n, and the sum
+    ``2*sum_{k>lag}(q-k)*rho_k`` accumulates that noise with weights up to q.
+    At n=150 and q=116 it reports a large omitted mass on a near-independent
+    series, which is how the first version came to refuse everything it was
+    shown.
+
+    So the omitted mass is compared against its own standard error under the
+    null, and only counts when it clears ``n_sigma`` of it *and* moves eta by
+    more than ``tolerance``. Both conditions, because either alone
+    misfires: significance without magnitude refuses good bandwidths, and
+    magnitude without significance refuses small samples.
+    """
+    r = _clean(returns)
+    n = r.size
+    probe = min(max(int(lag * 4), lag + 50), n - 1)
+    if probe <= lag or n < 20:
+        return {"sufficient": True, "eta_shift": 0.0, "omitted_sigma": 0.0,
+                "probe_lag": int(probe)}
+
+    rho = autocorrelations(r, probe)
+    k = np.arange(1, rho.size + 1)
+    tail_k, tail_rho = k[lag:], rho[lag:]
+    if tail_k.size == 0:
+        return {"sufficient": True, "eta_shift": 0.0, "omitted_sigma": 0.0,
+                "probe_lag": int(probe)}
+
+    weights = (q - tail_k).astype(float)
+    omitted = 2.0 * float(np.sum(weights * tail_rho))
+    # Under the null rho_k ~ N(0, 1/n), independent across k.
+    se = 2.0 * math.sqrt(float(np.sum(weights ** 2)) / n)
+    sigmas = abs(omitted) / se if se > 0 else 0.0
+
+    kept_k, kept_rho = k[:lag], rho[:lag]
+    bart = 1.0 - kept_k / (lag + 1.0)
+    var_kept = q + 2.0 * float(np.sum(bart * (q - kept_k) * kept_rho))
+    var_all = var_kept + omitted
+    if var_kept <= 0 or var_all <= 0:
+        return {"sufficient": False, "eta_shift": float("inf"),
+                "omitted_sigma": float(sigmas), "probe_lag": int(probe),
+                "max_abs_rho_beyond": float(np.abs(tail_rho).max())}
+
+    shift = abs(math.sqrt(var_all / var_kept) - 1.0)
+    return {
+        "sufficient": bool(sigmas <= n_sigma or shift <= tolerance),
+        "eta_shift": float(shift),
+        "omitted_sigma": float(sigmas),
+        "max_abs_rho_beyond": float(np.abs(tail_rho).max()),
+        "probe_lag": int(probe),
+    }
+
+
+def lo_eta(returns, q: int, max_lag: Optional[int] = None,
+           holding_period: Optional[int] = None,
+           check_bandwidth: bool = True) -> float:
     """Lo's annualisation factor for aggregating ``q`` periods.
 
     Returns ``sqrt(q)`` when the returns are serially uncorrelated, less than
@@ -127,8 +217,28 @@ def lo_eta(returns, q: int, max_lag: Optional[int] = None) -> float:
     r = _clean(returns)
     if r.size < 2:
         return math.sqrt(q)
-    lag = max_lag if max_lag is not None else newey_west_lag(r.size)
-    lag = min(lag, q - 1, r.size - 1)
+    if max_lag is not None:
+        lag = min(max_lag, q - 1, r.size - 1)
+    elif holding_period is not None:
+        # The hold sets the bandwidth, but see the module docstring: at
+        # bar-level q this does not rescue the estimate, it only makes the
+        # refusal informative.
+        lag = min(3 * int(holding_period), q - 1, r.size - 1)
+    else:
+        lag = min(newey_west_lag(r.size), q - 1, r.size - 1)
+
+    if check_bandwidth:
+        diag = bandwidth_diagnostic(r, lag, q)
+        if not diag["sufficient"]:
+            raise BandwidthTooShort(
+                f"truncating at lag {lag} omits enough dependence to move eta "
+                f"by {diag['eta_shift']:.1%} (max |rho| beyond it "
+                f"{diag['max_abs_rho_beyond']:.3f}). "
+                "The truncation is cutting through live dependence, so eta "
+                "would be biased toward no correction — the flattering "
+                "direction. Pass holding_period=<bars a position is held> or "
+                "an explicit max_lag past the dependence, or "
+                "check_bandwidth=False to accept the bias deliberately.")
     rho = autocorrelations(r, lag)
     if rho.size == 0:
         return math.sqrt(q)
