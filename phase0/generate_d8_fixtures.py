@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -111,12 +112,70 @@ def describe_gaps(idx: pd.DatetimeIndex) -> dict:
     }
 
 
+def _wma_exact(series: pd.Series, period: int) -> pd.Series:
+    """WMA reduced with ``math.fsum`` instead of WMPS's ``np.dot``.
+
+    The one place this generator deliberately departs from WMPS, added
+    2026-09-20 (research log seq=102). WMPS reduces the window with
+    ``np.dot``, which dispatches to BLAS, so the summation order — and the
+    last bit — belongs to the kernel chosen for the running CPU and to the
+    numpy build, not to the source.
+
+    That was treated as a machine-portability problem until this generator was
+    re-run on the machine that produced the original fixture, against
+    byte-identical WMPS sources (all three sha256 matching the manifest) and
+    byte-identical input: ``wma_20``, ``wma_55``, ``hma_21`` and ``hma_55``
+    came back up to 5 ULP different, and ``wma_9`` — the column seq=98
+    recorded as the CI-breaking one — came back exact. A reference that does
+    not reproduce on its own machine is pinning a toolchain, not arithmetic.
+
+    ``math.fsum`` is correctly rounded, so these columns are now fixed by
+    IEEE-754 and reproduce on any conforming platform. The values sit 2-4 ULP
+    from WMPS's ``np.dot`` and are the more accurate of the two; the manifest
+    records the measured distance, so the deviation is auditable rather than
+    silent. WMPS itself is unchanged — it is frozen under spec 1.3.
+    """
+    weights = np.arange(1, period + 1, dtype=float)
+    weight_sum = float(weights.sum())
+    return series.rolling(period).apply(
+        lambda x: math.fsum(x * weights) / weight_sum, raw=True)
+
+
+def _hma_exact(series: pd.Series, period: int) -> pd.Series:
+    """HMA over :func:`_wma_exact`, mirroring WMPS's composition exactly."""
+    half, sqrt_p = period // 2, round(math.sqrt(period))
+    diff = 2.0 * _wma_exact(series, half) - _wma_exact(series, period)
+    return _wma_exact(diff, sqrt_p)
+
+
+def dot_product_deviation(df: pd.DataFrame) -> dict:
+    """ULP distance from WMPS's own ``np.dot`` output, measured at generation.
+
+    Recorded in the manifest so the deviation introduced by ``_wma_exact`` is
+    a stated, measured number rather than a claim in a docstring.
+    """
+    out: dict[str, float] = {}
+    for p in WMA_PERIODS:
+        a = _wma_exact(df["close"], p).to_numpy()
+        b = wma(df["close"], p).to_numpy()
+        m = ~np.isnan(a)
+        out[f"wma_{p}"] = float(
+            (np.abs(a[m] - b[m]) / np.spacing(np.abs(b[m]))).max())
+    for p in HMA_PERIODS:
+        a = _hma_exact(df["close"], p).to_numpy()
+        b = hma(df["close"], p).to_numpy()
+        m = ~np.isnan(a)
+        out[f"hma_{p}"] = float(
+            (np.abs(a[m] - b[m]) / np.spacing(np.abs(b[m]))).max())
+    return out
+
+
 def gen_indicators(df: pd.DataFrame) -> dict:
     cols: dict[str, pd.Series] = {}
     for p in WMA_PERIODS:
-        cols[f"wma_{p}"] = wma(df["close"], p)
+        cols[f"wma_{p}"] = _wma_exact(df["close"], p)
     for p in HMA_PERIODS:
-        cols[f"hma_{p}"] = hma(df["close"], p)
+        cols[f"hma_{p}"] = _hma_exact(df["close"], p)
     k_p, d_p, s_k = STOCH_PARAMS
     k, d = stochastic(df["high"], df["low"], df["close"], k_p, d_p, s_k)
     cols[f"stoch_k_{k_p}_{d_p}_{s_k}"] = k
@@ -242,6 +301,7 @@ def main() -> None:
     sample_out.to_csv(OUT / "sample_xauusd_h1.csv")
 
     ind = gen_indicators(sample)
+    deviation = dot_product_deviation(sample)
     ind["frame"].to_csv(OUT / "indicators.csv")
 
     sizer_df = gen_sizer_grid()
@@ -288,6 +348,18 @@ def main() -> None:
                              "d_period": STOCH_PARAMS[1],
                              "smooth_k": STOCH_PARAMS[2]},
             "atr_period": ATR_PERIOD,
+            "reduction": "math.fsum (correctly rounded)",
+            "reduction_note": (
+                "wma/hma are reduced with math.fsum, not WMPS's np.dot. "
+                "np.dot dispatches to BLAS, so its summation order comes "
+                "from the CPU kernel and numpy build; re-running this "
+                "generator on the SAME machine against byte-identical "
+                "sources reproduced four of the five columns only to 5 ULP. "
+                "fsum is correctly rounded, so these columns are fixed by "
+                "IEEE-754 and reproduce anywhere. See seq=102."),
+            "deviates_from_wmps": True,
+            "deviation_ulp_vs_wmps_np_dot": deviation,
+            "exactly_reproducible_columns": "all",
         },
         "sizer_grid": {
             "n_rows": int(len(sizer_df)),

@@ -32,8 +32,16 @@ class SlipModel:
     honest provenance. Nothing in this repo has measured the latency between
     a Celery beat tick firing and a Pepperstone fill, so one tick is a
     stated guess, and it is stamped as one so that a ``REALISTIC`` result
-    cannot be read as if the slip were sourced. It is the same status as the
-    $7.00/lot commission, and it should be measured for the same reason.
+    cannot be read as if the slip were sourced.
+
+    It used to share that status with the $7.00/lot commission. It no longer
+    does: at seq=101 the commission value was sourced to Pepperstone's own
+    MT5 Razor schedule and raised to ``BROKER_PUBLISHED``, leaving slip the
+    last cost input with no source at all. Slip is also the harder of the
+    two, because no published document can supply it — a schedule states a
+    commission, but slip is a property of this account's latency to this
+    broker, and only a real fill measures it. Until one does, a ``REALISTIC``
+    fill is sourced on its spread and its commission, and guessed on its slip.
     """
 
     ticks: float = 1.0
