@@ -78,7 +78,8 @@ class _TrivialStrategy(Strategy):
 class TestCostModelMechanics(unittest.TestCase):
 
     def setUp(self):
-        self.cost = PepperstoneXAUUSDCostModel()
+        # Mechanics need a non-zero schedule; the measured one is 0.00.
+        self.cost = PepperstoneXAUUSDCostModel.for_scenario("conservative")
 
     def test_commission_callable_per_oz(self):
         fn = _commission_callable(self.cost)
@@ -222,7 +223,7 @@ class TestPipelineFlow(unittest.TestCase):
 
         # With non-zero commission, at least some trades should have it.
         r_real = run_backtest(self.bars_3y, _TrivialStrategy, cash=10_000,
-                              cost_model=PepperstoneXAUUSDCostModel())
+                              cost_model=PepperstoneXAUUSDCostModel.for_scenario("conservative"))
         if not r_real.trades.empty:
             self.assertTrue((r_real.trades["Commission"] > 0).any())
 

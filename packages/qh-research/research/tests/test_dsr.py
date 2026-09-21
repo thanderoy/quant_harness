@@ -5,6 +5,8 @@ from __future__ import annotations
 import math
 
 import numpy as np
+
+from research.metrics.returns import Returns
 import pytest
 
 from research import log as research_log
@@ -18,12 +20,13 @@ from research.post.dsr import (
 
 
 def _returns_with_exact_sharpe(n: int, sr_per_obs: float, seed: int = 0,
-                               std: float = 0.01) -> np.ndarray:
+                               std: float = 0.01) -> "Returns":
     """Construct near-normal returns with an exact per-observation Sharpe."""
     rng = np.random.default_rng(seed)
     x = rng.standard_normal(n)
     x = (x - x.mean()) / x.std(ddof=1)        # mean 0, std 1 exactly
-    return x * std + sr_per_obs * std         # std=std, mean=SR*std → SR exact
+    # std=std, mean=SR*std -> the per-observation Sharpe is exact.
+    return Returns.from_bars(x * std + sr_per_obs * std, "D1")
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +172,10 @@ def test_n_trials_defaults_to_log(tmp_path):
 def test_rejects_annualised_input_leak():
     # Tiny noise around a large mean → per-obs SR ≫ 1.0 → clearly annualised.
     rng = np.random.default_rng(5)
-    bad = rng.standard_normal(500) * 0.001 + 0.5    # SR ≈ 500
+    bad = Returns.from_bars(
+        rng.standard_normal(500) * 0.001 + 0.5, "D1")    # SR ≈ 500
+    # The frequency is supplied, so the annualised-leak guard is the thing
+    # under test rather than the missing-frequency error in front of it.
     with pytest.raises(ValueError, match="annualised"):
         deflated_sharpe_ratio(bad, benchmark_sharpe=0.0, n_trials=10)
 

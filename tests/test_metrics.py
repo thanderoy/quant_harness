@@ -137,7 +137,7 @@ class TestPBO(unittest.TestCase):
     def test_pbo_combinations_count(self):
         rng = np.random.default_rng(0)
         M = pd.DataFrame(rng.normal(0, 0.01, size=(800, 5)))
-        out = pbo(M, S=16)
+        out = pbo(M, S=16, periods_per_year=252)
         # C(16, 8) = 12,870
         self.assertEqual(out["n_combinations"], 12870)
 

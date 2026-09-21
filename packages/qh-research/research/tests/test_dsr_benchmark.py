@@ -16,6 +16,8 @@ import math
 from pathlib import Path
 
 import numpy as np
+
+from research.metrics.returns import Returns
 import pytest
 
 from research import log as research_log
@@ -41,7 +43,10 @@ REPO = Path(__file__).resolve().parents[4]
 
 
 def _returns(mu=0.0008, sd=0.01, n=2000, seed=0):
-    return np.random.default_rng(seed).normal(mu, sd, n)
+    # Returns carry their own frequency, so no call site below has
+    # to name one — which is the point of the type.
+    return Returns.from_bars(
+        np.random.default_rng(seed).normal(mu, sd, n), "D1")
 
 
 def test_benchmark_sharpe_has_no_default():
@@ -120,8 +125,8 @@ def test_benchmark_from_d5_reads_and_converts(tmp_path):
         {"symbol": "XAUUSD", "buy_and_hold_sharpe_annualised": 0.6343},
         {"symbol": "EURUSD", "buy_and_hold_sharpe_annualised": -0.1571},
     ]}}))
-    assert benchmark_from_d5("XAUUSD", art) == pytest.approx(XAUUSD_BH_PER_OBS)
-    assert benchmark_from_d5("EURUSD", art) < 0
+    assert benchmark_from_d5("XAUUSD", art, periods_per_year=252) == pytest.approx(XAUUSD_BH_PER_OBS)
+    assert benchmark_from_d5("EURUSD", art, periods_per_year=252) < 0
 
 
 def test_benchmark_from_d5_names_what_it_has(tmp_path):
@@ -129,15 +134,15 @@ def test_benchmark_from_d5_names_what_it_has(tmp_path):
     art.write_text(json.dumps({"d5_benchmark_sharpe": {"per_instrument": [
         {"symbol": "XAUUSD", "buy_and_hold_sharpe_annualised": 0.6343}]}}))
     with pytest.raises(KeyError, match="XAUUSD"):
-        benchmark_from_d5("BTCUSD", art)
+        benchmark_from_d5("BTCUSD", art, periods_per_year=252)
 
 
 def test_the_real_d5_artifact_still_parses():
     """The conversion path works against the committed Phase 0 artifact."""
     art = sorted(REPO.glob("phase0/phase0_universe_*.json"))[-1]
-    got = benchmark_from_d5("XAUUSD", art)
+    got = benchmark_from_d5("XAUUSD", art, periods_per_year=252)
     assert got == pytest.approx(XAUUSD_BH_PER_OBS, abs=1e-4)
-    assert benchmark_from_d5("EURUSD", art) < 0
+    assert benchmark_from_d5("EURUSD", art, periods_per_year=252) < 0
 
 
 def test_psr_vs_zero_is_still_measured_against_zero():

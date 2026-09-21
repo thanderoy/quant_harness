@@ -62,6 +62,7 @@ All ten hold. The three that took the most work:
 | Commission: zero it, and with which spread? | **Measured at 0.00 on all 358 live deals** — the account is not on the Razor schedule (seq=105). The $7.00 constant is a known over-cost, left in place because zeroing it flatters every recorded metric and because the measured spread (0.17 USD/oz) differs from the model's assumed 0.22. The two must move together. |
 | Slip is `HAND_ENTERED` at 1 tick | The only cost input with no source at all, and no document can supply it — only a real fill measures it. |
 | Branch protection | CI runs again; making it required to merge is a repo setting. |
+| O1 timeframe ruling — confirm | **Closed 2026-09-20 as H1** (seq=106), six days past its pinned veto date. Both legs are now measured: H4 is 2.06x cheaper on cost-to-ATR, but zero instruments are tradable there at $100 against three at H1. Flips to H4 above ~$1,100 of capital. The spec says O1 is brought back with the numbers attached, so this wants your confirmation rather than mine. |
 | Workstation disk | 92% used, ~9 GB free. A nine-symbol panel run will not like it. |
 
 ### Known and carried

@@ -24,6 +24,8 @@ References
 from __future__ import annotations
 
 import numpy as np
+
+from research.metrics.returns import resolve_periods_per_year
 import pandas as pd
 
 
@@ -43,14 +45,16 @@ def equity_curve(returns, initial: float = 1.0) -> pd.Series:
     return pd.Series(initial * np.cumprod(1.0 + r))
 
 
-def sharpe_ratio(returns, periods_per_year: int, rf: float = 0.0) -> float:
+def sharpe_ratio(returns, periods_per_year: 'int | float | None' = None, rf: float = 0.0) -> float:
     """Annualised Sharpe ratio.
 
     SR = (mean(r) - rf_per_period) / std(r) * sqrt(periods_per_year)
 
     Returns NaN if std == 0, T < 2, or non-finite.
     """
-    r = _to_array(returns)
+    r, periods_per_year = resolve_periods_per_year(
+        returns, periods_per_year, caller="sharpe_ratio")
+    r = _to_array(r)
     if r.size < 2:
         return float("nan")
     rf_per = rf / periods_per_year
@@ -61,13 +65,15 @@ def sharpe_ratio(returns, periods_per_year: int, rf: float = 0.0) -> float:
     return float(excess.mean() / sd * np.sqrt(periods_per_year))
 
 
-def sortino_ratio(returns, periods_per_year: int,
+def sortino_ratio(returns, periods_per_year: 'int | float | None' = None,
                   rf: float = 0.0, mar: float = 0.0) -> float:
     """Annualised Sortino — downside-deviation-based Sharpe analogue.
 
     Uses Minimum Acceptable Return `mar` (annualised) as the threshold;
     default 0 (penalise only outright losses, not relative underperformance).
     """
+    returns, periods_per_year = resolve_periods_per_year(
+        returns, periods_per_year, caller="sortino_ratio")
     r = _to_array(returns)
     if r.size < 2:
         return float("nan")
@@ -94,8 +100,10 @@ def max_drawdown(returns) -> float:
     return float(-dd.min())
 
 
-def cagr(returns, periods_per_year: int) -> float:
+def cagr(returns, periods_per_year: 'int | float | None' = None) -> float:
     """Compound annual growth rate from a returns stream."""
+    returns, periods_per_year = resolve_periods_per_year(
+        returns, periods_per_year, caller="cagr")
     r = _to_array(returns)
     if r.size == 0:
         return float("nan")
@@ -108,8 +116,10 @@ def cagr(returns, periods_per_year: int) -> float:
     return float(final ** (1.0 / years) - 1.0)
 
 
-def calmar_ratio(returns, periods_per_year: int) -> float:
+def calmar_ratio(returns, periods_per_year: 'int | float | None' = None) -> float:
     """CAGR / |max drawdown|. NaN if either undefined."""
+    returns, periods_per_year = resolve_periods_per_year(
+        returns, periods_per_year, caller="calmar_ratio")
     c = cagr(returns, periods_per_year)
     mdd = max_drawdown(returns)
     if mdd == 0 or not np.isfinite(mdd) or not np.isfinite(c):
@@ -168,11 +178,13 @@ def sharpe_std_error(sharpe: float, T: int,
     return float(np.sqrt(var))
 
 
-def summarize(returns, periods_per_year: int) -> dict:
+def summarize(returns, periods_per_year: 'int | float | None' = None) -> dict:
     """One-shot dict of every standard metric.
 
     Useful for serialising into a strategy-research log.
     """
+    returns, periods_per_year = resolve_periods_per_year(
+        returns, periods_per_year, caller="summarize")
     r = _to_array(returns)
     return {
         "n_periods": int(r.size),
