@@ -72,8 +72,8 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 625 passed, 1 skipped — with the out-of-repo data present.
-# Without it (and on CI): 601 passed, 25 skipped. See the note below.
+# expected: 638 passed, 1 skipped — with the out-of-repo data present.
+# Without it (and on CI): 614 passed, 25 skipped. See the note below.
 
 # Calibration check (synthetic data)
 PYTHONPATH=packages/qh-resources:packages/qh-strategies:packages/qh-research \
@@ -92,8 +92,13 @@ Two things worth knowing before the commands surprise you:
   'research'` without the prefix above.
 - **The skip count depends on data you may not have.** Some parity checks read
   OHLC CSVs and a WMPS checkout that live outside this repo; without them the
-  run is 601 passed, 25 skipped, which is what CI sees. `CI_LIMITED` in
-  `tests/test_x_coverage.py` names every such case and why.
+  run is 614 passed, 25 skipped, which is what CI sees on `develop`.
+  `CI_LIMITED` in `tests/test_x_coverage.py` names every such case and why.
+  One further test compares `entries.jsonl` against `origin/develop` and
+  skips when there is nothing to compare, so a branch that appends to the
+  research log reports 615 / 24 instead. All three counts are correct; they
+  are answers to different questions: there are 639 tests, and the two
+  conditions skip 24 and 1 of them respectively.
 
 > Until 2026-09-20 this section said `pip install -r requirements.txt`,
 > `python -m unittest discover tests -v` and "Ran 53 tests — OK". Following it

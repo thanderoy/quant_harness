@@ -305,10 +305,42 @@ def _payload_to_entry(payload: dict) -> LogEntry:
     return LogEntry(**p)
 
 
+def _stringify_keys(value):
+    """Coerce every mapping key to ``str``, recursively.
+
+    ``json.dumps`` converts non-string keys to strings on the way out, so an
+    entry written with ``{20: ...}`` is read back as ``{"20": ...}``. With
+    ``sort_keys=True`` those two order differently — ints sort numerically
+    (20, 50, 100) and their string forms lexicographically ("100", "20",
+    "50") — so the canonical form of an entry changed between writing it and
+    reading it back, and ``verify()`` reported "contents tampered" on an
+    entry nobody had touched.
+
+    Found when the first caller passed horizon-keyed metrics. Two horizons
+    (20, 50) hash identically either way; it takes a third that reorders
+    under string sort to expose it, which is why this survived 108 entries.
+
+    Normalising here rather than at each call site keeps the chain's
+    integrity independent of what callers happen to pass. Entries whose keys
+    were already strings — every existing entry — hash exactly as before, so
+    this is not a chain migration.
+    """
+    if isinstance(value, dict):
+        return {str(k): _stringify_keys(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_stringify_keys(v) for v in value]
+    return value
+
+
 def _canonical(payload: dict) -> str:
-    """Canonical JSON for hashing — excludes entry_hash, sorts keys, no spaces."""
+    """Canonical JSON for hashing — excludes entry_hash, sorts keys, no spaces.
+
+    Keys are stringified first so the form is stable across the JSONL
+    round-trip; see :func:`_stringify_keys`.
+    """
     without_hash = {k: v for k, v in payload.items() if k != "entry_hash"}
-    return json.dumps(without_hash, sort_keys=True, separators=(",", ":"))
+    return json.dumps(_stringify_keys(without_hash), sort_keys=True,
+                      separators=(",", ":"))
 
 
 def _hash(payload: dict) -> str:

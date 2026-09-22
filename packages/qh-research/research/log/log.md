@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 108
+- **Entries:** 109
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (108 entries)
+- **Hash chain:** OK — chain ok (109 entries)
 
 ## Principles
 
@@ -1893,3 +1893,13 @@ _Metrics_: `binding_gate_low_sr`=dsr, `conclusion`=information, not breadth, `de
 > After five consecutive falsifications the joint false-negative rate of six AND-ed gates had never been measured, so 'the mechanism failed' and 'the stack rejects nearly everything' produced identical evidence. Measured now by injecting alpha at known annualised Sharpe among 19 noise strategies and running the full stack. UNIT. First run used n=114, one fold's OOS trades, and returned a 0% pass rate at every level including 1.5. That was the WRONG UNIT and the result was an artifact: MinTRL puts the minimum decidable annualised Sharpe at n=114 at 1.66, so the entire curve ran below the theoretical floor and the gates were correctly refusing an undecidable sample. The recorded verdicts were never taken there — crest_n_keel's DSR used 2,141 pooled trades and asqs 1,147. Re-run at n=2,000 pooled, which is the unit that applies. RESULT at n=2,000, 26 trials, research thresholds: pass rate 0% at SR 0.0/0.3/0.5, 15% at 0.8, 75% at 1.2, 70% at 1.5. DETECTION FLOOR = 1.2 annualised. False-positive rate 0% — no noise passes. So the harness can pass things; it is not tuned to a rejection rate of one. R8 FIRES. The pre-registered reading was that a floor above ~0.6 per instrument means breadth is not the missing ingredient, information is. The floor is 1.2, twice that. Mechanisms in this repo were measured at OOS Sharpe 0.27-0.41 (crest_n_keel walk-forward), well under the floor, so the falsifications CANNOT distinguish 'no edge' from 'a real edge below 1.2'. Adding instruments does not move a detection floor. PER-GATE. n_trades is inert — 100% pass at every level, since 2,000 observations always clears 30 or 100. profit_factor is the opposite of inert and was misjudged at n=114: it rejects ~100% up to SR 0.5 and passes 100% at 1.2+, making it a strong discriminator. DSR binds at the low end (0% pass to SR 0.5) and relaxes properly (95% at 1.5). max_dd rejects 35% at low SR and nothing at high. EXCHANGE RATE. Tightening PBO 0.5->0.3 and OOS trades 30->100 changed the joint pass rate at NO level and left the floor at 1.2. PBO's own pass rate falls (50%->10% at SR 0.0) but PBO was never binding, so the tightening costs zero detection power here. What it gains is not measured by this test, which only shows it is free. LIMITS. 20 trials per point gives about 10 percentage points of standard error on a pass rate, which is why 1.5 (70%) reads below 1.2 (75%); that inversion is noise, not structure. Returns are synthetic i.i.d. normal, so this measures the gates' response to a clean signal and is an upper bound on power against real returns. Not a trial: measuring the instrument, not testing a hypothesis.
 
 _hash_: `1d7327fbbe1da7a9…` · _prev_: `8e336b78999449f4…`
+
+### seq 108 · 2026-09-22T11:35:04Z · audit · `record:o1-timeframe-ruling`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `confirmed_by`=user, `confirmed_on`=2026-09-22, `declared_prior`=H4, `flip_threshold_accepted`=True, `flip_threshold_usd`=1100, `prior_overturned_by`=data, `reopens_if`=account capital >= ~1100 USD, `ruling`=H1, `supersedes_seq`=106
+
+> O1 (REWRITE.md section 10.2) was closed at seq=106 as H1 and brought back with both legs measured, per the spec's requirement that it return with the numbers attached rather than be settled by the analyst. The user confirmed it on 2026-09-22, explicitly accepting the ~$1,100 capital level at which the ruling flips to H4. That threshold is therefore a live, pre-registered trigger rather than an aside: if account capital crosses it, the timeframe decision reopens on its own terms and does not need re-arguing. The declared prior in the spec was H4; it was overturned by data (zero tradable instruments at $100 against three at H1), which is the only thing the spec allowed to overturn it. O1 is now closed; no Phase 2 work is blocked on it.
+
+_hash_: `45b550cda872646a…` · _prev_: `1d7327fbbe1da7a9…`
