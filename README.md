@@ -67,13 +67,13 @@ importable with no network and no Django settings.
 ## Quick start
 
 ```bash
-# Setup — uv manages the environment and the four workspace packages
+# Setup — uv manages the environment and the three built packages
 uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 548 passed, 1 skipped — with the out-of-repo data present.
-# Without it (and on CI): 524 passed, 25 skipped. See the note below.
+# expected: 625 passed, 1 skipped — with the out-of-repo data present.
+# Without it (and on CI): 601 passed, 25 skipped. See the note below.
 
 # Calibration check (synthetic data)
 PYTHONPATH=packages/qh-resources:packages/qh-strategies:packages/qh-research \
@@ -86,13 +86,13 @@ is trustworthy on your machine.
 
 Two things worth knowing before the commands surprise you:
 
-- **`PYTHONPATH` is needed outside pytest.** The four package paths are set in
+- **`PYTHONPATH` is needed outside pytest.** Four paths are set in
   `[tool.pytest.ini_options] pythonpath`, so pytest finds them and nothing else
   does — `examples/` fails with `ModuleNotFoundError: No module named
   'research'` without the prefix above.
 - **The skip count depends on data you may not have.** Some parity checks read
   OHLC CSVs and a WMPS checkout that live outside this repo; without them the
-  run is 524 passed, 25 skipped, which is what CI sees. `CI_LIMITED` in
+  run is 601 passed, 25 skipped, which is what CI sees. `CI_LIMITED` in
   `tests/test_x_coverage.py` names every such case and why.
 
 > Until 2026-09-20 this section said `pip install -r requirements.txt`,
