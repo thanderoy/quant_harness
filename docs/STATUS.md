@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-09-22 — Phase 1 complete; gate power measured, and R8 fires.
+**Last updated:** 2026-09-22 — Phase 1 complete; gate power measured and R8 fires; O1 confirmed as H1.
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -29,10 +29,10 @@ the next reader can check rather than trust.
 
 | Metric | Value | How it was measured |
 |---|---|---|
-| Tests passing | **601 passed, 25 skipped** on CI; 625 passed, 1 skipped locally with the out-of-repo data present | CI run 35580705744 on `develop` — a bare `uv run pytest -q -rs` on a runner that has neither the OHLC CSVs nor a WMPS checkout at the paths the seq=31 artifact records. The 625 is the same command where those paths do resolve; `QH_PARITY_DATA_DIR=/nonexistent QH_WMPS_DIR=/nonexistent` reproduces the CI figure locally. |
+| Tests passing | **601 passed, 25 skipped** on CI for `develop`; 602 / 24 on a branch that appends to the research log; 625 / 1 locally with the out-of-repo data present | CI run 35580705744 on `develop` — a bare `uv run pytest -q -rs` on a runner that has neither the OHLC CSVs nor a WMPS checkout at the paths the seq=31 artifact records. The 625 is the same command where those paths do resolve; `QH_PARITY_DATA_DIR=/nonexistent QH_WMPS_DIR=/nonexistent` reproduces the CI figure locally. The 602 is the third condition: `test_no_pre_existing_entry_was_rewritten` diffs `entries.jsonl` against `origin/develop` and skips when there is nothing to compare, so any branch that appends to the log runs one test more than `develop` does. |
 | Packages | 3 built — `qh-resources`, `qh-strategies`, `qh-research`. `qh-platform` is in the spec and the pytest path list but does not exist yet | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; 3 CI-limited and declared (X15a, X17, X22) | `tests/test_x_coverage.py` |
-| Research log | 108 entries (to seq=107), chain verified; `trial_count()` = 26 | `research.log.verify()` |
+| Research log | 109 entries (to seq=108), chain verified; `trial_count()` = 26 | `research.log.verify()` |
 | Instruments | 9 — 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching | `snapshots/pepperstone_live_20260906.json` |
 | Gate detection floor | **1.2 annualised Sharpe**, false-positive rate 0% at n=2,000 pooled | seq=107, `research/reports/power.py` |
 
@@ -44,7 +44,7 @@ the next reader can check rather than trust.
 |---|---|---|
 | 0 | Diagnostic — D1-D9, no code changes | ✅ done (`docs/phase0_memo.md`) |
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
-| 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ⏭ next; `panel_edge.py` written, unrun |
+| 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ⏭ next, **at H1** (O1 confirmed, seq=108); `panel_edge.py` written, unrun |
 | 2b | Universe expansion — non-USD crosses, metals, indices | ⚠ its rationale is now contested — see below |
 | 3+ | Execution merge, live path | ⏭ not entered until a mechanism survives 2b |
 
@@ -92,7 +92,6 @@ Three consequences worth carrying:
 
 | Item | Why it is blocked |
 |---|---|
-| O1 timeframe ruling — confirm | **Closed 2026-09-20 as H1** (seq=106), six days past its pinned veto date. Both legs are measured: H4 is 2.06x cheaper on cost-to-ATR, but zero instruments are tradable there at $100 against three at H1. Flips to H4 above ~$1,100 of capital. The spec says O1 comes back with the numbers attached, so this wants your confirmation rather than mine. |
 | Phase 2b's rationale, after R8 | R5 requires 2b to complete before any new mechanism is pre-registered, because "a discovery claim does need breadth". seq=107 measures the missing ingredient as information rather than breadth. Both can't be the governing reason; which one holds is a spec decision. |
 | Branch protection | CI runs again; making it required to merge is a repo setting only you can change. |
 | Slip is `HAND_ENTERED` at 1 tick | The only cost input with no source at all, and no document can supply it — only a real fill measures it. The 358 deals carry the fill price but not the requested price, so they cannot close this. |
@@ -102,6 +101,7 @@ Three consequences worth carrying:
 | Item | Outcome |
 |---|---|
 | Commission: zero it, and with which spread? | **Closed.** Measured at 0.00 across all 358 live deals (seq=105) — the account is Standard, not Razor, which made the gold dispute moot rather than settled. `cost_model.py` now defaults to `MEASURED` (commission 0.00, spread 0.17) with `CONSERVATIVE` (7.00, 0.22) as a declared scenario, and every `CostBreakdown` stamps which one produced it. The two moved together, as required. |
+| O1 timeframe ruling | **Confirmed by the user 2026-09-22** (seq=108). H1 for the first panel run; the spec's declared prior was H4 and was overturned by data, which is the only thing it allowed. The **~$1,100 flip threshold is accepted and now live**: if capital crosses it the timeframe decision reopens on its own terms rather than needing re-argument. Nothing in Phase 2 is blocked on this. |
 | Workstation disk | 79% used, 23 GB free (2026-09-22), against 92%/9 GB when last written. A nine-symbol panel run has room. This figure goes stale fastest of anything here — re-measure rather than cite it. |
 
 ### Known and carried
@@ -152,5 +152,7 @@ pass. This is worth stating plainly because seq=107's detection floor makes a
 live result unlikely, and that is the expected outcome rather than a
 disappointment.
 
+The timeframe is settled: **H1**, confirmed at seq=108, with the ~$1,100 flip
+to H4 accepted as a live trigger rather than a caveat.
 `packages/qh-research/research/pre/panel_edge.py` is written and has not been
 run.

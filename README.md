@@ -92,8 +92,12 @@ Two things worth knowing before the commands surprise you:
   'research'` without the prefix above.
 - **The skip count depends on data you may not have.** Some parity checks read
   OHLC CSVs and a WMPS checkout that live outside this repo; without them the
-  run is 601 passed, 25 skipped, which is what CI sees. `CI_LIMITED` in
-  `tests/test_x_coverage.py` names every such case and why.
+  run is 601 passed, 25 skipped, which is what CI sees on `develop`.
+  `CI_LIMITED` in `tests/test_x_coverage.py` names every such case and why.
+  One further test compares `entries.jsonl` against `origin/develop` and
+  skips when there is nothing to compare, so a branch that appends to the
+  research log reports 602 / 24 instead. All three counts are correct; they
+  are answers to different questions.
 
 > Until 2026-09-20 this section said `pip install -r requirements.txt`,
 > `python -m unittest discover tests -v` and "Ran 53 tests — OK". Following it
