@@ -39,7 +39,9 @@ trend filter. H4 is therefore resampled from H1. That is not assumed to be
 faithful: XAUUSD has both natively, and resampling its H1 reproduces
 **32,876 of 32,960 native H4 bars with a 100% exact match on open, high, low
 and close** (the remainder are partial bars at the ends). The check is
-:func:`validate_resampling` and a test runs it.
+:func:`validate_resampling`; ``tests/test_panel_edge_resampling.py`` pins
+those numbers, and :func:`check_panel` runs the check so the evidence travels
+on the report rather than living in this paragraph.
 
 Histories are very unequal — EURUSD has 80,000 H1 bars from 2013, NZDUSD has
 10,000 from 2025. That is reported rather than equalised: truncating everything
@@ -58,7 +60,8 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from research.pre.signal_edge import _excursions, wilder_atr
+from research.pre.signal_edge import (_excursions, _forward_extremes,
+                                      wilder_atr)
 from research.pre.signals.flood_tide import FloodTideParams, generate_signals
 
 __all__ = [
@@ -180,16 +183,23 @@ def _forward_arrays(ohlc: pd.DataFrame):
 
 def _instrument_excursions(ohlc: pd.DataFrame, signal_idx: np.ndarray,
                            window: int, atr: np.ndarray):
-    """Normalised MFE/MAE for a set of entry bars at one horizon."""
+    """Normalised MFE/MAE for a set of entry bars at one horizon.
+
+    The forward arrays come from :func:`signal_edge._forward_extremes` rather
+    than being rebuilt here. ``_excursions`` indexes them by *bar position*
+    (``fwd_high[idx]``), so they must be full length and aligned to ``t``; an
+    earlier version of this function passed one element per signal and indexed
+    it with original bar numbers, which raised IndexError on the first real
+    run. Reusing the canonical builder removes the second definition rather
+    than repairing it — the arithmetic here was never the part that was wrong.
+    """
     open_, high, low, close = _forward_arrays(ohlc)
     n = len(close)
     keep = signal_idx[signal_idx <= n - window - 1]
     if keep.size == 0:
         return np.array([]), np.array([])
     dirs = np.ones(keep.size, dtype=np.int64)
-    fwd_high = np.array([high[i + 1: i + 1 + window].max() for i in keep])
-    fwd_low = np.array([low[i + 1: i + 1 + window].min() for i in keep])
-    fwd_close = np.array([close[i + window] for i in keep])
+    fwd_high, fwd_low, fwd_close = _forward_extremes(high, low, close, window)
     mfe, mae, _ = _excursions(keep, dirs, open_, fwd_high, fwd_low,
                               fwd_close, atr)
     finite = np.isfinite(mfe) & np.isfinite(mae)
@@ -241,6 +251,20 @@ def check_panel(data_dir: Optional[Path] = None,
     for h in HORIZONS:
         num, den = sum(observed[h][0]), sum(observed[h][1])
         report.pooled_e_ratio[h] = float(num / den) if den else float("nan")
+
+    # The majors have no native H4, so every trend filter in this run reads a
+    # resampled series. XAUUSD has both, and is the only place that assumption
+    # can be checked — so it is checked here and travels with the result,
+    # rather than being asserted in a docstring. A missing file degrades to an
+    # empty check rather than failing the run: the panel does not depend on
+    # XAUUSD, only the validation does.
+    try:
+        report.resampling_check = validate_resampling(
+            load_ohlcv(data_dir / "XAUUSD_H1.csv"),
+            load_ohlcv(data_dir / "XAUUSD_H4.csv"))
+    except (FileNotFoundError, OSError):
+        report.resampling_check = {"common_bars": 0, "exact_match_rate": {},
+                                   "note": "XAUUSD H1/H4 not available here"}
 
     # -- the pooled null ---------------------------------------------------
     null = {h: [] for h in HORIZONS}
@@ -309,6 +333,12 @@ def log_panel_edge(report: PanelEdgeReport, log_dir: Optional[Path] = None):
                                        for i in report.instruments},
             "per_instrument_n_signals": {i.symbol: i.n_signals
                                          for i in report.instruments},
+            "max_e_ratio_anywhere": max(
+                (v for i in report.instruments for v in i.e_ratio.values()),
+                default=float("nan")),
+            "gate": 1.15,
+            "min_signals_to_decide": MIN_SIGNALS_TO_DECIDE,
+            "resampling_check": report.resampling_check,
         },
         **kwargs,
     )

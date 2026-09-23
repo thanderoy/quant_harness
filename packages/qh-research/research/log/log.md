@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 109
+- **Entries:** 110
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (109 entries)
+- **Hash chain:** OK — chain ok (110 entries)
 
 ## Principles
 
@@ -1903,3 +1903,13 @@ _Metrics_: `confirmed_by`=user, `confirmed_on`=2026-09-22, `declared_prior`=H4, 
 > O1 (REWRITE.md section 10.2) was closed at seq=106 as H1 and brought back with both legs measured, per the spec's requirement that it return with the numbers attached rather than be settled by the analyst. The user confirmed it on 2026-09-22, explicitly accepting the ~$1,100 capital level at which the ruling flips to H4. That threshold is therefore a live, pre-registered trigger rather than an aside: if account capital crosses it, the timeframe decision reopens on its own terms and does not need re-arguing. The declared prior in the spec was H4; it was overturned by data (zero tradable instruments at $100 against three at H1), which is the only thing the spec allowed to overturn it. O1 is now closed; no Phase 2 work is blocked on it.
 
 _hash_: `45b550cda872646a…` · _prev_: `1d7327fbbe1da7a9…`
+
+### seq 109 · 2026-09-22T12:41:33Z · audit · `record:phase2-panel-flood-tide`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `alive_anywhere`=[], `decidable_instruments`=['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'USDCAD', 'AUDUSD', 'NZDUSD'], `gate`=1.15, `max_e_ratio_anywhere`=1.0846668431418245, `min_signals_to_decide`=30, `n_permutations`=1000, `null_mean`={'20': 0.9896991843874637, '50': 0.9870587208680979, '100': 0.9917710501445433}, `panel`=['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'USDCAD', 'AUDUSD', 'NZDUSD'], `per_instrument_e_ratio`={'AUDUSD': {'20': 0.8984646507798342, '50': 0.8494955151619173, '100': 0.8727155128561536}, 'EURUSD': {'20': 0.9944351745740351, '50': 0.981873588909948, '100': 0.9671068824339911}, 'GBPUSD': {'20': 0.9541025999429922, '50': 0.9069830816659791, '100': 0.8993232177764537}, 'NZDUSD': {'20': 1.0846668431418245, '50': 1.0389040667193754, '100': 1.0821666827202245}, 'USDCAD': {'20': 0.9560245640246086, '50': 1.0053911854241775, '100': 1.0399532180447935}, 'USDCHF': {'20': 0.9131786964817641, '50': 0.9098778211321785, '100': 0.9752343152070687}, 'USDJPY': {'20': 0.9892077162999618, '50': 1.0632563462374143, '100': 1.0832442116324053}}, `per_instrument_n_signals`={'AUDUSD': 643, 'EURUSD': 835, 'GBPUSD': 888, 'NZDUSD': 124, 'USDCAD': 975, 'USDCHF': 875, 'USDJPY': 1166}, `pooled_e_ratio`={'20': 0.9585353257120178, '50': 0.9660447503183115, '100': 0.9866194230501696}, `pooled_p_value`={'20': 0.947, '50': 0.859, '100': 0.602}, `resampling_check`={'common_bars': 32876, 'exact_match_rate': {'close': 1.0, 'high': 1.0, 'low': 1.0, 'open': 1.0}, 'native_bars': 32960}
+
+> Phase 2 acceptance: re-run an already-falsified mechanism across the panel. The pooled E-Ratio pools excursions rather than averaging per-instrument ratios, and the null draws each instrument's realised signal count from its own regime-filtered eligible pool. Instruments alive at their own gate: none. Not a trial: flood_tide_h1 was shelved at seq=34 and this re-tests it rather than proposing it.
+
+_hash_: `52bfe3d912c80df8…` · _prev_: `45b550cda872646a…`

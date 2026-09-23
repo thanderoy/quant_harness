@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-09-22 — Phase 1 complete; gate power measured and R8 fires; O1 confirmed as H1.
+**Last updated:** 2026-09-22 — **Phase 2 complete**: `flood_tide_h1` dead across all seven FX majors (seq=109).
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -29,10 +29,10 @@ the next reader can check rather than trust.
 
 | Metric | Value | How it was measured |
 |---|---|---|
-| Tests passing | **614 passed, 25 skipped** on CI for `develop`; 639 tests total, and two independent conditions each unskip some of them (see next column) | 639 tests total. Two conditions gate the rest: hiding the out-of-repo data (`QH_PARITY_DATA_DIR=/nonexistent QH_WMPS_DIR=/nonexistent`) skips **24**, and a log matching `origin/develop` skips **1** more, because `test_no_pre_existing_entry_was_rewritten` has nothing to diff. CI on `develop` hits both: 614 / 25. A branch appending to the log: 615 / 24. Locally with the data present and a log append: 639 / 0. Both gaps measured 2026-09-22. |
+| Tests passing | **620 passed, 25 skipped** on CI for `develop`; 645 tests total, and two independent conditions each unskip some of them (see next column) | 645 tests total. Two conditions gate the rest: hiding the out-of-repo data (`QH_PARITY_DATA_DIR=/nonexistent QH_WMPS_DIR=/nonexistent`) skips **24**, and a log matching `origin/develop` skips **1** more, because `test_no_pre_existing_entry_was_rewritten` has nothing to diff. CI on `develop` hits both: 620 / 25. A branch appending to the log: 621 / 24. Both gaps measured 2026-09-22, and the 614/25 they predicted for the previous merge was confirmed on run 35726737404. |
 | Packages | 3 built — `qh-resources`, `qh-strategies`, `qh-research`. `qh-platform` is in the spec and the pytest path list but does not exist yet | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; 3 CI-limited and declared (X15a, X17, X22) | `tests/test_x_coverage.py` |
-| Research log | 109 entries (to seq=108), chain verified; `trial_count()` = 26 | `research.log.verify()` |
+| Research log | 110 entries (to seq=109), chain verified; `trial_count()` = 26 | `research.log.verify()` |
 | Instruments | 9 — 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching | `snapshots/pepperstone_live_20260906.json` |
 | Gate detection floor | **1.2 annualised Sharpe**, false-positive rate 0% at n=2,000 pooled | seq=107, `research/reports/power.py` |
 
@@ -44,8 +44,8 @@ the next reader can check rather than trust.
 |---|---|---|
 | 0 | Diagnostic — D1-D9, no code changes | ✅ done (`docs/phase0_memo.md`) |
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
-| 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ⏭ next, **at H1** (O1 confirmed, seq=108); `panel_edge.py` written, unrun |
-| 2b | Universe expansion — non-USD crosses, metals, indices | ⚠ its rationale is now contested — see below |
+| 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
+| 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ next, but ⚠ its rationale is contested — see below |
 | 3+ | Execution merge, live path | ⏭ not entered until a mechanism survives 2b |
 
 ### Phase 1 acceptance criteria
@@ -137,22 +137,50 @@ These hold throughout. If a change would break one, that is the moment to stop.
 
 ---
 
-## What "done" looks like for Phase 2
+## Phase 2 — what the panel run found
 
-`signal_edge` running per-instrument across the FX majors from one strategy
-module, producing per-instrument results with no symbol-specific branching
-anywhere in the call path — which Phase 1 criterion 5 already demonstrates on
-synthetic bars. Phase 2 is that same claim against real data, on the panel,
-with costs that are measured rather than assumed.
+Run at H1 on 2026-09-22 (seq=109), 1,000 permutations, seed fixed.
 
-Its acceptance is **harness validation, not discovery** (R5): re-running an
-already-falsified mechanism, where `flood_tide_h1` being dead everywhere
-validates the harness and confirms the verdict in one run. A dead result is a
-pass. This is worth stating plainly because seq=107's detection floor makes a
-live result unlikely, and that is the expected outcome rather than a
-disappointment.
+| | E(h=20) | E(h=50) | E(h=100) |
+|---|---|---|---|
+| Pooled E-Ratio | 0.959 | 0.966 | 0.987 |
+| Null mean | 0.990 | 0.987 | 0.992 |
+| p | 0.947 | 0.859 | 0.602 |
 
-The timeframe is settled: **H1**, confirmed at seq=108, with the ~$1,100 flip
-to H4 accepted as a live trigger rather than a caveat.
-`packages/qh-research/research/pre/panel_edge.py` is written and has not been
-run.
+**Alive at their own gate: none.** The highest per-instrument E-Ratio anywhere
+is 1.085 (NZDUSD, h=20) against a 1.15 hard gate — `flood_tide` is a breakout
+entry, so the gate applies rather than being diagnostic-only. All seven
+instruments cleared `MIN_SIGNALS_TO_DECIDE`; the mechanism sits below its own
+null at every horizon.
+
+That is the acceptance condition met. Under R5, Phase 2 is *harness
+validation* by re-running an already-falsified mechanism: `flood_tide_h1`
+being dead everywhere confirms the harness and seq=34's shelving in one run.
+A dead result is the pass.
+
+Two things worth carrying:
+
+- **NZDUSD carries the highest ratios and the thinnest sample** — 124 signals
+  over 20 months, against 835-1,166 over twelve years elsewhere. It clears the
+  30-signal decidability floor comfortably, but the thinnest instrument
+  showing the highest numbers is what noise looks like. It changes nothing
+  here; it would matter if anything were near the gate.
+- **A smoke run at 3 permutations reported p=1.0000 at every horizon.** At
+  1,000 the p-values are 0.947 / 0.859 / 0.602. Reporting the smoke run would
+  have published "worse than every random draw", which the data does not
+  support. The honest reading is weaker: the entry fails to beat random
+  entries, and is not reliably worse than them.
+
+The resampling check travels with the result (`resampling_check` in the entry's
+metrics): the majors have no native H4, so every trend filter in this run read
+a resampled series, and that assumption is recorded next to the verdict that
+depends on it rather than asserted in a docstring.
+
+---
+
+## What "done" looks like for Phase 2b
+
+Universe expansion to effective N >= 3.5 per D4. **Its stated rationale is
+contested** — R5 gates it on a discovery claim needing breadth, and seq=107
+measures the missing ingredient as information rather than breadth. That is a
+spec decision and is listed under "Needs the user" above.
