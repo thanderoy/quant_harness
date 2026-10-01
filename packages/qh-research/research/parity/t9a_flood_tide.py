@@ -127,17 +127,35 @@ class ParityReport:
 DATA_DIR_ENV = "QH_PARITY_DATA_DIR"
 
 
+#: The CSVs tracked in this repository. ``XAUUSD_H1.csv`` is tracked because
+#: seq=31 depends on it and it is not durably reproducible from the broker
+#: (see ``research/data_manifest.json``); ``XAUUSD_H4.csv`` sits beside it.
+IN_REPO_DATA_DIR = REPO_ROOT / "packages" / "qh-research" / "research" / "data"
+
+
 def default_data_paths() -> tuple[Path, Path]:
     """Where seq=31's inputs live.
 
-    The artifact records absolute paths into the WMPS repo, which is where
-    the CSVs are on the machine that produced them and nowhere else — a CI
-    runner has no such directory, which is how the first CI run failed. The
-    artifact's own SHA-256 still guards the contents, so the path may move
-    freely as long as the bytes do not.
+    The artifact records absolute paths into the WMPS repo, which is where the
+    CSVs were on the machine that produced them and nowhere else — a CI runner
+    has no such directory, which is how the first CI run failed.
 
     Resolution order: ``$QH_PARITY_DATA_DIR`` if set, else the path recorded
-    in the artifact.
+    in the artifact, else the copies tracked in this repository.
+
+    That last fallback is why 23 checks stopped skipping on CI. They had been
+    declared CI-limited for want of data that was sitting in the checkout the
+    whole time: both CSVs are tracked here and are byte-identical to the WMPS
+    originals. Two of them carry Phase 1 acceptance criteria #2 and #3, so the
+    skip was not cosmetic — the criteria were met locally and unproven on a
+    runner.
+
+    The fallback is safe for the reason the docstring has always given: the
+    artifact's own ``ohlc_hash`` is parity layer 1 and is compared before
+    anything downstream runs, so a wrong file fails loudly rather than
+    producing a plausible number. The path may move freely as long as the
+    bytes do not — this makes that sentence load-bearing instead of
+    aspirational.
     """
     ref = load_reference()
     h1 = Path(ref["inputs"]["h1_path"])
@@ -146,6 +164,11 @@ def default_data_paths() -> tuple[Path, Path]:
     if override:
         d = Path(override)
         return d / h1.name, d / h4.name
+    if h1.exists() and h4.exists():
+        return h1, h4
+    in_repo = (IN_REPO_DATA_DIR / h1.name, IN_REPO_DATA_DIR / h4.name)
+    if in_repo[0].exists() and in_repo[1].exists():
+        return in_repo
     return h1, h4
 
 

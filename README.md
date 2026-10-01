@@ -72,8 +72,8 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 638 passed, 1 skipped — with the out-of-repo data present.
-# Without it (and on CI): 614 passed, 25 skipped. See the note below.
+# expected: 650 passed, 1 skipped — with the out-of-repo data present.
+# On CI, which has neither the WMPS checkout nor a log diff: 648 / 3.
 
 # Calibration check (synthetic data)
 PYTHONPATH=packages/qh-resources:packages/qh-strategies:packages/qh-research \
@@ -90,15 +90,14 @@ Two things worth knowing before the commands surprise you:
   `[tool.pytest.ini_options] pythonpath`, so pytest finds them and nothing else
   does — `examples/` fails with `ModuleNotFoundError: No module named
   'research'` without the prefix above.
-- **The skip count depends on data you may not have.** Some parity checks read
-  OHLC CSVs and a WMPS checkout that live outside this repo; without them the
-  run is 614 passed, 25 skipped, which is what CI sees on `develop`.
-  `CI_LIMITED` in `tests/test_x_coverage.py` names every such case and why.
-  One further test compares `entries.jsonl` against `origin/develop` and
-  skips when there is nothing to compare, so a branch that appends to the
-  research log reports 615 / 24 instead. All three counts are correct; they
-  are answers to different questions: there are 639 tests, and the two
-  conditions skip 24 and 1 of them respectively.
+- **Three checks skip on CI, and each is declared.** X22's port-vs-WMPS
+  comparison needs a separate checkout (`$QH_WMPS_DIR`); the append-only log
+  check has nothing to diff when the log matches `origin/develop`; and one
+  parity-resolution case asserts the recorded path wins *where it resolves*,
+  so it skips on a runner by design. `CI_LIMITED` in
+  `tests/test_x_coverage.py` names what that costs. The seq=31 CSVs are
+  tracked here, so the parity checks that once needed out-of-repo data now
+  run everywhere.
 
 > Until 2026-09-20 this section said `pip install -r requirements.txt`,
 > `python -m unittest discover tests -v` and "Ran 53 tests — OK". Following it
