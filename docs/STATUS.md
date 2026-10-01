@@ -29,7 +29,7 @@ the next reader can check rather than trust.
 
 | Metric | Value | How it was measured |
 |---|---|---|
-| Tests passing | **620 passed, 25 skipped** on CI for `develop`; 645 tests total, and two independent conditions each unskip some of them (see next column) | 645 tests total. Two conditions gate the rest: hiding the out-of-repo data (`QH_PARITY_DATA_DIR=/nonexistent QH_WMPS_DIR=/nonexistent`) skips **24**, and a log matching `origin/develop` skips **1** more, because `test_no_pre_existing_entry_was_rewritten` has nothing to diff. CI on `develop` hits both: 620 / 25. A branch appending to the log: 621 / 24. Both gaps measured 2026-09-22, and the 614/25 they predicted for the previous merge was confirmed on run 35726737404. |
+| Tests passing | **648 passed, 3 skipped** on CI; 651 tests total. Only three skips remain, each declared | 651 tests total, measured on run 36921322475. The three CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); `test_no_pre_existing_entry_was_rewritten` (nothing to diff when the log matches `origin/develop`); and one case in `test_parity_data_resolution.py` that exists to assert the recorded path wins *where it resolves*, so it skips on a runner by design. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
 | Packages | 3 built — `qh-resources`, `qh-strategies`, `qh-research`. `qh-platform` is in the spec and the pytest path list but does not exist yet | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; 3 CI-limited and declared (X15a, X17, X22) | `tests/test_x_coverage.py` |
 | Research log | 110 entries (to seq=109), chain verified; `trial_count()` = 26 | `research.log.verify()` |
@@ -109,6 +109,7 @@ Three consequences worth carrying:
 | Item | Notes |
 |---|---|
 | D3b covers 2 of 9 symbols | The frontier cannot fully cost the other seven. |
+| Parity CSVs resolve from this repo | `default_data_paths()` prefers `$QH_PARITY_DATA_DIR`, then the WMPS path recorded in the seq=31 artifact, then the copies tracked here. Safe because `ohlc_hash` is parity layer 1 and is compared before anything downstream runs. This un-skipped 23 CI checks, two of which carry Phase 1 criteria #2 and #3 — previously met locally and unproven on a runner. |
 | `n_trades` gate is inert | Passed at every injected alpha level (seq=107); contributes nothing to the six-way AND. |
 | Three copies of the indicator arithmetic | `resources`, `research.engines`, `cnk_engine`. The first two are held together by T11's bit-for-bit test; the third is frozen as a parity generator. |
 | DSR twin duplication | `research/post/dsr.py` is canonical; the harness twin must reproduce the parity vectors. |
