@@ -55,10 +55,6 @@ DEFERRED: dict[str, tuple[str, str]] = {}
 #: runner, and a green tick that hides that is exactly the reassurance this
 #: file exists to refuse.
 CI_LIMITED: dict[str, str] = {
-    "X15a": ("recomputation needs seq=31's OHLC CSVs, which live in the WMPS "
-             "repo; on a runner those tests skip and only the committed "
-             "fixture is validated against the adjudicated artifact. Set "
-             "$QH_PARITY_DATA_DIR to exercise the full check."),
     "X22": ("CI now asserts every fixture column exactly. The ULP bound that "
             "used to be the limitation is gone: at seq=102 `wma` stopped "
             "reducing with `np.dot`, whose summation order came from the "
@@ -72,10 +68,12 @@ CI_LIMITED: dict[str, str] = {
             "never sees."),
     "X17": ("behaviour-neutrality is proven two ways and CI sees one of "
             "them. The commit-vs-parent comparison cannot be re-run from a "
-            "later commit, so it is recorded in the seq=96 metrics; the "
-            "recomputation needs the same out-of-repo CSVs as X15a and "
-            "skips on a runner. What CI asserts is that the pinned fixture "
-            "still loads and still matches the seq=31 artifact."),
+            "later commit at all, so it is recorded in the seq=96 metrics "
+            "rather than re-executed. That half is permanent and no amount "
+            "of data fixes it. The other half — the recomputation — used to "
+            "skip for want of the out-of-repo CSVs and no longer does: they "
+            "are tracked in this repository and `default_data_paths()` now "
+            "falls back to them."),
 }
 
 
@@ -185,14 +183,22 @@ def test_ci_limitations_name_real_covered_ids(marked):
 
 
 def test_partially_exercised_coverage_is_declared_not_implied():
-    """X15a is the current case: green in CI does not mean fully checked.
+    """Green in CI does not mean fully checked, and the gap gets named.
 
-    Recorded so the distinction survives being forgotten. If the data ever
-    becomes available to CI, delete the entry — the test above will not let
-    it linger on an id that stopped needing it.
+    X15a used to be the case here, and its own note said to delete the entry
+    if the data ever became available to CI. It did: both CSVs were tracked
+    in this repository the whole time, and `default_data_paths()` now falls
+    back to them, so 23 checks stopped skipping. X15a is out, and X17's note
+    is narrowed to the half that no data can fix.
+
+    X22 is the remaining case and is a different kind: it needs a WMPS
+    checkout, which is a separate repository rather than a path, so no
+    fallback resolves it.
     """
-    assert "X15a" in CI_LIMITED
-    assert "QH_PARITY_DATA_DIR" in CI_LIMITED["X15a"]
+    assert "X15a" not in CI_LIMITED, (
+        "X15a's limitation was the out-of-repo CSVs, which CI can now reach")
+    assert "X22" in CI_LIMITED
+    assert "QH_WMPS_DIR" in CI_LIMITED["X22"]
 
 
 def test_markers_are_registered_so_they_cannot_be_typos():
