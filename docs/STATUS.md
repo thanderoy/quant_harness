@@ -92,7 +92,7 @@ Three consequences worth carrying:
 
 | Item | Why it is blocked |
 |---|---|
-| Phase 2b's rationale, after R8 | R5 requires 2b to complete before any new mechanism is pre-registered, because "a discovery claim does need breadth". seq=107 measures the missing ingredient as information rather than breadth. Both can't be the governing reason; which one holds is a spec decision. |
+| Phase 2b — run it on the credibility argument, or not at all? | **Measured at seq=110: breadth does not move the detection floor.** It is 1.2 at both the current effective N (~2) and 2b's target (3.5). That is structural, not a quirk of the draws: with one fold standing for one year the t-statistic is `SR_annualised × √years`, which does not depend on how many observations fill those years, and breadth adds observations within the same calendar span. The other half is arithmetic: lifting a measured 0.3 per-instrument edge above a 1.2 floor needs N_eff ≈ 16, where 2b targets 3.5. So R5's stated rationale — that expansion is what gets a mechanism past the gates — does not hold, and R8 stands. 2b may still be worth running for its *other* purpose, since N_eff 3.5 makes a future discovery claim more credible than 2 does. That is a spec decision, not a measurement. |
 | Branch protection | CI runs again; making it required to merge is a repo setting only you can change. |
 | Slip is `HAND_ENTERED` at 1 tick | The only cost input with no source at all, and no document can supply it — only a real fill measures it. The 358 deals carry the fill price but not the requested price, so they cannot close this. |
 

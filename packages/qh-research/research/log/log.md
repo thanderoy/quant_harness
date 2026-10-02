@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 110
+- **Entries:** 111
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (110 entries)
+- **Hash chain:** OK — chain ok (111 entries)
 
 ## Principles
 
@@ -1913,3 +1913,13 @@ _Metrics_: `alive_anywhere`=[], `decidable_instruments`=['EURUSD', 'GBPUSD', 'US
 > Phase 2 acceptance: re-run an already-falsified mechanism across the panel. The pooled E-Ratio pools excursions rather than averaging per-instrument ratios, and the null draws each instrument's realised signal count from its own regime-filtered eligible pool. Instruments alive at their own gate: none. Not a trial: flood_tide_h1 was shelved at seq=34 and this re-tests it rather than proposing it.
 
 _hash_: `52bfe3d912c80df8…` · _prev_: `45b550cda872646a…`
+
+### seq 110 · 2026-10-02T06:23:17Z · audit · `record:breadth-vs-detection-floor`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `effective_n_required_to_clear_floor`=16, `effective_n_target_phase_2b`=3.5, `floor_at_2b_target`=1.2, `floor_at_current_breadth`=1.2, `floor_moved`=False, `folds`=17, `independence_assumed`=True, `measured_per_instrument_sharpe`=0.27-0.41, `n_obs_2b`=3500, `n_obs_current`=2000, `pass_rate_2b`={'0.3': 0.0, '0.5': 0.0, '0.8': 0.2, '1.0': 0.2, '1.2': 0.55}, `pass_rate_current`={'0.3': 0.0, '0.5': 0.0, '0.8': 0.15, '1.0': 0.35, '1.2': 0.75}, `ppy_2b`=205, `ppy_current`=117, `r5_breadth_rationale_holds`=False, `r8_stands`=True, `reproduces_seq107`=True, `trials_per_point`=20
+
+> R5 gates Phase 2b on a discovery claim needing breadth (D4: seven majors deliver roughly two effective bets, target >= 3.5). seq=107 measured the floor at 1.2 against mechanisms of 0.27-0.41 and concluded information, not breadth. Both could have been true at once, because the floor does fall with effective n, so the open question was how much 2b actually buys. Measured rather than argued. MEASURED: the power curve at the pooled unit, 20 trials per point, run at the current breadth (n=2,000, 17 folds, ppy=117) and at 2b's target (n=3,500, ppy=205). The detection floor -- first level reaching 50% pass -- is 1.2 in BOTH. The post-2b curve is not uniformly better: 0.8 goes 15%->20% but 1.0 goes 35%->20% and 1.2 goes 75%->55%, differences consistent with sampling noise at 20 trials. WHY THIS IS STRUCTURAL, not a quirk of these draws: with one fold standing for one year, the t-statistic is SR_annualised * sqrt(years), which does not depend on how many observations fill those years. Breadth adds observations within the SAME calendar span, so for a fixed annualised effect size it buys no detection power. Span buys power; sampling density does not. THE OTHER HALF, which this simulation does not model: breadth's real argument is not that it lowers the floor but that pooling independent instruments RAISES the pooled effect above a per-instrument one, roughly SR_pooled ~ SR_instrument * sqrt(N_eff). That is arithmetic rather than simulation here, and it does not rescue the case: lifting a measured 0.3 per-instrument edge above a 1.2 floor needs N_eff ~ (1.2/0.3)^2 = 16 effective bets. Phase 2b targets 3.5. Even granting ideal diversification and ignoring correlation, 2b is roughly a quarter of the breadth required. CONCLUSION: both halves point the same way and R8 stands. Breadth is not the missing ingredient at this effect size. This does not say Phase 2b is worthless -- effective N 3.5 still makes a future discovery claim more credible than 2 does, which is R5's other purpose -- but it does refute the specific rationale that expansion is what gets a mechanism past the gates. Whether 2b still runs on the credibility argument alone is a spec decision for the user, not a measurement. CAVEAT: the simulation treats pooled observations as independent, so its no-gain result is an upper bound on what breadth buys; correlated instruments would do worse, not better.
+
+_hash_: `1ab76e5a8f2d60a6…` · _prev_: `52bfe3d912c80df8…`
