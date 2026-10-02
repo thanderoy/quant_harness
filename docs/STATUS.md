@@ -113,7 +113,7 @@ Three consequences worth carrying:
 | `n_trades` gate is inert | Passed at every injected alpha level (seq=107); contributes nothing to the six-way AND. |
 | Three copies of the indicator arithmetic | `resources`, `research.engines`, `cnk_engine`. The first two are held together by T11's bit-for-bit test; the third is frozen as a parity generator. |
 | DSR twin duplication | `research/post/dsr.py` is canonical; the harness twin must reproduce the parity vectors. |
-| `research.engines.strategies` vs top-level `strategies` | Name overlap, not yet resolved. |
+| `research.engines.strategies` vs top-level `strategies` | Name overlap, **measured benign and guarded**. No module imports both, and nothing under `research/` uses a bare `import strategies` — every import there is fully qualified, so the interpreter never chooses between them. A rename would touch ten files to remove a cosmetic wart and move real risk around, so the fix is a guard instead: `tests/test_strategies_namespace.py` fails if a bare `import strategies` ever appears under `research/`, which is the one way the wart could become a bug. |
 | Scan/position visualisation | Parked, unpublished (VortexEdge + Astra Terminal concept). |
 
 ---
