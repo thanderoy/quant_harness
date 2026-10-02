@@ -103,7 +103,7 @@ def _dsr_for(wf, num_trials: int) -> dict | None:
 
 
 def _gate(wf, dsr_result, name: str) -> None:
-    r = wf.to_scorecard_result(name=name, num_trials=1)
+    r = wf.to_scorecard_result(name=name)
     if dsr_result is not None:
         r.dsr_probability = dsr_result["dsr_probability"]
     gate = evaluate(r, Thresholds())

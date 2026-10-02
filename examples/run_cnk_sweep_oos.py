@@ -136,7 +136,7 @@ def run_one(tf: str, cash: float, trial_ns: list[int]) -> dict:
                   f"(obs {d['sharpe_obs_annualised']:.3f} vs "
                   f"benchmark {d['sr_benchmark_annualised']:.3f})")
 
-    r = wf.to_scorecard_result(name=f"cnk_momentum_{tf}_sweep_leader", num_trials=1)
+    r = wf.to_scorecard_result(name=f"cnk_momentum_{tf}_sweep_leader")
     dmax = _dsr_for(wf, max(trial_ns))
     if dmax is not None:
         r.dsr_probability = dmax["dsr_probability"]
