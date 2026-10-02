@@ -71,6 +71,35 @@ DEFAULT_LEVELS = (0.0, 0.3, 0.5, 0.8, 1.2, 1.5)
 #: wrong sample size is a floor for a harness nobody has.
 REALISTIC_N_OBS = 114
 REALISTIC_SPAN_DAYS = 365.25      # one fold's test window
+
+#: Folds in the walk-forward this module's pooled numbers come from. The
+#: pooled unit is 17 one-year test windows, so a pooled run of T observations
+#: annualises at ``T // WALK_FORWARD_FOLDS``, not at ``T``.
+WALK_FORWARD_FOLDS = 17
+
+
+class FoldConventionError(ValueError):
+    """``T`` and ``periods_per_year`` disagree about the same span.
+
+    Raised rather than resolved by precedence. Both are assertions about how
+    many observations make a year, and silently preferring one is how a power
+    curve gets measured on a rescaled axis: passing ``periods_per_year=T``
+    for a pooled run reports 0% at every level, because an injected
+    "annualised Sharpe of 0.8" then means a far smaller per-period effect
+    than the run it is being compared against.
+    """
+
+
+def periods_per_year_for(n_obs: int, folds: int = WALK_FORWARD_FOLDS) -> int:
+    """Observations per year for a run pooling ``folds`` one-year windows.
+
+    The convention existed only as the literal ``2000 // 17`` inside one test
+    and as prose in half a dozen docstrings. Stating it once, here, is what
+    makes it checkable at a call site instead of rediscoverable.
+    """
+    if folds < 1:
+        raise ValueError(f"folds must be >= 1, got {folds}")
+    return max(n_obs // folds, 1)
 #: The honest floor from the research log. DSR's haircut scales with it.
 REALISTIC_N_TRIALS = 26
 
@@ -228,13 +257,35 @@ def power_curve(levels: Sequence[float] = DEFAULT_LEVELS,
                 n_trials: int = 100,
                 n_strategies: int = 20,
                 T: int = REALISTIC_N_OBS,
-                periods_per_year: int = int(REALISTIC_N_OBS),
+                periods_per_year: Optional[int] = None,
+                folds: int = 1,
                 sigma: float = 0.01,
                 thresholds: Optional[Thresholds] = None,
                 thresholds_name: str = "research",
                 n_trials_dsr: int = REALISTIC_N_TRIALS,
                 seed: int = 0) -> PowerCurve:
-    """Measure pass rate against injected Sharpe."""
+    """Measure pass rate against injected Sharpe.
+
+    ``folds`` says how many one-year test windows ``T`` observations span, and
+    the annualisation follows from it: a single fold (the default) annualises
+    at ``T``, and a pooled run over 17 folds at ``T // 17``.
+
+    ``periods_per_year`` remains available as an explicit override, but it is
+    no longer a silent default. Passing one that disagrees with ``T`` and
+    ``folds`` raises :class:`FoldConventionError` instead of quietly
+    rescaling the axis. That pairing had to be carried by hand, and getting
+    it wrong does not look like an error: it reports a plausible 0% at every
+    level, which reads as "nothing passes" rather than "wrong units".
+    """
+    derived = periods_per_year_for(T, folds)
+    if periods_per_year is None:
+        periods_per_year = derived
+    elif int(periods_per_year) != derived:
+        raise FoldConventionError(
+            f"periods_per_year={periods_per_year} disagrees with T={T} over "
+            f"{folds} fold(s), which implies {derived}. These are two claims "
+            "about the same span. Pass folds= and let the annualisation "
+            "follow, or correct one of them.")
     t = thresholds or Thresholds()
     curve = PowerCurve(thresholds_name=thresholds_name,
                        periods_per_year=periods_per_year,

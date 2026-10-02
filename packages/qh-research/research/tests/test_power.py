@@ -11,7 +11,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from research.reports.power import (
+from research.reports.power import (WALK_FORWARD_FOLDS,
+                                    FoldConventionError,
+                                    periods_per_year_for,
     GATE_NAMES,
     PowerCurve,
     PowerPoint,
@@ -100,5 +102,58 @@ def test_noise_does_not_pass():
     """The one end-to-end assertion worth its runtime: at the pooled unit the
     false-positive rate is zero."""
     c = power_curve(levels=(0.0,), n_trials=5, T=2000,
-                    periods_per_year=2000 // 17)
+                    folds=WALK_FORWARD_FOLDS)
     assert c.points[0].pass_rate == 0.0
+
+
+# -- the fold convention ----------------------------------------------------
+# periods_per_year and T are two claims about the same span, and carrying the
+# pairing by hand produced a wrong measurement: a sweep run with
+# periods_per_year=T instead of T//17 reported 0% at every injected level.
+# That failure is dangerous because it looks like a result. "Nothing passes"
+# is exactly what this module exists to report, so a rescaled axis reads as a
+# finding rather than as broken units.
+
+def test_a_single_fold_annualises_at_its_own_length():
+    assert periods_per_year_for(114, folds=1) == 114
+
+
+def test_a_pooled_run_annualises_per_fold_not_per_sample():
+    """The case that was wrong: 2,000 pooled observations over 17 one-year
+    windows make a year 117 observations long, not 2,000."""
+    assert periods_per_year_for(2000, folds=WALK_FORWARD_FOLDS) == 2000 // 17
+    assert periods_per_year_for(2000, folds=WALK_FORWARD_FOLDS) != 2000
+
+
+def test_the_default_fold_count_is_the_walk_forward_the_numbers_came_from():
+    assert WALK_FORWARD_FOLDS == 17
+    assert periods_per_year_for(3500) == 3500 // 17
+
+
+def test_an_inconsistent_pair_is_refused_rather_than_resolved():
+    """Precedence would be the wrong answer here. Both values assert how many
+    observations make a year, so preferring one silently is the defect."""
+    with pytest.raises(FoldConventionError, match="disagrees"):
+        power_curve(levels=(0.0,), n_trials=1, T=2000,
+                    periods_per_year=2000, folds=WALK_FORWARD_FOLDS)
+
+
+def test_the_error_names_both_claims_and_what_was_implied():
+    with pytest.raises(FoldConventionError) as e:
+        power_curve(levels=(0.0,), n_trials=1, T=2000,
+                    periods_per_year=999, folds=WALK_FORWARD_FOLDS)
+    m = str(e.value)
+    assert "999" in m          # what was passed
+    assert "2000" in m         # the sample it disagrees with
+    assert str(2000 // 17) in m  # what the fold count implies
+
+
+def test_an_agreeing_override_is_not_a_conflict():
+    c = power_curve(levels=(0.0,), n_trials=1, T=2000,
+                    periods_per_year=2000 // 17, folds=WALK_FORWARD_FOLDS)
+    assert c.periods_per_year == 2000 // 17
+
+
+def test_zero_folds_is_refused():
+    with pytest.raises(ValueError, match="folds"):
+        periods_per_year_for(2000, folds=0)
