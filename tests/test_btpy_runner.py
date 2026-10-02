@@ -202,7 +202,7 @@ class TestPipelineFlow(unittest.TestCase):
             train_size="1460D", test_size="365D", step_size="365D",
             exclude_ranges=[], cash=10_000, verbose=False,
         )
-        r = wf.to_scorecard_result(name="test", num_trials=1)
+        r = wf.to_scorecard_result(name="test")
         # evaluate() should run without crashing
         gate_report = evaluate(r, Thresholds())
         self.assertIsNotNone(gate_report)

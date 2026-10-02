@@ -342,32 +342,30 @@ class WalkForwardResult:
     n_trades_oos: int = 0
     oos_profit_factor: float = float("nan")
 
-    def to_scorecard_result(
-        self, name: Optional[str] = None,
-        num_trials: int = 1,
-        sr_variance_annualised: Optional[float] = None,
-        periods_per_year: int = 252,
-    ) -> Result:
+    def to_scorecard_result(self, name: Optional[str] = None) -> Result:
         """Build a Result object ready for research.reports.scorecard.evaluate().
 
-        Parameters
-        ----------
-        num_trials : int
-            Total strategy variants tested on this dataset. Honest count
-            (every parameter sweep cell, every discarded variant).
-        sr_variance_annualised : float, optional
-            Cross-sectional variance of IS Sharpes from a parameter sweep.
-            If None, estimated from the fold-level IS Sharpes.
-        periods_per_year : int
-            Annualisation basis. Use 6048 for H1, 24192 for M15.
+        This used to accept ``num_trials``, ``sr_variance_annualised`` and
+        ``periods_per_year``. None of the three were ever read: ``Result``
+        carries nine fields and none of them is a trial count, a Sharpe
+        variance or an annualisation basis, so every value a caller passed was
+        discarded. All five call sites in the repo omitted them and silently
+        got the defaults, which made no difference, because the defaults were
+        discarded too.
+
+        That is worse than a wrong default. ``periods_per_year`` documented
+        itself as "use 6048 for H1, 24192 for M15", which reads as control
+        over the annualisation; there was none. ``num_trials`` named itself
+        the honest trial count that feeds the DSR haircut, which is this
+        repo's central guard against selection bias; it fed nothing.
+
+        The metrics on ``Result`` are annualised upstream, and the haircut is
+        applied where the comments below already say it is — ``pbo`` and
+        ``dsr_probability`` are populated separately, by callers that consume
+        ``research.log.trial_count()``. Removing the three parameters changes
+        no behaviour. It removes a promise the function never kept.
         """
         n = name or self.strategy_name
-        sr_var = sr_variance_annualised
-        if sr_var is None and len(self.is_sharpes) > 1:
-            sr_var = float(pd.Series(self.is_sharpes).var(ddof=1))
-        elif sr_var is None:
-            sr_var = 0.5   # rough fallback
-
         return Result(
             name=n,
             is_sharpe=self.mean_is_sharpe,

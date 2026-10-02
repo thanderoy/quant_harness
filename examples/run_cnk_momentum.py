@@ -82,7 +82,7 @@ def main() -> int:
               f"vs expected max {dsr_res['sr_benchmark_annualised']:.3f} "
               f"(prob={dsr_res['dsr_probability']:.3f}, num_trials={args.num_trials})")
 
-    r = wf.to_scorecard_result(name="crest_n_keel_momentum_24h", num_trials=1)
+    r = wf.to_scorecard_result(name="crest_n_keel_momentum_24h")
     if dsr_res is not None:
         r.dsr_probability = dsr_res["dsr_probability"]
     gate = evaluate(r, Thresholds())
