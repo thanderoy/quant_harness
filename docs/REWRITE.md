@@ -834,17 +834,89 @@ than numerically; decidability is a power question and now lives with the power 
 
 - `rejected_alternative` — keep eff_N ≥ 4 and expand the universe until it is reached. Rejected
   because F1 shows no instrument count satisfies it.
-- `selection_guard` — *proposed, needs sign-off.* The gate this installs is one the project's own
-  mechanisms fail: measured OOS Sharpes of 0.27–0.41 against a floor of 1.2 (seq=107). The ruling
-  replaces an unreachable criterion with a reachable one that still blocks every current
-  candidate, so it does not clear a path the researcher wanted cleared. Marked proposed because,
-  unlike R6 and R7, this guard was not stated when the ruling was made.
+- `selection_guard` — **the replacement gate is stricter in practice than the one it removed.**
+  eff_N ≥ 4 was unreachable, so it blocked everything by being unsatisfiable — a gate that never
+  opens also never has to be argued with. The decidability gate is reachable in principle and
+  still blocks every current candidate: measured OOS Sharpes of 0.27–0.41 against a floor of 1.2
+  (seq=107). Swapping an unreachable criterion for a reachable one that the project's own
+  mechanisms fail does not clear a path anyone wanted cleared, and it converts a permanent excuse
+  into a target that can be missed on the record. Recorded 2026-10-05; it was not stated when the
+  ruling was made, which is the defect the basis annotation exists to prevent recurring.
 
-**Note on R6, R7 and R8.** All three were issued after their data landed, into a section whose
+**R9 — the H4 prior is withdrawn; the prior is H1, and the cost measurement becomes a veto.**
+`basis: POST_DATA`
+
+Ruled 2026-08-31 in `phase0_memo.md` §3.1, and unnumbered until the 2026-10-05 sweep. D2 showed
+granularity argues H1 unambiguously, flipping one of the prior's three legs. The other two —
+cost-to-ATR and fewer scheduled evaluations — still favoured H4, and D3 was blocked.
+
+The ruling's substance is that the two legs do not conflict symmetrically. **Granularity is a hard
+constraint**: below the threshold the trade cannot be placed within budget at all. **Cost is
+soft**: it degrades edge continuously. Hard dominates soft, so D3 stops being the decider and
+becomes a veto. And because H4 was already dead on granularity, a veto does not redirect the
+search to another timeframe — the finding would be that $100 cannot trade this system at any
+timeframe.
+
+- `rejected_alternative` — keep the H4 prior standing until D3 unblocked and let the cost
+  measurement decide between them, which is what O1 as written called for.
+- `selection_guard` — **the veto thresholds were declared before the measurement existed**:
+  < 5% of 1×ATR(H1) proceeds, 5–10% marginal, > 10% vetoes H1. The part of this ruling that could
+  have been outcome-selected is the part that was pinned in advance, which is the PRE_DATA
+  discipline applied to exactly the leg that needed it.
+
+**R9 corrects the record for O1.** seq=106 and seq=108 state `declared_prior: H4` and
+`prior_overturned_by: data`. That is wrong: R9 withdrew the H4 prior on 2026-08-31, eleven days
+before D3 landed. O1's closure confirmed a prior that had already been ruled; it did not overturn
+one. The log is append-only, so the correction is recorded rather than edited — see seq=112.
+
+**Note on R6, R7, R8 and R9.** All four were issued after their data landed, into a section whose
 definition was "made before data". That was an error in categorisation, not in the rulings
 themselves — each survives being restated with its basis and guard. The annotation exists so the
 next post-data ruling has to show its guard at the point it is written, rather than being audited
 into one later.
+
+**R10 — the third market structure is equity indices, entering as US500.** `basis: POST_DATA`
+
+R5-as-amended requires the research universe to span at least three distinct market structures.
+FX and metals are present. This ruling names the third and states its reason before the research
+data is pulled.
+
+**Indices, not energy, and the reason is structural rather than statistical.** FX and metals as
+held here are both USD-legged, spot, and flat 24h Monday to Friday — metals are commodity-like in
+their drivers but FX-like in their *structure*, so they stretch the universe less than their
+label suggests. The third structure should break that frame, and the two candidates break
+different parts of it:
+
+- **Energy** breaks the spot frame: term structure, inventory cycles, roll. But a CFD rolls
+  contracts, and a roll produces a price discontinuity that is not a market move. This repo has no
+  machinery to distinguish one from the other, and its entire history is about not mistaking an
+  artifact for a finding. Energy would introduce a contamination channel rather than a test.
+- **Indices** break the calendar frame: an equity index observes an exchange holiday calendar that
+  FX ignores. Its untradable periods follow a *different* calendar rather than the same weekend,
+  which is precisely what R3's mask policy and R4's tradable-bar horizon were built for and have
+  never been exercised against. A gap in an index is a real price move, not a bookkeeping
+  artifact.
+
+So indices test the harness on the axis it was designed for, and energy would test it on an axis
+where it cannot tell signal from artifact.
+
+- `rejected_alternative` — energy (WTI or Brent), rejected on the roll-contamination argument
+  above, not on any measured property. No energy series exists in the repo, so the alternative was
+  rejected on reasoning rather than on numbers that favoured indices.
+- `selection_guard` — **the calendar structure of US500 was measured before this ruling was
+  written, and the measurement is orthogonal to the outcome the ruling could be selected for.**
+  What was measured: bars per week, trading-day counts, gap-to-ATR distribution, and the share of
+  partial trading days (US500 21.3% of days under 20 bars, against EURUSD 0.7% and XAUUSD 2.1%).
+  None of that is a return, an edge, or a Sharpe. Knowing an instrument keeps an exchange holiday
+  calendar says nothing about whether a mechanism will work on it, so the choice could not have
+  been made for how the result would look. Stated here because the ordering — measure, then
+  declare — is the ordering this scheme exists to make visible rather than hide.
+
+**Not yet satisfiable.** The pinned registry snapshot holds nine instruments, all FX and metals;
+no index is in it. CLAUDE.md is explicit that `filling_mode` is broker policy and must not be
+taken on trust for a new symbol. US500 therefore needs a registry snapshot refresh — an
+MT5-dependent action — before it can enter the universe, even though its H1 history is already
+present. Phase 2b cannot start on the structural criterion until that snapshot exists.
 
 ### 10.2 Open — genuinely data-dependent
 

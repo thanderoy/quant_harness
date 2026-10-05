@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-05 — R6/R7/R8 annotated POST_DATA, R5 re-scoped structurally (seq=111).
+**Last updated:** 2026-10-05 — rulings annotated by basis; R9 found unnumbered and corrects O1's record; R10 names indices as the third market structure (seq=112).
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -92,7 +92,7 @@ Three consequences worth carrying:
 
 | Item | Why it is blocked |
 |---|---|
-| Phase 2b — the gate, re-scoped | **R5 re-scoped 2026-10-05, not dropped** (seq=111). Its breadth argument is refuted by F1: at the measured mean |ρ| of 0.44–0.62, no instrument count reaches eff_N ≥ 4, and a gate no amount of the gated work can satisfy is not a gate. Its mechanism-generality argument is untouched and was always the stronger one. The gate now reads: **the research universe must span at least three distinct market structures** (FX, metals, and indices or energy) before any new mechanism is pre-registered. Decidability moved to the measured `min_decidable_sharpe` from seq=107. What still needs you: sign-off on R8's `selection_guard`, recorded as PROPOSED because it was not stated when the ruling was made. |
+| Phase 2b — blocked on a registry snapshot | R5 is re-scoped to the structural criterion and **R10 names the third market structure: equity indices, entering as US500** (seq=112), chosen for structural difference — an exchange holiday calendar FX ignores, which is what R3's mask policy and R4's tradable-bar horizon were built for and never exercised against. Energy was rejected because a CFD roll produces a discontinuity this repo cannot distinguish from a price move. **What blocks 2b:** the pinned registry snapshot holds nine instruments, all FX and metals. `filling_mode` is broker policy and must not be assumed for a new symbol, so US500 needs a registry snapshot refresh — an MT5-dependent action — even though its H1 history is already present. |
 | Branch protection | CI runs again; making it required to merge is a repo setting only you can change. |
 | Slip is `HAND_ENTERED` at 1 tick | The only cost input with no source at all, and no document can supply it — only a real fill measures it. The 358 deals carry the fill price but not the requested price, so they cannot close this. |
 
