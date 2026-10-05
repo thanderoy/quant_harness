@@ -869,7 +869,31 @@ timeframe.
 before D3 landed. O1's closure confirmed a prior that had already been ruled; it did not overturn
 one. The log is append-only, so the correction is recorded rather than edited — see seq=112.
 
-**Note on R6, R7, R8 and R9.** All four were issued after their data landed, into a section whose
+**R11 — Phase 3 accepts on an enumerated deviation set, not on identity.** `basis: POST_DATA`
+
+§11 writes Phase 3's acceptance as "live strategy signals through `resources` are identical to the
+pre-merge signals". F3 shows that is unachievable: the `fsum`/`np.dot` reduction flips a
+signal-driving comparison about once in 27,000 bars. An acceptance criterion that cannot be met is
+worse than a loose one, because it gets quietly reinterpreted during the cutover rather than
+argued with beforehand.
+
+Phase 3's acceptance becomes: **the deviation set is enumerated in advance; every member is
+attributed to the `fsum`/`np.dot` reduction; and no member falls on a bar where a live strategy
+would have acted.** The third clause decides whether the merge is behaviour-neutral in practice,
+and it needs the strategy logic rather than the indicators alone.
+
+- `rejected_alternative` — revert `resources` to `np.dot` so the two agree bit-for-bit. Rejected
+  because seq=102 already rejected it, for a reason recorded before this measurement existed: the
+  BLAS kernel's summation order is a property of the running CPU, so a reference built on it
+  drifts on its own machine across numpy versions. Bit-identity with WMPS would be bought with
+  platform non-determinism, which is the worse trade.
+- `selection_guard` — **this ruling makes the merge harder, not easier.** "Identical" is a
+  criterion nobody can fail, because any difference found during a cutover gets explained away as
+  noise. Replacing it with an enumerated set adds an obligation that did not exist: the deviations
+  must be listed before the merge and each attributed. It also adds a third clause that is not yet
+  measured and may block Phase 3 outright if a flip lands on a bar a deployed strategy traded.
+
+**Note on R6–R11.** All of them were issued after their data landed, into a section whose
 definition was "made before data". That was an error in categorisation, not in the rulings
 themselves — each survives being restated with its basis and guard. The annotation exists so the
 next post-data ruling has to show its guard at the point it is written, rather than being audited
@@ -967,6 +991,24 @@ pooling raises the pooled effect roughly as `SR_pooled ≈ SR_instrument × √N
 measured 0.3 per-instrument edge above a 1.2 floor needs N_eff ≈ 16. Both halves point the same
 way. The simulation treats pooled observations as independent, so its no-gain result is an upper
 bound on what breadth buys; correlated instruments do worse.
+**F3 — the deterministic reduction flips signal comparisons at about 1 bar in 27,000.**
+Logged at seq=113. `resources` reproduces the D8 fixtures exactly (X22, string equality, no
+tolerance), but five columns — `wma_9`, `wma_20`, `wma_55`, `hma_21`, `hma_55` — deliberately
+differ from the live WMPS code, because `resources` reduces with `math.fsum` where WMPS uses
+`np.dot`. That change was made at seq=102, after numpy moved underneath the fixture and BLAS
+summation order made the reference drift on its own machine. The gap is 2–5 ULP against a 16 ULP
+guard.
+
+A ULP-level difference in a *value* is not automatically a difference in a *signal*, so the
+comparisons that drive entries were counted directly — indicator slope, and price-vs-indicator
+cross: XAUUSD 5 flips in 124,887 bars, EURUSD 1 in 80,000, GBPUSD 3 in 80,000, US500 4 in 62,726.
+Thirteen in 347,613. Up to 44% of bars carry a differing indicator value; almost all are absorbed
+by the comparison and a handful are not. The flips concentrate in `wma_20` and `wma_55`;
+`hma_21` and `hma_55` produced none despite the largest raw differences, consistent with hma's
+extra smoothing stage absorbing the reduction error rather than straddling thresholds with it.
+
+Consequence: Phase 3 cannot accept on "identical" (R11).
+
 
 ---
 
