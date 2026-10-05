@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-05 — rulings annotated by basis; R9 found unnumbered and corrects O1's record; R10 names indices as the third market structure (seq=112).
+**Last updated:** 2026-10-05 — Phase 3 specified; F3 shows its stated acceptance is unachievable and R11 replaces it (seq=113).
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -46,7 +46,8 @@ the next reader can check rather than trust.
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
 | 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ next, but ⚠ its rationale is contested — see below |
-| 3+ | Execution merge, live path | ⏭ not entered until a mechanism survives 2b |
+| 3 | Execution merge — WMPS subtree, de-duplication, broker port, T10 rename | ⏭ **specified** (`docs/phase3_spec.md`), not started. **Not gated on 2b** — only Phase 4 is |
+| 4+ | Multi-symbol live, CPCV | ⏭ not entered until a mechanism survives 2b |
 
 ### Phase 1 acceptance criteria
 
