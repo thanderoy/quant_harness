@@ -703,20 +703,41 @@ Binary. All must hold.
 
 ## 10. Decisions
 
-### 10.1 Ruled — binding, made before data
+### 10.1 Ruled
 
-These are methodological choices, not empirical questions. Each is ruled now, with its reason
-stated, precisely because seeing the numbers first would let the answer be chosen for how it looks.
+Each ruling carries a **basis**.
 
-**R1 — Sequencing.** New `quant_harness` repository built first; WMPS merged as `platform` at
+**`PRE_DATA`** — ruled before the relevant numbers existed. These are methodological choices, not
+empirical questions, and they were ruled early precisely because seeing the numbers first would
+let the answer be chosen for how it looks. R1–R5 are all PRE_DATA, and that is a clean break:
+every ruling after R5 was issued after its data landed.
+
+**`POST_DATA`** — ruled in response to a measurement. These are not guarded by construction, so
+each one states two things that a PRE_DATA ruling does not need:
+
+- **`rejected_alternative`** — what else was on the table. A ruling with no stated alternative is
+  a description of what happened, not a choice.
+- **`selection_guard`** — why this ruling was not selected for how it looked. The strongest form
+  is a ruling that went against its own interest; the next is one that foreclosed fewer future
+  options than the alternative.
+
+This annotation was added on 2026-10-05 after R6, R7 and R8 were found to be sitting in a
+sequence whose own definition — "made before data" — they all failed. The numbers stay as they
+are: seq=89, 91, 107 and 110 already cite R7 and R8, the log is append-only, and renumbering
+would need a mapping event to keep those citations readable. That is more machinery than the
+problem warrants.
+
+A **measurement** is not a ruling and does not get an R number. Findings live in §10.4.
+
+**R1 — Sequencing.** `basis: PRE_DATA` New `quant_harness` repository built first; WMPS merged as `platform` at
 Phase 3, frozen to bug-fix-only meanwhile (§1.3). Residual risk — two implementations of the same
 numerical code coexisting — is controlled by D8 golden fixtures, T11 parity and the freeze rule.
 An unmirrored WMPS change is a spec violation, not an inconvenience.
 
-**R2 — Rename timing.** Research-side rename in Phase 0.5, before any module is written, so nothing
+**R2 — Rename timing.** `basis: PRE_DATA` Research-side rename in Phase 0.5, before any module is written, so nothing
 is born in the old namespace. Execution-side rename moves to Phase 3.
 
-**R3 — Mask policy: window indicators NaN, accumulator indicators skip-with-index.**
+**R3 — Mask policy: window indicators NaN, accumulator indicators skip-with-index.** `basis: PRE_DATA`
 
 Two classes, not one policy:
 
@@ -732,7 +753,7 @@ Two classes, not one policy:
 The distinction is structural, not per-indicator taste. Any new indicator is classified into one
 of the two at the point it is written.
 
-**R4 — E-Ratio horizon counts tradable bars, not calendar bars.**
+**R4 — E-Ratio horizon counts tradable bars, not calendar bars.** `basis: PRE_DATA`
 
 E-Ratio measures what a trade would have experienced. Over a weekend you could not have exited, so
 the gap is not a period during which MFE or MAE meaningfully accrued. Counting calendar bars with
@@ -743,11 +764,87 @@ removes it.
 Consequence: mask-on E-Ratios will differ from the original `flood_tide_h1` run. That is expected
 and is exactly what T9a's normaliser channel measures.
 
-**R5 — Phase 2b gate.** Phase 2 runs on FX majors alone, because its acceptance is *harness
-validation* via re-running an already-falsified mechanism, which does not need breadth. Phase 2b
-expansion must complete **before any new mechanism is pre-registered**, because a discovery claim
-does need breadth and seven majors deliver roughly two effective bets. The line is between
-validating the machine and making a claim with it.
+**R5 — Phase 2b gate.** `basis: PRE_DATA` — **re-scoped 2026-10-05, not dropped.**
+
+Phase 2 runs on FX majors alone, because its acceptance is *harness validation* via re-running an
+already-falsified mechanism, which does not need breadth. Phase 2b expansion must complete
+**before any new mechanism is pre-registered**. The line is between validating the machine and
+making a claim with it, and that line stands.
+
+R5 originally rested on two arguments. F1 refutes one and leaves the other untouched.
+
+- **The breadth argument is dead.** It read "seven majors deliver roughly two effective bets",
+  implying some larger instrument count would reach the target. At the measured mean |ρ| of
+  0.44–0.62, no instrument count reaches eff_N ≥ 4 (F1). A gate whose criterion cannot be
+  satisfied by any amount of the work it gates is not a gate.
+- **The mechanism-generality argument is untouched**, and was always the stronger one. A
+  mechanism that holds with identical parameters across different *market structures* is general.
+  One that holds only across nine USD-legged pairs may be a USD artifact. This was never a
+  function of effective N.
+
+So the gate keeps its purpose and replaces its numeric target with a structural one:
+
+> **The research universe must span at least three distinct market structures** — FX, metals, and
+> indices or energy — before any new mechanism is pre-registered.
+
+That is what eff_N ≥ 4 was a proxy for. The structural criterion measures it directly, rather than
+through a coefficient that cannot reach the required value.
+
+**Decidability moves out of this rule.** Whether a result is decidable is set by the measured
+`min_decidable_sharpe` from the power sweep (seq=107), not by breadth arithmetic. Conflating the
+two is what let a breadth target stand in for a power question it could not answer.
+
+**R6 — `h1_momentum` is halted at the beat schedule.** `basis: POST_DATA`
+
+Ruled and actioned 2026-08-31; `LIVE_RISK_HALT` at log seq=82. A mechanism carrying
+`verdict=killed` from two separate entries (seq=65, seq=81) was on the live beat schedule and
+fired. seq=81 had already recorded `untradeable_at_100usd=1` — the log contained the number that
+should have blocked it. Issued after D6 measured the risk configuration it was running under,
+which is what makes it POST_DATA.
+
+- `rejected_alternative` — leave it running on demo for forward data under the existing risk
+  configuration. The forward-data rationale is defensible in itself: forward data is the only
+  evidence uncontaminated by selection. What was not defensible was the configuration.
+- `selection_guard` — halting foreclosed fewer future choices than continuing. A halt can be
+  reversed once the configuration is fixed; the trades taken under a bad configuration cannot be
+  untaken, and they would have contaminated the forward record the alternative was meant to build.
+
+**R7 — the cost gate uses the entry-conditional spread estimator.** `basis: POST_DATA`
+
+Resolved at seq=91. D3a ran dual schedules for nine symbols: periodic 60s (time-weighted) and
+bar-boundary at H1/M15 close + 750 ms (entry-conditional). The two agree to the tick at p50, p75
+and p90 on every symbol. The D3b tick-weighted census disagrees by roughly 10x, because ticks
+burst precisely when the book is active and the spread is momentarily zero — it measures the
+spread when the market is busiest, not when an entry actually fires.
+
+- `rejected_alternative` — the tick-weighted census (448,777,747 spreads, ~11.9 months), by far
+  the larger sample.
+- `selection_guard` — **this ruling went against its own interest.** Entry-conditional and
+  time-weighted spreads push cost above the O1 veto line; tick-weighted does not. Adopting the
+  estimator that makes the project's own instruments look *more* expensive, and rejecting the one
+  with 400x the sample that made them look cheaper, is evidence the choice was not made for how
+  it looked.
+
+**R8 — the breadth target is replaced by a decidability gate.** `basis: POST_DATA`
+
+F1 (§10.4) establishes that eff_N ≥ 4 is unreachable. R8 is the ruling made in response: a result
+is decidable when it clears the measured `min_decidable_sharpe` from the power sweep, not when a
+breadth coefficient reaches a value it cannot reach. R5's gate is re-scoped structurally rather
+than numerically; decidability is a power question and now lives with the power measurement.
+
+- `rejected_alternative` — keep eff_N ≥ 4 and expand the universe until it is reached. Rejected
+  because F1 shows no instrument count satisfies it.
+- `selection_guard` — *proposed, needs sign-off.* The gate this installs is one the project's own
+  mechanisms fail: measured OOS Sharpes of 0.27–0.41 against a floor of 1.2 (seq=107). The ruling
+  replaces an unreachable criterion with a reachable one that still blocks every current
+  candidate, so it does not clear a path the researcher wanted cleared. Marked proposed because,
+  unlike R6 and R7, this guard was not stated when the ruling was made.
+
+**Note on R6, R7 and R8.** All three were issued after their data landed, into a section whose
+definition was "made before data". That was an error in categorisation, not in the rulings
+themselves — each survives being restated with its basis and guard. The annotation exists so the
+next post-data ruling has to show its guard at the point it is written, rather than being audited
+into one later.
 
 ### 10.2 Open — genuinely data-dependent
 
@@ -767,6 +864,37 @@ stands by default and the reason is recorded rather than left implicit.
 **Does `btpy_runner` route sizing through `calculate_lot_size`?** This is a fact about existing
 code, resolved by reading it. Moved to a D6 required output. Its consequence is mechanical: if
 sizing is `backtesting.py` native, T9c becomes mandatory.
+
+---
+
+### 10.4 Findings — measurements, not decisions
+
+A finding is a measurement plus arithmetic, with no judgment in it. It carries an F number, not an
+R number, because nothing was chosen. Findings constrain rulings; they are not rulings.
+
+This section exists because R8 was originally two things fused together — a measurement and a
+ruling made in response to it — and that fusion is part of why the category slipped. Once they are
+separated, the measurement needs no guard (nothing was selected) and the ruling needs one.
+
+**F1 — eff_N ≥ 4 is unreachable at the measured correlations.** Mean |ρ| across the candidate
+universe is 0.44–0.62 (D4). At that level of dependence, no instrument count drives effective N to
+4: adding correlated instruments adds progressively less independent information, and the ceiling
+sits below the target. Measurement plus arithmetic, no judgment.
+
+Consequences: R5's breadth argument is refuted and the gate is re-scoped structurally (§10.1);
+R8 replaces the breadth target with a decidability gate.
+
+**F2 — breadth does not move the detection floor.** Logged at seq=110. The floor is 1.2
+annualised at both the current effective breadth (n=2,000 pooled, 17 folds) and Phase 2b's target
+(n=3,500). With one fold standing for one year, the t-statistic is `SR_annualised × √years`, which
+does not depend on how many observations fill those years — and breadth adds observations within
+the same calendar span. Span buys detection power; sampling density does not.
+
+The companion arithmetic, stated separately because it is not what the simulation measured:
+pooling raises the pooled effect roughly as `SR_pooled ≈ SR_instrument × √N_eff`, so lifting a
+measured 0.3 per-instrument edge above a 1.2 floor needs N_eff ≈ 16. Both halves point the same
+way. The simulation treats pooled observations as independent, so its no-gain result is an upper
+bound on what breadth buys; correlated instruments do worse.
 
 ---
 

@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-09-22 — **Phase 2 complete**: `flood_tide_h1` dead across all seven FX majors (seq=109).
+**Last updated:** 2026-10-05 — R6/R7/R8 annotated POST_DATA, R5 re-scoped structurally (seq=111).
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -92,7 +92,7 @@ Three consequences worth carrying:
 
 | Item | Why it is blocked |
 |---|---|
-| Phase 2b — run it on the credibility argument, or not at all? | **Measured at seq=110: breadth does not move the detection floor.** It is 1.2 at both the current effective N (~2) and 2b's target (3.5). That is structural, not a quirk of the draws: with one fold standing for one year the t-statistic is `SR_annualised × √years`, which does not depend on how many observations fill those years, and breadth adds observations within the same calendar span. The other half is arithmetic: lifting a measured 0.3 per-instrument edge above a 1.2 floor needs N_eff ≈ 16, where 2b targets 3.5. So R5's stated rationale — that expansion is what gets a mechanism past the gates — does not hold, and R8 stands. 2b may still be worth running for its *other* purpose, since N_eff 3.5 makes a future discovery claim more credible than 2 does. That is a spec decision, not a measurement. |
+| Phase 2b — the gate, re-scoped | **R5 re-scoped 2026-10-05, not dropped** (seq=111). Its breadth argument is refuted by F1: at the measured mean |ρ| of 0.44–0.62, no instrument count reaches eff_N ≥ 4, and a gate no amount of the gated work can satisfy is not a gate. Its mechanism-generality argument is untouched and was always the stronger one. The gate now reads: **the research universe must span at least three distinct market structures** (FX, metals, and indices or energy) before any new mechanism is pre-registered. Decidability moved to the measured `min_decidable_sharpe` from seq=107. What still needs you: sign-off on R8's `selection_guard`, recorded as PROPOSED because it was not stated when the ruling was made. |
 | Branch protection | CI runs again; making it required to merge is a repo setting only you can change. |
 | Slip is `HAND_ENTERED` at 1 tick | The only cost input with no source at all, and no document can supply it — only a real fill measures it. The 358 deals carry the fill price but not the requested price, so they cannot close this. |
 
