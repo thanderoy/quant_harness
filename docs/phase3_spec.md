@@ -181,6 +181,8 @@ Binary. All must hold. Criterion 1 replaces §11's "identical" clause per R11.
    in `pyproject.toml`, with the reason recorded there.
 5. `MT5APIClient` satisfies the `resources.execution.broker` port, verified by replaying recorded
    live orders through both the old client and the port with identical resulting order parameters.
+   ◐ **Partly met 2026-10-07.** The port is satisfied and every strategy order path replays
+   identically; the replay over real recorded orders has not run — see §5 step 5.
 6. The execution-side T10 rename is complete; no pre-rename namespace identifiers remain
    anywhere the X16 guard scans.
 7. The demo stack runs a full week unattended with no behavioural change.
@@ -243,7 +245,13 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
       signal since 2025 below ~$1,000 and 34.8% at the $3,643 demo balance** — ruled by T5, and
       carried to step 7. asqs had a fourth, private copy (nearest rounding plus the `min_lot`
       clamp), now routed through the same adapter.
-5. Broker port adaptation and order replay.
+5. ~~Broker port adaptation and order replay.~~ ✅ **Code path done 2026-10-07 (seq=122); real-data
+   replay pending an export.** `MT5Broker` (`app/adapters/broker.py`) is the port's `LIVE`
+   configuration, and crest_n_keel, asqs and h1_momentum send through it. The port grew optional
+   `sl`/`tp`/`magic`/`comment` on `OrderRequest` and a `FillConfig.LIVE` kept off the `FRONTIER`.
+   All 45 strategy order paths replay byte-identical against a baseline committed before the port
+   (541e732). Criterion 5's *recorded live orders* are in the live Postgres; the replay runs on them
+   when `$QH_RECORDED_ORDERS` names a JSON export of Trade rows.
 6. T10 execution rename.
 7. Demo week.
 
