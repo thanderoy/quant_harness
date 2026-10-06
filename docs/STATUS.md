@@ -32,7 +32,7 @@ the next reader can check rather than trust.
 | Tests passing | **671 passed, 2 skipped** on CI; 673 tests total. At most three skips, each declared | 673 tests total, measured on run 37527937727 (the step 4.1 branch, which appends seq=120, so the log-rewrite check had something to diff and ran). Where the log matches `origin/develop` it skips, giving one fewer passed and one more skipped. The CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); `test_no_pre_existing_entry_was_rewritten` (nothing to diff when the log matches `origin/develop`); and one case in `test_parity_data_resolution.py` that exists to assert the recorded path wins *where it resolves*, so it skips on a runner by design. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
 | Packages | 4 built — `qh-resources`, `qh-strategies`, `qh-research`, and `qh-platform` as of the Phase 3 subtree merge | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; **2** CI-limited and declared (X17, X22) | `tests/test_x_coverage.py` |
-| Research log | 121 entries (to seq=120), chain verified; `trial_count()` = 26 | `research.log.verify()` |
+| Research log | 122 entries (to seq=121), chain verified; `trial_count()` = 26 | `research.log.verify()` |
 | Instruments | 9 — 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching | `snapshots/pepperstone_live_20260906.json` |
 | Gate detection floor | **1.2 annualised Sharpe**, false-positive rate 0% at n=2,000 pooled | seq=107, `research/reports/power.py` |
 

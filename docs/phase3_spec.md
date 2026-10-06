@@ -235,8 +235,14 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
    2. ~~**`drawdown_guard`**~~ ✅ **Done 2026-10-06 (seq=118).** The platform imports the port and
       the guard from `resources` and keeps `JsonPeakStore` locally. 129 lines → 64, and nothing
       was added to `resources` — see §2.3.
-   3. **`sizer`** — an API rewrite, and the only one of the three that changes how much money a
-      live order risks. Last, and with its own design.
+   3. ~~**`sizer`**~~ ✅ **Done 2026-10-07 (seq=121).** `calculate_lot_size` → `size_order`, a
+      thin adapter over `size_position` on the pinned snapshot that keeps the 0.10-lot hard cap.
+      The one reachable change is T5's refusal: on a 4,080-cell grid, 1,294 cells refuse where the
+      old sizer traded `min_lot` over budget; the floor-semantics difference needs ATR < $0.10,
+      which no XAUUSD bar in 650,769 has reached. **At crest_n_keel's geometry it refuses every H1
+      signal since 2025 below ~$1,000 and 34.8% at the $3,643 demo balance** — ruled by T5, and
+      carried to step 7. asqs had a fourth, private copy (nearest rounding plus the `min_lot`
+      clamp), now routed through the same adapter.
 5. Broker port adaptation and order replay.
 6. T10 execution rename.
 7. Demo week.
