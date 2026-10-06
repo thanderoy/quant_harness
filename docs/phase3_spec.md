@@ -130,6 +130,32 @@ broken code rather than a suite that belongs elsewhere. Criterion 4 now covers i
 
 ---
 
+### 2.3 Why step 4 is three different problems
+
+Surveyed 2026-10-06 before executing. The three modules share one blocker and then diverge.
+
+| Module | WMPS | `resources` | Kind of change |
+|---|---|---|---|
+| `indicators` | `wma`, `hma`, `stochastic`, `atr` | identical signatures | **drop-in**, once packaged |
+| `drawdown_guard` | `PeakStore`, **`JsonPeakStore`**, `DrawdownGuard` | `PeakStore`, **`InMemoryPeakStore`**, `DrawdownGuard` | **feature gap** |
+| `sizer` | `calculate_lot_size()`, XAUUSD-hardcoded | `size_position()` → `PositionSize`, `InstrumentSpec`-driven | **API rewrite** |
+
+**`drawdown_guard` is the dangerous one.** `resources` has no `JsonPeakStore`, and its
+`InMemoryPeakStore` docstring says plainly: *"Non-persistent store. The correct default for a
+backtest."* The live strategies persist peak equity to JSON files under the platform's state
+directory (the pre-rename path named in R12), with atomic `os.replace` writes. Swapping in the `resources` version replaces a persistent store with an
+in-memory one, so peak equity resets on every Celery task run and the **10% maximum-drawdown guard
+effectively never fires**.
+
+That is R12's hazard in a second costume: a change that reads as de-duplication and silently
+disables a risk control. `resources` needs a persistent store before this module is touched.
+
+**`sizer` changes live position sizing.** Different name, arguments and return type, and
+symbol-agnostic where the live one is XAUUSD-hardcoded. It is the only module here that can change
+how much money a real order risks, which is why it goes last.
+
+---
+
 ---
 
 ## 3. Acceptance criteria
@@ -184,7 +210,21 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
 1. ~~Measure criterion 1's third clause.~~ ✅ Done, 2026-10-06. The gate passed; see §2.1.
 2. ~~Record the pre-merge `develop` SHA.~~ ✅ `531d3b28ab810720c9e1d61f2715afd6b1a4eb86`.
 3. ~~Subtree merge, no refactor.~~ ✅ Done 2026-10-06, commit `6971806`. See §2.2.
-4. De-duplicate, one module at a time, re-running X22 and T11 after each.
+3a. **Package `qh-resources` for platform consumption.** ⛔ **Prerequisite, not in the original
+    ordering.** The trading service builds with context `backend/trading`, copies only its own
+    `pyproject.toml` and `uv.lock`, and runs `uv sync --frozen`. `packages/qh-resources` is
+    outside that build context and undeclared as a dependency, so `from resources…` cannot
+    resolve in the container however the strategy imports are rewritten. Widening the context and
+    declaring the dependency means changing the `Dockerfile` **and** `docker-compose.yml`, whose
+    service definitions are on the platform's do-not-touch list absent a specific instruction.
+    **This gates all three modules below.**
+4. De-duplicate, one module at a time, re-running X22 and T11 after each — in this order, which
+   is not arbitrary (see §2.3):
+   1. **`indicators`** — a clean swap once 3a lands. All four signatures identical, and F4 already
+      showed crest_n_keel's signals do not change.
+   2. **`drawdown_guard`** — **not a swap.** `resources` has no persistent peak store; see §2.3.
+   3. **`sizer`** — an API rewrite, and the only one of the three that changes how much money a
+      live order risks. Last, and with its own design.
 5. Broker port adaptation and order replay.
 6. T10 execution rename.
 7. Demo week.
