@@ -39,6 +39,7 @@ from app.quant.strategies.base import BaseStrategy
 from app.quant.strategies.drawdown_guard import DrawdownGuard, JsonPeakStore
 from app.quant.strategies.indicators import atr as calc_atr
 from app.quant.strategies.logging_utils import get_strategy_logger
+from app.quant.strategies.sizer import size_order
 from app.adapters.mt5_api import MT5APIClient
 from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
@@ -97,7 +98,6 @@ class _PartialCloseTracker:
 SYMBOL = "XAUUSD"
 MAGIC_NUMBER = 1500020
 XAUUSD_POINT = 0.01
-XAUUSD_CONTRACT = 100.0  # oz per standard lot
 XAUUSD_MIN_LOT = 0.01
 XAUUSD_MAX_LOT = 0.10
 XAUUSD_LOT_STEP = 0.01
@@ -608,16 +608,34 @@ class ASQSafeScalpingStrategy(BaseStrategy):
     # ──────────────────────────────────────────────────────────────────────
 
     def _compute_lot_size(self, balance: float) -> float:
+        """Fixed-SL position sizing through the shared sizer.
+
+        The stop is a fixed SL_POINTS distance, so it is passed as the "ATR"
+        with a multiplier of 1.0. Returns 0.0 when the sizer refuses because
+        one minimum lot already exceeds the risk budget.
+
+        This used to compute its own lot: rounded to *nearest*, then clamped
+        up to XAUUSD_MIN_LOT. Both were T5's named bugs. At step 4.3, across
+        balances $50-$100,000 at 0.5/1/2% risk, the two disagreed in 100 of
+        6,000 cells: 82 where nearest-rounding put the position over budget
+        (worst 1.2x), and 18 where the min-lot clamp traded up to 12x budget.
+        Everywhere else they agree exactly. At the default 0.5% the first
+        tradable balance is $600.
         """
-        Fixed-SL position sizing.
-        Lot = risk_amount / (SL_dollars × contract_size).
-        Clamped to [MIN_LOT, MAX_LOT], rounded to LOT_STEP.
-        """
-        sl_dollars = SL_POINTS * XAUUSD_POINT  # 300 × 0.01 = $3.00
-        risk_amount = balance * self.risk_pct   # balance × 0.005
-        raw_lots = risk_amount / (sl_dollars * XAUUSD_CONTRACT)
-        rounded = round(raw_lots / XAUUSD_LOT_STEP) * XAUUSD_LOT_STEP
-        return max(XAUUSD_MIN_LOT, min(rounded, XAUUSD_MAX_LOT))
+        sized = size_order(
+            SYMBOL,
+            account_balance=balance,
+            atr_value=SL_POINTS * XAUUSD_POINT,
+            risk_pct=self.risk_pct,
+            sl_atr_multiplier=1.0,
+            max_lot=XAUUSD_MAX_LOT,
+        )
+        if not sized.tradable:
+            LOGGER.warning(
+                f"Sizer declined: reason={sized.reason.value} "
+                f"balance={balance:.2f} risk_pct={self.risk_pct}"
+            )
+        return sized.lots
 
     def _compute_sl_tp(
         self, signal: str, entry_price: float,
@@ -782,6 +800,10 @@ class ASQSafeScalpingStrategy(BaseStrategy):
             entry_price = float(df.iloc[-2]["close"])
 
         lot_size = self._compute_lot_size(balance)
+        if lot_size <= 0:
+            # Declined by the sizer, already logged with its reason. Nothing
+            # reaches the broker, so there is no trade record to write.
+            return None
         sl, tp = self._compute_sl_tp(signal, entry_price)
 
         LOGGER.info(
