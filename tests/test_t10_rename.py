@@ -49,10 +49,16 @@ EXCLUDED_TREES = (
 #: stale strings: they are live runtime state paths and a Docker volume on the
 #: running system.
 #:
-#:     /var/lib/qhf/asqs_peak.json           asqs peak state
-#:     /var/lib/qhf/peak_hma_stoch_1h.json   crest_n_keel peak state
-#:     /var/lib/qhf/peak_equity_HMA1H.json   drawdown guard peak equity
-#:     qhf_state:/var/lib/qhf                the volume all three live on
+#:     <state>/asqs_peak.json           asqs peak state
+#:     <state>/peak_hma_stoch_1h.json   crest_n_keel peak state
+#:     qhf_state:<state>                the volume both live on
+#:
+#: R12 originally listed a third file, peak_equity_HMA1H.json, as the drawdown
+#: guard's peak path. It was not: it appeared only inside a `Usage:` docstring
+#: example in the platform's drawdown_guard module, never as a constant any
+#: strategy read. Step 4.2 rewrote that module, the example went with it, and
+#: this test failed — which is the guard working. The live state files are the
+#: two DEFAULT_PEAK_STORE_PATH constants below.
 #:
 #: Renaming them is a migration, not a find-and-replace. The drawdown guard
 #: reads peak equity from that file to enforce the 10% maximum-drawdown rule;
@@ -407,8 +413,7 @@ def test_the_live_state_paths_are_named_so_the_rename_cannot_forget_them():
     platform = REPO / "packages" / "qh-platform"
     if not platform.exists():
         pytest.skip("platform tree not merged yet")
-    must_migrate = ("asqs_peak.json", "peak_hma_stoch_1h.json",
-                    "peak_equity_HMA1H.json")
+    must_migrate = ("asqs_peak.json", "peak_hma_stoch_1h.json")
     found = {name: False for name in must_migrate}
     for path in platform.rglob("*.py"):
         if "__pycache__" in path.parts:

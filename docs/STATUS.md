@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-06 — **Phase 3 step 3a done**: `resources` installs and imports in the trading image (seq=117).
+**Last updated:** 2026-10-06 — Phase 3 step 4.2 done; it needed no new code, and R12's path list is corrected (seq=119).
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -109,7 +109,6 @@ Three consequences worth carrying:
 
 | Item | Notes |
 |---|---|
-| `resources` has no persistent peak store | `resources.risk.drawdown_guard` ships only `InMemoryPeakStore` — "the correct default for a backtest". The live guard persists peak equity to JSON with atomic writes. De-duplicating it as-is would reset the peak every Celery run and stop the 10% drawdown guard firing. Blocks Phase 3 step 4.2. |
 | D3b covers 2 of 9 symbols | The frontier cannot fully cost the other seven. |
 | Parity CSVs resolve from this repo | `default_data_paths()` prefers `$QH_PARITY_DATA_DIR`, then the WMPS path recorded in the seq=31 artifact, then the copies tracked here. Safe because `ohlc_hash` is parity layer 1 and is compared before anything downstream runs. This un-skipped 23 CI checks, two of which carry Phase 1 criteria #2 and #3 — previously met locally and unproven on a runner. |
 | `n_trades` gate is inert | Passed at every injected alpha level (seq=107); contributes nothing to the six-way AND. |

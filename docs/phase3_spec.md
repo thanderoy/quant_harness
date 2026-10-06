@@ -228,7 +228,9 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
    is not arbitrary (see §2.3):
    1. **`indicators`** — a clean swap once 3a lands. All four signatures identical, and F4 already
       showed crest_n_keel's signals do not change.
-   2. **`drawdown_guard`** — **not a swap.** `resources` has no persistent peak store; see §2.3.
+   2. ~~**`drawdown_guard`**~~ ✅ **Done 2026-10-06 (seq=118).** The platform imports the port and
+      the guard from `resources` and keeps `JsonPeakStore` locally. 129 lines → 64, and nothing
+      was added to `resources` — see §2.3.
    3. **`sizer`** — an API rewrite, and the only one of the three that changes how much money a
       live order risks. Last, and with its own design.
 5. Broker port adaptation and order replay.
