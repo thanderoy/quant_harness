@@ -37,3 +37,17 @@ pythonpath = [
     "packages/qh-research",
     "packages/qh-platform",
 ]
+# The platform's Django suite is not collected here. It needs Django, a
+# Postgres test database and the `trading` container, and it is run as
+# `docker-compose exec trading pytest -n 2` per the platform's own
+# instructions. Before the Phase 3 subtree merge this path did not exist, so a
+# bare `pytest` simply never saw it; afterwards collection aborts on
+# `ModuleNotFoundError: No module named 'django'` and takes the whole suite
+# with it, which reads as broken code rather than a suite that belongs
+# elsewhere. Excluding it keeps the two suites separate, which is what they
+# already were.
+norecursedirs = [
+    "*.egg", ".*", "_darcs", "build", "CVS", "dist", "node_modules", "venv",
+    "{arch}",
+    "packages/qh-platform/backend",
+]

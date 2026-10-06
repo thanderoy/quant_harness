@@ -893,7 +893,32 @@ and it needs the strategy logic rather than the indicators alone.
   must be listed before the merge and each attributed. It also adds a third clause that is not yet
   measured and may block Phase 3 outright if a flip lands on a bar a deployed strategy traded.
 
-**Note on R6–R11.** All of them were issued after their data landed, into a section whose
+**R12 — the merged platform tree is carved out of X16 until the execution rename runs.**
+`basis: POST_DATA`
+
+The Phase 3 subtree merge brought eight live pre-rename references into the tree: three strategy
+state paths, the drawdown guard's peak-equity path, the Docker volume all four sit on, and a
+VALIDATION.md documenting one of them. X16 fails on them, correctly.
+
+They are not stale strings. `/var/lib/qhf/peak_equity_HMA1H.json` is where the drawdown guard
+reads peak equity to enforce the 10% maximum-drawdown rule. Change the path without moving the
+file and the guard finds no peak, concludes the account is at a new high, and returns the entire
+drawdown budget unspent. The rename is a migration of live state, which is why T10's
+execution-side half is scheduled at Phase 3 step 6 rather than done opportunistically during the
+merge.
+
+- `rejected_alternative` — rename now, during the merge, and keep X16 green throughout. Rejected
+  because a find-and-replace on those paths is a live trading-safety bug, and because doing it at
+  step 3 would bundle a state migration into a commit whose purpose is to move files unchanged.
+- `selection_guard` — **the carve-out is guarded against outliving its reason.**
+  `test_the_execution_rename_carve_out_is_still_needed` asserts each exempted tree still contains
+  a reference, so the moment the rename lands the test fails and forces the entry's deletion.
+  `test_the_live_state_paths_are_named_so_the_rename_cannot_forget_them` asserts the three state
+  filenames are still referenced by platform code, making the migration obligation executable
+  rather than a comment. A carve-out that quietly stops being needed is how a guard narrows; both
+  tests exist to stop that.
+
+**Note on R6–R12.** All of them were issued after their data landed, into a section whose
 definition was "made before data". That was an error in categorisation, not in the rulings
 themselves — each survives being restated with its basis and guard. The annotation exists so the
 next post-data ruling has to show its guard at the point it is written, rather than being audited
