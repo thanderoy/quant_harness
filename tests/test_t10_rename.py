@@ -44,6 +44,30 @@ EXCLUDED_TREES = (
     RESEARCH / "post" / "artifacts",
 )
 
+#: The platform tree merged at Phase 3 step 3, which has not yet had the
+#: execution-side rename (T10, scheduled at Phase 3 step 6). These are not
+#: stale strings: they are live runtime state paths and a Docker volume on the
+#: running system.
+#:
+#:     /var/lib/qhf/asqs_peak.json           asqs peak state
+#:     /var/lib/qhf/peak_hma_stoch_1h.json   crest_n_keel peak state
+#:     /var/lib/qhf/peak_equity_HMA1H.json   drawdown guard peak equity
+#:     qhf_state:/var/lib/qhf                the volume all three live on
+#:
+#: Renaming them is a migration, not a find-and-replace. The drawdown guard
+#: reads peak equity from that file to enforce the 10% maximum-drawdown rule;
+#: pointing it at a fresh path resets the peak silently, and the guard then
+#: believes the account is at a new high with its entire drawdown budget
+#: unspent. The rename must move the files, or read the old path and write the
+#: new one, before the strings change.
+#:
+#: Guarded below: each entry must still contain a reference, so this set
+#: cannot outlive the rename it is waiting for.
+AWAITING_EXECUTION_RENAME = (
+    REPO / "packages" / "qh-platform",
+    REPO / "services",
+)
+
 #: Documentation that records the project's own history, including the spec
 #: that *defines* the rename. Rewriting these would falsify the record of what
 #: was decided and why. X16 names code, config, Compose files and env-var
@@ -112,6 +136,8 @@ def _scanned_files() -> list[pathlib.Path]:
         if "__pycache__" in parts or ".venv" in parts or ".git" in parts:
             continue
         if any(str(path).startswith(str(t)) for t in EXCLUDED_TREES):
+            continue
+        if any(str(path).startswith(str(t)) for t in AWAITING_EXECUTION_RENAME):
             continue
         if path == pathlib.Path(__file__).resolve():
             continue   # this file defines the check; it must name the string
@@ -334,3 +360,65 @@ def _rename_entry(log) -> dict:
         if entry["hypothesis_id"] == "record:t10-qhf-package-split":
             return entry
     raise AssertionError("no PROJECT_RENAME entry for the T10 split")
+
+
+# --------------------------------------------------------------------------- #
+# The Phase 3 carve-out must not outlive the rename it waits for               #
+# --------------------------------------------------------------------------- #
+
+def test_the_execution_rename_carve_out_is_still_needed():
+    """`AWAITING_EXECUTION_RENAME` exempts the merged platform tree from X16
+    because T10's execution-side rename is scheduled at Phase 3 step 6 and has
+    not run. A carve-out that stops being needed and stays in place is how a
+    guard quietly narrows, so each entry has to still contain a reference.
+
+    When the rename lands, this test fails and the entry is deleted. That is
+    the intended way for it to end.
+    """
+    stale = []
+    for tree in AWAITING_EXECUTION_RENAME:
+        if not tree.exists():
+            stale.append(f"{tree.relative_to(REPO)} (path is gone)")
+            continue
+        hits = 0
+        for path in tree.rglob("*"):
+            if not path.is_file() or path.suffix not in {
+                    ".py", ".toml", ".yml", ".yaml", ".cfg", ".ini", ".env", ".md"}:
+                continue
+            if "__pycache__" in path.parts:
+                continue
+            if QHF.search(path.read_text(errors="ignore")):
+                hits += 1
+                break
+        if hits == 0:
+            stale.append(f"{tree.relative_to(REPO)} (no references left)")
+    assert not stale, (
+        "these trees no longer need the carve-out; delete them from "
+        f"AWAITING_EXECUTION_RENAME: {stale}")
+
+
+def test_the_live_state_paths_are_named_so_the_rename_cannot_forget_them():
+    """The rename is a migration. If these paths change without the files
+    moving, the drawdown guard's peak equity resets and it believes the
+    account is at a new high with its full 10% budget unspent.
+
+    Named here rather than only in a comment, so the obligation is executable.
+    """
+    platform = REPO / "packages" / "qh-platform"
+    if not platform.exists():
+        pytest.skip("platform tree not merged yet")
+    must_migrate = ("asqs_peak.json", "peak_hma_stoch_1h.json",
+                    "peak_equity_HMA1H.json")
+    found = {name: False for name in must_migrate}
+    for path in platform.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        text = path.read_text(errors="ignore")
+        for name in must_migrate:
+            if name in text:
+                found[name] = True
+    missing = [n for n, ok in found.items() if not ok]
+    assert not missing, (
+        "these live state files are no longer referenced by the platform "
+        f"code: {missing}. If the rename moved them, update this list; if it "
+        "changed the path without moving the file, the peak state was reset.")

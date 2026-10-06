@@ -1,0 +1,344 @@
+import re
+from typing import Dict, Optional, List
+
+from app.quant.strategies.base import BaseStrategy
+from app.quant.strategies.logging_utils import get_strategy_logger
+from app.adapters.mt5_api import MT5APIClient
+from app.adapters.utils.create import create_trade as create_trade_record
+from app.config import settings
+
+
+SHORT_NAME = "FXZ"
+LOGGER = get_strategy_logger(__name__, SHORT_NAME)
+
+# (min_balance, volume) — highest matching tier wins
+# Allows for auto scaling based on precalculated thresholds
+VOLUME_TIERS = [
+    (50.00, 0.01),
+    (102.50, 0.02),
+    (207.50, 0.03),
+    (365.00, 0.04),
+    (575.00, 0.05),
+    (837.50, 0.06),
+    (1152.50, 0.07),
+    (1520.00, 0.08),
+    (1940.00, 0.09),
+    (2412.50, 0.10),
+]
+
+
+def get_volume_for_balance(balance: float) -> float:
+    """Return the largest volume tier the account balance qualifies for."""
+    volume = VOLUME_TIERS[0][1]  # default to smallest tier
+    for min_balance, tier_volume in VOLUME_TIERS:
+        if balance >= min_balance:
+            volume = tier_volume
+        else:
+            break
+    return volume
+
+
+class ForexeroStrategy(BaseStrategy):
+    """
+    Streams Forexero Telegram signals and executes trades via MT5 API.
+    For each signal, opens up to max_positions (TP1..TPn) positions and records
+    them in the DB as Trade entries.
+    """
+
+    SHORT_NAME = SHORT_NAME
+
+    def __init__(
+        self,
+        *,
+        environment: str = "test",
+        mt5_base_url: Optional[str] = None,
+        deviation: int = 20,
+        magic_number: int = 2460000,
+        trades_per_tp: int = 1,
+        use_tps: Optional[List[int]] = None,
+        adjust_for_high_risk_trades: bool = False,
+    ):
+        super().__init__(environment=environment)
+        self.deviation = deviation
+        self.magic_number = magic_number
+        self.trades_per_tp = trades_per_tp
+        self.use_tps = use_tps if use_tps is not None else [1, 2, 3]
+        self.adjust_for_high_risk_trades = adjust_for_high_risk_trades
+
+        base_url = mt5_base_url or settings.get_mt5_url(self.environment)
+        self.MT5_API_CLIENT = MT5APIClient(base_url=base_url)
+
+        # Try to connect MT5 once, ignore errors (we'll retry on send)
+        try:
+            self.MT5_API_CLIENT.connect()
+        except Exception as e:
+            LOGGER.warning(f"Could not connect MT5 at init: {e}")
+
+        # Cache leverage for capital calculations
+        self.account_leverage: float = 400.0
+        self.account_login = None
+        try:
+            info = self.MT5_API_CLIENT.get_account_info()
+            self.account_leverage = float(info.get("leverage", self.account_leverage))
+            self.account_login = int(info.get("login")) if info.get("login") else None
+        except Exception as e:
+            LOGGER.warning(f"Failed to get MT5 account info: {e}")
+
+    def _get_volume(self) -> float:
+        """Resolve order volume dynamically from current account balance."""
+        try:
+            info = self.MT5_API_CLIENT.get_account_info()
+            balance = float(info.get("balance", 0.0))
+            volume = get_volume_for_balance(balance)
+            LOGGER.info(f"Account balance: {balance}, volume: {volume}")
+            return volume
+        except Exception as e:
+            LOGGER.warning(
+                f"Failed to get balance for volume sizing: {e}. Using minimum 0.01."
+            )
+            return VOLUME_TIERS[0][1]
+
+    def _normalize_symbol(self, symbol: str) -> str:
+        # Remove emojis, slashes and spaces e.g. "🔔XAU/USD🔔" -> "XAUUSD"
+        s = symbol.replace("🔔", "").replace("/", "").replace(" ", "")
+        return s.upper()
+
+    def _extract_signal_data(self, signal: dict) -> Optional[Dict[str, str]]:
+        content = signal.get("content")
+        if not content:
+            return None
+
+        data: Dict[str, str] = {}
+        lines = [ln.strip() for ln in content.split("\n") if ln.strip()]
+        if not lines:
+            return None
+
+        # First non-empty line is the symbol line
+        symbol = self._normalize_symbol(lines[0])
+        if symbol not in ["XAUUSD"]:
+            LOGGER.warning(f"Invalid symbol {symbol}, skipping signal")
+            return None
+
+        data["Symbol"] = symbol
+
+        # Remaining lines are key/value pairs like "Direction: BUY" or "TP1 1970.00"
+        # Allow spaces in keys (e.g. "Entry Price")
+        kv_pattern = re.compile(
+            r"^(?P<key>[A-Za-z0-9 ]+?)\s*[:]\s*(?P<val>.+?)\s*$|^(?P<key_nc>[A-Za-z0-9]+)\s+(?P<val_nc>.+?)\s*$"
+        )
+
+        for line in lines[1:]:
+            # Try matching with colon first
+            m = kv_pattern.match(line)
+            if not m:
+                continue
+
+            if m.group("key"):
+                key_raw = m.group("key")
+                val_raw = m.group("val")
+            else:
+                key_raw = m.group("key_nc")
+                val_raw = m.group("val_nc")
+
+            key = key_raw.strip().upper()
+            val = val_raw.replace("\xa0", " ").strip()
+            # Normalize common keys
+            key = {
+                "DIRECTION": "Direction",
+                "ENTRYPRICE": "Entry Price",
+                "SL": "SL",
+                "TP": "TP",
+                "TP1": "TP1",
+                "TP2": "TP2",
+                "TP3": "TP3",
+            }.get(key, key.title())
+            data[key] = val
+
+        return data
+
+    def _parse_float(self, v: Optional[str]) -> Optional[float]:
+        try:
+            return None if v is None else float(str(v).split()[0])
+        except Exception:
+            return None
+
+    def process_signal(self, signal: dict):
+        """
+        Synchronously process a signal: parse, validate, and execute trades.
+        """
+        if not signal:
+            LOGGER.info("Empty signal object, skipping")
+            return
+
+        # Check whether to ignore 'HIGH RISK' trades
+        if self.adjust_for_high_risk_trades:
+            content = signal.get("content", "").upper()
+            if content and "HIGH RISK" in content:
+                LOGGER.info("Reduced TPs for HIGH RISK signal")
+                self.use_tps = [1]
+
+        data = self._extract_signal_data(signal)
+        if not data:
+            LOGGER.info("Could not parse signal content, skipping")
+            return
+
+        symbol = data.get("Symbol")
+        action = (data.get("Direction") or "").strip().upper()
+        entry_price = self._parse_float(data.get("Entry Price"))
+        sl = self._parse_float(data.get("SL"))
+
+        # Validate required fields before proceeding
+        if not symbol:
+            LOGGER.warning("Missing or invalid symbol, skipping signal")
+            return
+
+        if action not in ("BUY", "SELL"):
+            LOGGER.warning(
+                f"Invalid action '{action}', must be BUY or SELL, skipping signal"
+            )
+            return
+
+        # Prepare list of (tp_index, tp_value) to execute
+        valid_tps: List[tuple[int, Optional[float]]] = []
+
+        # 1. Try to extract specific values for requested TPs
+        for i in self.use_tps:
+            val = self._parse_float(data.get(f"TP{i}"))
+            if val is not None:
+                valid_tps.append((i, val))
+
+        # 2. If no specific keys found, try generic "TP"
+        if not valid_tps:
+            val = self._parse_float(data.get("TP"))
+            if val is not None:
+                # Assign generic TP to the first requested TP index
+                if self.use_tps:
+                    valid_tps.append((self.use_tps[0], val))
+
+        # 3. If still nothing, place one order without TP if use_tps is configured
+        if not valid_tps and self.use_tps:
+            valid_tps.append((self.use_tps[0], None))
+
+        # Fetch tick data once before placing orders (for order type determination)
+        tick_data = None
+        if entry_price:
+            try:
+                tick_data = self.MT5_API_CLIENT.get_tick(symbol)
+                LOGGER.info(
+                    f"Fetched tick for {symbol}: bid={tick_data.get('bid')}, ask={tick_data.get('ask')}"
+                )
+            except Exception as e:
+                LOGGER.warning(f"Failed to get tick for {symbol}: {e}")
+
+        # Resolve volume once per signal based on current balance
+        volume = self._get_volume()
+
+        # Place orders
+        for tp_idx, tp in valid_tps:
+            for _ in range(self.trades_per_tp):
+                # Determine order type dynamically based on current tick price
+                order_type = "MARKET"  # Default to market if no entry price
+
+                if entry_price:
+                    if tick_data:
+                        bid = tick_data.get("bid")
+                        ask = tick_data.get("ask")
+
+                        if action == "BUY":
+                            # BUY_LIMIT: entry below current ask (waiting for price to come down)
+                            # BUY_STOP: entry at or above current ask (waiting for price to break up)
+                            if entry_price < ask:
+                                order_type = "LIMIT"
+                            else:
+                                order_type = "STOP"
+                            LOGGER.info(
+                                f"BUY: entry={entry_price}, ask={ask}, order_type={order_type}"
+                            )
+                        else:  # SELL
+                            # SELL_LIMIT: entry above current bid (waiting for price to rise)
+                            # SELL_STOP: entry at or below current bid (waiting for price to break down)
+                            if entry_price > bid:
+                                order_type = "LIMIT"
+                            else:
+                                order_type = "STOP"
+                            LOGGER.info(
+                                f"SELL: entry={entry_price}, bid={bid}, order_type={order_type}"
+                            )
+                    else:
+                        # Fallback to LIMIT if tick fetch failed
+                        order_type = "LIMIT"
+                        LOGGER.warning("Using LIMIT order type (tick data unavailable)")
+
+                try:
+                    order_data = {
+                        "entry_price": entry_price,
+                        "tp": tp,
+                        "sl": sl,
+                        "order_type": order_type,
+                    }
+                    LOGGER.info(f"Data: {order_data}")
+                    # Synchronous call
+                    order = self.MT5_API_CLIENT.send_order(
+                        action=action,
+                        symbol=symbol,
+                        volume=volume,
+                        order_type=order_type,
+                        price=entry_price,
+                        sl=sl,
+                        tp=tp,
+                        deviation=self.deviation,
+                        magic=self.magic_number,
+                        comment=f"FXZ TP{tp_idx}" if tp is not None else "FXZ",
+                    )
+
+                    # Create Trade object in DB if order succeeded
+                    if order and order.get("success") is True:
+                        executed_price = order.get("price", entry_price)
+                        executed_volume = order.get("volume", volume)
+
+                        account_instance = None
+                        if getattr(self, "account_login", None):
+                            from app.trades.models import Account
+
+                            account_instance = Account.objects.filter(
+                                login=self.account_login
+                            ).first()
+
+                        try:
+                            create_trade_record(
+                                order,
+                                symbol=symbol,
+                                direction=action,
+                                entry_price=float(executed_price),
+                                order_volume=float(executed_volume),
+                                account=account_instance,
+                                market_type="FOREX",
+                                strategy=self.__class__.__name__,
+                                timeframe="1H",
+                                sl=sl,
+                                tp=tp,
+                                environment=self.environment,
+                            )
+                        except Exception as e:
+                            LOGGER.error(
+                                {
+                                    "error": f"Failed to create trade record: {e}",
+                                    "order": order,
+                                }
+                            )
+                    else:
+                        retcode = (
+                            order.get("retcode", "unknown") if order else "no response"
+                        )
+                        retcode_desc = (
+                            order.get("retcode_description", "") if order else ""
+                        )
+                        LOGGER.error(
+                            {
+                                "error": f"Order failed: {retcode} - {retcode_desc}",
+                                "order": order,
+                            }
+                        )
+
+                except Exception as e:
+                    LOGGER.error({"error": f"Order placement error: {e}", "data": data})

@@ -106,6 +106,30 @@ instrument they run on. A future strategy reading `wma` directly would need this
 
 ---
 
+### 2.2 What the merge actually did, and what it surfaced
+
+Merged 2026-10-06 as `6971806`, parents `531d3b2` and `27f94d8`. Restore path:
+`531d3b28ab810720c9e1d61f2715afd6b1a4eb86`.
+
+**WMPS's `research/` tree did not come across.** It held 145 files including a copy of
+`entries.jsonl` frozen at seq=85 — the D9 migration entry. Verified to be an exact truncated
+prefix of the live chain, so no fork; but a 29-entry-stale duplicate of the project's source of
+truth sitting in-tree is something a reader greps and believes. Phase 3 merges the *platform*; the
+research tree was superseded by the rewrite, which is R1's whole sequencing argument. Removed in
+the same branch; the tree now holds exactly one `entries.jsonl`.
+
+**`git subtree add` cannot target two prefixes.** §1 said `packages/qh-platform/` *and*
+`services/`. One subtree add into `packages/qh-platform/`, then a normal `git mv` of
+`docker-compose.yml` into `services/`.
+
+**Collection aborted on the first run.** The merged Django suite took the *whole* test run down
+with `ModuleNotFoundError: No module named 'django'` — zero tests, not one failure. That reads as
+broken code rather than a suite that belongs elsewhere. Criterion 4 now covers it.
+
+**X16 found eight live references, and they are not strings.** See R12.
+
+---
+
 ---
 
 ## 3. Acceptance criteria
@@ -115,15 +139,26 @@ Binary. All must hold. Criterion 1 replaces §11's "identical" clause per R11.
 1. **The deviation set is enumerated before the merge**, every member is attributed to the
    `fsum`/`np.dot` reduction, and **no member falls on a bar where a live strategy would have
    acted.** ✅ **Measured 2026-10-06 — passes (F4, seq=114).** See §2.1.
-2. WMPS history is preserved through the subtree merge — `git log --follow` reaches pre-merge
-   commits for every moved file.
+2. WMPS history is preserved through the subtree merge — the source commit is an ancestor of
+   `HEAD` and all its commits are reachable. ✅ **Met: 228 commits, back to 2024-11-15.**
+
+   > **Corrected 2026-10-06.** This criterion originally read "`git log --follow` reaches
+   > pre-merge commits for every moved file". That is not how `git subtree add` preserves
+   > history: it grafts the source as a second parent with files at their *original* paths and
+   > records no rename, so `--follow` has nothing to bridge and returns zero. The history is
+   > fully present — `git log <source-sha> -- backend/...` finds it. The criterion described a
+   > mechanism subtree does not use. Corrected rather than ruled on: there was no choice between
+   > options here, only a false statement about how git works.
 3. The three duplicated modules are deleted, not merely bypassed, and no import path reaches them.
-4. `MT5APIClient` satisfies the `resources.execution.broker` port, verified by replaying recorded
+4. The platform's Django suite is not collected by this repository's `pytest`. It needs Django, a
+   Postgres test database and the `trading` container. ✅ **Met** — excluded via `norecursedirs`
+   in `pyproject.toml`, with the reason recorded there.
+5. `MT5APIClient` satisfies the `resources.execution.broker` port, verified by replaying recorded
    live orders through both the old client and the port with identical resulting order parameters.
-5. The execution-side T10 rename is complete; no pre-rename namespace identifiers remain
+6. The execution-side T10 rename is complete; no pre-rename namespace identifiers remain
    anywhere the X16 guard scans.
-6. The demo stack runs a full week unattended with no behavioural change.
-7. `trial_count()` is unchanged by the merge. Phase 3 is engineering; it registers no hypothesis.
+7. The demo stack runs a full week unattended with no behavioural change.
+8. `trial_count()` is unchanged by the merge. Phase 3 is engineering; it registers no hypothesis.
 
 ---
 
@@ -147,8 +182,8 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
 ## 5. Ordering
 
 1. ~~Measure criterion 1's third clause.~~ ✅ Done, 2026-10-06. The gate passed; see §2.1.
-2. Record the pre-merge `develop` SHA.
-3. Subtree merge, no refactor. Verify criterion 2 before touching anything.
+2. ~~Record the pre-merge `develop` SHA.~~ ✅ `531d3b28ab810720c9e1d61f2715afd6b1a4eb86`.
+3. ~~Subtree merge, no refactor.~~ ✅ Done 2026-10-06, commit `6971806`. See §2.2.
 4. De-duplicate, one module at a time, re-running X22 and T11 after each.
 5. Broker port adaptation and order replay.
 6. T10 execution rename.

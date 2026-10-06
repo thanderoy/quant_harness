@@ -1,0 +1,13 @@
+#!/usr/bin/with-contenv bash
+
+# Fix permissions on wine prefix if needed
+chown -R abc:abc /config/.wine 2>/dev/null || true
+
+# Initialize Wine prefix if not present
+if [ ! -d "/config/.wine/drive_c" ]; then
+    echo "[cont-init] Initializing Wine prefix..."
+    s6-setuidgid abc wineboot --init
+fi
+
+# Kick off the installer and service start sequence as user abc
+exec s6-setuidgid abc /scripts/01-start.sh

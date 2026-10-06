@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-06 — Phase 3's gate measured and passed; it is not refused by its own acceptance criterion (F4, seq=114).
+**Last updated:** 2026-10-06 — **Phase 3 step 3 done**: WMPS merged as `packages/qh-platform` (seq=115).
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -30,7 +30,7 @@ the next reader can check rather than trust.
 | Metric | Value | How it was measured |
 |---|---|---|
 | Tests passing | **665 passed, 3 skipped** on CI; 668 tests total. Only three skips remain, each declared | 668 tests total, measured on run 36984498496 (`develop` at d07f20a). The three CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); `test_no_pre_existing_entry_was_rewritten` (nothing to diff when the log matches `origin/develop`); and one case in `test_parity_data_resolution.py` that exists to assert the recorded path wins *where it resolves*, so it skips on a runner by design. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
-| Packages | 3 built — `qh-resources`, `qh-strategies`, `qh-research`. `qh-platform` is in the spec and the pytest path list but does not exist yet | `ls packages/` |
+| Packages | 4 built — `qh-resources`, `qh-strategies`, `qh-research`, and `qh-platform` as of the Phase 3 subtree merge | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; 3 CI-limited and declared (X15a, X17, X22) | `tests/test_x_coverage.py` |
 | Research log | 110 entries (to seq=109), chain verified; `trial_count()` = 26 | `research.log.verify()` |
 | Instruments | 9 — 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching | `snapshots/pepperstone_live_20260906.json` |
@@ -46,7 +46,7 @@ the next reader can check rather than trust.
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
 | 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ next, but ⚠ its rationale is contested — see below |
-| 3 | Execution merge — WMPS subtree, de-duplication, broker port, T10 rename | ⏭ specified (`docs/phase3_spec.md`); **gate measured and passed** (F4, seq=114) — 227 signals each side, zero differences. Remaining criteria are engineering. **Not gated on 2b** |
+| 3 | Execution merge | 🔨 **in progress** — gate passed (F4), subtree merged (seq=115, 228 commits preserved). Remaining: de-duplicate, broker port, execution rename, demo week |
 | 4+ | Multi-symbol live, CPCV | ⏭ not entered until a mechanism survives 2b |
 
 ### Phase 1 acceptance criteria
