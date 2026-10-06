@@ -896,16 +896,23 @@ and it needs the strategy logic rather than the indicators alone.
 **R12 — the merged platform tree is carved out of X16 until the execution rename runs.**
 `basis: POST_DATA`
 
-The Phase 3 subtree merge brought eight live pre-rename references into the tree: three strategy
-state paths, the drawdown guard's peak-equity path, the Docker volume all four sit on, and a
-VALIDATION.md documenting one of them. X16 fails on them, correctly.
+The Phase 3 subtree merge brought eight live pre-rename references into the tree: two strategy
+peak-state paths, the Docker volume they sit on, a VALIDATION.md documenting one of them, and a
+docstring example. X16 fails on them, correctly.
 
-They are not stale strings. `/var/lib/qhf/peak_equity_HMA1H.json` is where the drawdown guard
-reads peak equity to enforce the 10% maximum-drawdown rule. Change the path without moving the
-file and the guard finds no peak, concludes the account is at a new high, and returns the entire
-drawdown budget unspent. The rename is a migration of live state, which is why T10's
+They are not stale strings. The two `DEFAULT_PEAK_STORE_PATH` constants are where `asqs` and
+`crest_n_keel` read peak equity to enforce the maximum-drawdown rule. Change a path without
+moving the file and the guard finds no peak, concludes the account is at a new high, and returns
+the entire drawdown budget unspent. The rename is a migration of live state, which is why T10's
 execution-side half is scheduled at Phase 3 step 6 rather than done opportunistically during the
 merge.
+
+> **Corrected 2026-10-06 (seq=119).** This originally counted *three* strategy state paths,
+> listing the drawdown guard's own peak file as a fourth live path. There is no such file: that
+> name appeared only inside a `Usage:` docstring example in the platform's `drawdown_guard`
+> module, never as a constant any strategy read. Step 4.2 rewrote that module and the example
+> went with it, which failed the very guard R12 installed — working exactly as intended, by
+> refusing to let a list assembled from a grep stand unchecked.
 
 - `rejected_alternative` — rename now, during the merge, and keep X16 green throughout. Rejected
   because a find-and-replace on those paths is a live trading-safety bug, and because doing it at
