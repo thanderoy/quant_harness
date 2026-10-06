@@ -574,11 +574,18 @@ def test_the_port_matches_the_code_it_was_ported_from(sample, manifest):
     bounded here rather than ignored, because "a few ULP" is the difference
     between re-associating a sum and getting the window wrong.
 
-    WMPS is frozen under spec 1.3, so this gap closes only if the live app is
-    ever mirrored onto the same reduction. Until then the live app runs
-    arithmetic a few ULP less accurate than the backtester, which is recorded
-    in the log and is far below any decision boundary — see
-    ``test_the_last_bits_never_change_a_decision``.
+    ``live`` here is the **frozen WMPS checkout**, which is a separate
+    repository and still reduces with ``np.dot``. It is no longer the only
+    live copy: Phase 3 step 4.1 deleted the duplicate in
+    ``qh-platform/backend/trading`` and re-exported these four functions from
+    ``resources``, so the in-repo app now runs this reduction exactly. The gap
+    bounded here is therefore specifically a WMPS-versus-port gap, and it
+    closes only if that frozen repository is ever mirrored too.
+
+    The difference is far below any decision boundary either way — see
+    ``test_the_last_bits_never_change_a_decision``, and the measurement in
+    ``qh-platform``'s ``indicators`` module, which found 0 signal flips in
+    157,727 bars of XAUUSD H1 and H4 against 3.49 ULP of arithmetic drift.
 
     It needs the WMPS checkout, so it skips on a runner.
     """
