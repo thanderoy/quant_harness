@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-06 — Phase 3 step 4.2 done; it needed no new code, and R12's path list is corrected (seq=119).
+**Last updated:** 2026-10-07 — Phase 3 steps 4.1–6 done (seq=120–123); the demo week's preconditions are in `docs/phase3_spec.md` §5.1.
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -46,7 +46,7 @@ the next reader can check rather than trust.
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
 | 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ next, but ⚠ its rationale is contested — see below |
-| 3 | Execution merge | 🔨 in progress — gate passed (F4), subtree merged (seq=115). step 3a done (seq=117) — `resources` installs in the trading image, both import paths coexist. **Step 4 is now unblocked**, but `drawdown_guard` still needs a persistent peak store in `resources` before it can be de-duplicated |
+| 3 | Execution merge | 🔨 steps 1–6 done, **step 7 (demo week) ready and waiting on you** — gate passed (F4), subtree merged (seq=115), `resources` in the image (seq=117); de-duplicated `drawdown_guard` (seq=118), `indicators` (seq=120) and `sizer` (seq=121, adopting T5's refusal); `MT5Broker` behind the broker port with 45 order paths replaying identically (seq=122); T10's execution rename with a verified state migration (seq=123). Criterion 5's real-order replay needs a Trade export. Preconditions and what to watch: `docs/phase3_spec.md` §5.1 |
 | 4+ | Multi-symbol live, CPCV | ⏭ not entered until a mechanism survives 2b |
 
 ### Phase 1 acceptance criteria

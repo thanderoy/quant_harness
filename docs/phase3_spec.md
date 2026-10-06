@@ -261,7 +261,74 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
    scanned). `services/migrate_state_volume.sh` does the verified copy the cutover needs — see
    step 7 — and both stores now log CRITICAL on missing or unreadable state instead of starting
    fresh in silence.
-7. Demo week.
+7. Demo week — **ready to start; needs you.** It is a week of the stack running unattended against
+   the demo account, which no session can do on your behalf. Everything the earlier steps carried
+   forward is collected in §5.1 so the week starts from one checklist rather than five PRs.
+
+### 5.1 Demo week: preconditions, what "no behavioural change" means, what to watch
+
+**Preconditions, in order.** Each names who acts.
+
+1. *(you)* Merge #56 → #57 → #58 in that order; each is stacked on the one before.
+2. *(you)* **Close criterion 5's real-data clause.** Export the recorded orders from the database
+   the live strategies write to — only the fields the replay needs, no account data — to a path
+   **outside the repository** (it is trading history), then run the replay on it:
+
+   ```bash
+   docker compose exec trading python manage.py shell -c "import json; \
+     from app.trades.models import Trade; print(json.dumps(list(Trade.objects.values( \
+     'strategy','direction','symbol','order_volume','sl','tp')), default=str))" \
+     > ~/recorded_orders.json
+   cd packages/qh-platform/backend/trading
+   QH_RECORDED_ORDERS=~/recorded_orders.json pytest tests/test_order_replay.py -k recorded
+   ```
+3. *(you)* **Decide the asqs daily-cap bug before the week, not during it.** `_check_daily_cap`
+   compares `dj_tz.now().date()` (UTC) with an `entry_time__date` lookup Django evaluates in
+   `Africa/Nairobi`, so from 21:00 to 24:00 UTC it counts the wrong day — confirmed by experiment
+   (seq=123). The one-line fix is `dj_tz.localdate()`. Fixing it mid-week would make criterion 7
+   unreadable; leaving it means a known deviation during those three hours.
+4. *(you)* **Decide which strategies the week runs.** The beat schedule currently runs none. §4
+   says `asqs` and `crest_n_keel` carry `verdict=deployed`; the settings comment calls both
+   retired. `h1_momentum` stays halted under R6 either way.
+5. *(you)* **Migrate the state, with the workers stopped.** The WMPS stack and this one use
+   different Docker volumes regardless of the rename (neither Compose file sets a project name).
+   `docker volume ls --format '{{.Name}}' | grep state` gives both names; then
+   `services/migrate_state_volume.sh <wmps volume> <new volume>`. Its file listing also answers
+   R12's open question — whether an orphaned `peak_equity_HMA1H.json` sits on the old volume.
+6. *(you)* Start the new stack against `mt5-test`. A CRITICAL "no peak-state file" line at the
+   first evaluation means the migration did not happen; stop and rerun step 5.
+
+**What "no behavioural change" (criterion 7) can mean.** Read literally it cannot hold, because
+Phase 3 changed behaviour on purpose, each change ruled before data or forced by a bug. So the
+criterion is: **every difference from the WMPS stack is one of these, and nothing else is.**
+
+| Intended change | From | Expect during the week |
+|---|---|---|
+| Refuse when one minimum lot exceeds the budget (T5, X7) | step 4.3 | At the $3,643 demo balance, crest_n_keel declines ~35% of H1 signals (seq=121); asqs trades above $600 at its default 0.5% |
+| asqs rounds lots down, not to nearest | step 4.3 | Occasionally 0.01 lot smaller than WMPS would send |
+| CRITICAL on missing or unreadable state | step 6 | Never, after a correct migration |
+| HMA via `math.fsum` | step 4.1 | Nothing observable — 0 signal flips in 157,727 bars |
+
+Order *requests* are not on the list: all 45 strategy order paths replay byte-identical (seq=122).
+
+**What to look at, daily.**
+
+- `declined by sizer` / `sizer_declined` lines against signals — the refusal rate should sit near
+  the table above. Far higher means a sizing input changed.
+- `Order execution error` and `Order failed` lines. **Every one is a finding.** During step 5 a
+  stale install made every order raise inside `_place_order`, which caught it, logged one ERROR
+  line and returned — no order, no trade record, nothing else. That is what a broken order path
+  looks like in production: a quiet week. An alert on these lines is worth adding before day one.
+- CRITICAL lines, which after the first start should be none.
+- Peak-state files advancing, and trade records reconciling with the broker's deals.
+
+**Pass:** five trading days with zero order errors, no unexplained difference from the table, and
+no CRITICAL after first start.
+
+**What the week does not validate.** `mt5-test` is MetaQuotes-Demo, not Pepperstone (CLAUDE.md
+rule 7). For XAUUSD the terms the sizer reads are identical on both — contract 100, step 0.01,
+minimum 0.01, tick 0.01, USD — and the filling-mode difference (3 vs 2) is resolved per symbol by
+the MT5 API, so **sizing and order construction carry over; fills, spreads and costs do not.**
 
 ---
 
