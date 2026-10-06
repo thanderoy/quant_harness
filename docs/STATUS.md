@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-06 — Phase 3 step 4 surveyed and **blocked on packaging**; `drawdown_guard` is a feature gap, not a swap (seq=116).
+**Last updated:** 2026-10-06 — **Phase 3 step 3a done**: `resources` installs and imports in the trading image (seq=117).
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -46,7 +46,7 @@ the next reader can check rather than trust.
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
 | 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ next, but ⚠ its rationale is contested — see below |
-| 3 | Execution merge | 🔨 in progress — gate passed (F4), subtree merged (seq=115). **Step 4 blocked**: `resources` is outside the trading build context, so no module can be de-duplicated until `qh-resources` is packaged for the platform (seq=116). Needs a `docker-compose.yml` change, which is do-not-touch absent instruction |
+| 3 | Execution merge | 🔨 in progress — gate passed (F4), subtree merged (seq=115). step 3a done (seq=117) — `resources` installs in the trading image, both import paths coexist. **Step 4 is now unblocked**, but `drawdown_guard` still needs a persistent peak store in `resources` before it can be de-duplicated |
 | 4+ | Multi-symbol live, CPCV | ⏭ not entered until a mechanism survives 2b |
 
 ### Phase 1 acceptance criteria

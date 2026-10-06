@@ -1,0 +1,49 @@
+# The trading image builds from the repository root so it can install
+# packages/qh-resources alongside the Django app (Phase 3 step 3a). Without
+# this file that context is ~160 MB, nearly all of it data and git objects
+# the image never reads.
+#
+# Everything here is excluded from every build context rooted at the repo.
+
+# Research data — 104 MB of OHLC CSVs. The platform never reads these; the
+# research packages do, from the working tree.
+packages/qh-research/research/data/
+**/*.csv
+
+# Git objects and worktrees — 51 MB.
+.git/
+.gitignore
+.github/
+
+# Local environments and caches.
+.venv/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+*.egg-info/
+
+# Research artifacts and the rendered log. The chain itself
+# (entries.jsonl) is small and harmless, but nothing in the image reads it.
+packages/qh-research/research/log/
+packages/qh-research/research/pre/artifacts/
+packages/qh-research/research/post/artifacts/
+packages/qh-research/research/post/sweeps/
+
+# Specs and project documentation.
+docs/
+phase0/
+examples/
+
+# The platform's own test tree is copied deliberately by the Dockerfile;
+# the harness test trees are not part of any image.
+tests/
+packages/qh-resources/tests/
+packages/qh-strategies/tests/
+packages/qh-research/research/tests/
+
+# Editor and OS noise.
+.vscode/
+.idea/
+.DS_Store

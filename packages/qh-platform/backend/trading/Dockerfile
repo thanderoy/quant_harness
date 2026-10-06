@@ -28,11 +28,27 @@ COPY --from=ghcr.io/astral-sh/uv:0.11.8 /uv /uvx /bin/
 #   works without ad-hoc installs. The env is dev/test/demo and there is no
 #   separate prod image today, so the few MB of test tooling is acceptable.
 #   Stricter prod/test image separation (multi-stage) is a deliberate follow-up.
-COPY pyproject.toml uv.lock /app/
+# Paths below are relative to the REPOSITORY ROOT, not to this directory.
+# Phase 3 step 3a widened the build context so the image can install
+# packages/qh-resources, which lives outside backend/trading. See
+# docs/phase3_spec.md section 3a and the repo-root .dockerignore.
+COPY packages/qh-platform/backend/trading/pyproject.toml \
+     packages/qh-platform/backend/trading/uv.lock /app/
 RUN uv sync --frozen --no-dev --group test --no-install-project
 
+# The instrument-neutral core, installed with --no-deps on purpose. This app
+# already pins numpy==1.26.4 and pandas==2.2.1, which satisfy qh-resources'
+# requirements (numpy>=1.24, pandas>=2.0), so installing without deps adds the
+# `resources` package while leaving the locked dependency set untouched and
+# `uv sync --frozen` still valid. Resolving them again here would let the
+# platform's pins drift from the lockfile that was verified against them.
+# --system because UV_PROJECT_ENVIRONMENT (set above) steers `uv sync` but not
+# `uv pip install`, which looks for an active virtualenv and fails without it.
+COPY packages/qh-resources /opt/qh-resources
+RUN uv pip install --system --no-deps /opt/qh-resources
+
 # Copy project
-COPY . /app/
+COPY packages/qh-platform/backend/trading/ /app/
 
 RUN mkdir -p /app/logs && \
     mkdir -p /app/static && \
