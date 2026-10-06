@@ -1,124 +1,116 @@
 """
 Unit tests for app.quant.strategies.sizer
 
-Tracks the v1.1 (revised) API:
-  - calculate_lot_size() returns (lot_size, effective_atr).
-  - The single v1.0 XAUUSD_MIN_ATR=5.0 constant was retired; the sizer now
-    carries only a numerical safety floor, LOT_SAFETY_FLOOR_ATR, and the lot
-    is floored to the step (math.floor), never rounded up.
+The platform sizer is a thin adapter over ``resources.risk.size_position``
+(Phase 3 step 4.3). These tests pin what the adapter adds — the pinned
+snapshot, the account currency, the hard lot cap, the effective-ATR contract
+and the configuration errors — and the one behaviour that changed on purpose:
+refusing when the minimum position exceeds the budget (REWRITE.md T5, X7).
+The arithmetic itself is tested in qh-resources.
 """
+
+import json
+from pathlib import Path
 
 import pytest
 
 from app.quant.strategies.sizer import (
-    LOT_SAFETY_FLOOR_ATR,
-    XAUUSD_MAX_LOT,
-    XAUUSD_MIN_LOT,
-    XAUUSD_POINT_VALUE_PER_LOT,
-    calculate_lot_size,
+    ACCOUNT_CCY,
+    MAX_LOT,
+    REGISTRY_SNAPSHOT,
+    SizingReason,
+    instrument,
+    size_order,
 )
 
-
-def test_zero_balance_raises():
-    with pytest.raises(ValueError, match="account_balance"):
-        calculate_lot_size(account_balance=0.0, atr_value=10.0)
+SYMBOL = "XAUUSD"
 
 
-def test_negative_balance_raises():
-    with pytest.raises(ValueError, match="account_balance"):
-        calculate_lot_size(account_balance=-100.0, atr_value=10.0)
+def test_account_currency_matches_the_pinned_snapshot():
+    import resources.instruments.registry as registry
 
-
-def test_zero_risk_pct_raises():
-    with pytest.raises(ValueError, match="risk_pct"):
-        calculate_lot_size(account_balance=1000.0, atr_value=10.0, risk_pct=0.0)
-
-
-def test_negative_risk_pct_raises():
-    with pytest.raises(ValueError, match="risk_pct"):
-        calculate_lot_size(account_balance=1000.0, atr_value=10.0, risk_pct=-0.01)
-
-
-def test_atr_below_floor_uses_safety_floor():
-    # An ATR below LOT_SAFETY_FLOOR_ATR must be lifted to the floor for sizing,
-    # so a near-zero ATR sizes identically to an ATR exactly at the floor and the
-    # returned effective_atr is the floor (not the raw value).
-    # balance=50, risk_pct=0.02 → risk_amount=1.0; floor=0.10, sl_mult=1.5 →
-    # sl_distance=0.15; raw_lots = 1.0/(0.15*100)=0.0667 → floor to 0.06.
-    result_tiny_atr = calculate_lot_size(account_balance=50.0, atr_value=0.01)
-    result_floor_atr = calculate_lot_size(
-        account_balance=50.0, atr_value=LOT_SAFETY_FLOOR_ATR
+    payload = json.loads(
+        (Path(registry.SNAPSHOT_DIR) / REGISTRY_SNAPSHOT).read_text()
     )
-    assert result_tiny_atr == result_floor_atr
-    lots, effective_atr = result_tiny_atr
-    assert effective_atr == LOT_SAFETY_FLOOR_ATR
-    assert lots == pytest.approx(0.06, abs=1e-9)
+    assert payload["account_currency"] == ACCOUNT_CCY
 
 
-def test_atr_above_floor_is_passed_through():
-    # When ATR exceeds the safety floor it is used unchanged for sizing.
-    _, effective_atr = calculate_lot_size(account_balance=5000.0, atr_value=12.5)
-    assert effective_atr == 12.5
+def test_xauusd_terms_come_from_the_snapshot():
+    spec = instrument(SYMBOL)
+    assert spec.contract_size == 100.0
+    assert spec.volume_min == 0.01
+    assert spec.volume_step == 0.01
 
 
-def test_result_never_exceeds_max_lot():
-    # Very large balance, tiny ATR → without cap would be huge
-    lots, _ = calculate_lot_size(
-        account_balance=1_000_000.0,
-        atr_value=50.0,
-        risk_pct=0.10,
-    )
-    assert lots <= XAUUSD_MAX_LOT
+def test_unpinned_symbol_raises():
+    with pytest.raises(Exception, match="not in snapshot"):
+        size_order("NOTASYMBOL", 1000.0, 10.0, 0.02, 1.5)
 
 
-def test_result_never_below_min_lot():
-    # Very small balance → without floor would round to zero
-    lots, _ = calculate_lot_size(
-        account_balance=10.0,
-        atr_value=50.0,
-        risk_pct=0.01,
-    )
-    assert lots >= XAUUSD_MIN_LOT
+@pytest.mark.parametrize("kwargs, match", [
+    (dict(risk_pct=0.0), "risk_pct"),
+    (dict(risk_pct=-0.01), "risk_pct"),
+    (dict(sl_atr_multiplier=0.0), "sl_atr_multiplier"),
+    (dict(max_lot=0.0), "max_lot"),
+])
+def test_configuration_errors_raise(kwargs, match):
+    args = dict(account_balance=1000.0, atr_value=10.0, risk_pct=0.02,
+                sl_atr_multiplier=1.5)
+    args.update(kwargs)
+    with pytest.raises(ValueError, match=match):
+        size_order(SYMBOL, **args)
 
 
-def test_known_numeric_example():
-    # balance=5000, risk_pct=0.02, atr=10.0, sl_mult=1.5
-    # risk_amount=100, sl_distance=15, raw_lots=100/1500≈0.0667
-    # → floored to lot_step (NOT rounded) → 0.06
-    lots, effective_atr = calculate_lot_size(
-        account_balance=5000.0,
-        atr_value=10.0,
-        risk_pct=0.02,
-        sl_atr_multiplier=1.5,
-        point_value_per_lot=XAUUSD_POINT_VALUE_PER_LOT,
-    )
-    assert lots == pytest.approx(0.06, abs=1e-9)
-    assert effective_atr == 10.0
+def test_non_positive_balance_is_a_refusal_not_an_exception():
+    sized = size_order(SYMBOL, 0.0, 10.0, 0.02, 1.5)
+    assert not sized.tradable
+    assert sized.reason is SizingReason.NON_POSITIVE_BALANCE
 
 
-def test_result_clamped_to_max():
-    # balance=10000, risk=5%, atr=10 → raw_lots=0.333 → floored 0.33 → clamp 0.10
-    lots, _ = calculate_lot_size(
-        account_balance=10000.0,
-        atr_value=10.0,
-        risk_pct=0.05,
-        sl_atr_multiplier=1.5,
-    )
-    assert lots == XAUUSD_MAX_LOT
+def test_x7_min_position_over_budget_is_refused():
+    """$100, 2% budget, 1.5xATR(H1) stop. One 0.01 lot at a $15 stop risks
+    $15, 7.5x the $2 budget. The old sizer clamped up to 0.01 and traded it."""
+    sized = size_order(SYMBOL, 100.0, 10.0, 0.02, 1.5)
+    assert sized.lots == 0.0
+    assert sized.reason is SizingReason.MIN_POSITION_EXCEEDS_RISK_BUDGET
+    assert sized.risk_actual_pct == 0.0
 
 
-def test_result_rounded_to_two_decimal_places():
-    lots, _ = calculate_lot_size(account_balance=1234.56, atr_value=8.7)
-    # Verify result has at most 2 decimal places
-    assert round(lots, 2) == lots
+def test_known_value_and_floor_rounding():
+    # $5,000 x 2% = $100 budget; stop 1.5 x 12.5 = $18.75; per lot $1,875.
+    # raw 0.0533 -> floored to 0.05, never rounded up to 0.06.
+    sized = size_order(SYMBOL, 5000.0, 12.5, 0.02, 1.5)
+    assert sized.lots == 0.05
+    assert sized.reason is SizingReason.OK
+    assert sized.effective_atr == pytest.approx(12.5)
+    assert sized.risk_actual_pct == pytest.approx(0.05 * 1875.0 / 5000.0)
+    assert sized.risk_actual_pct <= 0.02
 
 
-def test_custom_min_max_lot():
-    lots, _ = calculate_lot_size(
-        account_balance=100.0,
-        atr_value=5.0,
-        risk_pct=0.02,
-        min_lot=0.05,
-        max_lot=0.20,
-    )
-    assert 0.05 <= lots <= 0.20
+def test_hard_cap_holds_and_lowers_risk():
+    sized = size_order(SYMBOL, 1_000_000.0, 10.0, 0.02, 1.5)
+    assert sized.lots == MAX_LOT
+    assert sized.capped
+    assert sized.risk_actual_pct < 0.02
+
+
+def test_custom_cap_is_respected():
+    sized = size_order(SYMBOL, 1_000_000.0, 10.0, 0.02, 1.5, max_lot=0.05)
+    assert sized.lots == 0.05
+
+
+def test_effective_atr_carries_the_floor():
+    """The stop is floored at 10 ticks ($0.10). The caller places SL/TP from
+    effective_atr, so it must reflect the floored stop, not the raw ATR."""
+    sized = size_order(SYMBOL, 1000.0, 0.01, 0.02, 1.0)
+    assert sized.position.effective_stop_distance == pytest.approx(0.10)
+    assert sized.effective_atr == pytest.approx(0.10)
+
+
+@pytest.mark.parametrize("balance", [100.0, 600.0, 1234.56, 3643.0, 10_000.0])
+@pytest.mark.parametrize("atr_value", [0.5, 6.0, 9.72, 19.9, 45.0])
+@pytest.mark.parametrize("risk_pct", [0.005, 0.02, 0.05])
+def test_either_refuses_or_stays_within_budget(balance, atr_value, risk_pct):
+    """REWRITE.md's one honest form of the property."""
+    sized = size_order(SYMBOL, balance, atr_value, risk_pct, 1.5)
+    assert (not sized.tradable) or sized.risk_actual_pct <= risk_pct + 1e-12
