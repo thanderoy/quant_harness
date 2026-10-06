@@ -72,8 +72,12 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 670 passed, 1 skipped — with the out-of-repo data present.
-# On CI, which has neither the WMPS checkout nor a log diff: 668 / 3.
+# expected: 673 tests.
+# Locally with the out-of-repo data present: 673 passed, 0 skipped.
+# On CI, which has no WMPS checkout: 671 / 2.
+# Both figures are for a branch that appends to the research log. Where the log
+# matches origin/develop, the rewrite check has nothing to diff and skips: one
+# fewer passed, one more skipped.
 
 # Calibration check (synthetic data)
 PYTHONPATH=packages/qh-resources:packages/qh-strategies:packages/qh-research \
