@@ -123,3 +123,77 @@ def test_x32_platform_still_resolves_to_stdlib():
 @pytest.mark.parametrize("name", sorted(DISTRIBUTIONS.values()))
 def test_allowed_table_covers_every_declared_package(name):
     assert name in ALLOWED, f"{name} has no declared import policy"
+
+
+# -- no second definition ----------------------------------------------------
+#
+# Import direction says `platform` may import `resources`. It does not say
+# `platform` must *stop defining its own copy*, and until Phase 3 step 4 it
+# had one: four indicator functions duplicated verbatim, except `wma`, which
+# had silently diverged — the live app reduced with `np.dot` while the
+# backtester reduced with `math.fsum`. Two copies of a formula is two chances
+# for the backtest to disagree with the account, and the one that diverged is
+# the one nobody noticed.
+#
+# The names below are owned by `resources`. The platform may re-export them;
+# it may not define them again.
+
+#: import name in `resources` -> the callables it is the single home of
+SINGLY_DEFINED: dict[str, frozenset[str]] = {
+    "resources.indicators": frozenset({"atr", "hma", "stochastic", "wma"}),
+    "resources.risk.drawdown_guard": frozenset({"DrawdownGuard", "PeakStore"}),
+}
+
+#: Deliberate exceptions, each with the reason it is not a duplicate.
+#: `JsonPeakStore` is a *platform* concern — it persists to a path on the
+#: container's volume, which `resources` has no business knowing about — so
+#: it is an implementation of a `resources` interface, not a second copy of
+#: one. See seq=116, which first mistook it for a feature gap.
+NOT_DUPLICATES: frozenset[str] = frozenset({"JsonPeakStore"})
+
+
+def _toplevel_defs(path: Path) -> set[str]:
+    """Names bound by a `def`/`class` at module level in this file.
+
+    Module level only: a name defined inside a function is a local, not a
+    second public definition, and flagging those would make the guard noisy
+    enough to be switched off.
+    """
+    tree = ast.parse(path.read_text(), filename=str(path))
+    return {
+        node.name
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+    }
+
+
+@pytest.mark.parametrize("owner,names", sorted(SINGLY_DEFINED.items()))
+def test_the_platform_imports_these_rather_than_defining_them_again(owner, names):
+    """A name `resources` owns must not be redefined under qh-platform.
+
+    This is the guard Phase 3 step 4 exists to leave behind. Deleting the
+    duplicate is a one-off; stopping the next one is what keeps the property.
+
+    It reads the source rather than importing it, so a redefinition inside a
+    module the test environment cannot import — anything needing Django
+    settings or a database, which is most of the platform — is still caught.
+    """
+    platform_dir = PACKAGES_DIR / "qh-platform"
+    if not platform_dir.exists():
+        pytest.skip("qh-platform not present")
+
+    offenders: list[str] = []
+    for path in platform_dir.rglob("*.py"):
+        if "__pycache__" in path.parts or ".venv" in path.parts:
+            continue
+        if "/tests/" in str(path) or path.name.startswith("test_"):
+            continue
+        clash = (_toplevel_defs(path) & names) - NOT_DUPLICATES
+        for name in sorted(clash):
+            offenders.append(f"{path.relative_to(platform_dir)}:{name}")
+
+    assert not offenders, (
+        f"{owner} is the single definition of {sorted(names)}, but qh-platform "
+        f"defines its own: {offenders}. Import it instead. If this really is a "
+        f"platform-specific implementation rather than a copy, add it to "
+        f"NOT_DUPLICATES with the reason.")
