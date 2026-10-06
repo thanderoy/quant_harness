@@ -195,13 +195,33 @@ def _recorded_orders() -> list[dict[str, Any]]:
     return json.loads(Path(path).read_text())
 
 
-def _replay(rows: list[dict[str, Any]]) -> int:
+#: Strategies whose orders cannot be replayed through today's code, and why.
+#: Every class that has ever subclassed BaseStrategy in WMPS history is either
+#: in _strategy_constants() or here, so a real export holds no surprises; a
+#: name in neither fails the replay rather than being skipped unseen.
+NOT_REPLAYABLE: dict[str, str] = {
+    "ForexeroStrategy": "legacy; still on the direct client, not the port",
+    "HMAStoch1HStrategy": "crest_n_keel's predecessor; its magic and comment "
+                          "belonged to code that no longer exists",
+    "HMAStochM15Strategy": "retired M15 variant; no current code path",
+    "LondonBreakoutStrategy": "retired; no current code path",
+}
+
+
+def _replay(rows: list[dict[str, Any]],
+            skipped: dict[str, int] | None = None) -> int:
     consts = _strategy_constants()
     compared = 0
+    unknown: set[str] = set()
     for row in rows:
         c = consts.get(row["strategy"])
         if c is None:
-            continue  # e.g. a legacy strategy that does not use the port
+            if row["strategy"] in NOT_REPLAYABLE:
+                if skipped is not None:
+                    skipped[row["strategy"]] = skipped.get(row["strategy"], 0) + 1
+            else:
+                unknown.add(row["strategy"])
+            continue
         old, new = _Recorder(), _Recorder()
         _client(old).send_order(
             action=row["direction"], symbol=row["symbol"],
@@ -214,6 +234,9 @@ def _replay(rows: list[dict[str, Any]]) -> int:
             magic=c["magic"], comment=c["comment"]))
         assert new.calls == old.calls, row
         compared += 1
+    assert not unknown, (
+        f"strategies in the export that are neither replayable nor listed in "
+        f"NOT_REPLAYABLE: {sorted(unknown)}. Add each to one or the other.")
     return compared
 
 
@@ -226,7 +249,11 @@ def test_recorded_live_orders_send_identical_requests_through_both():
     if not rows:
         pytest.skip(f"no recorded orders; set ${RECORDED_ENV} to a JSON export of "
                     "Trade rows to run criterion 5 on real data")
-    assert _replay(rows) > 0, "the export held no order from a ported strategy"
+    skipped: dict[str, int] = {}
+    compared = _replay(rows, skipped)
+    print(f"\nreplayed {compared} of {len(rows)} recorded orders identically; "
+          f"not replayable: {skipped or 'none'}")
+    assert compared > 0, "the export held no order from a ported strategy"
 
 
 def test_the_mt5_broker_satisfies_the_port():
