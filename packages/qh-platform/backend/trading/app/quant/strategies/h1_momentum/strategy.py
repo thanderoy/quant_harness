@@ -51,6 +51,9 @@ from typing import Optional
 import pandas as pd
 
 from app.adapters.mt5_api import MT5APIClient
+from app.adapters.broker import MT5Broker
+from resources.execution.broker import OrderRequest
+from resources.side import Side
 from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
 from app.quant.strategies.base import BaseStrategy
@@ -203,10 +206,10 @@ class H1MomentumStrategy(BaseStrategy):
                      login: Optional[int]) -> None:
         """Send the market order and record it. Every outcome is logged."""
         try:
-            order = self.mt5_client.send_order(
-                action="BUY", symbol=SYMBOL, volume=lot, order_type="MARKET",
-                sl=sl, deviation=20, magic=self.magic_number, comment="H1M",
-            )
+            order = MT5Broker(self.mt5_client).submit(OrderRequest(
+                symbol=SYMBOL, side=Side.LONG, volume=lot,
+                sl=sl, magic=self.magic_number, comment="H1M",
+            ))
         except Exception:
             self.logger.exception("h1_momentum.order_exception")
             return

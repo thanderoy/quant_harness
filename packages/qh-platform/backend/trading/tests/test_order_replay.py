@@ -143,3 +143,136 @@ def test_strategy_order_paths_match_the_pre_port_baseline(tmp_path):
             assert g == w, f"{name} case {i} differs from the pre-port baseline"
     # Not vacuous: every case sent exactly one order.
     assert all(len(c["http"]) == 1 for v in got.values() for c in v)
+
+
+# -- the adapter itself --------------------------------------------------------
+
+from resources.execution.broker import Bar, Broker, FillConfig, OrderRequest  # noqa: E402
+from resources.side import Side  # noqa: E402
+
+from app.adapters.broker import (  # noqa: E402
+    DEFAULT_DEVIATION, MT5Broker, OrderRejected, side_from_action,
+)
+
+BASE = "http://mt5-replay.invalid:5001"
+SIGNAL_BAR = Bar(2670.0, 2676.0, 2668.0, 2675.0)
+
+#: Per-strategy constants a Trade row does not carry. Read from the modules
+#: rather than restated, so a changed magic number cannot pass by agreement.
+def _strategy_constants() -> dict[str, dict[str, Any]]:
+    from app.quant.strategies.asqs import strategy as asqs
+    from app.quant.strategies.crest_n_keel import strategy as cnk
+    from app.quant.strategies.h1_momentum import strategy as h1m
+    return {
+        "ASQSafeScalpingStrategy": {"magic": asqs.MAGIC_NUMBER, "comment": "ASQSS"},
+        "CrestNKeelStrategy": {"magic": cnk.MAGIC_NUMBER, "comment": "HMA1H"},
+        "H1MomentumStrategy": {"magic": h1m.MAGIC_NUMBER, "comment": "H1M"},
+    }
+
+
+def _client(recorder: _Recorder) -> MT5APIClient:
+    client = MT5APIClient(base_url=BASE)
+    client.session.post = recorder
+    return client
+
+
+def _synthetic_orders() -> list[dict[str, Any]]:
+    rows = []
+    for strategy in _strategy_constants():
+        for direction in SIGNALS:
+            for vol in LOTS:
+                for sl, tp in SL_TP + [(2601.5, None)]:
+                    rows.append({"strategy": strategy, "direction": direction,
+                                 "symbol": "XAUUSD", "order_volume": vol,
+                                 "sl": sl, "tp": tp})
+    return rows
+
+
+def _recorded_orders() -> list[dict[str, Any]]:
+    path = os.environ.get(RECORDED_ENV)
+    if not path:
+        return []
+    return json.loads(Path(path).read_text())
+
+
+def _replay(rows: list[dict[str, Any]]) -> int:
+    consts = _strategy_constants()
+    compared = 0
+    for row in rows:
+        c = consts.get(row["strategy"])
+        if c is None:
+            continue  # e.g. a legacy strategy that does not use the port
+        old, new = _Recorder(), _Recorder()
+        _client(old).send_order(
+            action=row["direction"], symbol=row["symbol"],
+            volume=row["order_volume"], order_type="MARKET",
+            sl=row.get("sl"), tp=row.get("tp"), deviation=20,
+            magic=c["magic"], comment=c["comment"])
+        MT5Broker(_client(new)).submit(OrderRequest(
+            symbol=row["symbol"], side=side_from_action(row["direction"]),
+            volume=row["order_volume"], sl=row.get("sl"), tp=row.get("tp"),
+            magic=c["magic"], comment=c["comment"]))
+        assert new.calls == old.calls, row
+        compared += 1
+    return compared
+
+
+def test_synthetic_orders_send_identical_requests_through_both():
+    assert _replay(_synthetic_orders()) == 3 * 2 * 3 * 4
+
+
+def test_recorded_live_orders_send_identical_requests_through_both():
+    rows = _recorded_orders()
+    if not rows:
+        pytest.skip(f"no recorded orders; set ${RECORDED_ENV} to a JSON export of "
+                    "Trade rows to run criterion 5 on real data")
+    assert _replay(rows) > 0, "the export held no order from a ported strategy"
+
+
+def test_the_mt5_broker_satisfies_the_port():
+    broker = MT5Broker(_client(_Recorder()))
+    assert isinstance(broker, Broker)
+    assert broker.config is FillConfig.LIVE
+    assert DEFAULT_DEVIATION == 20
+
+
+@pytest.mark.parametrize("side, price, adverse", [
+    (Side.LONG, 2675.5, 0.5), (Side.SHORT, 2675.5, 0.0), (Side.SHORT, 2674.0, 1.0),
+])
+def test_fill_reports_the_venue_price_and_attributes_cost(side, price, adverse):
+    rec = _Recorder()
+    client = _client(rec)
+    broker = MT5Broker(client)
+    resp = dict(FAKE_RESPONSE, price=price)
+    with patch.object(client, "send_order", return_value=resp):
+        f = broker.fill(OrderRequest("XAUUSD", side, 0.01, sl=2600.0), SIGNAL_BAR)
+    assert f.price == price and f.reference_price == SIGNAL_BAR.close
+    assert f.slip_cost == pytest.approx(adverse) and f.spread_cost == 0.0
+    assert f.total_adverse_cost >= 0.0
+    assert f.ticket == FAKE_RESPONSE["ticket"] and f.response == resp
+
+
+@pytest.mark.parametrize("response", [
+    {"success": False, "retcode": 10019, "retcode_description": "no money"},
+    None,
+])
+def test_a_rejected_order_raises_with_the_venue_response(response):
+    client = _client(_Recorder())
+    with patch.object(client, "send_order", return_value=response):
+        with pytest.raises(OrderRejected) as exc:
+            MT5Broker(client).fill(OrderRequest("XAUUSD", Side.LONG, 0.01), SIGNAL_BAR)
+    assert exc.value.response == response
+
+
+def test_a_next_bar_means_history_and_nothing_is_sent():
+    rec = _Recorder()
+    with pytest.raises(ValueError, match="historical data"):
+        MT5Broker(_client(rec)).fill(OrderRequest("XAUUSD", Side.LONG, 0.01),
+                                     SIGNAL_BAR, next_bar=SIGNAL_BAR)
+    assert rec.calls == []
+
+
+@pytest.mark.parametrize("bad", ["HOLD", "", None, "LONG"])
+def test_an_unknown_action_raises_as_the_old_client_did(bad):
+    with pytest.raises(ValueError, match="BUY or SELL"):
+        side_from_action(bad)
