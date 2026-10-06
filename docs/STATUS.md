@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-06 — **Phase 3 step 3 done**: WMPS merged as `packages/qh-platform` (seq=115).
+**Last updated:** 2026-10-06 — Phase 3 step 4 surveyed and **blocked on packaging**; `drawdown_guard` is a feature gap, not a swap (seq=116).
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -46,7 +46,7 @@ the next reader can check rather than trust.
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
 | 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ next, but ⚠ its rationale is contested — see below |
-| 3 | Execution merge | 🔨 **in progress** — gate passed (F4), subtree merged (seq=115, 228 commits preserved). Remaining: de-duplicate, broker port, execution rename, demo week |
+| 3 | Execution merge | 🔨 in progress — gate passed (F4), subtree merged (seq=115). **Step 4 blocked**: `resources` is outside the trading build context, so no module can be de-duplicated until `qh-resources` is packaged for the platform (seq=116). Needs a `docker-compose.yml` change, which is do-not-touch absent instruction |
 | 4+ | Multi-symbol live, CPCV | ⏭ not entered until a mechanism survives 2b |
 
 ### Phase 1 acceptance criteria
@@ -109,6 +109,7 @@ Three consequences worth carrying:
 
 | Item | Notes |
 |---|---|
+| `resources` has no persistent peak store | `resources.risk.drawdown_guard` ships only `InMemoryPeakStore` — "the correct default for a backtest". The live guard persists peak equity to JSON with atomic writes. De-duplicating it as-is would reset the peak every Celery run and stop the 10% drawdown guard firing. Blocks Phase 3 step 4.2. |
 | D3b covers 2 of 9 symbols | The frontier cannot fully cost the other seven. |
 | Parity CSVs resolve from this repo | `default_data_paths()` prefers `$QH_PARITY_DATA_DIR`, then the WMPS path recorded in the seq=31 artifact, then the copies tracked here. Safe because `ohlc_hash` is parity layer 1 and is compared before anything downstream runs. This un-skipped 23 CI checks, two of which carry Phase 1 criteria #2 and #3 — previously met locally and unproven on a runner. |
 | `n_trades` gate is inert | Passed at every injected alpha level (seq=107); contributes nothing to the six-way AND. |
