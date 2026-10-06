@@ -1,0 +1,2384 @@
+{
+ "asqs": [
+  {
+   "args": [
+    "BUY",
+    0.01,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 2650.123456789,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.01,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 1999.995,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.01,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 3301.1,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 3200.1
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.05,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 2650.123456789,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.05,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 1999.995,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.05,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 3301.1,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 3200.1
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.1,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 2650.123456789,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.1,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 1999.995,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.1,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 3301.1,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 3200.1
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.01,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 2650.123456789,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.01,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 1999.995,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.01,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 3301.1,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 3200.1
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.05,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 2650.123456789,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.05,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 1999.995,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.05,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 3301.1,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 3200.1
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.1,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 2650.123456789,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.1,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 1999.995,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.1,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "ASQSS",
+      "deviation": 20,
+      "magic": 1500020,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 3301.1,
+      "strategy": "ASQSafeScalpingStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "tp": 3200.1
+     }
+    }
+   ]
+  }
+ ],
+ "crest_n_keel": [
+  {
+   "args": [
+    "BUY",
+    0.01,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 2650.123456789,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.01,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 1999.995,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.01,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 3301.1,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 3200.1
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.05,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 2650.123456789,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.05,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 1999.995,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.05,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 3301.1,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 3200.1
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.1,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 2650.123456789,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.1,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 1999.995,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "BUY",
+    0.1,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 3301.1,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 3200.1
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.01,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 2650.123456789,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.01,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 1999.995,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.01,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 3301.1,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 3200.1
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.05,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 2650.123456789,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.05,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 1999.995,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.05,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 3301.1,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 3200.1
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.1,
+    2650.123456789,
+    2710.987654321,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "tp": 2710.987654321,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 2650.123456789,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2710.987654321
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.1,
+    1999.995,
+    2000.005,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "tp": 2000.005,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 1999.995,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 2000.005
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    "SELL",
+    0.1,
+    3301.1,
+    3200.1,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "SELL",
+      "comment": "HMA1H",
+      "deviation": 20,
+      "magic": 1100001,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "tp": 3200.1,
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "SELL",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 3301.1,
+      "strategy": "CrestNKeelStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": 3200.1
+     }
+    }
+   ]
+  }
+ ],
+ "h1_momentum": [
+  {
+   "args": [
+    0.01,
+    2650.123456789,
+    14.25,
+    0.93,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "H1M",
+      "deviation": 20,
+      "magic": 1600001,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 2650.123456789,
+      "strategy": "H1MomentumStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": null
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    0.01,
+    1999.995,
+    14.25,
+    0.93,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "H1M",
+      "deviation": 20,
+      "magic": 1600001,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 1999.995,
+      "strategy": "H1MomentumStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": null
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    0.01,
+    3301.1,
+    14.25,
+    0.93,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "H1M",
+      "deviation": 20,
+      "magic": 1600001,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "volume": 0.01
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.01,
+      "sl": 3301.1,
+      "strategy": "H1MomentumStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": null
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    0.05,
+    2650.123456789,
+    14.25,
+    0.93,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "H1M",
+      "deviation": 20,
+      "magic": 1600001,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 2650.123456789,
+      "strategy": "H1MomentumStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": null
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    0.05,
+    1999.995,
+    14.25,
+    0.93,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "H1M",
+      "deviation": 20,
+      "magic": 1600001,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 1999.995,
+      "strategy": "H1MomentumStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": null
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    0.05,
+    3301.1,
+    14.25,
+    0.93,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "H1M",
+      "deviation": 20,
+      "magic": 1600001,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "volume": 0.05
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.05,
+      "sl": 3301.1,
+      "strategy": "H1MomentumStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": null
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    0.1,
+    2650.123456789,
+    14.25,
+    0.93,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "H1M",
+      "deviation": 20,
+      "magic": 1600001,
+      "order_type": "MARKET",
+      "sl": 2650.123456789,
+      "symbol": "XAUUSD",
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 2650.123456789,
+      "strategy": "H1MomentumStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": null
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    0.1,
+    1999.995,
+    14.25,
+    0.93,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "H1M",
+      "deviation": 20,
+      "magic": 1600001,
+      "order_type": "MARKET",
+      "sl": 1999.995,
+      "symbol": "XAUUSD",
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 1999.995,
+      "strategy": "H1MomentumStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": null
+     }
+    }
+   ]
+  },
+  {
+   "args": [
+    0.1,
+    3301.1,
+    14.25,
+    0.93,
+    null
+   ],
+   "http": [
+    {
+     "body": {
+      "action": "BUY",
+      "comment": "H1M",
+      "deviation": 20,
+      "magic": 1600001,
+      "order_type": "MARKET",
+      "sl": 3301.1,
+      "symbol": "XAUUSD",
+      "volume": 0.1
+     },
+     "url": "http://mt5-replay.invalid:5001/api/v1/order/send"
+    }
+   ],
+   "record": [
+    {
+     "args": [
+      {
+       "deal": 987654321,
+       "order": 123456789,
+       "price": 2675.5,
+       "retcode": 10009,
+       "retcode_description": "done",
+       "success": true,
+       "ticket": 123456789
+      }
+     ],
+     "kwargs": {
+      "account": null,
+      "direction": "BUY",
+      "entry_price": 2675.5,
+      "environment": "test",
+      "market_type": "COMMODITIES",
+      "order_volume": 0.1,
+      "sl": 3301.1,
+      "strategy": "H1MomentumStrategy",
+      "symbol": "XAUUSD",
+      "timeframe": "1H",
+      "tp": null
+     }
+    }
+   ]
+  }
+ ]
+}
