@@ -118,8 +118,8 @@ TRAIL_DISTANCE_POINTS = 100  # trail $1.00 behind price
 
 # ── Risk defaults ─────────────────────────────────────────────────────────
 DEFAULT_MAX_SPREAD_POINTS = 25
-DEFAULT_PEAK_STORE_PATH = "/var/lib/qhf/asqs_peak.json"
-DEFAULT_PARTIAL_STORE_PATH = "/var/lib/qhf/asqs_partial.json"
+DEFAULT_PEAK_STORE_PATH = "/var/lib/quant_harness/asqs_peak.json"
+DEFAULT_PARTIAL_STORE_PATH = "/var/lib/quant_harness/asqs_partial.json"
 
 
 # ── Indicator helpers ─────────────────────────────────────────────────────

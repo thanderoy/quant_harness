@@ -206,7 +206,7 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - /opt/telegram/session:/app/session
-      - qhf_state:/var/lib/qhf
+      - quant_harness_state:/var/lib/quant_harness
     env_file:
       - ../packages/qh-platform/.env
     depends_on:
@@ -227,7 +227,7 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - /opt/telegram/session:/app/session
-      - qhf_state:/var/lib/qhf
+      - quant_harness_state:/var/lib/quant_harness
     env_file:
       - ../packages/qh-platform/.env
     depends_on:
@@ -243,7 +243,7 @@ volumes:
   postgres-storage: {}
   static_volume: {}
   media_volume: {}
-  qhf_state: {}
+  quant_harness_state: {}
 
 networks:
   default:

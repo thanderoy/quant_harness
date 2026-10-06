@@ -28,7 +28,7 @@ XAUUSD_POINT = 0.01  # 1 point = $0.01/oz on XAUUSD
 
 # ── Deployment defaults (crest_n_keel demo) ───────────────────────────────
 # Separate peak file per strategy — never share drawdown state across strategies.
-DEFAULT_PEAK_STORE_PATH = "/var/lib/qhf/peak_hma_stoch_1h.json"
+DEFAULT_PEAK_STORE_PATH = "/var/lib/quant_harness/peak_hma_stoch_1h.json"
 # OOS MDD is ~15.6%; halt only on tail events worse than the backtest tail.
 DEFAULT_MAX_DRAWDOWN_PCT = 0.15
 # H1 with wide SL/TP → low spread sensitivity; 50pt is cheap insurance vs news.
