@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 120
+- **Entries:** 121
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (120 entries)
+- **Hash chain:** OK — chain ok (121 entries)
 
 ## Principles
 
@@ -2013,3 +2013,13 @@ _Metrics_: `actual_live_state_paths`=2, `claimed_live_state_paths`=3, `corrects`
 > R12 (seq=115) described the Phase 3 merge as bringing in 'three strategy state paths, the drawdown guard's peak-equity path, the Docker volume all four sit on'. There is no fourth live path. peak_equity_HMA1H.json appeared only inside a `Usage:` docstring example in the platform's drawdown_guard module -- never as a constant any strategy read. The live state files are the two DEFAULT_PEAK_STORE_PATH constants: asqs_peak.json in asqs and peak_hma_stoch_1h.json in crest_n_keel. HOW IT WAS FOUND. Step 4.2 rewrote the platform's drawdown_guard module, and the docstring example went with it. test_the_live_state_paths_are_named_so_the_rename_cannot_forget_them -- the guard R12 itself installed -- then failed, because a name on its must-migrate list had vanished from platform code. That is the guard working as designed: it refuses to let a list assembled from a grep stand unchecked, and it cannot tell a docstring from a constant, which is why it forces the check rather than making the judgement. R12's substance is unaffected. The two real paths are still live state, renaming them without migrating the files still resets the peak and hands back the drawdown budget, and the execution rename is still a migration scheduled at step 6. Only the count and one filename were wrong. OPEN QUESTION, NOT RESOLVED HERE: whether an orphaned peak_equity_HMA1H.json exists on the live qhf_state volume from an earlier deployment. The repository cannot answer that; it needs a look at the running volume. If one exists it is unread by any current code.
 
 _hash_: `83e518c01b63ba44…` · _prev_: `041ad77e29497383…`
+
+### seq 120 · 2026-10-06T20:31:03Z · audit · `record:phase3-step4-indicators`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `bars_numerically_different_pct`=52, `byte_identical`=['atr', 'hma', 'stochastic'], `close_vs_hma_flips`=0, `comparable_bars`=157727, `diverged`=wma, `guard_added`=test_the_platform_imports_these_rather_than_defining_them_again, `guard_checked_against_injected_duplicate`=True, `lines_after`=37, `lines_before`=101, `max_ulp`=3.49, `measured_on`=XAUUSD H1 + H4, HMA(55), full history, `platform_reduction`=np.dot, `platform_suite`=51 passed, 29 errors before and after (errors are django_db setup: no Postgres), `platform_tests_in_ci`=False, `resources_reduction`=math.fsum, `slope_sign_flips`=0, `x22_with_wmps_present`=18 passed, 0 skipped
+
+> docs/phase3_spec.md called step 4.1 'a clean swap ... all four signatures identical'. The signatures were identical; the arithmetic was not. atr, stochastic and hma's window logic were byte-identical, but the platform's wma reduced with np.dot while resources reduces with math.fsum (seq=102). So deleting the platform copy moves the live HMA by a few ULP. MEASURED BEFORE THE SWAP, not inferred from F4: on 157,727 comparable bars of XAUUSD H1 and H4 at HMA(55), 52% of values differ, the largest by 3.49 ULP, and neither of crest_n_keel's comparisons (hma_cur > hma_prev, close_cur > hma_cur) flips on any bar. asqs imports only atr, which was identical. The arithmetic moved; the signals did not. The platform module is now a re-export from resources (101 lines -> 37). GUARD. A new test in tests/test_import_direction.py fails if qh-platform defines at module level any name resources owns (the four indicators, DrawdownGuard, PeakStore), with JsonPeakStore declared as a deliberate platform implementation. Verified by injecting a duplicate wma and watching it fail before trusting it. GAP NAMED, NOT CLOSED: the platform's own suite is excluded by norecursedirs and runs in no CI job. It was run here in a local 3.12 venv: 51 passed and 29 errored identically before and after the change, the 29 being django_db tests with no Postgres to connect to. X22 still compares against the frozen WMPS repo, which keeps np.dot; its docstring now says so rather than describing the in-repo app as the one that lags.
+
+_hash_: `4c7512db677fcedb…` · _prev_: `83e518c01b63ba44…`

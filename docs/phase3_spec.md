@@ -226,8 +226,12 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
     file as valid. The live system was unaffected — it still runs from the WMPS repository.
 4. De-duplicate, one module at a time, re-running X22 and T11 after each — in this order, which
    is not arbitrary (see §2.3):
-   1. **`indicators`** — a clean swap once 3a lands. All four signatures identical, and F4 already
-      showed crest_n_keel's signals do not change.
+   1. ~~**`indicators`**~~ ✅ **Done 2026-10-06 (seq=120).** Not the clean swap this line used
+      to promise: the signatures were identical but `wma` was not — the platform reduced with
+      `np.dot`, `resources` with `math.fsum`. Measured before swapping, on 157,727 bars of XAUUSD
+      H1+H4 at HMA(55): 52% of values move, by at most 3.49 ULP, and neither of crest_n_keel's
+      comparisons flips on any bar. 101 lines → 37, and a guard in `test_import_direction.py`
+      now fails if the platform redefines any name `resources` owns.
    2. ~~**`drawdown_guard`**~~ ✅ **Done 2026-10-06 (seq=118).** The platform imports the port and
       the guard from `resources` and keeps `JsonPeakStore` locally. 129 lines → 64, and nothing
       was added to `resources` — see §2.3.
