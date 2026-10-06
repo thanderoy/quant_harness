@@ -43,10 +43,20 @@ __all__ = ["DrawdownGuard", "PeakStore", "JsonPeakStore"]
 
 
 class JsonPeakStore(PeakStore):
-    """Single-file JSON peak store. Atomic via os.replace."""
+    """Single-file JSON peak store. Atomic via os.replace.
+
+    A store that finds no usable peak returns ``None``, and the guard then
+    takes the current equity as a fresh high. That is right on a first
+    deployment and a silent loss of the drawdown budget at any other time --
+    the hazard R12 names for the execution rename, where a state path or
+    volume that changes without the file moving produces exactly this. The
+    two cases cannot be told apart from inside the process, so the store says
+    which one it might be, loudly, rather than deciding.
+    """
 
     def __init__(self, filepath: str):
         self.filepath = filepath
+        self._reported = False
         os.makedirs(os.path.dirname(filepath) or ".", exist_ok=True)
 
     def read(self) -> Optional[float]:
@@ -54,8 +64,23 @@ class JsonPeakStore(PeakStore):
             with open(self.filepath, "r") as f:
                 data = json.load(f)
             return float(data["peak_equity"])
-        except (FileNotFoundError, KeyError, ValueError, json.JSONDecodeError):
+        except FileNotFoundError:
+            self._report("no peak-state file")
             return None
+        except (KeyError, ValueError, TypeError, json.JSONDecodeError) as e:
+            self._report(f"peak-state file unreadable ({type(e).__name__})")
+            return None
+
+    def _report(self, what: str) -> None:
+        if self._reported:
+            return
+        self._reported = True
+        LOGGER.critical(
+            "%s at %s: the drawdown guard will take current equity as a fresh "
+            "peak, with its full budget unspent. Expected once on a first "
+            "deployment. At any other time peak state was lost -- e.g. a state "
+            "volume renamed or a stack moved without migrating it "
+            "(services/migrate_state_volume.sh).", what, self.filepath)
 
     def write(self, peak_equity: float) -> None:
         tmp = self.filepath + ".tmp"

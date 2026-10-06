@@ -69,7 +69,18 @@ class _PartialCloseTracker:
             with open(self._path, "r") as f:
                 data = json.load(f)
             self._closed_tickets = set(data.get("closed_tickets", []))
-        except (FileNotFoundError, json.JSONDecodeError):
+        except FileNotFoundError:
+            # Normal until the first TP1 partial close writes it.
+            LOGGER.info(f"No partial-close state at {self._path}; starting empty")
+            self._closed_tickets = set()
+        except (json.JSONDecodeError, TypeError, ValueError) as e:
+            # Losing this lets a position that already took its TP1 partial
+            # close take it again.
+            LOGGER.critical(
+                f"Partial-close state at {self._path} unreadable "
+                f"({type(e).__name__}); starting empty, so an open position "
+                f"may repeat its TP1 partial close"
+            )
             self._closed_tickets = set()
 
     def _save(self) -> None:
