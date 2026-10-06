@@ -1,0 +1,29 @@
+{
+  "all": {
+    "n": 119874,
+    "n_top": 11717,
+    "n_bot": 12387,
+    "spread_usd_per_oz": 1.4556294416589564,
+    "net_usd_per_oz": 1.1656294416589563,
+    "nw_t": 4.221325401450805,
+    "pays_costs": true
+  },
+  "low_vol_tercile": {
+    "n": 39728,
+    "n_top": 2158,
+    "n_bot": 1813,
+    "spread_usd_per_oz": 2.3142733256416603,
+    "net_usd_per_oz": 2.0242733256416603,
+    "nw_t": 3.1056984256688582,
+    "pays_costs": true
+  },
+  "high_vol_tercile": {
+    "n": 38846,
+    "n_top": 5609,
+    "n_bot": 6879,
+    "spread_usd_per_oz": 1.1816282299300354,
+    "net_usd_per_oz": 0.8916282299300353,
+    "nw_t": 2.4430235204534685,
+    "pays_costs": true
+  }
+}

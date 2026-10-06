@@ -1,0 +1,83 @@
+[project]
+name = "trading"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "amqp==5.2.0",
+    "asgiref==3.8.1",
+    "async-timeout==4.0.3",
+    "billiard==4.2.1",
+    "celery==5.4.0",
+    "certifi>=2024.2.2",
+    "charset-normalizer==3.3.2",
+    "click>=8.3.3",
+    "click-didyoumean==0.3.1",
+    "click-plugins==1.1.1",
+    "click-repl==0.3.0",
+    "colorama==0.4.6",
+    "django>=5.2.17",
+    "django-cors-headers==4.3.1",
+    "django-extensions==3.2.3",
+    "django-filter==24.1",
+    "djangorestframework>=3.17.2",
+    "gunicorn>=21.2.0",
+    "idna>=3.15",
+    "isort>=7.0.0",
+    "kombu==5.3.5",
+    "numpy==1.26.4",
+    "packaging==24.0",
+    "pandas==2.2.1",
+    "prompt-toolkit==3.0.43",
+    "psycopg2-binary==2.9.9",
+    "python-dateutil==2.8.2",
+    "python-dotenv>=1.2.2",
+    "pytz==2024.1",
+    "redis==5.0.2",
+    "requests>=2.31.0",
+    "six==1.16.0",
+    "sqlparse>=0.6.0",
+    "telethon>=1.41.2",
+    "typing-extensions>=4.12.2",
+    "tzdata==2024.1",
+    "urllib3>=2.2.1",
+    "vine==5.1.0",
+    "wcwidth==0.2.13",
+    "whitenoise==6.6.0",
+]
+
+# Test tooling. uv-native dependency group (PEP 735) rather than the
+# [project.optional-dependencies] extra the spec sketched — these are dev-time
+# tools, not optional features of the published package. Installed in the image
+# via `uv sync --group test` (see Dockerfile); excluded from a pure prod sync.
+[dependency-groups]
+test = [
+    "pytest>=9.0.3,<10",
+    "pytest-django>=4.8,<5",
+    "pytest-xdist>=3.5,<4",
+    "pytest-mock>=3.12,<4",
+    "model-bakery>=1.17,<2",
+]
+
+[tool.uv]
+# Security floors for transitive dependencies (GitHub Dependabot).
+# pyasn1 pulled in via telethon -> rsa; pin to patched version.
+constraint-dependencies = [
+    "pyasn1>=0.6.4",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "app.config.settings"
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+testpaths = ["tests"]
+addopts = "--strict-markers --strict-config"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: tests that touch external services (MT5 mock, Redis, etc.)",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]

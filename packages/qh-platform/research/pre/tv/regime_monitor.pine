@@ -1,0 +1,119 @@
+//@version=6
+// XAUUSD Regime Monitor — visual twin of research/pre/regime.py
+//
+// Plots the three regime parameters and shades the chart where all three align.
+// This is a DIAGNOSTIC overlay, not a strategy: there are no entries, exits or
+// sizing here. It answers "when does this combination fire, and against what
+// price action" — the question that has to be answered before any entry rule
+// built on it is worth registering as a hypothesis.
+//
+// Math is kept bit-for-bit with the Python module:
+//   trend_quality  = Kaufman ER(20)          -> bounded [0, 1]
+//   vol_regime     = ATR(14) / ATR(100)      -> ta.atr uses Wilder/RMA, as wilder_atr does
+//   trend_location = (close - SMA(200)) / ATR(14)
+//
+// Default thresholds are the percentile-calibrated ones from regime.py
+// (XAUUSD H1, 2004-2025, 124,688 bars): ER 0.30 = p65, vol 1.10 = p76.
+indicator("XAUUSD Regime Monitor", overlay = true)
+
+// --------------------------------------------------------------------------- //
+// Inputs                                                                       //
+// --------------------------------------------------------------------------- //
+erLen    = input.int(20,     "ER length",              minval = 2,     group = "Trend quality")
+erTrend  = input.float(0.30, "Trending when ER >=",    step   = 0.01,  group = "Trend quality")
+
+atrFast  = input.int(14,     "ATR fast",               minval = 1,     group = "Vol regime")
+atrSlow  = input.int(100,    "ATR slow",               minval = 2,     group = "Vol regime")
+volExp   = input.float(1.10, "Expanding when ratio >=", step  = 0.01,  group = "Vol regime")
+
+smaLen   = input.int(200,    "SMA anchor",             minval = 2,     group = "Trend location")
+biasMin  = input.float(0.0,  "Min bias (ATR units)",   step   = 0.5,   group = "Trend location")
+
+useClosed = input.bool(true, "Read last CLOSED bar",   group = "General",
+     tooltip = "House convention: evaluate on the closed bar, never the forming one.")
+showAnchor = input.bool(true, "Plot SMA anchor",       group = "General")
+
+// --------------------------------------------------------------------------- //
+// Parameters                                                                   //
+// --------------------------------------------------------------------------- //
+netChange  = math.abs(close - close[erLen])
+pathLength = math.sum(math.abs(close - close[1]), erLen)
+erRaw      = pathLength > 0 ? netChange / pathLength : na
+
+fastAtr    = ta.atr(atrFast)
+slowAtr    = ta.atr(atrSlow)
+volRaw     = slowAtr > 0 ? fastAtr / slowAtr : na
+
+anchor     = ta.sma(close, smaLen)
+biasRaw    = fastAtr > 0 ? (close - anchor) / fastAtr : na
+
+// Closed-bar read: shift one bar back so the forming bar never drives state.
+off        = useClosed ? 1 : 0
+er         = erRaw[off]
+volRegime  = volRaw[off]
+bias       = biasRaw[off]
+
+// --------------------------------------------------------------------------- //
+// Combined state                                                               //
+// --------------------------------------------------------------------------- //
+ready    = not na(er) and not na(volRegime) and not na(bias)
+trendOK  = ready and er        >= erTrend
+volOK    = ready and volRegime >= volExp
+biasOK   = ready and bias      >= biasMin
+regimeOn = trendOK and volOK and biasOK
+
+// How many of the three are satisfied — shows near-misses, not just full hits.
+score    = (trendOK ? 1 : 0) + (volOK ? 1 : 0) + (biasOK ? 1 : 0)
+
+bgcolor(regimeOn      ? color.new(color.teal,   85) :
+        ready and score == 2 ? color.new(color.gray, 92) : na,
+     title = "Regime shading")
+
+plot(showAnchor ? anchor : na, "SMA anchor", color = color.new(color.orange, 20), linewidth = 1)
+
+plotshape(regimeOn and not regimeOn[1], "Regime ON", shape.triangleup,
+     location.belowbar, color.new(color.teal, 0), size = size.tiny)
+plotshape(not regimeOn and regimeOn[1], "Regime OFF", shape.triangledown,
+     location.abovebar, color.new(color.maroon, 0), size = size.tiny)
+
+// --------------------------------------------------------------------------- //
+// Readout                                                                      //
+// --------------------------------------------------------------------------- //
+var table panel = table.new(position.top_right, 3, 5,
+     border_width = 1, frame_width = 1, frame_color = color.new(color.gray, 60))
+
+f_cell(row, label, valueTxt, ok) =>
+    table.cell(panel, 0, row, label,    text_size = size.small, text_color = color.gray,
+         text_halign = text.align_left)
+    table.cell(panel, 1, row, valueTxt, text_size = size.small,
+         text_color = color.new(color.white, 0), text_halign = text.align_right)
+    table.cell(panel, 2, row, ok ? "✓" : "·", text_size = size.small,
+         text_color = ok ? color.teal : color.new(color.gray, 40))
+
+if barstate.islast
+    table.cell(panel, 0, 0, useClosed ? "REGIME (closed)" : "REGIME (forming)",
+         text_size = size.small, text_color = color.new(color.white, 0))
+    table.cell(panel, 1, 0, regimeOn ? "ON" : str.tostring(score) + "/3",
+         text_size = size.small, text_color = regimeOn ? color.teal : color.gray,
+         text_halign = text.align_right)
+    table.cell(panel, 2, 0, "", text_size = size.small)
+
+    f_cell(1, "ER(" + str.tostring(erLen) + ")",
+         str.tostring(er, "#.###"), trendOK)
+    f_cell(2, "ATR " + str.tostring(atrFast) + "/" + str.tostring(atrSlow),
+         str.tostring(volRegime, "#.###"), volOK)
+    f_cell(3, "Bias (ATR)",
+         str.tostring(bias, "#.##"), biasOK)
+    table.cell(panel, 0, 4, "Close", text_size = size.small, text_color = color.gray,
+         text_halign = text.align_left)
+    table.cell(panel, 1, 4, str.tostring(close, format.mintick), text_size = size.small,
+         text_color = color.new(color.white, 0), text_halign = text.align_right)
+    table.cell(panel, 2, 4, "", text_size = size.small)
+
+// --------------------------------------------------------------------------- //
+// Alerts                                                                       //
+// --------------------------------------------------------------------------- //
+alertcondition(regimeOn and not regimeOn[1], "Regime ON",
+     "XAUUSD regime aligned: trending + expanding vol + above anchor")
+alertcondition(not regimeOn and regimeOn[1], "Regime OFF",
+     "XAUUSD regime no longer aligned")

@@ -1,0 +1,5 @@
+fastapi[standard]>=0.103.2
+fastapi-swagger-dark>=0.0.9
+MetaTrader5
+pandas
+uvicorn>=0.23.0

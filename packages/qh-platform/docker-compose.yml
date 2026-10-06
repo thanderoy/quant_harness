@@ -1,0 +1,255 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+    tag: "{{.Name}}"
+
+x-common-labels: &default-labels
+  logging: "promtail"
+  logging_jobname: "containerlogs"
+  stackname: "wmps"
+
+services:
+  mt5:
+    build:
+      context: backend/mt5-api
+      dockerfile: Dockerfile
+    container_name: mt5
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-UTC}
+      - CUSTOM_USER=${CUSTOM_USER}
+      - PASSWORD=${PASSWORD}
+      - MT5_API_PORT=5001
+      - MT5_API_HOST=0.0.0.0
+      - WINEPREFIX=/config/.wine
+      - WINEARCH=win64
+    volumes:
+      - /opt/mt5/config:/config
+    networks:
+      - traefik-public
+      - default
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:5001/ >/dev/null 2>&1 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15m
+    labels:
+      <<: *default-labels
+      traefik.enable: true
+      traefik.docker.network: traefik-public
+
+      # Router for mt5.${domain} (Port 3000)
+      traefik.http.routers.mt5-https.rule: Host(`${VNC_DOMAIN}`)
+      traefik.http.routers.mt5-https.entrypoints: https
+      traefik.http.routers.mt5-https.tls: true
+      traefik.http.routers.mt5-https.tls.certresolver: le
+      traefik.http.routers.mt5-https.service: mt5-service
+      traefik.http.services.mt5-service.loadbalancer.server.port: 3000
+
+      # Router for api.${domain} (Port 5001)
+      traefik.http.routers.mt5-api-https.rule: Host(`${API_DOMAIN}`)
+      traefik.http.routers.mt5-api-https.entrypoints: https
+      traefik.http.routers.mt5-api-https.tls: true
+      traefik.http.routers.mt5-api-https.tls.certresolver: le
+      traefik.http.routers.mt5-api-https.service: mt5-api-service
+      traefik.http.routers.mt5-api-https.middlewares: mt5-api-auth
+      traefik.http.middlewares.mt5-api-auth.basicauth.users: ${MT5_API_USERNAME?Variable not set}:${MT5_API_HASHED_PASSWORD?Variable not set}
+      traefik.http.services.mt5-api-service.loadbalancer.server.port: 5001
+    logging: *default-logging
+    # Cap the Wine/MT5 process tree. Steady-state RSS is ~512 MiB; the ceiling
+    # exists so a runaway tick pull is killed inside this cgroup instead of
+    # taking the 8 GB host with it (see 10-supervise.sh header).
+    mem_limit: 2g
+
+  mt5-test:
+    build:
+      context: backend/mt5-api
+      dockerfile: Dockerfile
+    container_name: mt5-test
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-UTC}
+      - CUSTOM_USER=${CUSTOM_USER}
+      - PASSWORD=${PASSWORD}
+      - MT5_API_PORT=5001
+      - MT5_API_HOST=0.0.0.0
+      - WINEPREFIX=/config/.wine
+      - WINEARCH=win64
+    volumes:
+      - /opt/mt5-test/config:/config
+    networks:
+      - traefik-public
+      - default
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:5001/ >/dev/null 2>&1 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15m
+    labels:
+      <<: *default-labels
+      traefik.enable: true
+      traefik.docker.network: traefik-public
+
+      # Router for VNC test (Port 3000)
+      traefik.http.routers.mt5-test-https.rule: Host(`${VNC_TEST_DOMAIN}`)
+      traefik.http.routers.mt5-test-https.entrypoints: https
+      traefik.http.routers.mt5-test-https.tls: true
+      traefik.http.routers.mt5-test-https.tls.certresolver: le
+      traefik.http.routers.mt5-test-https.service: mt5-test-service
+      traefik.http.services.mt5-test-service.loadbalancer.server.port: 3000
+
+      # Router for API test (Port 5001)
+      traefik.http.routers.mt5-test-api-https.rule: Host(`${API_TEST_DOMAIN}`)
+      traefik.http.routers.mt5-test-api-https.entrypoints: https
+      traefik.http.routers.mt5-test-api-https.tls: true
+      traefik.http.routers.mt5-test-api-https.tls.certresolver: le
+      traefik.http.routers.mt5-test-api-https.service: mt5-test-api-service
+      traefik.http.routers.mt5-test-api-https.middlewares: mt5-test-api-auth
+      traefik.http.middlewares.mt5-test-api-auth.basicauth.users: ${MT5_API_USERNAME?Variable not set}:${MT5_API_HASHED_PASSWORD?Variable not set}
+      traefik.http.services.mt5-test-api-service.loadbalancer.server.port: 5001
+    logging: *default-logging
+    # Cap the Wine/MT5 process tree. Steady-state RSS is ~512 MiB; the ceiling
+    # exists so a runaway tick pull is killed inside this cgroup instead of
+    # taking the 8 GB host with it (see 10-supervise.sh header).
+    mem_limit: 2g
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgres-storage:/var/lib/postgresql/data
+    networks:
+      - default
+      - dashboarding   # exposes the metadata/analytics DB to Superset (monitoring stack)
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      <<: *default-labels
+    logging: *default-logging
+
+  trading:
+    build:
+      context: backend/trading
+      dockerfile: Dockerfile
+    container_name: trading
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - START_FOREXERO_ON_START=true
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - /opt/telegram/session:/app/session
+    command: [ "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "app.config.wsgi:application" ]
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - default
+      - traefik-public
+    labels:
+      <<: *default-labels
+      traefik.enable: true
+      traefik.docker.network: traefik-public
+
+      # HTTPS Router
+      traefik.http.routers.trading-https.rule: Host(`${DJANGO_SERVICE_DOMAIN}`)
+      traefik.http.routers.trading-https.entrypoints: https
+      traefik.http.routers.trading-https.tls: true
+      traefik.http.routers.trading-https.tls.certresolver: le
+      traefik.http.routers.trading-https.service: trading-service
+      traefik.http.services.trading-service.loadbalancer.server.port: 8000
+
+      # Static Files Router
+      traefik.http.routers.trading-static.rule: Host(`${DJANGO_SERVICE_DOMAIN}`) && PathPrefix(`/static/`)
+      traefik.http.routers.trading-static.entrypoints: https
+      traefik.http.routers.trading-static.tls: true
+      traefik.http.routers.trading-static.service: trading-service
+    logging: *default-logging
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    networks:
+      - default
+      - dashboarding   # cache/celery broker for Superset (monitoring stack)
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    labels:
+      <<: *default-labels
+    logging: *default-logging
+    cpus: 0.5
+    mem_limit: 512m
+
+  celery:
+    build:
+      context: backend/trading
+      dockerfile: Dockerfile
+    container_name: celery
+    command: celery -A app worker --loglevel=info --concurrency=3
+    volumes:
+      - static_volume:/app/staticfiles
+      - /opt/telegram/session:/app/session
+      - qhf_state:/var/lib/qhf
+    env_file:
+      - .env
+    depends_on:
+      - trading
+      - redis
+    networks:
+      - default
+    labels:
+      <<: *default-labels
+    logging: *default-logging
+
+  celery-beat:
+    build:
+      context: backend/trading
+      dockerfile: Dockerfile
+    container_name: celery-beat
+    command: celery -A app beat --loglevel=info
+    volumes:
+      - static_volume:/app/staticfiles
+      - /opt/telegram/session:/app/session
+      - qhf_state:/var/lib/qhf
+    env_file:
+      - .env
+    depends_on:
+      - celery
+      - redis
+    networks:
+      - default
+    labels:
+      <<: *default-labels
+    logging: *default-logging
+
+volumes:
+  postgres-storage: {}
+  static_volume: {}
+  media_volume: {}
+  qhf_state: {}
+
+networks:
+  default:
+    driver: bridge
+  traefik-public:
+    external: true
+  # Shared BI data-plane: Superset (monitoring stack) reaches postgres/redis here.
+  dashboarding:
+    external: true

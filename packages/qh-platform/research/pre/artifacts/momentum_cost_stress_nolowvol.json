@@ -1,0 +1,302 @@
+{
+  "rule": {
+    "feature": "intraday_ret",
+    "horizon": 12,
+    "lowvol": false
+  },
+  "cost_mults": [
+    1.0,
+    1.5,
+    2.0,
+    3.0,
+    4.0
+  ],
+  "slippages": [
+    0.0,
+    0.05,
+    0.1,
+    0.2
+  ],
+  "results": {
+    "swap=off|mult=1.0|slip=0.0": {
+      "mean_sharpe": 0.7247980188804007,
+      "median_sharpe": 0.7999407756261933,
+      "folds_positive": 15,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=1.0|slip=0.05": {
+      "mean_sharpe": 0.633393041453012,
+      "median_sharpe": 0.7415945361452693,
+      "folds_positive": 15,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=1.0|slip=0.1": {
+      "mean_sharpe": 0.541982068281217,
+      "median_sharpe": 0.6832449543933009,
+      "folds_positive": 14,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=1.0|slip=0.2": {
+      "mean_sharpe": 0.35914246373846864,
+      "median_sharpe": 0.5665360616560078,
+      "folds_positive": 13,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=1.5|slip=0.0": {
+      "mean_sharpe": 0.6324124608478375,
+      "median_sharpe": 0.7562762015401145,
+      "folds_positive": 15,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=1.5|slip=0.05": {
+      "mean_sharpe": 0.5410038191124973,
+      "median_sharpe": 0.6979282433104667,
+      "folds_positive": 15,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=1.5|slip=0.1": {
+      "mean_sharpe": 0.4495892275463245,
+      "median_sharpe": 0.6363939414756746,
+      "folds_positive": 13,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=1.5|slip=0.2": {
+      "mean_sharpe": 0.26674252397373704,
+      "median_sharpe": 0.4241108256470601,
+      "folds_positive": 12,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=2.0|slip=0.0": {
+      "mean_sharpe": 0.5400250712842048,
+      "median_sharpe": 0.693705362590799,
+      "folds_positive": 15,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=2.0|slip=0.05": {
+      "mean_sharpe": 0.4486127872766204,
+      "median_sharpe": 0.6225349833984754,
+      "folds_positive": 13,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=2.0|slip=0.1": {
+      "mean_sharpe": 0.35719459935354614,
+      "median_sharpe": 0.5513595945568126,
+      "folds_positive": 13,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=2.0|slip=0.2": {
+      "mean_sharpe": 0.17434084083094406,
+      "median_sharpe": 0.27738926573638956,
+      "folds_positive": 11,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=3.0|slip=0.0": {
+      "mean_sharpe": 0.35524483643134214,
+      "median_sharpe": 0.5236457411269249,
+      "folds_positive": 13,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=3.0|slip=0.05": {
+      "mean_sharpe": 0.2638253339926344,
+      "median_sharpe": 0.44761808020917393,
+      "folds_positive": 12,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=3.0|slip=0.1": {
+      "mean_sharpe": 0.17240001947424877,
+      "median_sharpe": 0.29305001556048227,
+      "folds_positive": 11,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=3.0|slip=0.2": {
+      "mean_sharpe": -0.010467716697328548,
+      "median_sharpe": 0.09363724530998592,
+      "folds_positive": 9,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=4.0|slip=0.0": {
+      "mean_sharpe": 0.17045739206859803,
+      "median_sharpe": 0.30871282180011067,
+      "folds_positive": 11,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=4.0|slip=0.05": {
+      "mean_sharpe": 0.07903075936014312,
+      "median_sharpe": 0.19374554846884237,
+      "folds_positive": 10,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=4.0|slip=0.1": {
+      "mean_sharpe": -0.01240159358564548,
+      "median_sharpe": 0.10981989604491817,
+      "folds_positive": 9,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=off|mult=4.0|slip=0.2": {
+      "mean_sharpe": -0.195283131052527,
+      "median_sharpe": -0.05805062367001954,
+      "folds_positive": 8,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=1.0|slip=0.0": {
+      "mean_sharpe": 0.6260958820195085,
+      "median_sharpe": 0.7451121298476001,
+      "folds_positive": 15,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=1.0|slip=0.05": {
+      "mean_sharpe": 0.5346637941971635,
+      "median_sharpe": 0.6867706455512375,
+      "folds_positive": 14,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=1.0|slip=0.1": {
+      "mean_sharpe": 0.4432257705162158,
+      "median_sharpe": 0.628425904808635,
+      "folds_positive": 13,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=1.0|slip=0.2": {
+      "mean_sharpe": 0.26033224482795175,
+      "median_sharpe": 0.40337205460017234,
+      "folds_positive": 12,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=1.5|slip=0.0": {
+      "mean_sharpe": 0.5336863774190432,
+      "median_sharpe": 0.694336403789385,
+      "folds_positive": 14,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=1.5|slip=0.05": {
+      "mean_sharpe": 0.44225065561731275,
+      "median_sharpe": 0.6231314582242509,
+      "folds_positive": 13,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=1.5|slip=0.1": {
+      "mean_sharpe": 0.35080904390001455,
+      "median_sharpe": 0.5519214872938232,
+      "folds_positive": 13,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=1.5|slip=0.2": {
+      "mean_sharpe": 0.16790847998577688,
+      "median_sharpe": 0.25671485127722954,
+      "folds_positive": 11,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=2.0|slip=0.0": {
+      "mean_sharpe": 0.44127505517217935,
+      "median_sharpe": 0.6092662571236503,
+      "folds_positive": 13,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=2.0|slip=0.05": {
+      "mean_sharpe": 0.34983572144178676,
+      "median_sharpe": 0.5380575011653954,
+      "folds_positive": 13,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=2.0|slip=0.1": {
+      "mean_sharpe": 0.2583905437405701,
+      "median_sharpe": 0.41903495039093636,
+      "folds_positive": 12,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=2.0|slip=0.2": {
+      "mean_sharpe": 0.07548298570991709,
+      "median_sharpe": 0.15305301664508533,
+      "folds_positive": 10,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=3.0|slip=0.0": {
+      "mean_sharpe": 0.2564469966376705,
+      "median_sharpe": 0.43469987394306014,
+      "folds_positive": 12,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=3.0|slip=0.05": {
+      "mean_sharpe": 0.1650005052082712,
+      "median_sharpe": 0.2801945272885386,
+      "folds_positive": 10,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=3.0|slip=0.1": {
+      "mean_sharpe": 0.07354826170248398,
+      "median_sharpe": 0.16923871393032508,
+      "folds_positive": 10,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=3.0|slip=0.2": {
+      "mean_sharpe": -0.10937315222093404,
+      "median_sharpe": 0.0013101024432243006,
+      "folds_positive": 9,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=4.0|slip=0.0": {
+      "mean_sharpe": 0.07161178422428618,
+      "median_sharpe": 0.18542278025042105,
+      "folds_positive": 10,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=4.0|slip=0.05": {
+      "mean_sharpe": -0.01984177668296379,
+      "median_sharpe": 0.10146652830793856,
+      "folds_positive": 9,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=4.0|slip=0.1": {
+      "mean_sharpe": -0.11130099776587199,
+      "median_sharpe": 0.017503830025419824,
+      "folds_positive": 9,
+      "n_folds": 17,
+      "trades": 1132
+    },
+    "swap=on|mult=4.0|slip=0.2": {
+      "mean_sharpe": -0.29423609111001864,
+      "median_sharpe": -0.1504408496122831,
+      "folds_positive": 7,
+      "n_folds": 17,
+      "trades": 1132
+    }
+  }
+}
