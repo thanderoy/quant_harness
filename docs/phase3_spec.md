@@ -70,6 +70,42 @@ the reduction error rather than straddling thresholds with it.
 
 Recorded as **F3** (seq=113). The ruling in response is **R11**.
 
+### 2.1 The gate — measured, and it passes
+
+Criterion 1's third clause was the only one that could refuse the phase, so it was measured before
+any merge work.
+
+**Exposure.** `asqs` imports only `atr` from the shared indicators. `crest_n_keel` imports `hma`,
+`stochastic` and `atr`, and uses `hma(close, 55)` in *both* of its signal conditions — slope
+(`hma_cur > hma_prev`) and cross (`close_cur > hma_cur`) — so it sits directly in the deviating
+path. `h1_momentum` is halted under R6.
+
+**`atr` and `stochastic` are clean.** Zero differing bars for `atr_14`, `atr_50`, `%K` and `%D`
+across XAUUSD, EURUSD, GBPUSD and US500, with NaN shapes matching exactly. `asqs` is therefore
+unaffected by measurement, not by argument from X22's column list.
+
+**The gate.** `crest_n_keel`'s live signal logic was reimplemented against both indicator sets and
+run over the full XAUUSD H1 history, with its live parameters (hma 55, stoch 14/3/3, atr 14) and
+its live bar convention (current = `iloc[-2]`, previous = `iloc[-3]`).
+
+| | |
+|---|---|
+| Bars evaluated | 124,887 |
+| BUY/SELL signals via `resources` | 227 |
+| BUY/SELL signals via WMPS | 227 |
+| **Signal differences** | **0** |
+
+**Why it passes despite F3.** The F3 flips concentrate in `wma_20` and `wma_55`. `hma_21` and
+`hma_55` produced none on any instrument tested, despite carrying the largest raw ULP differences —
+consistent with hma's extra smoothing stage absorbing the reduction error rather than straddling
+thresholds with it. The deviating indicators that *do* flip comparisons are not the ones any
+deployed strategy reads.
+
+That is a narrow result, not a general one. It holds for the strategies deployed today on the
+instrument they run on. A future strategy reading `wma` directly would need this measured again.
+
+---
+
 ---
 
 ## 3. Acceptance criteria
@@ -78,9 +114,7 @@ Binary. All must hold. Criterion 1 replaces §11's "identical" clause per R11.
 
 1. **The deviation set is enumerated before the merge**, every member is attributed to the
    `fsum`/`np.dot` reduction, and **no member falls on a bar where a live strategy would have
-   acted.** The third clause is the one that decides behaviour-neutrality and is **not yet
-   measured** — it needs the strategy logic, not the indicators alone. If a flip lands on a traded
-   bar, Phase 3 stops and the deviation is resolved before the cutover, not after.
+   acted.** ✅ **Measured 2026-10-06 — passes (F4, seq=114).** See §2.1.
 2. WMPS history is preserved through the subtree merge — `git log --follow` reaches pre-merge
    commits for every moved file.
 3. The three duplicated modules are deleted, not merely bypassed, and no import path reaches them.
@@ -112,9 +146,7 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
 
 ## 5. Ordering
 
-1. Measure criterion 1's third clause — replay the deviation set against each deployed strategy's
-   signal logic. **This is the gate.** It is cheap, it is the only criterion that can refuse the
-   phase, and it is the one most likely to be skipped under momentum.
+1. ~~Measure criterion 1's third clause.~~ ✅ Done, 2026-10-06. The gate passed; see §2.1.
 2. Record the pre-merge `develop` SHA.
 3. Subtree merge, no refactor. Verify criterion 2 before touching anything.
 4. De-duplicate, one module at a time, re-running X22 and T11 after each.
