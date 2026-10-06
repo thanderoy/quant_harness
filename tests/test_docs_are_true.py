@@ -240,3 +240,45 @@ def test_no_constant_claims_a_source_it_does_not_carry():
     assert names & {"COMMISSION_PROVENANCE", "COMMISSION_MEASURED"}, (
         "the module claims its constants come from published docs but exposes "
         "no provenance record; a header is not a citation")
+
+
+def test_docs_do_not_disagree_about_the_same_test_count():
+    """Two documents stating the CI count must state the same one.
+
+    `test_a_stated_test_count_names_the_condition_it_holds_under` checks that a
+    figure says what it holds under. It cannot check whether the figure is
+    current, and a count cannot verify itself without running the suite. What
+    *is* checkable is agreement: STATUS.md and README.md both quote the CI
+    number, and on 2026-10-06 they had drifted to 665/3 and 667/1 while CI
+    actually reported 667/3. Both named their conditions, so the existing guard
+    passed; both were simply stale.
+
+    Disagreement is the cheap half of staleness and this catches it. Two docs
+    that are wrong in the same direction still slip through, which is why the
+    provenance column names the CI run id — so the figure can be checked
+    against a runner rather than against the other document.
+    """
+    # Two spellings are in use: "667 passed, 3 skipped" and the terser
+    # "667 / 3". The first draft of this test matched only the former, so it
+    # read one document, found nothing to compare, and passed vacuously — it
+    # was checked against an injected disagreement before being believed.
+    pat = re.compile(r"(\d{3,4})\s*passed,\s*(\d+)\s*skipped"
+                     r"|(\d{3,4})\s*/\s*(\d+)\b")
+    seen: dict[str, set] = {}
+    for doc in DOCS:
+        for line in read(doc).splitlines():
+            if "CI" not in line:
+                continue
+            for m in pat.finditer(line):
+                g = [x for x in m.groups() if x is not None]
+                if len(g) == 2:
+                    seen.setdefault(doc.name, set()).add((int(g[0]), int(g[1])))
+    cis = {d: v for d, v in seen.items() if v}
+    if len(cis) < 2:
+        return  # nothing to cross-check
+    allpairs = set().union(*cis.values())
+    assert len(allpairs) == 1, (
+        "documents disagree about the CI test count: "
+        + "; ".join(f"{d}={sorted(v)}" for d, v in cis.items())
+        + ". One of them is stale — check the CI run named in STATUS.md's "
+          "provenance column rather than picking whichever looks right.")
