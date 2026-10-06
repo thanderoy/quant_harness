@@ -1008,6 +1008,19 @@ by the comparison and a handful are not. The flips concentrate in `wma_20` and `
 extra smoothing stage absorbing the reduction error rather than straddling thresholds with it.
 
 Consequence: Phase 3 cannot accept on "identical" (R11).
+**F4 — the deviation flips no deployed-strategy signal.** Logged at seq=114. Phase 3's gate,
+measured before any merge work. `asqs` reads only `atr` from the shared indicators; `atr` and
+`stochastic` show zero differing bars across four instruments with NaN shapes matching, so `asqs`
+is unaffected by measurement rather than by argument. `crest_n_keel` reads `hma(close, 55)` in both
+its slope and cross conditions and so sits directly in the deviating path — its live signal logic
+run over 124,887 XAUUSD H1 bars produces 227 signals under each implementation and **zero**
+differences.
+
+The reason is in F3's own shape: the flips concentrate in `wma_20` and `wma_55`, and `hma`
+produced none anywhere despite the largest raw differences. The deviating indicators that flip
+comparisons are not the ones any deployed strategy reads. Narrow, not general: a future strategy
+reading `wma` directly needs this measured again.
+
 
 
 ---
