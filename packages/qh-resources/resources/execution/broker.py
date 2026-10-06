@@ -60,6 +60,14 @@ class FillConfig(str, Enum):
     NEXT_OPEN = "next_open"
     NEXT_OPEN_SPREAD = "next_open_spread"
     REALISTIC = "realistic"
+    #: A real fill from a real venue (Phase 3). Not an assumption, so it is
+    #: not on the FRONTIER and no simulator may be configured with it: a
+    #: SimulatedBroker reporting LIVE would label invented prices as
+    #: transacted ones. It is also the one configuration for which
+    #: ``next_bar`` is necessarily ``None`` — the next bar has not happened —
+    #: and that is not the look-ahead fallback the port's refusal rule
+    #: guards against, because the price comes from the venue, not a bar.
+    LIVE = "live"
 
     @property
     def fills_on_signal_bar(self) -> bool:
@@ -78,6 +86,10 @@ class FillConfig(str, Enum):
     @property
     def charges_slip(self) -> bool:
         return self is FillConfig.REALISTIC
+
+    @property
+    def is_simulated(self) -> bool:
+        return self is not FillConfig.LIVE
 
 
 #: All four, in adversity order. X23 requires that no backtest artifact is
@@ -111,11 +123,20 @@ class OrderRequest:
     market impact is deliberately not modelled — nothing in this repo has
     measured it, and a fabricated impact curve would make the ``REALISTIC``
     leg look rigorous while being invented.
+
+    ``sl``, ``tp``, ``magic`` and ``comment`` exist for a live venue, which
+    needs them on the order itself (Phase 3 step 5). The simulator prices
+    the entry only and ignores them; exits are the strategy's business in a
+    backtest. They are optional so every Phase 1 call site is unchanged.
     """
 
     symbol: str
     side: Side
     volume: float
+    sl: float | None = None
+    tp: float | None = None
+    magic: int = 0
+    comment: str = ""
 
     def __post_init__(self) -> None:
         if not (self.volume > 0):
@@ -151,7 +172,8 @@ class Fill:
 
 @runtime_checkable
 class Broker(Protocol):
-    """The port. ``SimulatedBroker`` implements it now, MT5 in Phase 3."""
+    """The port. ``SimulatedBroker`` implements the four simulated
+    configurations; the platform's ``MT5Broker`` implements ``LIVE``."""
 
     @property
     def config(self) -> FillConfig:

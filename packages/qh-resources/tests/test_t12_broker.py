@@ -59,8 +59,16 @@ def test_the_frontier_is_every_configuration_there_is():
     """X23 relies on FRONTIER meaning "all four". If a fifth configuration
     is ever added to the enum without being added here, every completeness
     check in the repo would keep passing while silently no longer covering
-    it."""
-    assert set(FRONTIER) == set(FillConfig)
+    it.
+
+    Phase 3 step 5 added the first non-simulated member, ``LIVE``, and this
+    test caught it as designed. The property it protects is that the
+    frontier covers every *simulated* configuration — a live fill is not an
+    assumption a backtest can record — so that is what it now asserts. A
+    fifth simulated configuration left off FRONTIER still fails here.
+    """
+    assert set(FRONTIER) == {c for c in FillConfig if c.is_simulated}
+    assert set(FillConfig) - set(FRONTIER) == {FillConfig.LIVE}
     assert len(FRONTIER) == 4
 
 
@@ -195,3 +203,41 @@ def test_side_is_one_enum_shared_with_strategies():
     silently never closes."""
     strategies = pytest.importorskip("strategies")
     assert strategies.Side is Side
+
+
+# -- Phase 3 step 5: the live configuration ----------------------------------
+
+def test_live_is_not_on_the_frontier():
+    """A real fill is not an execution *assumption*. X23 counts the frontier
+    from FRONTIER, so LIVE joining it would let a backtest artifact claim a
+    configuration it cannot have run."""
+    from resources.execution.broker import FRONTIER, FillConfig
+
+    assert FillConfig.LIVE not in FRONTIER
+    assert len(FRONTIER) == 4
+    assert all(c.is_simulated for c in FRONTIER)
+    assert not FillConfig.LIVE.is_simulated
+
+
+def test_a_simulator_refuses_to_be_configured_live():
+    from resources.execution.broker import FillConfig
+    from resources.execution.simulated import SimulatedBroker
+
+    with pytest.raises(ValueError, match="cannot be configured LIVE"):
+        SimulatedBroker(config=FillConfig.LIVE)
+
+
+def test_live_order_fields_are_optional_and_ignored_by_the_simulator():
+    """sl/tp/magic/comment exist for a venue. Adding them must not move a
+    simulated price — the simulator prices the entry only."""
+    from resources.execution.broker import Bar, FillConfig, OrderRequest
+    from resources.execution.simulated import SimulatedBroker
+    from resources.side import Side
+
+    bar, nxt = Bar(100.0, 101.0, 99.0, 100.5), Bar(100.7, 101.2, 100.1, 100.9)
+    plain = OrderRequest("XAUUSD", Side.LONG, 0.01)
+    rich = OrderRequest("XAUUSD", Side.LONG, 0.01, sl=99.0, tp=103.0,
+                        magic=7, comment="x")
+    assert (plain.sl, plain.tp, plain.magic, plain.comment) == (None, None, 0, "")
+    sim = SimulatedBroker(config=FillConfig.NEXT_OPEN)
+    assert sim.fill(plain, bar, nxt) == sim.fill(rich, bar, nxt)
