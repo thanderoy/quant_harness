@@ -13,7 +13,7 @@ x-common-labels: &default-labels
 services:
   mt5:
     build:
-      context: backend/mt5-api
+      context: ../packages/qh-platform/backend/mt5-api
       dockerfile: Dockerfile
     container_name: mt5
     restart: unless-stopped
@@ -66,7 +66,7 @@ services:
 
   mt5-test:
     build:
-      context: backend/mt5-api
+      context: ../packages/qh-platform/backend/mt5-api
       dockerfile: Dockerfile
     container_name: mt5-test
     restart: unless-stopped
@@ -122,7 +122,7 @@ services:
     container_name: postgres
     restart: unless-stopped
     env_file:
-      - .env
+      - ../packages/qh-platform/.env
     volumes:
       - postgres-storage:/var/lib/postgresql/data
     networks:
@@ -139,12 +139,12 @@ services:
 
   trading:
     build:
-      context: backend/trading
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: packages/qh-platform/backend/trading/Dockerfile
     container_name: trading
     restart: unless-stopped
     env_file:
-      - .env
+      - ../packages/qh-platform/.env
     environment:
       - START_FOREXERO_ON_START=true
     volumes:
@@ -199,8 +199,8 @@ services:
 
   celery:
     build:
-      context: backend/trading
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: packages/qh-platform/backend/trading/Dockerfile
     container_name: celery
     command: celery -A app worker --loglevel=info --concurrency=3
     volumes:
@@ -208,7 +208,7 @@ services:
       - /opt/telegram/session:/app/session
       - qhf_state:/var/lib/qhf
     env_file:
-      - .env
+      - ../packages/qh-platform/.env
     depends_on:
       - trading
       - redis
@@ -220,8 +220,8 @@ services:
 
   celery-beat:
     build:
-      context: backend/trading
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: packages/qh-platform/backend/trading/Dockerfile
     container_name: celery-beat
     command: celery -A app beat --loglevel=info
     volumes:
@@ -229,7 +229,7 @@ services:
       - /opt/telegram/session:/app/session
       - qhf_state:/var/lib/qhf
     env_file:
-      - .env
+      - ../packages/qh-platform/.env
     depends_on:
       - celery
       - redis

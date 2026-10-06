@@ -210,14 +210,20 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
 1. ~~Measure criterion 1's third clause.~~ ✅ Done, 2026-10-06. The gate passed; see §2.1.
 2. ~~Record the pre-merge `develop` SHA.~~ ✅ `531d3b28ab810720c9e1d61f2715afd6b1a4eb86`.
 3. ~~Subtree merge, no refactor.~~ ✅ Done 2026-10-06, commit `6971806`. See §2.2.
-3a. **Package `qh-resources` for platform consumption.** ⛔ **Prerequisite, not in the original
-    ordering.** The trading service builds with context `backend/trading`, copies only its own
+3a. **Package `qh-resources` for platform consumption.** ✅ **Done 2026-10-06 (seq=117).**
+    Prerequisite, not in the original ordering. The trading service builds with context `backend/trading`, copies only its own
     `pyproject.toml` and `uv.lock`, and runs `uv sync --frozen`. `packages/qh-resources` is
     outside that build context and undeclared as a dependency, so `from resources…` cannot
     resolve in the container however the strategy imports are rewritten. Widening the context and
     declaring the dependency means changing the `Dockerfile` **and** `docker-compose.yml`, whose
     service definitions are on the platform's do-not-touch list absent a specific instruction.
-    **This gates all three modules below.**
+    Resolved by widening the trading build context to the repository root, adding a
+    repo-root `.dockerignore` (context 116 MB → 418 kB), and installing with
+    `uv pip install --system --no-deps`. Verified by building the image and importing from it.
+    **Also repaired a regression from step 3**: moving `docker-compose.yml` into `services/`
+    left five build contexts and four `env_file` paths pointing at directories that do not
+    exist. `docker compose config` never validates build-context existence, so it reported the
+    file as valid. The live system was unaffected — it still runs from the WMPS repository.
 4. De-duplicate, one module at a time, re-running X22 and T11 after each — in this order, which
    is not arbitrary (see §2.3):
    1. **`indicators`** — a clean swap once 3a lands. All four signatures identical, and F4 already
