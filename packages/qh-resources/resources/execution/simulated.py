@@ -68,6 +68,11 @@ class SimulatedBroker:
     slip: SlipModel = field(default_factory=SlipModel)
 
     def __post_init__(self) -> None:
+        if not self.config.is_simulated:
+            raise ValueError(
+                "SimulatedBroker cannot be configured LIVE: it would report "
+                "simulated prices as transacted ones. A live fill comes from a "
+                "venue adapter, not from this class.")
         if self.config.charges_spread and self.spreads is None:
             self.spreads = load_spreads()
 

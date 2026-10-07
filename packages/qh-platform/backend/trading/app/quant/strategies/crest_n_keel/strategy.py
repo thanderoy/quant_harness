@@ -9,6 +9,8 @@ from app.quant.strategies.indicators import hma, stochastic, atr
 from app.quant.strategies.logging_utils import get_strategy_logger
 from app.quant.strategies.sizer import size_order
 from app.adapters.mt5_api import MT5APIClient
+from app.adapters.broker import MT5Broker, side_from_action
+from resources.execution.broker import OrderRequest
 from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
 from app.quant.strategies.drawdown_guard import (
@@ -334,17 +336,15 @@ class CrestNKeelStrategy(BaseStrategy):
     ) -> None:
         """Send market order and record in DB. Logs all outcomes."""
         try:
-            order = self.mt5_client.send_order(
-                action=signal,
+            order = MT5Broker(self.mt5_client).submit(OrderRequest(
                 symbol=SYMBOL,
+                side=side_from_action(signal),
                 volume=lot_size,
-                order_type="MARKET",
                 sl=sl,
                 tp=tp,
-                deviation=20,
                 magic=self.magic_number,
                 comment="HMA1H",
-            )
+            ))
 
             if order and order.get("success") is True:
                 fill_price = float(order.get("price", 0.0))
