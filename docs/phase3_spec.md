@@ -288,7 +288,8 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
    `Africa/Nairobi`, so from 21:00 to 24:00 UTC it counts the wrong day — confirmed by experiment
    (seq=123). The one-line fix is `dj_tz.localdate()`. Fixing it mid-week would make criterion 7
    unreadable; leaving it means a known deviation during those three hours.
-4. *(you)* **Decide which strategies the week runs.** The beat schedule currently runs none. §4
+4. ~~*(you)* **Decide which strategies the week runs.**~~ ✅ **crest_n_keel and asqs, as
+   engineering fixtures under R13** (seq=125) — demo only, time-boxed, P&L not evidence. The beat schedule currently runs none. §4
    says `asqs` and `crest_n_keel` carry `verdict=deployed`; the settings comment calls both
    retired. `h1_momentum` stays halted under R6 either way.
 5. *(you)* **Migrate the state, with the workers stopped.** The WMPS stack and this one use

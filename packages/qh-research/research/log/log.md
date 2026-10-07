@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 125
+- **Entries:** 126
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (125 entries)
+- **Hash chain:** OK — chain ok (126 entries)
 
 ## Principles
 
@@ -2063,3 +2063,13 @@ _Metrics_: `bug`=today = dj_tz.now().date() (UTC) vs entry_time__date evaluated 
 > Found at Phase 3 step 4.3 and confirmed at step 6 (seq=123): asqs _check_daily_cap took dj_tz.now().date(), the UTC date, but filtered Trade.entry_time__date, which Django evaluates in TIME_ZONE=Africa/Nairobi. From 21:00 to 24:00 UTC the two dates differ, so the cap counted trades against the wrong day -- and the existing tests, built on dj_tz.now(), passed by day and failed by night. Fixed with dj_tz.localdate(), keeping the lookup's Nairobi-day semantics, so the cap's day now turns over at Nairobi midnight (21:00 UTC). Five new tests pin the clock with patch('django.utils.timezone.now'); run against the unfixed code, the three in-window hours and the boundary test failed and noon passed, so they test the bug and not the wall clock. Opened ahead of the demo week as checklist item 3 (phase3_spec.md section 5.1) asked: merging it is the decision. With it the platform suite is 181 passed, 1 skipped -- its first fully green run in this repository.
 
 _hash_: `71a937dce4d89aee…` · _prev_: `752166d03d7733fc…`
+
+### seq 125 · 2026-10-07T09:18:11Z · audit · `record:r13-demo-week-fixtures`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `basis`=POST_DATA, `counts_as_trial`=False, `environment`=test (mt5-test, MetaQuotes-Demo), `evidence_claimed`=none, `guards_checked_by_injection`=['task-name typo', 'strategy routed to prod'], `h1_momentum`=still halted (R6), `rejected_alternative`=crest_n_keel alone, `ruling`=R13, `scheduled`=['quant.crest_n_keel.run (HH:01)', 'quant.asqs.run (every 5 min, expires 240s)', 'quant.asqs.audit (20:05)']
+
+> Both strategies were retired 2026-08-30 on refuted evidence (crest_n_keel seq=45/49; asqs seq=30/51) with the condition that re-enabling needs new out-of-sample evidence. R13 does not meet or claim it: it reschedules both for the Phase 3 demo week only, because criterion 7 needs the stack to run a week and a stack running no strategy exercises none of what Phase 3 changed. Chosen by the owner on 2026-10-07 after being told neither has an edge. Conditions: demo terminal only (a test fails on a prod route), time-boxed to the week but never removed while an asqs position is open, and the week's P&L is not evidence -- nothing from it is registered as a trial. h1_momentum stays halted under R6. Full text in REWRITE.md section 10.1.
+
+_hash_: `559412976a3e1cb8…` · _prev_: `71a937dce4d89aee…`

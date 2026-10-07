@@ -925,6 +925,35 @@ merge.
   rather than a comment. A carve-out that quietly stops being needed is how a guard narrows; both
   tests exist to stop that.
 
+**R13 — crest_n_keel and asqs return to the beat schedule for the Phase 3 demo week, as
+engineering fixtures only.** `basis: POST_DATA`
+
+Both were retired on 2026-08-30 because their evidence was refuted — crest_n_keel's deployed
+pullback is edgeless (seq=45, seq=49), asqs is net-losing out of sample (seq=30; DSR 0.038 at
+seq=51) — and the retirement said re-enabling needs new out-of-sample evidence. There is none, and
+this ruling does not claim any. Criterion 7 needs the stack to run a week unattended, and a stack
+running no strategy exercises none of what Phase 3 changed. These two together exercise all of
+it: shared sizing in both its refusal (crest_n_keel, ~35% of H1 signals at the $3,643 demo
+balance) and round-down (asqs) forms, the broker port, all three state files, both drawdown
+guards and the daily cap. Chosen by the owner on 2026-10-07.
+
+Conditions, each enforced where it can be:
+
+- **Demo only.** `tests/test_demo_week_schedule.py` fails if a scheduled strategy resolves to `prod`.
+- **Time-boxed.** Both entries come off when the week ends, but never while an asqs position is
+  open, since `asqs.evaluate()` also drives exit management.
+- **Their P&L is not evidence.** Nothing from the week is registered as a trial or read as a
+  performance result; `trial_count()` stays where it is.
+- `h1_momentum` stays halted (R6); the same test asserts it.
+
+- `rejected_alternative` — crest_n_keel alone. Quieter, and one H1 evaluation an hour is easier to
+  watch, but it leaves asqs's fixed-stop sizing, its partial-close state file and the daily cap
+  fixed in seq=124 untested — three of the things the week exists to exercise.
+- `selection_guard` — **chosen for coverage, against the record of both strategies.** Neither was
+  picked for how it performs; both are known not to. The choice is scored only on which Phase 3
+  code paths it reaches, which is decidable from the code before the week runs, and the P&L
+  exclusion removes the one way the week's results could be read back into a deployment decision.
+
 **Note on R6–R12.** All of them were issued after their data landed, into a section whose
 definition was "made before data". That was an error in categorisation, not in the rulings
 themselves — each survives being restated with its basis and guard. The annotation exists so the
