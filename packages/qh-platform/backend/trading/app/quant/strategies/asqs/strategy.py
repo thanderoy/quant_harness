@@ -331,7 +331,10 @@ class ASQSafeScalpingStrategy(BaseStrategy):
         from app.trades.models import Trade
         from django.utils import timezone as dj_tz
 
-        today = dj_tz.now().date()
+        # localdate(), not now().date(): entry_time__date is evaluated in
+        # TIME_ZONE (Africa/Nairobi), so "today" must be too. now().date() is
+        # the UTC date, which differs from 21:00 to 24:00 UTC every day.
+        today = dj_tz.localdate()
         count = Trade.objects.filter(
             strategy=self.__class__.__name__,
             entry_time__date=today,
