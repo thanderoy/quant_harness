@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 124
+- **Entries:** 125
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (124 entries)
+- **Hash chain:** OK — chain ok (125 entries)
 
 ## Principles
 
@@ -2053,3 +2053,13 @@ _Metrics_: `carve_out_retired`=AWAITING_EXECUTION_RENAME, by its own guard, `cri
 > PATH MAPPING -- apply when resolving any platform state path recorded before this entry: /var/lib/qhf/<file> -> /var/lib/quant_harness/<file>; Compose volume qhf_state -> quant_harness_state. This is the execution half of T10; the research half is seq=85/96. SCOPE WAS NARROWER THAN T10 FEARED. T10 lists app labels, settings module, Celery app and task names, Compose service and container names and env prefixes. A scan of the platform and services trees found the old namespace only in the state directory (two strategy modules, the Dockerfile, one VALIDATION.md row) and the Compose volume. None of the Django, Celery or env identifiers ever carried it, so T10's migration hazards for those -- table renames, queued tasks failing to route, beat entries -- do not arise. The beat schedule still runs no strategy. A THIRD LIVE STATE FILE. R12 named two (asqs_peak.json, peak_hma_stoch_1h.json). The scan found asqs_partial.json, asqs's TP1 partial-close tracker; losing it lets a position repeat its partial close. The state-path guard now names all three and asserts they sit under the new directory, checked by injecting a stray path. X16 HAD A BLIND SPOT. It selected files by suffix, so the Dockerfile -- no suffix -- and shell scripts were never scanned; the Dockerfile's state directory was invisible to it. Criterion 6 is defined as 'anywhere the X16 guard scans', which a blind spot would satisfy on a technicality. Widened to Dockerfiles, .dockerignore, .env.example and .sh; it caught this step's own migration-script comment on its first run, and an injected Dockerfile reference. THE VOLUME IS THE REAL HAZARD, AND IT PREDATES THE RENAME. Renaming a Compose volume key gives an empty volume with no error. Separately, neither the WMPS nor this repository's Compose file sets a project name, so their volumes are already distinct Docker volumes: the step-7 cutover starts from empty state whatever the key is called. services/migrate_state_volume.sh copies one volume to another and refuses a missing or empty source, a non-empty destination and a source still mounted by a running container, then compares sha256 of every file; all five branches were exercised on throwaway volumes. Because nothing inside a process can tell a first deployment from lost state, both stores now log CRITICAL when they find none or cannot read it -- the drawdown guard's peak once per store -- instead of quietly starting fresh. THE DAILY-CAP BUG IS CONFIRMED, NOT INFERRED. asqs _check_daily_cap fails 2 of 5 tests under TIME_ZONE=Africa/Nairobi at 21:59 UTC and passes 5 of 5 with only TIME_ZONE changed to UTC. Still not fixed in Phase 3.
 
 _hash_: `752166d03d7733fc…` · _prev_: `62f250077db58d1b…`
+
+### seq 124 · 2026-10-07T07:35:07Z · audit · `record:asqs-daily-cap-timezone-fix`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `bug`=today = dj_tz.now().date() (UTC) vs entry_time__date evaluated in TIME_ZONE=Africa/Nairobi, `day_boundary_now`=Nairobi midnight (21:00 UTC), `first_fully_green_platform_run`=True, `fix`=today = dj_tz.localdate(), `fixed_platform_suite`=181 passed, 1 skipped (recorded-order replay awaiting export), `regression_tests`=5, `unfixed`=4 of 5 fail (three in-window hours, the boundary); noon passes, `window_utc`=21:00-24:00 daily
+
+> Found at Phase 3 step 4.3 and confirmed at step 6 (seq=123): asqs _check_daily_cap took dj_tz.now().date(), the UTC date, but filtered Trade.entry_time__date, which Django evaluates in TIME_ZONE=Africa/Nairobi. From 21:00 to 24:00 UTC the two dates differ, so the cap counted trades against the wrong day -- and the existing tests, built on dj_tz.now(), passed by day and failed by night. Fixed with dj_tz.localdate(), keeping the lookup's Nairobi-day semantics, so the cap's day now turns over at Nairobi midnight (21:00 UTC). Five new tests pin the clock with patch('django.utils.timezone.now'); run against the unfixed code, the three in-window hours and the boundary test failed and noon passed, so they test the bug and not the wall clock. Opened ahead of the demo week as checklist item 3 (phase3_spec.md section 5.1) asked: merging it is the decision. With it the platform suite is 181 passed, 1 skipped -- its first fully green run in this repository.
+
+_hash_: `71a937dce4d89aee…` · _prev_: `752166d03d7733fc…`

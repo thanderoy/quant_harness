@@ -199,6 +199,34 @@ class TestCheckDailyCap:
         self._make_trades(3, entry_time=dj_tz.now(), strategy="SomeOtherStrategy")
         assert self.s._check_daily_cap() is True
 
+    # The two tests above used dj_tz.now(), so they passed or failed with the
+    # wall clock: between 21:00 and 24:00 UTC the date in UTC and the date in
+    # TIME_ZONE (Africa/Nairobi, UTC+3) differ, and _check_daily_cap took the
+    # first while the entry_time__date lookup uses the second. They failed every
+    # night in that window and passed by day. These pin the clock inside it.
+
+    #: 22:30 UTC on the 6th is 01:30 on the 7th in Nairobi.
+    IN_THE_GAP = datetime(2026, 10, 6, 22, 30, tzinfo=timezone.utc)
+
+    @pytest.mark.parametrize("now", [
+        datetime(2026, 10, 6, 21, 0, tzinfo=timezone.utc),
+        datetime(2026, 10, 6, 22, 30, tzinfo=timezone.utc),
+        datetime(2026, 10, 6, 23, 59, tzinfo=timezone.utc),
+        datetime(2026, 10, 6, 12, 0, tzinfo=timezone.utc),
+    ])
+    def test_cap_reached_blocks_at_any_hour(self, now):
+        with patch("django.utils.timezone.now", return_value=now):
+            self._make_trades(3, entry_time=now)
+            assert self.s._check_daily_cap() is False
+
+    def test_the_day_boundary_is_local_midnight(self):
+        """Trades at 23:30 Nairobi on the 6th are yesterday's at 01:30 on the
+        7th, though both instants fall on the 6th in UTC."""
+        before_midnight_local = datetime(2026, 10, 6, 20, 30, tzinfo=timezone.utc)
+        with patch("django.utils.timezone.now", return_value=self.IN_THE_GAP):
+            self._make_trades(3, entry_time=before_midnight_local)
+            assert self.s._check_daily_cap() is True
+
 
 # NOTE: TestCheckDrawdown was deleted here. The v1.0 `_check_drawdown(balance,
 # equity)` method it targeted no longer exists — drawdown enforcement moved to
