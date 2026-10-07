@@ -142,6 +142,14 @@ def test_allowed_table_covers_every_declared_package(name):
 SINGLY_DEFINED: dict[str, frozenset[str]] = {
     "resources.indicators": frozenset({"atr", "hma", "stochastic", "wma"}),
     "resources.risk.drawdown_guard": frozenset({"DrawdownGuard", "PeakStore"}),
+    "resources.risk.sizer": frozenset({
+        "size_position", "effective_stop", "PositionSize", "SizingReason",
+        "StaticFxRates", "FxRateProvider",
+        # The pre-4.3 platform entry point. Its arithmetic now lives in
+        # size_position; a function by this name reappearing in the platform
+        # is a second sizer, whatever its body says.
+        "calculate_lot_size",
+    }),
 }
 
 #: Deliberate exceptions, each with the reason it is not a duplicate.

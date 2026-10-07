@@ -54,7 +54,7 @@ from app.adapters.mt5_api import MT5APIClient
 from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
 from app.quant.strategies.base import BaseStrategy
-from app.quant.strategies.sizer import calculate_lot_size
+from app.quant.strategies.sizer import size_order
 
 SHORT_NAME = "H1M"
 SYMBOL = "XAUUSD"
@@ -280,10 +280,16 @@ class H1MomentumStrategy(BaseStrategy):
             self.logger.error("h1_momentum.bad_balance balance=%s", balance)
             return None
 
-        lot, effective_atr = calculate_lot_size(
-            account_balance=balance, atr_value=atr_now,
+        sized = size_order(
+            SYMBOL, account_balance=balance, atr_value=atr_now,
             risk_pct=RISK_PCT, sl_atr_multiplier=STOP_ATR_MULT,
         )
+        if not sized.tradable:
+            self.logger.warning(
+                "h1_momentum.sizer_declined reason=%s balance=%s atr=%s",
+                sized.reason.value, balance, atr_now)
+            return None
+        lot, effective_atr = sized.lots, sized.effective_atr
         try:
             tick = self.mt5_client.get_tick(SYMBOL) or {}
             ask = float(tick.get("ask") or 0.0)

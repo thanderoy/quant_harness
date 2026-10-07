@@ -7,7 +7,7 @@ import pandas as pd
 from app.quant.strategies.base import BaseStrategy
 from app.quant.strategies.indicators import hma, stochastic, atr
 from app.quant.strategies.logging_utils import get_strategy_logger
-from app.quant.strategies.sizer import calculate_lot_size
+from app.quant.strategies.sizer import size_order
 from app.adapters.mt5_api import MT5APIClient
 from app.adapters.utils.create import create_trade as create_trade_record
 from app.config import settings
@@ -482,12 +482,25 @@ class CrestNKeelStrategy(BaseStrategy):
 
         entry_price = float(df.iloc[-2]["close"])
 
-        lot_size, effective_atr = calculate_lot_size(
+        sized = size_order(
+            SYMBOL,
             account_balance=balance,
             atr_value=atr_value,
             risk_pct=self.risk_pct,
             sl_atr_multiplier=self.sl_atr_mult,
         )
+        if not sized.tradable:
+            # A refusal, not an order attempt: nothing reaches the broker, so
+            # there is no retcode to record. Logged at WARNING so a run of
+            # them on a small account is visible rather than looking like
+            # "no signal".
+            LOGGER.warning(
+                f"Signal {signal} declined by sizer: reason={sized.reason.value} "
+                f"balance={balance:.2f} raw_atr={atr_value:.4f} "
+                f"risk_pct={self.risk_pct}"
+            )
+            return None
+        lot_size, effective_atr = sized.lots, sized.effective_atr
         sl, tp = self._compute_sl_tp(signal, entry_price, effective_atr)
 
         LOGGER.info(
