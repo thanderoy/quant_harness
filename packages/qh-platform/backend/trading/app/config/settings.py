@@ -282,7 +282,7 @@ CELERY_BEAT_SCHEDULE = {
     #   - It sets RISK_PCT = 0.05 and STOP_ATR_MULT = 10.0, overriding the
     #     sizer's 2% default with the value the trading profile calls stale.
     #   - It wires NO DrawdownGuard. The guard is imported only by
-    #     crest_n_keel and asqs, both already retired, so the only strategy
+    #     crest_n_keel and asqs, both retired at the time, so the only strategy
     #     on the schedule was the only one with no drawdown protection.
     #   - At its own geometry (10xATR, 5%) with H1 gold ATR $14-22/oz, one
     #     minimum lot realises 140-220% of a $100 account. It survived only
@@ -309,28 +309,45 @@ CELERY_BEAT_SCHEDULE = {
     #     "schedule": crontab(minute=2, day_of_week="mon-fri"),
     #     "options": {"expires": 300},
     # },
-    # crest_n_keel and asqs are RETIRED from the schedule. Both ran on demo
-    # for months on evidence that has since been refuted, and leaving them
-    # scheduled contaminates the read on anything deployed alongside them.
+    # ── Phase 3 demo week: crest_n_keel + asqs, as ENGINEERING FIXTURES ──
     #
-    #   crest_n_keel (magic 1100001) — research log seq=49: the nested
-    #     walk-forward showed training rank carries no out-of-sample
-    #     information (selected beat the gate-passing pool in 17/32 folds,
-    #     p=0.430); the full-history leader's apparent edge was 0.68-0.81
-    #     Sharpe of pure lookahead. The deployed PULLBACK variant is
-    #     separately confirmed edgeless (seq=45).
-    #   asqs (magic 1500020) — research log seq=30: harness walk-forward
-    #     returned OOS Sharpe ~-1 and net-losing, refuting the seeded
-    #     5.14 Sharpe / 1.55 profit factor the strategy was deployed on.
-    #     seq=51 adds DSR 0.038 at grid N.
+    # Both were retired on 2026-08-30 (WMPS 717b729) because their evidence was
+    # refuted: crest_n_keel's deployed pullback is edgeless (seq=45, seq=49),
+    # asqs is net-losing out of sample (seq=30, DSR 0.038 at seq=51). That
+    # retirement said re-enabling needs new out-of-sample evidence. Nothing here
+    # claims any. These run under ruling R13 (REWRITE.md section 10.1) for one
+    # purpose: the Phase 3 demo week (criterion 7), which exercises the code the
+    # merge changed -- shared sizing and its refusal, the broker port, the three
+    # state files, both drawdown guards, the daily cap.
     #
-    # Verified flat before removal: 0 open XAUUSD positions on demo for both
-    # magic numbers, so nothing was orphaned. Note that asqs.evaluate() also
-    # drives manage_positions() (breakeven, trailing, partial close), so this
-    # entry must NOT be removed while an asqs position is open.
+    # Conditions R13 attaches, so this cannot drift into a redeployment:
+    #   - demo only. Both strategies default to environment="test" (mt5-test);
+    #     tests/test_demo_week_schedule.py fails if a scheduled strategy
+    #     resolves to "prod".
+    #   - time-boxed to the demo week. Remove both entries when it ends -- but
+    #     never while an asqs position is open: asqs.evaluate() also drives
+    #     manage_positions() (breakeven, trailing, partial close).
+    #   - their P&L is not evidence. Nothing from this week is logged as a
+    #     trial or read as a performance result.
     #
-    # The strategy code and tasks are retained; only the schedule is removed.
-    # Re-enabling requires new out-of-sample evidence, not just a re-run.
+    # Schedules are restored exactly as they ran before retirement.
+    "crest-n-keel": {
+        "task": "quant.crest_n_keel.run",
+        "schedule": crontab(minute=1, day_of_week="mon-fri"),
+    },
+    "asqs": {
+        "task": "quant.asqs.run",
+        "schedule": crontab(
+            minute="1,6,11,16,21,26,31,36,41,46,51,56", day_of_week="mon-fri"
+        ),
+        # Discard if not picked up within 4 min — by then iloc[-2] has shifted
+        # to the next bar and the signal would be stale.
+        "options": {"expires": 240},
+    },
+    "asqs-audit": {
+        "task": "quant.asqs.audit",
+        "schedule": crontab(hour=20, minute=5, day_of_week="mon-fri"),
+    },
 }
 
 # Telegram API Credentials
