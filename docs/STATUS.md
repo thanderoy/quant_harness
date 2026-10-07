@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-07 — Phase 3 steps 4.1–6 done (seq=120–123); the demo week's preconditions are in `docs/phase3_spec.md` §5.1.
+**Last updated:** 2026-10-07 — Phase 3 cut over on the server; the demo week is running (seq=126).
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -32,7 +32,7 @@ the next reader can check rather than trust.
 | Tests passing | **675 passed, 2 skipped** on CI; 677 tests total. At most three skips, each declared | 677 tests total, measured on run 37538752734 (the step 6 branch, which appends seq=123, so the log-rewrite check had something to diff and ran). Where the log matches `origin/develop` it skips, giving one fewer passed and one more skipped. The CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); `test_no_pre_existing_entry_was_rewritten` (nothing to diff when the log matches `origin/develop`); and one case in `test_parity_data_resolution.py` that exists to assert the recorded path wins *where it resolves*, so it skips on a runner by design. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
 | Packages | 4 built — `qh-resources`, `qh-strategies`, `qh-research`, and `qh-platform` as of the Phase 3 subtree merge | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; **2** CI-limited and declared (X17, X22) | `tests/test_x_coverage.py` |
-| Research log | 126 entries (to seq=125), chain verified; `trial_count()` = 26 | `research.log.verify()` |
+| Research log | 127 entries (to seq=126), chain verified; `trial_count()` = 26 | `research.log.verify()` |
 | Instruments | 9 — 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching | `snapshots/pepperstone_live_20260906.json` |
 | Gate detection floor | **1.2 annualised Sharpe**, false-positive rate 0% at n=2,000 pooled | seq=107, `research/reports/power.py` |
 
@@ -46,7 +46,7 @@ the next reader can check rather than trust.
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
 | 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ next, but ⚠ its rationale is contested — see below |
-| 3 | Execution merge | 🔨 steps 1–6 done, **step 7 (demo week) ready and waiting on you** — gate passed (F4), subtree merged (seq=115), `resources` in the image (seq=117); de-duplicated `drawdown_guard` (seq=118), `indicators` (seq=120) and `sizer` (seq=121, adopting T5's refusal); `MT5Broker` behind the broker port with 45 order paths replaying identically (seq=122); T10's execution rename with a verified state migration (seq=123). Criterion 5's real-order replay needs a Trade export. Preconditions and what to watch: `docs/phase3_spec.md` §5.1 |
+| 3 | Execution merge | 🔨 **demo week running since 2026-10-07 11:33 UTC** (crest_n_keel + asqs on mt5-test, R13) — steps 1–6 done; criteria 1–6 and 8 met, criterion 5 on real orders (seq=126). Criterion 7 is decided by the week. What to watch: `docs/phase3_spec.md` §5.1 |
 | 4+ | Multi-symbol live, CPCV | ⏭ not entered until a mechanism survives 2b |
 
 ### Phase 1 acceptance criteria

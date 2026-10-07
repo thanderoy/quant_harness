@@ -181,8 +181,9 @@ Binary. All must hold. Criterion 1 replaces §11's "identical" clause per R11.
    in `pyproject.toml`, with the reason recorded there.
 5. `MT5APIClient` satisfies the `resources.execution.broker` port, verified by replaying recorded
    live orders through both the old client and the port with identical resulting order parameters.
-   ◐ **Partly met 2026-10-07.** The port is satisfied and every strategy order path replays
-   identically; the replay over real recorded orders has not run — see §5 step 5.
+   ✅ **Met 2026-10-07 (seq=126).** All 27 recorded asqs orders replay byte-identical through both
+   paths; the other 135 are legacy forexero, not on the port. No crest_n_keel order was ever
+   recorded, so its coverage is the 45-case strategy replay.
 6. The execution-side T10 rename is complete; no pre-rename namespace identifiers remain
    anywhere the X16 guard scans. ✅ **Met 2026-10-07**, after widening what X16 scans to
    include Dockerfiles and shell scripts — a criterion defined by a guard is only as good as the
@@ -270,7 +271,7 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
 **Preconditions, in order.** Each names who acts.
 
 1. *(you)* Merge #56 → #57 → #58 in that order; each is stacked on the one before.
-2. *(you)* **Close criterion 5's real-data clause.** Export the recorded orders from the database
+2. ~~*(you)* **Close criterion 5's real-data clause.**~~ ✅ 27/27 asqs orders identical (seq=126). Export the recorded orders from the database
    the live strategies write to — only the fields the replay needs, no account data — to a path
    **outside the repository** (it is trading history), then run the replay on it:
 
@@ -292,12 +293,15 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
    engineering fixtures under R13** (seq=125) — demo only, time-boxed, P&L not evidence. The beat schedule currently runs none. §4
    says `asqs` and `crest_n_keel` carry `verdict=deployed`; the settings comment calls both
    retired. `h1_momentum` stays halted under R6 either way.
-5. *(you)* **Migrate the state, with the workers stopped.** The WMPS stack and this one use
+5. ~~*(you)* **Migrate the state, with the workers stopped.**~~ ✅ Done on the server (seq=126); crest_n_keel's
+   peak reset to current equity by decision, on the new volume only. The orphan exists (5000.0). The WMPS stack and this one use
    different Docker volumes regardless of the rename (neither Compose file sets a project name).
    `docker volume ls --format '{{.Name}}' | grep state` gives both names; then
    `services/migrate_state_volume.sh <wmps volume> <new volume>`. Its file listing also answers
    R12's open question — whether an orphaned `peak_equity_HMA1H.json` sits on the old volume.
-6. *(you)* Start the new stack against `mt5-test`. A CRITICAL "no peak-state file" line at the
+6. ~~*(you)* Start the new stack against `mt5-test`.~~ ✅ **The week started 2026-10-07 11:33 UTC.** Run it as
+   `docker compose -p wine-mt5-python-setup --env-file ../packages/qh-platform/.env` from `services/` —
+   without `-p` Compose creates an empty database. A CRITICAL "no peak-state file" line at the
    first evaluation means the migration did not happen; stop and rerun step 5.
 
 **What "no behavioural change" (criterion 7) can mean.** Read literally it cannot hold, because

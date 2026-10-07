@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 126
+- **Entries:** 127
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (126 entries)
+- **Hash chain:** OK — chain ok (127 entries)
 
 ## Principles
 
@@ -2073,3 +2073,13 @@ _Metrics_: `basis`=POST_DATA, `counts_as_trial`=False, `environment`=test (mt5-t
 > Both strategies were retired 2026-08-30 on refuted evidence (crest_n_keel seq=45/49; asqs seq=30/51) with the condition that re-enabling needs new out-of-sample evidence. R13 does not meet or claim it: it reschedules both for the Phase 3 demo week only, because criterion 7 needs the stack to run a week and a stack running no strategy exercises none of what Phase 3 changed. Chosen by the owner on 2026-10-07 after being told neither has an edge. Conditions: demo terminal only (a test fails on a prod route), time-boxed to the week but never removed while an asqs position is open, and the week's P&L is not evidence -- nothing from it is registered as a trial. h1_momentum stays halted under R6. Full text in REWRITE.md section 10.1.
 
 _hash_: `559412976a3e1cb8…` · _prev_: `71a937dce4d89aee…`
+
+### seq 126 · 2026-10-07T12:02:13Z · audit · `record:phase3-cutover-demo-week-start`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `asqs_peak`=3772.33, `compose`=-p wine-mt5-python-setup --env-file packages/qh-platform/.env, --no-deps trading celery celery-beat, `crest_n_keel_recorded_orders`=0, `crest_peak_reset`={'approved_by': 'owner, 2026-10-07', 'from': 5270.44, 'on': 'new volume only', 'reason': '30.9% drawdown vs 15% guard would halt crest all week; the old peak tracks account equity including forexero losses', 'to': 3643.15}, `criterion_5_real_data`=27 of 27 recorded asqs orders replay identically; 135 forexero not replayable by design, `demo_equity_at_start`=3643.15, `first_asqs_run`=11:36 UTC, bar 11:30, no signal, no CRITICAL, `first_crest_run`=12:01 UTC, env=test (mt5-test), no signal, no CRITICAL, guard not tripped, `observed_not_touched`=['live mt5 container unhealthy 8 days', 'd3a-spread-collector restart loop: trade server null'], `open_positions_at_start`=0, `r12_orphan`=peak_equity_HMA1H.json exists, 5000.0, read by no code; copied, not deleted, `recorded_orders_total`=162, `rollback_images`=wine-mt5-python-setup-{trading,celery,celery-beat}:pre-phase3, `state_migration`=wine-mt5-python-setup_qhf_state -> wine-mt5-python-setup_quant_harness_state, 4 files, sha256 verified, `untouched`=['mt5', 'mt5-test', 'postgres', 'redis']
+
+> Steps 2, 5 and 6 of the demo-week checklist, run on the server with the owner's approval. CRITERION 5 IS MET ON REAL DATA: the 162 recorded orders export to 135 forexero (legacy, not on the port, not replayable by design) and 27 asqs, and all 27 asqs orders produce byte-identical requests through MT5APIClient and MT5Broker. No crest_n_keel order was ever recorded, so its coverage remains the 45-case strategy replay. THE STATE VOLUME was migrated with services/migrate_state_volume.sh (4 files, checksums verified). R12's open question is answered: the orphaned peak_equity_HMA1H.json exists (5000.0) and no code reads it. A DELIBERATE PEAK RESET, NOT A SILENT ONE: crest_n_keel's recorded peak was 5270.44 against 3643.15 equity, a 30.9% drawdown its 15% guard would have halted on at every evaluation -- the week would have tested only the halt path. The peak measures the shared account, including forexero's demo losses. With the owner's approval it was reset to current equity on the NEW volume only; the old volume keeps 5270.44. This is the reset the step-6 CRITICAL log exists to make visible when it happens by accident; here it is recorded instead. CUTOVER: the new compose file run under the existing project name, so Postgres and the static volumes were reused (a default project name would have created an empty database and collided on container names), and --no-deps so only trading, celery and celery-beat were replaced. The first build attempt failed at compose interpolation (labels need the env file passed with --env-file); fixed and rebuilt. Pre-cutover images are tagged :pre-phase3 for rollback. The demo week started at 11:33 UTC; asqs first evaluated at 11:36 and crest_n_keel at 12:01 (routed to mt5-test), both without error. Seen and left alone: the live mt5 container has reported unhealthy for 8 days, and the d3a spread collector is in a restart loop because that terminal returns no trade server.
+
+_hash_: `eed69d5c380a39fc…` · _prev_: `559412976a3e1cb8…`
