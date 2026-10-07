@@ -69,7 +69,18 @@ class _PartialCloseTracker:
             with open(self._path, "r") as f:
                 data = json.load(f)
             self._closed_tickets = set(data.get("closed_tickets", []))
-        except (FileNotFoundError, json.JSONDecodeError):
+        except FileNotFoundError:
+            # Normal until the first TP1 partial close writes it.
+            LOGGER.info(f"No partial-close state at {self._path}; starting empty")
+            self._closed_tickets = set()
+        except (json.JSONDecodeError, TypeError, ValueError) as e:
+            # Losing this lets a position that already took its TP1 partial
+            # close take it again.
+            LOGGER.critical(
+                f"Partial-close state at {self._path} unreadable "
+                f"({type(e).__name__}); starting empty, so an open position "
+                f"may repeat its TP1 partial close"
+            )
             self._closed_tickets = set()
 
     def _save(self) -> None:
@@ -118,8 +129,8 @@ TRAIL_DISTANCE_POINTS = 100  # trail $1.00 behind price
 
 # ── Risk defaults ─────────────────────────────────────────────────────────
 DEFAULT_MAX_SPREAD_POINTS = 25
-DEFAULT_PEAK_STORE_PATH = "/var/lib/qhf/asqs_peak.json"
-DEFAULT_PARTIAL_STORE_PATH = "/var/lib/qhf/asqs_partial.json"
+DEFAULT_PEAK_STORE_PATH = "/var/lib/quant_harness/asqs_peak.json"
+DEFAULT_PARTIAL_STORE_PATH = "/var/lib/quant_harness/asqs_partial.json"
 
 
 # ── Indicator helpers ─────────────────────────────────────────────────────

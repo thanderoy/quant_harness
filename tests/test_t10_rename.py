@@ -44,35 +44,18 @@ EXCLUDED_TREES = (
     RESEARCH / "post" / "artifacts",
 )
 
-#: The platform tree merged at Phase 3 step 3, which has not yet had the
-#: execution-side rename (T10, scheduled at Phase 3 step 6). These are not
-#: stale strings: they are live runtime state paths and a Docker volume on the
-#: running system.
+#: The live state files the execution rename had to migrate, not rename.
+#: The drawdown guard reads peak equity from the first two to enforce the
+#: maximum-drawdown rule; changing a path without moving the file resets the
+#: peak silently and hands back the whole drawdown budget. The third is
+#: asqs's TP1 partial-close tracker -- R12 missed it, the Phase 3 step 6 scan
+#: found it -- and losing it lets a position repeat its partial close.
 #:
-#:     <state>/asqs_peak.json           asqs peak state
-#:     <state>/peak_hma_stoch_1h.json   crest_n_keel peak state
-#:     qhf_state:<state>                the volume both live on
-#:
-#: R12 originally listed a third file, peak_equity_HMA1H.json, as the drawdown
-#: guard's peak path. It was not: it appeared only inside a `Usage:` docstring
-#: example in the platform's drawdown_guard module, never as a constant any
-#: strategy read. Step 4.2 rewrote that module, the example went with it, and
-#: this test failed — which is the guard working. The live state files are the
-#: two DEFAULT_PEAK_STORE_PATH constants below.
-#:
-#: Renaming them is a migration, not a find-and-replace. The drawdown guard
-#: reads peak equity from that file to enforce the 10% maximum-drawdown rule;
-#: pointing it at a fresh path resets the peak silently, and the guard then
-#: believes the account is at a new high with its entire drawdown budget
-#: unspent. The rename must move the files, or read the old path and write the
-#: new one, before the strings change.
-#:
-#: Guarded below: each entry must still contain a reference, so this set
-#: cannot outlive the rename it is waiting for.
-AWAITING_EXECUTION_RENAME = (
-    REPO / "packages" / "qh-platform",
-    REPO / "services",
-)
+#: Until step 6 the platform and services trees were exempt from X16 under
+#: AWAITING_EXECUTION_RENAME. That carve-out ended the way it was built to:
+#: the rename landed, its guard failed, and the entry was deleted.
+STATE_DIR = "/var/lib/quant_harness"
+LIVE_STATE_FILES = ("asqs_peak.json", "peak_hma_stoch_1h.json", "asqs_partial.json")
 
 #: Documentation that records the project's own history, including the spec
 #: that *defines* the rename. Rewriting these would falsify the record of what
@@ -133,17 +116,23 @@ def _scanned_files() -> list[pathlib.Path]:
     # .md included even though X16 names only code and config: a README that
     # tells a reader to `from qhf.data import load_bars` is wrong in a way
     # that costs someone an afternoon, and it is the first thing they read.
-    suffixes = {".py", ".toml", ".yml", ".yaml", ".cfg", ".ini", ".env", ".md"}
+    #
+    # Dockerfiles and shell scripts were not scanned until Phase 3 step 6. A
+    # Dockerfile has no suffix, so the platform's `mkdir /var/lib/<old>` was
+    # invisible to this check -- and criterion 6 is defined as "anywhere X16
+    # scans", which a blind spot would satisfy on a technicality.
+    suffixes = {".py", ".toml", ".yml", ".yaml", ".cfg", ".ini", ".env", ".md", ".sh"}
+    names = {"Dockerfile", ".dockerignore", ".env.example"}
     out = []
     for path in REPO.rglob("*"):
-        if not path.is_file() or path.suffix not in suffixes:
+        if not path.is_file():
+            continue
+        if path.suffix not in suffixes and path.name not in names:
             continue
         parts = path.parts
         if "__pycache__" in parts or ".venv" in parts or ".git" in parts:
             continue
         if any(str(path).startswith(str(t)) for t in EXCLUDED_TREES):
-            continue
-        if any(str(path).startswith(str(t)) for t in AWAITING_EXECUTION_RENAME):
             continue
         if path == pathlib.Path(__file__).resolve():
             continue   # this file defines the check; it must name the string
@@ -368,62 +357,43 @@ def _rename_entry(log) -> dict:
     raise AssertionError("no PROJECT_RENAME entry for the T10 split")
 
 
-# --------------------------------------------------------------------------- #
-# The Phase 3 carve-out must not outlive the rename it waits for               #
-# --------------------------------------------------------------------------- #
+def test_every_live_state_file_lives_under_the_renamed_state_dir():
+    """Each live state file is still referenced, and only at the new path.
 
-def test_the_execution_rename_carve_out_is_still_needed():
-    """`AWAITING_EXECUTION_RENAME` exempts the merged platform tree from X16
-    because T10's execution-side rename is scheduled at Phase 3 step 6 and has
-    not run. A carve-out that stops being needed and stays in place is how a
-    guard quietly narrows, so each entry has to still contain a reference.
-
-    When the rename lands, this test fails and the entry is deleted. That is
-    the intended way for it to end.
-    """
-    stale = []
-    for tree in AWAITING_EXECUTION_RENAME:
-        if not tree.exists():
-            stale.append(f"{tree.relative_to(REPO)} (path is gone)")
-            continue
-        hits = 0
-        for path in tree.rglob("*"):
-            if not path.is_file() or path.suffix not in {
-                    ".py", ".toml", ".yml", ".yaml", ".cfg", ".ini", ".env", ".md"}:
-                continue
-            if "__pycache__" in path.parts:
-                continue
-            if QHF.search(path.read_text(errors="ignore")):
-                hits += 1
-                break
-        if hits == 0:
-            stale.append(f"{tree.relative_to(REPO)} (no references left)")
-    assert not stale, (
-        "these trees no longer need the carve-out; delete them from "
-        f"AWAITING_EXECUTION_RENAME: {stale}")
-
-
-def test_the_live_state_paths_are_named_so_the_rename_cannot_forget_them():
-    """The rename is a migration. If these paths change without the files
-    moving, the drawdown guard's peak equity resets and it believes the
-    account is at a new high with its full 10% budget unspent.
-
-    Named here rather than only in a comment, so the obligation is executable.
+    Referenced, because a file that disappears from the code is either
+    migrated and renamed (update the list) or silently abandoned. At the new
+    path, because one strategy left on the old directory would read a volume
+    nothing mounts any more and start from empty state.
     """
     platform = REPO / "packages" / "qh-platform"
     if not platform.exists():
-        pytest.skip("platform tree not merged yet")
-    must_migrate = ("asqs_peak.json", "peak_hma_stoch_1h.json")
-    found = {name: False for name in must_migrate}
+        pytest.skip("platform tree not present")
+    paths: dict[str, set[str]] = {name: set() for name in LIVE_STATE_FILES}
+    pat = re.compile(r"[\"'](/[^\"']*/(%s))[\"']" % "|".join(
+        re.escape(n) for n in LIVE_STATE_FILES))
     for path in platform.rglob("*.py"):
-        if "__pycache__" in path.parts:
+        if "__pycache__" in path.parts or ".venv" in path.parts:
             continue
-        text = path.read_text(errors="ignore")
-        for name in must_migrate:
-            if name in text:
-                found[name] = True
-    missing = [n for n, ok in found.items() if not ok]
+        for m in pat.finditer(path.read_text(errors="ignore")):
+            paths[m.group(2)].add(m.group(1))
+    missing = [n for n, found in paths.items() if not found]
     assert not missing, (
-        "these live state files are no longer referenced by the platform "
-        f"code: {missing}. If the rename moved them, update this list; if it "
-        "changed the path without moving the file, the peak state was reset.")
+        f"live state files no longer referenced by platform code: {missing}. "
+        "Moved and renamed? update LIVE_STATE_FILES. Otherwise the state was "
+        "abandoned and the strategy starts from empty.")
+    wrong = {n: sorted(p) for n, p in paths.items()
+             if any(not x.startswith(STATE_DIR + "/") for x in p)}
+    assert not wrong, f"state paths outside {STATE_DIR}: {wrong}"
+
+
+def test_the_state_migration_script_is_shipped_and_executable():
+    """The rename moved the volume key, and the cutover moves the stack.
+    Either way the files have to be copied, and the script that does it
+    with verification has to be there when someone needs it."""
+    script = REPO / "services" / "migrate_state_volume.sh"
+    assert script.is_file()
+    assert script.stat().st_mode & 0o111, "not executable"
+    text = script.read_text()
+    for refusal in ("does not exist", "holds no files", "mounted by running",
+                    "refusing to overwrite", "checksums differ"):
+        assert refusal in text, f"the script lost its '{refusal}' refusal"

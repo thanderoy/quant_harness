@@ -184,7 +184,9 @@ Binary. All must hold. Criterion 1 replaces §11's "identical" clause per R11.
    ◐ **Partly met 2026-10-07.** The port is satisfied and every strategy order path replays
    identically; the replay over real recorded orders has not run — see §5 step 5.
 6. The execution-side T10 rename is complete; no pre-rename namespace identifiers remain
-   anywhere the X16 guard scans.
+   anywhere the X16 guard scans. ✅ **Met 2026-10-07**, after widening what X16 scans to
+   include Dockerfiles and shell scripts — a criterion defined by a guard is only as good as the
+   guard's coverage.
 7. The demo stack runs a full week unattended with no behavioural change.
 8. `trial_count()` is unchanged by the merge. Phase 3 is engineering; it registers no hypothesis.
 
@@ -252,7 +254,13 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
    All 45 strategy order paths replay byte-identical against a baseline committed before the port
    (541e732). Criterion 5's *recorded live orders* are in the live Postgres; the replay runs on them
    when `$QH_RECORDED_ORDERS` names a JSON export of Trade rows.
-6. T10 execution rename.
+6. ~~T10 execution rename.~~ ✅ **Done 2026-10-07 (seq=123).** State directory → `/var/lib/quant_harness`,
+   volume → `quant_harness_state`. No Django, Celery or env identifier carried the old namespace, so
+   T10's table-rename and task-routing hazards don't arise. Found a **third live state file**
+   (`asqs_partial.json`) R12 missed, and an X16 blind spot (Dockerfiles and `.sh` were never
+   scanned). `services/migrate_state_volume.sh` does the verified copy the cutover needs — see
+   step 7 — and both stores now log CRITICAL on missing or unreadable state instead of starting
+   fresh in silence.
 7. Demo week.
 
 ---

@@ -53,10 +53,10 @@ COPY packages/qh-platform/backend/trading/ /app/
 RUN mkdir -p /app/logs && \
     mkdir -p /app/static && \
     mkdir -p /app/session && \
-    mkdir -p /var/lib/qhf && \
+    mkdir -p /var/lib/quant_harness && \
     chmod 777 /app/logs && \
     chmod 777 /app/session && \
-    chmod 777 /var/lib/qhf
+    chmod 777 /var/lib/quant_harness
 
 RUN chmod +x /app/entrypoint.sh
 

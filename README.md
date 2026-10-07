@@ -42,32 +42,46 @@ packages/
 ├── qh-strategies/  → import `strategies`
 │   ├── instrument-neutral strategy definitions; emit risk units, never lots
 │   └── registry.py          # lifecycle; a beat schedule is generated, not written
-└── qh-research/    → import `research`
-    ├── log.py               # append-only, hash-chained hypothesis register
-    ├── pre/                 # signal_edge (E-Ratio), screens — before a backtest
-    ├── post/                # dsr, mintrl, sweeps — after the harness runs
-    ├── parity/              # migration parity fixtures (T9)
-    ├── metrics/             # Sharpe family, PSR/DSR twin, PBO
-    ├── validation/          # walk-forward split generators
-    ├── reports/             # pre-registered gate evaluator
-    ├── engines/             # backtesting.py wrapper and its strategy adapters
-    ├── datasets/            # CSV loader and broker cost models
-    └── data/                # OHLCV inputs
+├── qh-research/    → import `research`
+│   ├── log.py               # append-only, hash-chained hypothesis register
+│   ├── pre/                 # signal_edge (E-Ratio), screens — before a backtest
+│   ├── post/                # dsr, mintrl, sweeps — after the harness runs
+│   ├── parity/              # migration parity fixtures (T9)
+│   ├── metrics/             # Sharpe family, PSR/DSR twin, PBO
+│   ├── validation/          # walk-forward split generators
+│   ├── reports/             # pre-registered gate evaluator
+│   ├── engines/             # backtesting.py wrapper and its strategy adapters
+│   ├── datasets/            # CSV loader and broker cost models
+│   └── data/                # OHLCV inputs
+└── qh-platform/    → the live execution stack, merged at Phase 3
+    └── backend/
+        ├── trading/         # Django + Celery app; strategies size through
+        │                    # `resources` and send through its broker port
+        └── mt5-api/         # FastAPI service inside the Wine/MT5 container
+
+services/
+├── docker-compose.yml       # the stack; strategy state on `quant_harness_state`
+└── migrate_state_volume.sh  # verified copy of live strategy state between
+                             # volumes — run it before any volume or stack change
 
 examples/                    # runnable drivers for the above
 tests/                       # repo-level suite; each package also has its own
 ```
 
-The import-direction contract is `resources ← strategies ← research`, enforced
-at AST level in CI (X19). `resources` imports none of the others and is
+The import-direction contract is `resources ← strategies ← {research, platform}`,
+enforced at AST level in CI (X19). `resources` imports none of the others and is
 importable with no network and no Django settings.
+
+`qh-platform`'s own Django suite is not collected by the repository's `pytest`:
+it needs Django, a Postgres test database and the trading image. Run it from
+`packages/qh-platform/backend/trading/`.
 
 ---
 
 ## Quick start
 
 ```bash
-# Setup — uv manages the environment and the three built packages
+# Setup — uv manages the environment; the packages are on pytest's pythonpath
 uv sync --group test
 
 # Verify on your machine

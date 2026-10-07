@@ -16,7 +16,7 @@
 |---|---|---|
 | Per-trade risk | **0.5% equity** | Runs alongside ASQS; both directional XAUUSD → same-side exposure can stack. Conservative until portfolio correlation control exists. |
 | Drawdown-guard threshold | **15%** | OOS MDD ~15.6%; halts only on tail events worse than the backtest tail. (ASQS uses 8% because its backtested MDD is 5.5%.) |
-| Peak-state file | `/var/lib/qhf/peak_hma_stoch_1h.json` | Separate peak per strategy; never shared. |
+| Peak-state file | `/var/lib/quant_harness/peak_hma_stoch_1h.json` | Separate peak per strategy; never shared. |
 | Session window | **08:00–17:00 UTC**, by **bar open time** | London+NY. Convention: a bar counts in-session if its *open* hour ∈ [8,17): 08:00 opens in, 17:00 opens out. Applied to the closed bar (`iloc[-2]`) so live matches backtest. |
 | Friday cutoff | **no new entries after Fri 15:00 UTC**, by **wall-clock** | Avoids opening late-Friday positions carried over the weekend gap. Wall-clock (not bar) because the risk is about when the position is *opened*. Risk-reducing deviation from backtest if the backtest enters late Friday. |
 | Spread filter | **50 pt** | H1 with wide SL/TP → low spread sensitivity; cheap insurance vs news/thin liquidity. |

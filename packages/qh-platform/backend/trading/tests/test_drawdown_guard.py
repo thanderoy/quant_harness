@@ -90,3 +90,62 @@ def test_current_drawdown(tmp_path: Path) -> None:
     guard.update(equity=100.0)
     assert guard.current_drawdown(equity=92.0) == pytest.approx(0.08)
     assert guard.current_drawdown(equity=110.0) == 0.0  # above peak clamps to 0
+
+
+# -- state loss is loud (Phase 3 step 6) --------------------------------------
+
+import logging  # noqa: E402
+
+from app.quant.strategies.drawdown_guard import JsonPeakStore  # noqa: E402
+
+
+def _criticals(caplog):
+    return [r for r in caplog.records if r.levelno == logging.CRITICAL]
+
+
+def test_missing_peak_file_is_reported_once_as_critical(tmp_path, caplog):
+    """A missing peak is either a first deployment or lost state, and lost
+    state hands the drawdown budget back. It must not look like nothing."""
+    store = JsonPeakStore(str(tmp_path / "peak.json"))
+    with caplog.at_level(logging.INFO):
+        assert store.read() is None
+        assert store.read() is None
+    crit = _criticals(caplog)
+    assert len(crit) == 1, "reported once per store, not on every read"
+    assert "fresh peak" in crit[0].getMessage()
+    assert "peak.json" in crit[0].getMessage()
+
+
+@pytest.mark.parametrize("body", ["{not json", '{"other": 1}', '{"peak_equity": "x"}',
+                                  '{"peak_equity": null}'])
+def test_unreadable_peak_file_is_critical(tmp_path, caplog, body):
+    path = tmp_path / "peak.json"
+    path.write_text(body)
+    with caplog.at_level(logging.INFO):
+        assert JsonPeakStore(str(path)).read() is None
+    assert len(_criticals(caplog)) == 1
+
+
+def test_a_present_peak_is_read_silently(tmp_path, caplog):
+    path = tmp_path / "peak.json"
+    JsonPeakStore(str(path)).write(3643.21)
+    with caplog.at_level(logging.INFO):
+        assert JsonPeakStore(str(path)).read() == 3643.21
+    assert not _criticals(caplog)
+
+
+def test_partial_close_tracker_missing_is_routine_corrupt_is_critical(tmp_path, caplog):
+    from app.quant.strategies.asqs.strategy import _PartialCloseTracker
+
+    with caplog.at_level(logging.INFO):
+        _PartialCloseTracker(str(tmp_path / "missing.json"))
+    assert not _criticals(caplog)
+
+    bad = tmp_path / "partial.json"
+    bad.write_text("{truncated")
+    caplog.clear()
+    with caplog.at_level(logging.INFO):
+        t = _PartialCloseTracker(str(bad))
+    assert not t.is_closed(101)
+    crit = _criticals(caplog)
+    assert len(crit) == 1 and "repeat its TP1" in crit[0].getMessage()
