@@ -282,7 +282,8 @@ restore path is the pre-merge SHA on `develop`; record it before starting.
    cd packages/qh-platform/backend/trading
    QH_RECORDED_ORDERS=~/recorded_orders.json pytest tests/test_order_replay.py -k recorded
    ```
-3. *(you)* **Decide the asqs daily-cap bug before the week, not during it.** `_check_daily_cap`
+3. *(you)* **Decide the asqs daily-cap bug before the week, not during it.** A fix is open as its
+   own PR (seq=124) — merging it is the decision; leaving it open keeps the bug. `_check_daily_cap`
    compares `dj_tz.now().date()` (UTC) with an `entry_time__date` lookup Django evaluates in
    `Africa/Nairobi`, so from 21:00 to 24:00 UTC it counts the wrong day — confirmed by experiment
    (seq=123). The one-line fix is `dj_tz.localdate()`. Fixing it mid-week would make criterion 7
