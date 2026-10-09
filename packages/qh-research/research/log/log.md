@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 128
+- **Entries:** 130
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (128 entries)
+- **Hash chain:** OK — chain ok (130 entries)
 
 ## Principles
 
@@ -2093,3 +2093,23 @@ _Metrics_: `added`=['EURGBP', 'EURJPY', 'AUDJPY', 'EURAUD', 'US500'], `ioc_all`=
 > R10's blocker is cleared. The registry had nine instruments, all FX and metals, and filling_mode is broker policy that must be read rather than assumed, so US500 could not enter the universe without an MT5 dump. That needed a working Pepperstone terminal, and the live mt5 container had run no terminal and no API since 2026-09-29: its image predated the supervision fixes (#109, #110), and the desktop service was looping on a stale X lock. Rebuilding and recreating mt5 alone (owner-approved 2026-10-08) brought it back logged in, and the d3a spread collector recovered with it. The D1 collector, given --symbols, then dumped fourteen symbols from PepperstoneKE-MT5-Live01 with --expect-server armed: OK, no errors, no missing fields, IOC on all fourteen. Pinned as pepperstone_live_20261009.json beside, not over, the 20260906 snapshot; the live sizer still reads 20260906, because the demo week forbids a behaviour change. US500 shares no terms with FX: contract 1, tick 0.1 worth $0.1, lot min and step 0.1, max 500, swap_mode 5; one lot is $1 per point, and resources' size_position gives 1.6 lots for 1% of $3,643.15 at a 22.5-point stop. TWO THINGS THE DUMP DOES NOT SETTLE. Swaps read exactly 0.0 on both sides for eight symbols, six of which were non-zero on 2026-09-06, and a second query agreed; they are recorded as reported, cause unknown, and nothing reads swap fields today. terminal_build is 6182 from the terminal's own startup log, not 5833 as the old snapshot would have carried; LiveUpdate offers 6230.
 
 _hash_: `8251cda62e972245…` · _prev_: `eed69d5c380a39fc…`
+
+### seq 128 · 2026-10-09T08:33:31Z · audit · `record:us500-daily-prefix`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `dense_from_utc`=2016-01-25 00:00:00+00:00, `file`=US500_H1.csv, `other_files_with_prefix`={'USDX_H1.csv': 39}, `r10_partial_day_share_dense`=0.03, `r10_partial_day_share_full_file`=0.272, `r10_partial_day_share_recorded`=0.213, `r10_reproduced`=False, `seq74_daily_bars_in_window`=897, `seq74_first_train_window`={'bars': 4139, 'daily_bars': 897, 'daily_day_share': 0.87, 'end': '2016-08-05'}, `seq74_rerun`=False, `seq74_window_bars`=58855, `sparse_from`=2012-08-06, `sparse_prefix_bars`=897, `xauusd_partial_day_share_recorded`=0.021
+
+> Found while bringing US500 into the Phase 2b universe. US500_H1.csv holds one bar per day from 2012-08-06 to 2016-01-22, 897 bars, then 23 a day from 2016-01-25. Nothing in the bars says so: each looks like an hour with an implausibly wide range. No other file in use has this; every FX and metals H1 series is dense from its first full day (USDX, already rejected at seq=73, has 39). research/data_manifest.py now records dense_from_utc and sparse_prefix_bars per intraday file, and dense_start() gives a run the place to begin. The loaders are unchanged, because data_manifest pins their output hash against logged artifacts. TWO EARLIER RESULTS READ THE PREFIX. (1) seq=74, the vol_gate_cross_instrument kill, used the common window from 2012-08-06, so 897 of its 58,855 US500 bars were daily, and its first 1460-day training window was 87% daily-bar days (897 of 4,139 bars). The gate's thresholds are causal expanding percentiles and terciles, so every fold inherited a distribution seeded on daily ranges. Every test window starts after 2016-08-05, so the OOS bars themselves are hourly. The verdict was p=0.9701 with the observed advantage at half its own null mean; this record does not claim the verdict changes, only that it was reached on contaminated inputs and has not been re-run. (2) seq=112 recorded us500_partial_day_share 0.213 as part of R10's selection_guard. It does not reproduce. Days under 20 bars are 27.2% over the full file and 3.0% from 2016-01-25 (80 of 2,701; XAUUSD's figure was 2.1%); no variant tried, by timezone shift, window end or threshold, gives 0.213. The dense-period figure is the honest one. R10's argument is structural and survives in kind: the dense data shows US exchange holidays as 19-bar days and early closes as 10-12-bar days, a calendar FX does not keep. But the measured size of that difference is about a seventh of what the ruling cited, and whether that changes the ruling is the owner's call, not this record's.
+
+_hash_: `b3d462108b02916a…` · _prev_: `8251cda62e972245…`
+
+### seq 129 · 2026-10-09T08:34:11Z · audit · `record:us500-daily-prefix-correction`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `corrects`=128, `hourly_only_from_2016_01_25`={'EURUSD': 0.005, 'US500': 0.03, 'XAUUSD': 0.017}, `r10_input_contaminated`=True, `r10_reproduced`=True, `reproduced`={'EURUSD': 0.007, 'US500': 0.213, 'XAUUSD': 0.021}, `seq112_window`=2013-10-08..2025-12-31, all days, threshold <20 bars
+
+> seq=128 said seq=112's us500_partial_day_share of 0.213 does not reproduce. That was wrong: I had not tried the window seq=112 used. On 2013-10-08 to 2025-12-31, counting every day with fewer than 20 bars, the three figures reproduce exactly: EURUSD 0.007, XAUUSD 0.021, US500 0.213. The measurement was right; its input was not. That window includes 2013-10-08 to 2016-01-22, where US500_H1.csv holds one bar per day, and every one of those days counts as partial. On the hourly data alone, 2016-01-25 onwards, the same count gives US500 0.030, XAUUSD 0.017, EURUSD 0.005. So the correction stands in substance and changes in wording: R10's cited gap between US500 and the others (21.3% against 2.1%) is mostly the daily prefix, and the real one is 3.0% against 1.7%. Everything else in seq=128 stands: the 897-bar prefix, the seq=74 exposure, and that whether R10's cited magnitude matters is the owner's call.
+
+_hash_: `112c8f5b24c3b147…` · _prev_: `b3d462108b02916a…`

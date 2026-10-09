@@ -992,6 +992,10 @@ where it cannot tell signal from artifact.
   written, and the measurement is orthogonal to the outcome the ruling could be selected for.**
   What was measured: bars per week, trading-day counts, gap-to-ATR distribution, and the share of
   partial trading days (US500 21.3% of days under 20 bars, against EURUSD 0.7% and XAUUSD 2.1%).
+  *Correction 2026-10-09 (seq=128, seq=129): all three figures reproduce on 2013-10-08..2025-12-31,
+  but US500_H1.csv holds one bar per day until 2016-01-22, and those days all count as partial. On
+  hourly data alone the shares are US500 3.0%, XAUUSD 1.7%, EURUSD 0.5%. The ruling's reasoning is
+  structural and is not altered here; whether its cited magnitude matters is open under STATUS.*
   None of that is a return, an edge, or a Sharpe. Knowing an instrument keeps an exchange holiday
   calendar says nothing about whether a mechanism will work on it, so the choice could not have
   been made for how the result would look. Stated here because the ordering — measure, then

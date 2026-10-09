@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-09 — Phase 2b's registry blocker is cleared: a fourteen-symbol Pepperstone snapshot including US500 (seq=127). The Phase 3 demo week is still running.
+**Last updated:** 2026-10-09 — US500's H1 file opens with 897 daily bars, now detected by the data manifest; R10's partial-day figure was measured over them (seq=128, corrected at seq=129). Phase 2b's registry blocker is cleared (seq=127). The Phase 3 demo week is still running.
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -29,10 +29,10 @@ the next reader can check rather than trust.
 
 | Metric | Value | How it was measured |
 |---|---|---|
-| Tests passing | **681 passed, 2 skipped** on CI; 683 tests total. At most three skips, each declared | 683 tests total, measured on run 37900239567 (the Phase 2b snapshot branch, which appends seq=127, so the log-rewrite check had something to diff and ran). Where the log matches `origin/develop` it skips, giving one fewer passed and one more skipped. The CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); `test_no_pre_existing_entry_was_rewritten` (nothing to diff when the log matches `origin/develop`); and one case in `test_parity_data_resolution.py` that exists to assert the recorded path wins *where it resolves*, so it skips on a runner by design. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
+| Tests passing | **687 passed, 2 skipped** on CI; 689 tests total. At most three skips, each declared | 689 tests total, measured on run 37906144320 (the US500 density branch, which appends seq=128 and seq=129, so the log-rewrite check had something to diff and ran). Where the log matches `origin/develop` it skips, giving one fewer passed and one more skipped. The CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); `test_no_pre_existing_entry_was_rewritten` (nothing to diff when the log matches `origin/develop`); and one case in `test_parity_data_resolution.py` that exists to assert the recorded path wins *where it resolves*, so it skips on a runner by design. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
 | Packages | 4 built — `qh-resources`, `qh-strategies`, `qh-research`, and `qh-platform` as of the Phase 3 subtree merge | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; **2** CI-limited and declared (X17, X22) | `tests/test_x_coverage.py` |
-| Research log | 128 entries (to seq=127), chain verified; `trial_count()` = 26 | `research.log.verify()` |
+| Research log | 130 entries (to seq=129), chain verified; `trial_count()` = 26 | `research.log.verify()` |
 | Instruments | 9 — 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching | `snapshots/pepperstone_live_20260906.json` |
 | Gate detection floor | **1.2 annualised Sharpe**, false-positive rate 0% at n=2,000 pooled | seq=107, `research/reports/power.py` |
 
@@ -45,7 +45,7 @@ the next reader can check rather than trust.
 | 0 | Diagnostic — D1-D9, no code changes | ✅ done (`docs/phase0_memo.md`) |
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
-| 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ **unblocked** — `pepperstone_live_20261009.json` holds the nine plus EURGBP, EURJPY, AUDJPY, EURAUD and US500, all broker-read (seq=127). Next: bring US500 into the research universe under R3/R4 |
+| 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ **unblocked** — `pepperstone_live_20261009.json` holds the nine plus EURGBP, EURJPY, AUDJPY, EURAUD and US500, all broker-read (seq=127). US500's history is hourly only from 2016-01-25 — the 897 daily bars before it are now flagged by `data_manifest` (seq=128). Next: bring US500 into the research universe under R3/R4 |
 | 3 | Execution merge | 🔨 **demo week running since 2026-10-07 11:33 UTC** (crest_n_keel + asqs on mt5-test, R13) — steps 1–6 done; criteria 1–6 and 8 met, criterion 5 on real orders (seq=126). Criterion 7 is decided by the week. What to watch: `docs/phase3_spec.md` §5.1 |
 | 4+ | Multi-symbol live, CPCV | ⏭ not entered until a mechanism survives 2b |
 
@@ -93,6 +93,8 @@ Three consequences worth carrying:
 
 | Item | Why it is blocked |
 |---|---|
+| R10's partial-day figure was measured over daily bars | seq=112 cites US500 at 21.3% of days under 20 bars against XAUUSD 2.1% and EURUSD 0.7%. All three reproduce exactly on 2013-10-08..2025-12-31, but that window includes two years in which US500_H1.csv holds one bar per day. On hourly data alone the same count is **US500 3.0%, XAUUSD 1.7%, EURUSD 0.5%** (seq=128, corrected at seq=129). The structural argument survives in kind, since US holidays show as 19-bar days and early closes as 10–12, but the gap is far smaller than cited. Whether R10 stands as written is a ruling, so it is yours. |
+| Re-run seq=74 on hourly data? | The low-vol gate's US500 kill (p=0.9701) used a window from 2012-08-06, and its first training window was 87% daily-bar days. Its test windows are all hourly and the verdict is unlikely to move, but it was reached on contaminated inputs. A re-run is a correction (`counts_as_trial=False`), not a new trial. |
 | Branch protection | CI runs again; making it required to merge is a repo setting only you can change. |
 | Slip is `HAND_ENTERED` at 1 tick | The only cost input with no source at all, and no document can supply it — only a real fill measures it. The 358 deals carry the fill price but not the requested price, so they cannot close this. |
 
