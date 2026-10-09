@@ -1021,6 +1021,37 @@ US500 is contract 1, tick 0.1, lot step 0.1. The structural criterion can now be
 bringing US500 into the research universe, which is where R3 and R4 meet an exchange calendar. *Superseded the same day: R10 does not stand (see the note at its head), so meeting the
 structural criterion waits on a new third structure.*
 
+**R14 — the third market structure is European equity indices, entering as GER40.** `basis: POST_DATA`
+
+Ruled by the owner 2026-10-09, after R10 fell (seq=130); recorded at seq=132.
+
+**An equity index, because it is the harder test.** R5's purpose is mechanism generality, and a gate
+that costs nothing proves nothing. Trend is strong in crypto, so a trend mechanism passing there is
+weak evidence; an equity index, where mean reversion is more present and trend weaker, is the more
+informative place for a mechanism to survive or fail.
+
+**GER40 within the indices, because its drivers are independent of the USD block.** UK100 is the
+fallback. US30 and NAS100 share US500's drivers and add little; JP225 is entangled with USD/JPY,
+which erodes the independence the third structure exists to buy.
+
+- `rejected_alternative` — energy, again, on the roll argument: a CFD roll's jump would make a
+  mechanism failing on energy indistinguishable from one failing on roll artifacts. Crypto, on the
+  argument above, though structurally the cleanest candidate (24/7, no session, no roll).
+- `selection_guard` — **integrity was verified before the declaration and nothing else was looked
+  at.** `research.admission` ran on GER40 and UK100 as pulled from PepperstoneKE-MT5-Live01: bar
+  spacing, gap census, timeframe inference, OHLC bracketing, and the broker's contract terms. It
+  found GER40_H1.csv holding monthly, then daily, then H4 bars before it becomes hourly on
+  2018-07-13, and admitted it from there (45,316 bars); UK100 admitted whole from 2017-08-29. No
+  return, correlation or mechanism output was computed for either. The preference order was stated
+  before the data was pulled, on drivers rather than history length — UK100 has the longer clean
+  series and was still ranked second.
+
+**Admission is now a standing gate, not a one-off check** (owner, same ruling). Every instrument
+passes `research.admission` before it enters any universe; `panel_edge.check_panel` enforces it,
+refusing an instrument that fails and reading an `ADMIT_FROM` instrument from its admitted date.
+It checks integrity only, which is what keeps it on the safe side of this ruling's boundary:
+verifying bar spacing, gaps and timeframe may inform a choice; inspecting behaviour may not.
+
 ### 10.2 Open — genuinely data-dependent
 
 **O1 — Timeframe for the first panel research run: H1 or H4.**
