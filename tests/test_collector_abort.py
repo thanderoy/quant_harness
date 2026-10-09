@@ -485,3 +485,12 @@ def test_d1_collects_exactly_the_symbols_it_is_given(dying_server, tmp_path):
     # not silently OK.
     assert artifact["guards"]["symbols_with_missing_fields"], proc.stdout
 
+
+def test_phase_2b_snapshot_holds_what_the_collector_adds():
+    """The pinned snapshot and the collector's list must not drift apart."""
+    from phase0.collectors._client import PHASE_2B_ADDITIONS, UNIVERSE
+
+    snap = REPO / ("packages/qh-resources/resources/instruments/snapshots/"
+                   "pepperstone_live_20261009.json")
+    instruments = json.loads(snap.read_text())["instruments"]
+    assert set(instruments) == set(UNIVERSE) | set(PHASE_2B_ADDITIONS)
