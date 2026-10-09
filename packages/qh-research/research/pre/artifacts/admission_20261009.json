@@ -1,0 +1,333 @@
+{
+  "generated_at_utc": "2026-10-09T09:54:14.881845+00:00",
+  "data_dir": "/home/roy-thande/Local/wine-mt5-python-setup/research/data",
+  "hole_hours": 144.0,
+  "admissions": [
+    {
+      "symbol": "EURUSD",
+      "timeframe": "H1",
+      "verdict": "ADMIT",
+      "admit_from": "2013-10-08 06:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 80000,
+        "n_dense": 80000,
+        "first_bar": "2013-10-08 06:00:00+00:00",
+        "last_bar": "2026-08-28 23:00:00+00:00",
+        "bars_before_admitted": 0,
+        "nonconforming_runs": 0,
+        "manifest_sparse_prefix_bars": 0,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 79301,
+          "within_day": 15,
+          "over_day_to_weekend": 676,
+          "long_weekend_or_holiday": 7,
+          "holes": 0
+        },
+        "undeclared_holes": [],
+        "declared_holes": []
+      }
+    },
+    {
+      "symbol": "GBPUSD",
+      "timeframe": "H1",
+      "verdict": "ADMIT",
+      "admit_from": "2013-10-08 06:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 80000,
+        "n_dense": 80000,
+        "first_bar": "2013-10-08 06:00:00+00:00",
+        "last_bar": "2026-08-28 23:00:00+00:00",
+        "bars_before_admitted": 0,
+        "nonconforming_runs": 0,
+        "manifest_sparse_prefix_bars": 0,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 79302,
+          "within_day": 14,
+          "over_day_to_weekend": 676,
+          "long_weekend_or_holiday": 7,
+          "holes": 0
+        },
+        "undeclared_holes": [],
+        "declared_holes": []
+      }
+    },
+    {
+      "symbol": "USDJPY",
+      "timeframe": "H1",
+      "verdict": "ADMIT",
+      "admit_from": "2013-10-08 11:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 80000,
+        "n_dense": 80000,
+        "first_bar": "2013-10-08 11:00:00+00:00",
+        "last_bar": "2026-08-28 23:00:00+00:00",
+        "bars_before_admitted": 0,
+        "nonconforming_runs": 0,
+        "manifest_sparse_prefix_bars": 0,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 79303,
+          "within_day": 14,
+          "over_day_to_weekend": 675,
+          "long_weekend_or_holiday": 7,
+          "holes": 0
+        },
+        "undeclared_holes": [],
+        "declared_holes": []
+      }
+    },
+    {
+      "symbol": "USDCHF",
+      "timeframe": "H1",
+      "verdict": "ADMIT",
+      "admit_from": "2013-10-07 12:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 80000,
+        "n_dense": 80000,
+        "first_bar": "2013-10-07 12:00:00+00:00",
+        "last_bar": "2026-08-28 23:00:00+00:00",
+        "bars_before_admitted": 0,
+        "nonconforming_runs": 0,
+        "manifest_sparse_prefix_bars": 0,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 79302,
+          "within_day": 14,
+          "over_day_to_weekend": 675,
+          "long_weekend_or_holiday": 8,
+          "holes": 0
+        },
+        "undeclared_holes": [],
+        "declared_holes": []
+      }
+    },
+    {
+      "symbol": "USDCAD",
+      "timeframe": "H1",
+      "verdict": "ADMIT",
+      "admit_from": "2013-10-08 16:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 80000,
+        "n_dense": 80000,
+        "first_bar": "2013-10-08 16:00:00+00:00",
+        "last_bar": "2026-08-28 23:00:00+00:00",
+        "bars_before_admitted": 0,
+        "nonconforming_runs": 0,
+        "manifest_sparse_prefix_bars": 0,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 79303,
+          "within_day": 13,
+          "over_day_to_weekend": 676,
+          "long_weekend_or_holiday": 7,
+          "holes": 0
+        },
+        "undeclared_holes": [],
+        "declared_holes": []
+      }
+    },
+    {
+      "symbol": "AUDUSD",
+      "timeframe": "H1",
+      "verdict": "ADMIT",
+      "admit_from": "2017-10-24 00:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 54958,
+        "n_dense": 54958,
+        "first_bar": "2017-10-24 00:00:00+00:00",
+        "last_bar": "2026-08-28 23:00:00+00:00",
+        "bars_before_admitted": 0,
+        "nonconforming_runs": 0,
+        "manifest_sparse_prefix_bars": 0,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 54478,
+          "within_day": 12,
+          "over_day_to_weekend": 462,
+          "long_weekend_or_holiday": 5,
+          "holes": 0
+        },
+        "undeclared_holes": [],
+        "declared_holes": []
+      }
+    },
+    {
+      "symbol": "NZDUSD",
+      "timeframe": "H1",
+      "verdict": "ADMIT",
+      "admit_from": "2025-01-22 00:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 10000,
+        "n_dense": 10000,
+        "first_bar": "2025-01-22 00:00:00+00:00",
+        "last_bar": "2026-09-01 17:00:00+00:00",
+        "bars_before_admitted": 0,
+        "nonconforming_runs": 0,
+        "manifest_sparse_prefix_bars": 0,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 9909,
+          "within_day": 4,
+          "over_day_to_weekend": 86,
+          "long_weekend_or_holiday": 0,
+          "holes": 0
+        },
+        "undeclared_holes": [],
+        "declared_holes": []
+      }
+    },
+    {
+      "symbol": "XAUUSD",
+      "timeframe": "H1",
+      "verdict": "ADMIT",
+      "admit_from": "2004-06-11 07:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 124887,
+        "n_dense": 124887,
+        "first_bar": "2004-06-11 07:00:00+00:00",
+        "last_bar": "2025-12-31 23:00:00+00:00",
+        "bars_before_admitted": 0,
+        "nonconforming_runs": 0,
+        "manifest_sparse_prefix_bars": 0,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 119304,
+          "within_day": 4431,
+          "over_day_to_weekend": 1094,
+          "long_weekend_or_holiday": 56,
+          "holes": 1
+        },
+        "undeclared_holes": [],
+        "declared_holes": [
+          {
+            "from": "2025-09-12 23:00:00+00:00",
+            "to": "2025-10-15 07:00:00+00:00",
+            "hours": 776.0
+          }
+        ]
+      }
+    },
+    {
+      "symbol": "XAGUSD",
+      "timeframe": "H1",
+      "verdict": "ADMIT",
+      "admit_from": "2009-08-18 20:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 99999,
+        "n_dense": 99999,
+        "first_bar": "2009-08-18 20:00:00+00:00",
+        "last_bar": "2026-08-28 22:00:00+00:00",
+        "bars_before_admitted": 0,
+        "nonconforming_runs": 0,
+        "manifest_sparse_prefix_bars": 0,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 95752,
+          "within_day": 3341,
+          "over_day_to_weekend": 868,
+          "long_weekend_or_holiday": 37,
+          "holes": 0
+        },
+        "undeclared_holes": [],
+        "declared_holes": []
+      }
+    },
+    {
+      "symbol": "US500",
+      "timeframe": "H1",
+      "verdict": "REFUSE",
+      "admit_from": "2016-01-25 00:00:00+00:00",
+      "reasons": [
+        "1 undeclared holes over 144h"
+      ],
+      "census": {
+        "n_bars": 62726,
+        "n_dense": 61829,
+        "first_bar": "2012-08-06 00:00:00+00:00",
+        "last_bar": "2026-08-28 22:00:00+00:00",
+        "bars_before_admitted": 897,
+        "nonconforming_runs": 1,
+        "manifest_sparse_prefix_bars": 897,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 59452,
+          "within_day": 1824,
+          "over_day_to_weekend": 531,
+          "long_weekend_or_holiday": 20,
+          "holes": 1
+        },
+        "undeclared_holes": [
+          {
+            "from": "2025-07-16 10:00:00+00:00",
+            "to": "2025-09-09 14:00:00+00:00",
+            "hours": 1324.0
+          }
+        ],
+        "declared_holes": []
+      }
+    },
+    {
+      "symbol": "GER40",
+      "timeframe": "H1",
+      "verdict": "ADMIT_FROM",
+      "admit_from": "2018-07-13 09:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 51529,
+        "n_dense": 45316,
+        "first_bar": "1999-06-30 17:00:00+00:00",
+        "last_bar": "2026-10-09 11:00:00+00:00",
+        "bars_before_admitted": 6213,
+        "nonconforming_runs": 1,
+        "manifest_sparse_prefix_bars": 2209,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 43668,
+          "within_day": 1208,
+          "over_day_to_weekend": 419,
+          "long_weekend_or_holiday": 20,
+          "holes": 0
+        },
+        "undeclared_holes": [],
+        "declared_holes": []
+      }
+    },
+    {
+      "symbol": "UK100",
+      "timeframe": "H1",
+      "verdict": "ADMIT",
+      "admit_from": "2017-08-29 00:00:00+00:00",
+      "reasons": [],
+      "census": {
+        "n_bars": 52186,
+        "n_dense": 52186,
+        "first_bar": "2017-08-29 00:00:00+00:00",
+        "last_bar": "2026-10-09 11:00:00+00:00",
+        "bars_before_admitted": 0,
+        "nonconforming_runs": 0,
+        "manifest_sparse_prefix_bars": 0,
+        "modal_spacing_hours": 1.0,
+        "gaps_by_hours": {
+          "1_step": 50653,
+          "within_day": 1050,
+          "over_day_to_weekend": 449,
+          "long_weekend_or_holiday": 33,
+          "holes": 0
+        },
+        "undeclared_holes": [],
+        "declared_holes": []
+      }
+    }
+  ]
+}

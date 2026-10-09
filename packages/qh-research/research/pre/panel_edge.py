@@ -60,6 +60,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
+from research import admission
 from research.pre.signal_edge import (_excursions, _forward_extremes,
                                       wilder_atr)
 from research.pre.signals.flood_tide import FloodTideParams, generate_signals
@@ -221,7 +222,11 @@ def check_panel(data_dir: Optional[Path] = None,
     pools: list[tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray, int]] = []
 
     for sym in symbols:
+        # The admission gate: no instrument enters the panel unchecked, and
+        # one admitted from a later date is read from there (seq=128).
+        admitted_from = admission.require(sym, "H1", data_dir)
         h1 = load_ohlcv(data_dir / f"{sym}_H1.csv")
+        h1 = h1[h1.index >= admitted_from]
         h4 = resample_h4(h1)
         sig = generate_signals(h1, h4, params)
 

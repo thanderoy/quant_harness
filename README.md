@@ -155,6 +155,24 @@ print(result.summary_str())
 df = result.df  # DatetimeIndex'd OHLCV DataFrame
 ```
 
+### Admission — before an instrument enters any universe
+
+```bash
+# Pull H1 history from a running mt5-api, refusing any other broker
+python -m phase0.collectors.history_pull --symbols GER40 UK100 \
+  --out-dir <data dir> --expect-server Pepperstone
+
+# Integrity check: ADMIT, ADMIT_FROM <date>, or REFUSE with reasons
+cd packages/qh-research && QH_DATA_DIR=<data dir> \
+  python -m research.admission EURUSD XAUUSD GER40
+```
+
+Integrity only: bar spacing, timeframe inferred from within-day spacing, OHLC
+bracketing, and gaps over 144 hours unless declared in `KNOWN_HOLES`. Broker
+exports can open with years of coarser bars under an `_H1` name (US500, GER40),
+so `panel_edge.check_panel` runs this on every instrument and reads an
+`ADMIT_FROM` one from its admitted date.
+
 ### Cost model
 
 ```python
