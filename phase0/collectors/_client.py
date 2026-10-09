@@ -31,6 +31,14 @@ UNIVERSE: tuple[str, ...] = (
     "XAUUSD", "XAGUSD",
 )
 
+#: What Phase 2b adds: the four non-USD crosses REWRITE.md section 1 names, and
+#: US500, the equity-index structure R10 selects. Not part of ``UNIVERSE`` —
+#: the D2/D3 collectors and their artifacts are defined over the nine.
+PHASE_2B_ADDITIONS: tuple[str, ...] = (
+    "EURGBP", "EURJPY", "AUDJPY", "EURAUD",
+    "US500",
+)
+
 ARTIFACT_DIR = Path(__file__).resolve().parents[1]
 
 

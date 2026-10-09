@@ -4,6 +4,9 @@ Runs unattended the moment a terminal is up:
 
     python3 -m phase0.collectors.d1_contract_specs
 
+``--symbols`` overrides the universe; the Phase 2b refresh passes the nine plus
+``PHASE_2B_ADDITIONS``.
+
 Writes ``phase0/d1_contract_specs_<UTCDATE>.json``. Every snapshot carries a
 ``provenance`` field with exactly two legal values, ``MT5_SYMBOL_INFO`` or
 ``HAND_ENTERED``. There is no third state and no default: this collector only
@@ -95,13 +98,14 @@ def main() -> int:
     ap.add_argument("--expect-server", default=None,
                     help="refuse to collect unless the terminal's trade "
                          "server contains this substring (case-insensitive)")
+    ap.add_argument("--symbols", nargs="*", default=list(UNIVERSE))
     args = ap.parse_args()
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     artifact: dict = {
         "task": "D1",
         "collected_at_utc": now_iso(),
-        "universe": list(UNIVERSE),
+        "universe": list(args.symbols),
         "provenance_rule": "MT5_SYMBOL_INFO | HAND_ENTERED — no third state, "
                            "no default. This collector emits only the former.",
         "probe": probe(),
@@ -137,7 +141,7 @@ def main() -> int:
 
     specs: dict[str, dict] = {}
     errors: dict[str, str] = {}
-    for sym in UNIVERSE:
+    for sym in args.symbols:
         try:
             specs[sym] = fetch_symbol(sym)
         except EndpointMissing as exc:

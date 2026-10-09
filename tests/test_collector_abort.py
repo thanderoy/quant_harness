@@ -471,3 +471,26 @@ def test_d3a_keeps_sampling_bar_boundaries_after_one_comes_due_late(
     # the bug the boundary series stopped dead and periodic ran unbounded.
     assert boundary >= 2, f"boundary series stalled: {boundary} samples"
     assert periodic <= 10, f"periodic schedule spun: {periodic} samples"
+
+
+def test_d1_collects_exactly_the_symbols_it_is_given(dying_server, tmp_path):
+    """--symbols replaces the universe, and the artifact says which one it used."""
+    url = dying_server(ok_calls=10_000)
+    proc = _run("phase0.collectors.d1_contract_specs", url,
+                "--out-dir", str(tmp_path), "--symbols", "US500", "EURGBP")
+    artifact = json.loads(next(tmp_path.glob("d1_contract_specs_*.json")).read_text())
+    assert artifact["universe"] == ["US500", "EURGBP"]
+    assert list(artifact["specs"]) == ["US500", "EURGBP"]
+    # The fake server returns no contract fields, so the run is incomplete,
+    # not silently OK.
+    assert artifact["guards"]["symbols_with_missing_fields"], proc.stdout
+
+
+def test_phase_2b_snapshot_holds_what_the_collector_adds():
+    """The pinned snapshot and the collector's list must not drift apart."""
+    from phase0.collectors._client import PHASE_2B_ADDITIONS, UNIVERSE
+
+    snap = REPO / ("packages/qh-resources/resources/instruments/snapshots/"
+                   "pepperstone_live_20261009.json")
+    instruments = json.loads(snap.read_text())["instruments"]
+    assert set(instruments) == set(UNIVERSE) | set(PHASE_2B_ADDITIONS)

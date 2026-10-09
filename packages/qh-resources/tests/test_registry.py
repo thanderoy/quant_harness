@@ -269,3 +269,49 @@ def test_gold_min_position_risk_from_real_specs():
     xau = Registry.load(REAL)["XAUUSD"]
     # 0.01 lots x 100 oz = 1 oz; a $14 stop risks $14 = 14% of a $100 account.
     assert xau.min_position_risk(14.0) == pytest.approx(14.0)
+
+
+# --------------------------------------------------------------------------- #
+# Phase 2b — the nine plus the crosses and US500                               #
+# --------------------------------------------------------------------------- #
+PHASE_2B = "pepperstone_live_20261009.json"
+LIVE_NINE = "pepperstone_live_20260906.json"
+PHASE_2B_ADDITIONS = {"EURGBP", "EURJPY", "AUDJPY", "EURAUD", "US500"}
+
+
+def test_phase_2b_snapshot_is_the_nine_plus_the_additions():
+    """Every symbol is broker-sourced, and nothing from the nine was dropped."""
+    reg = Registry.load(PHASE_2B)
+    nine = set(Registry.load(LIVE_NINE).symbols)
+    assert set(reg.symbols) == nine | PHASE_2B_ADDITIONS
+    assert reg.provenance_summary() == {"MT5_SYMBOL_INFO": 14}
+    assert not reg.is_provisional
+
+
+def test_phase_2b_snapshot_came_from_the_execution_venue():
+    """The mislabelling of 2026-09-01 is why this is asserted, not assumed."""
+    payload = json.loads((SNAPSHOT_DIR / PHASE_2B).read_text())
+    assert payload["server"] == "PepperstoneKE-MT5-Live01"
+    assert payload["trade_mode"] == 2
+
+
+def test_ioc_still_generalises_with_an_index_in_the_universe():
+    """filling_mode is broker policy, so US500 had to be read, not inferred."""
+    reg = Registry.load(PHASE_2B)
+    IOC = 2
+    assert all((reg[s].filling_mode or 0) & IOC for s in reg.symbols)
+
+
+def test_us500_is_one_dollar_per_point_per_lot():
+    """US500's terms share nothing with FX: contract 1, tick 0.1, lot step 0.1.
+
+    One lot moves $1 per index point, so a 22.5-point stop at the 0.1 lot
+    minimum risks $2.25 — derived from contract_size, and agreeing exactly with
+    tick_value because the quote currency is the account currency.
+    """
+    us500 = Registry.load(PHASE_2B)["US500"]
+    assert us500.currency_profit == "USD"
+    assert us500.contract_size * us500.tick_size == pytest.approx(us500.tick_value)
+    assert (us500.volume_min, us500.volume_step) == (0.1, 0.1)
+    assert us500.min_position_risk(22.5) == pytest.approx(2.25)
+

@@ -1003,6 +1003,11 @@ taken on trust for a new symbol. US500 therefore needs a registry snapshot refre
 MT5-dependent action — before it can enter the universe, even though its H1 history is already
 present. Phase 2b cannot start on the structural criterion until that snapshot exists.
 
+**Satisfied 2026-10-09** (seq=127). `pepperstone_live_20261009.json` holds US500 alongside the nine
+and four non-USD crosses, read from PepperstoneKE-MT5-Live01: `filling_mode` is IOC for all fourteen, and
+US500 is contract 1, tick 0.1, lot step 0.1. The structural criterion can now be met; what remains is
+bringing US500 into the research universe, which is where R3 and R4 meet an exchange calendar.
+
 ### 10.2 Open — genuinely data-dependent
 
 **O1 — Timeframe for the first panel research run: H1 or H4.**
