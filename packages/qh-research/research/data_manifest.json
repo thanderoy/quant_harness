@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-09T08:32:14.194237+00:00",
+  "generated_at_utc": "2026-10-09T09:52:39.906618+00:00",
   "generator": "research/data_manifest.py",
   "data_dir": "/home/roy-thande/Local/wine-mt5-python-setup/research/data",
   "data_dir_env_override": "QH_DATA_DIR",
@@ -75,6 +75,18 @@
       "dense_from_utc": "2013-10-08 06:00:00+00:00",
       "sparse_prefix_bars": 0
     },
+    "GER40_H1.csv": {
+      "size_bytes": 2760557,
+      "sha256": "98fa50df407c580f5e52fcdce8967da75bb16a0a50eaa59c4feccb584bfc7a7d",
+      "tracked_in_git": false,
+      "format": "house_semicolon_ohlcv",
+      "n_bars": 51529,
+      "first_bar_utc": "1999-06-30 17:00:00+00:00",
+      "last_bar_utc": "2026-10-09 11:00:00+00:00",
+      "ohlc_hash_sha16": "a0829cda8ec53e51",
+      "dense_from_utc": "2015-02-23 00:00:00+00:00",
+      "sparse_prefix_bars": 2209
+    },
     "NZDUSD_H1.csv": {
       "size_bytes": 533687,
       "sha256": "cf3357bb9715d87bebd84d0b10a42b62fddae61657671d71afea96adea780930",
@@ -97,6 +109,18 @@
       "last_bar_utc": "2026-08-28 20:00:00+00:00",
       "ohlc_hash_sha16": "3c2dd38d54cb7fa8",
       "dense_from_utc": "2013-10-08 13:00:00+00:00",
+      "sparse_prefix_bars": 0
+    },
+    "UK100_H1.csv": {
+      "size_bytes": 2604019,
+      "sha256": "be1a4ca42a939273a9c2671cbfba3049a35a57f348ca138a795695f5d1757834",
+      "tracked_in_git": false,
+      "format": "house_semicolon_ohlcv",
+      "n_bars": 52186,
+      "first_bar_utc": "2017-08-29 00:00:00+00:00",
+      "last_bar_utc": "2026-10-09 11:00:00+00:00",
+      "ohlc_hash_sha16": "c8ac9df65bf7bab6",
+      "dense_from_utc": "2017-08-29 00:00:00+00:00",
       "sparse_prefix_bars": 0
     },
     "US500_H1.csv": {

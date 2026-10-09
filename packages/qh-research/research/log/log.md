@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 132
+- **Entries:** 133
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (132 entries)
+- **Hash chain:** OK — chain ok (133 entries)
 
 ## Principles
 
@@ -2133,3 +2133,13 @@ _Metrics_: `artifact`=research/pre/artifacts/vol_gate_repl_US500_common_dense.js
 > CORRECTION RE-RUN, not a new trial. seq=74's US500 leg read 897 daily bars at the head of its window. Re-run on hourly data only, with every other part of the seq=73 specification frozen: same entry, gate, horizon, cost, fold geometry and null, same decisive stream (advantage at p<0.05, declared at seq=73). Before running, seq=74's observed US500 statistics were reproduced exactly on the original window (58,833 bars), so the only thing that moved is the window. Prior stated before the run: the kill stands. RESULT: advantage +0.0879, p=0.9055 against a null mean of +0.1562 (seq=74: +0.0687, p=0.9701). The gate still does worse on US500 than the mechanical artifact predicts; the verdict is unchanged, killed. Power is lower: starting in 2016 leaves 5 folds rather than 9 and 223 gated trades rather than 415. XAGUSD's leg had no daily prefix and is not re-run.
 
 _hash_: `ec20b9846e23d269…` · _prev_: `143e2d7a3bb1842e…`
+
+### seq 132 · 2026-10-09T09:56:15Z · audit · `record:r14-ger40-third-structure`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `admission_artifact`=research/pre/artifacts/admission_20261009.json, `behaviour_inspected`=False, `fallback`=UK100, `ger40`={'admit_from': '2018-07-13', 'bars_admitted': 45316, 'bars_before': 6213, 'manifest_prefix_bars': 2209, 'verdict': 'ADMIT_FROM'}, `hole_hours`=144, `instrument`=GER40, `panel_gate_noop_on_majors`=True, `rejected`={'JP225': 'entangled with USD/JPY', 'US30/NAS100': 'share US500 drivers', 'crypto': 'trend strong, weak evidence', 'energy': 'CFD roll artifacts'}, `ruled_by`=owner, `ruled_on`=2026-10-09, `ruling`=R14, `snapshot`=pepperstone_live_20261009b.json, `third_structure`=european_equity_index, `uk100`={'admit_from': '2017-08-29', 'bars': 52186, 'verdict': 'ADMIT'}, `us500`={'undeclared_hole': ['2025-07-16', '2025-09-09'], 'verdict': 'REFUSE'}
+
+> Owner ruling 2026-10-09, after R10 fell (seq=130). An equity index rather than crypto because trend is strong in crypto, so a trend mechanism passing there is weak evidence, and R5's gate should cost something; rather than energy because a CFD roll would make a mechanism failing on energy indistinguishable from one failing on roll artifacts. GER40 first for drivers independent of the USD block, UK100 as fallback; US30 and NAS100 share US500's drivers, JP225 is entangled with USD/JPY. The preference was stated before any data was pulled. THE ORDER WAS INTEGRITY, THEN DECLARATION. GER40 and UK100 H1 history was pulled from PepperstoneKE-MT5-Live01 by phase0/collectors/history_pull.py (new, committed), and both were added to the registry in pepperstone_live_20261009b.json (16 symbols, IOC on all). research.admission (new) then checked integrity only: OHLC bracketing, grid alignment, timeframe inference from within-day spacing, and a gap census against a 144-hour hole threshold that sits above every holiday closure seen (max 131h, GER40 Christmas 2018). GER40_H1.csv holds monthly bars from 1999, then daily, then H4 (six bars a day, 2015-02 to 2018-07), and becomes hourly on 2018-07-13: ADMIT_FROM, 45,316 bars. The manifest's bars-per-day check had caught only the first 2,209 of the 6,213 coarse bars, because six a day clears a quarter of 24; the admission check reads spacing instead. UK100 ADMIT whole from 2017-08-29. No return, correlation or mechanism output was computed for either. THE GATE ALSO CAUGHT A NEW DEFECT: US500_H1.csv has a 55-day hole, 2025-07-16 to 2025-09-09, declared nowhere, so US500 is refused until it is. XAUUSD's 2025-09-12 to 2025-10-15 broker hole is declared (KNOWN_GAPS) and it is admitted. The nine FX and metals instruments are all admitted whole. ADMISSION IS NOW STANDING: panel_edge.check_panel refuses an instrument that fails it and reads an ADMIT_FROM instrument from its admitted date. On the seven majors the gate is a no-op, verified by byte-identical check_panel instrument output with and without it.
+
+_hash_: `727181bd71cb7b23…` · _prev_: `ec20b9846e23d269…`

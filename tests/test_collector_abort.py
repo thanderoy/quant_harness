@@ -19,8 +19,10 @@ import subprocess
 import time
 import sys
 import threading
+from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -494,3 +496,52 @@ def test_phase_2b_snapshot_holds_what_the_collector_adds():
                    "pepperstone_live_20261009.json")
     instruments = json.loads(snap.read_text())["instruments"]
     assert set(instruments) == set(UNIVERSE) | set(PHASE_2B_ADDITIONS)
+
+
+class _RatesHandler(BaseHTTPRequestHandler):
+    """Serves ``total`` hourly bars, newest last, paged like mt5-api."""
+
+    total = 2500
+
+    def log_message(self, *args) -> None:  # noqa: ANN002
+        pass
+
+    def do_GET(self) -> None:  # noqa: N802
+        url = urlparse(self.path)
+        if url.path == "/api/v1/account":
+            return self._send(200, {"server": "PepperstoneKE-MT5-Live01",
+                                    "trade_mode": 2, "currency": "USD"})
+        q = {k: v[0] for k, v in parse_qs(url.query).items()}
+        count, start = int(q["count"]), int(q["start_pos"])
+        if start >= self.total:
+            return self._send(404, {"detail": "No market rates found"})
+        hi = self.total - start
+        lo = max(hi - count, 0)
+        base = datetime(2020, 1, 6)
+        rows = [{"time": (base + timedelta(hours=i)).isoformat(),
+                 "open": 1.0, "high": 1.5, "low": 0.5, "close": 1.2,
+                 "tick_volume": 7} for i in range(lo, hi)]
+        self._send(200, {"rates": rows})
+
+    _send = _DyingHandler._send
+
+
+def test_history_pull_pages_to_the_end_and_drops_the_forming_bar(tmp_path):
+    srv = HTTPServer(("127.0.0.1", 0), _RatesHandler)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        proc = _run("phase0.collectors.history_pull",
+                    f"http://127.0.0.1:{srv.server_port}",
+                    "--symbols", "GER40", "--out-dir", str(tmp_path),
+                    "--page", "1000", "--expect-server", "Pepperstone")
+    finally:
+        srv.shutdown()
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    lines = (tmp_path / "GER40_H1.csv").read_text().splitlines()
+    assert lines[0] == "Date;Open;High;Low;Close;Volume"
+    # 2500 served, the newest dropped as still forming.
+    assert len(lines) - 1 == 2499
+    assert lines[1].startswith("2020.01.06 00:00;")
+    artifact = json.loads(next(tmp_path.glob("history_pull_*.json")).read_text())
+    assert artifact["broker"]["server"] == "PepperstoneKE-MT5-Live01"
+    assert artifact["symbols"]["GER40"]["pages"] == 3

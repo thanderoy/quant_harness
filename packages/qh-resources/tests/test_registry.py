@@ -315,3 +315,26 @@ def test_us500_is_one_dollar_per_point_per_lot():
     assert (us500.volume_min, us500.volume_step) == (0.1, 0.1)
     assert us500.min_position_risk(22.5) == pytest.approx(2.25)
 
+
+
+# --------------------------------------------------------------------------- #
+# The European index candidates, after R10 fell                               #
+# --------------------------------------------------------------------------- #
+WITH_EUROPE = "pepperstone_live_20261009b.json"
+
+
+def test_second_snapshot_adds_ger40_and_uk100_to_the_fourteen():
+    reg = Registry.load(WITH_EUROPE)
+    assert set(reg.symbols) == set(Registry.load(PHASE_2B).symbols) | {"GER40", "UK100"}
+    assert reg.provenance_summary() == {"MT5_SYMBOL_INFO": 16}
+    assert all((reg[s].filling_mode or 0) & 2 for s in reg.symbols)
+
+
+def test_european_indices_quote_in_their_own_currency():
+    """So their tick_value carries an FX rate, unlike US500's."""
+    reg = Registry.load(WITH_EUROPE)
+    for sym, ccy in (("GER40", "EUR"), ("UK100", "GBP")):
+        spec = reg[sym]
+        assert spec.currency_profit == ccy
+        assert (spec.contract_size, spec.tick_size, spec.volume_step) == (1.0, 0.1, 0.1)
+        assert spec.contract_size * spec.tick_size != pytest.approx(spec.tick_value)

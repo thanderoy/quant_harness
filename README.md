@@ -86,9 +86,9 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 690 tests.
-# Locally with the out-of-repo data present: 690 passed, 0 skipped.
-# On CI, which has no WMPS checkout: 688 / 2.
+# expected: 703 tests.
+# Locally with the out-of-repo data present: 703 passed, 0 skipped.
+# On CI, which has no WMPS checkout: 701 / 2.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.
@@ -154,6 +154,24 @@ print(result.summary_str())
 
 df = result.df  # DatetimeIndex'd OHLCV DataFrame
 ```
+
+### Admission — before an instrument enters any universe
+
+```bash
+# Pull H1 history from a running mt5-api, refusing any other broker
+python -m phase0.collectors.history_pull --symbols GER40 UK100 \
+  --out-dir <data dir> --expect-server Pepperstone
+
+# Integrity check: ADMIT, ADMIT_FROM <date>, or REFUSE with reasons
+cd packages/qh-research && QH_DATA_DIR=<data dir> \
+  python -m research.admission EURUSD XAUUSD GER40
+```
+
+Integrity only: bar spacing, timeframe inferred from within-day spacing, OHLC
+bracketing, and gaps over 144 hours unless declared in `KNOWN_HOLES`. Broker
+exports can open with years of coarser bars under an `_H1` name (US500, GER40),
+so `panel_edge.check_panel` runs this on every instrument and reads an
+`ADMIT_FROM` one from its admitted date.
 
 ### Cost model
 
