@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 127
+- **Entries:** 128
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (127 entries)
+- **Hash chain:** OK — chain ok (128 entries)
 
 ## Principles
 
@@ -2083,3 +2083,13 @@ _Metrics_: `asqs_peak`=3772.33, `compose`=-p wine-mt5-python-setup --env-file pa
 > Steps 2, 5 and 6 of the demo-week checklist, run on the server with the owner's approval. CRITERION 5 IS MET ON REAL DATA: the 162 recorded orders export to 135 forexero (legacy, not on the port, not replayable by design) and 27 asqs, and all 27 asqs orders produce byte-identical requests through MT5APIClient and MT5Broker. No crest_n_keel order was ever recorded, so its coverage remains the 45-case strategy replay. THE STATE VOLUME was migrated with services/migrate_state_volume.sh (4 files, checksums verified). R12's open question is answered: the orphaned peak_equity_HMA1H.json exists (5000.0) and no code reads it. A DELIBERATE PEAK RESET, NOT A SILENT ONE: crest_n_keel's recorded peak was 5270.44 against 3643.15 equity, a 30.9% drawdown its 15% guard would have halted on at every evaluation -- the week would have tested only the halt path. The peak measures the shared account, including forexero's demo losses. With the owner's approval it was reset to current equity on the NEW volume only; the old volume keeps 5270.44. This is the reset the step-6 CRITICAL log exists to make visible when it happens by accident; here it is recorded instead. CUTOVER: the new compose file run under the existing project name, so Postgres and the static volumes were reused (a default project name would have created an empty database and collided on container names), and --no-deps so only trading, celery and celery-beat were replaced. The first build attempt failed at compose interpolation (labels need the env file passed with --env-file); fixed and rebuilt. Pre-cutover images are tagged :pre-phase3 for rollback. The demo week started at 11:33 UTC; asqs first evaluated at 11:36 and crest_n_keel at 12:01 (routed to mt5-test), both without error. Seen and left alone: the live mt5 container has reported unhealthy for 8 days, and the d3a spread collector is in a restart loop because that terminal returns no trade server.
 
 _hash_: `eed69d5c380a39fc…` · _prev_: `559412976a3e1cb8…`
+
+### seq 127 · 2026-10-09T07:35:11Z · audit · `record:phase2b-registry-snapshot`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `added`=['EURGBP', 'EURJPY', 'AUDJPY', 'EURAUD', 'US500'], `ioc_all`=True, `live_sizer_snapshot_unchanged`=pepperstone_live_20260906.json, `mt5_redeploy`=main 6dacc18, mt5 only, --no-deps; rollback image wine-mt5-python-setup-mt5:pre-supervise, `n_symbols`=14, `server`=PepperstoneKE-MT5-Live01, `snapshot`=pepperstone_live_20261009.json, `source_artifact`=phase0/d1_contract_specs_20261009T073147Z.json, `terminal_build`=6182, `zero_swap_symbols`=['EURUSD', 'GBPUSD', 'USDCHF', 'AUDUSD', 'XAUUSD', 'XAGUSD', 'EURGBP', 'EURAUD']
+
+> R10's blocker is cleared. The registry had nine instruments, all FX and metals, and filling_mode is broker policy that must be read rather than assumed, so US500 could not enter the universe without an MT5 dump. That needed a working Pepperstone terminal, and the live mt5 container had run no terminal and no API since 2026-09-29: its image predated the supervision fixes (#109, #110), and the desktop service was looping on a stale X lock. Rebuilding and recreating mt5 alone (owner-approved 2026-10-08) brought it back logged in, and the d3a spread collector recovered with it. The D1 collector, given --symbols, then dumped fourteen symbols from PepperstoneKE-MT5-Live01 with --expect-server armed: OK, no errors, no missing fields, IOC on all fourteen. Pinned as pepperstone_live_20261009.json beside, not over, the 20260906 snapshot; the live sizer still reads 20260906, because the demo week forbids a behaviour change. US500 shares no terms with FX: contract 1, tick 0.1 worth $0.1, lot min and step 0.1, max 500, swap_mode 5; one lot is $1 per point, and resources' size_position gives 1.6 lots for 1% of $3,643.15 at a 22.5-point stop. TWO THINGS THE DUMP DOES NOT SETTLE. Swaps read exactly 0.0 on both sides for eight symbols, six of which were non-zero on 2026-09-06, and a second query agreed; they are recorded as reported, cause unknown, and nothing reads swap fields today. terminal_build is 6182 from the terminal's own startup log, not 5833 as the old snapshot would have carried; LiveUpdate offers 6230.
+
+_hash_: `8251cda62e972245…` · _prev_: `eed69d5c380a39fc…`
