@@ -51,3 +51,11 @@ def test_the_manifest_records_us500s_daily_prefix():
     entry = json.loads(dm.MANIFEST.read_text())["files"]["US500_H1.csv"]
     assert entry["sparse_prefix_bars"] == 897
     assert entry["dense_from_utc"].startswith("2016-01-25")
+
+
+def test_the_seq74_correction_starts_where_us500_becomes_hourly():
+    """--dense-only moves US500's window and leaves a dense series alone."""
+    from research.pre.vol_gate_replication import COMMON_START, dense_window_start
+
+    assert dense_window_start("US500", COMMON_START) == "2016-01-25"
+    assert dense_window_start("XAGUSD", COMMON_START) == COMMON_START

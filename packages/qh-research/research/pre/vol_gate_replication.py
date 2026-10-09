@@ -23,6 +23,11 @@ costs and is a separate question. Swap is excluded for the same reason -- it is
 priced per-lot in XAU terms and does not transfer.
 
 Usage:  python -m research.pre.vol_gate_replication --symbol XAGUSD --reps 200
+
+``--dense-only`` starts the window where the file becomes the timeframe it
+declares, per the data manifest. It exists for one correction: US500_H1.csv
+opens with 897 daily bars, and seq=74 read them (seq=128). Nothing else in the
+specification moves.
 """
 from __future__ import annotations
 
@@ -34,6 +39,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from research import data_manifest
 from research.pre.feature_screen import build_features
 from research.pre.state_screen import build_state, terciles
 from research.post.sweeps.data import load
@@ -46,6 +52,12 @@ ENTRY_PCTILE = 0.90
 COST_FRAC = 0.000145          # 1.45bp round trip, matched to XAU's $0.29/$2000
 # Common window so no instrument is advantaged by simply having more history.
 COMMON_START, COMMON_END = "2012-08-06", "2025-12-31"
+
+
+def dense_window_start(symbol: str, start: str) -> str:
+    """The later of ``start`` and the day the H1 file becomes hourly."""
+    entry = json.loads(data_manifest.MANIFEST.read_text())["files"][f"{symbol}_H1.csv"]
+    return max(start, entry["dense_from_utc"][:10])
 
 
 def _folds(idx) -> list[tuple[int, int]]:
@@ -120,14 +132,19 @@ def main() -> int:
     ap.add_argument("--full-history", action="store_true",
                     help="Use the instrument's whole series instead of the "
                          "common window. Secondary context only.")
+    ap.add_argument("--dense-only", action="store_true",
+                    help="Start the common window where the file becomes "
+                         "hourly, per the data manifest.")
     a = ap.parse_args()
 
     start = None if a.full_history else COMMON_START
     end = None if a.full_history else COMMON_END
+    if a.dense_only:
+        start = dense_window_start(a.symbol, start or COMMON_START)
     df = load("H1", tz="server_eet", with_volume=True, symbol=a.symbol,
               start=start, end=end)
     obs = statistics(df)
-    win = "full" if a.full_history else "common"
+    win = ("full" if a.full_history else "common") + ("_dense" if a.dense_only else "")
     print(f"[{a.symbol}/{win}] {len(df):,} bars {df.index[0].date()}..{df.index[-1].date()} "
           f"| {len(_folds(df.index))} folds", flush=True)
     print("observed:", json.dumps(obs), flush=True)
