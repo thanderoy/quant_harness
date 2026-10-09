@@ -962,6 +962,14 @@ into one later.
 
 **R10 — the third market structure is equity indices, entering as US500.** `basis: POST_DATA`
 
+> **Does not stand — ruled by the owner 2026-10-09 (seq=130).** The ruling's measured case was
+> that US500 keeps a calendar FX and metals do not: 21.3% partial days against XAUUSD's 2.1%. That
+> gap was mostly the 897 daily bars at the head of US500_H1.csv (seq=128, seq=129); on hourly data it
+> is 3.0% against 1.7%. Asked whether R10 stands on that, the owner answered "not really". The text
+> below is kept as the record of what was ruled and why. US500 stays in the registry snapshot, which
+> is a fact about the broker rather than a choice, but it is no longer R5's third structure, and
+> **which instrument or structure is** is open again.
+
 R5-as-amended requires the research universe to span at least three distinct market structures.
 FX and metals are present. This ruling names the third and states its reason before the research
 data is pulled.
@@ -1010,7 +1018,8 @@ present. Phase 2b cannot start on the structural criterion until that snapshot e
 **Satisfied 2026-10-09** (seq=127). `pepperstone_live_20261009.json` holds US500 alongside the nine
 and four non-USD crosses, read from PepperstoneKE-MT5-Live01: `filling_mode` is IOC for all fourteen, and
 US500 is contract 1, tick 0.1, lot step 0.1. The structural criterion can now be met; what remains is
-bringing US500 into the research universe, which is where R3 and R4 meet an exchange calendar.
+bringing US500 into the research universe, which is where R3 and R4 meet an exchange calendar. *Superseded the same day: R10 does not stand (see the note at its head), so meeting the
+structural criterion waits on a new third structure.*
 
 ### 10.2 Open — genuinely data-dependent
 

@@ -1,12 +1,15 @@
 """research.post.sweeps.data — OHLCV loading + timeframe helpers for the sweep."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-DATA_DIR = REPO_ROOT / "research" / "data"
+#: ``QH_DATA_DIR`` overrides, as it does for ``research.data_manifest``. Only
+#: XAUUSD is tracked in-repo; every other symbol lives in that directory.
+DATA_DIR = Path(os.environ.get("QH_DATA_DIR", REPO_ROOT / "research" / "data"))
 
 # Broker-history holes documented in research.engines.btpy_runner.
 KNOWN_GAPS = [("2025-09-12", "2025-10-15"), ("2026-01-13", "2026-01-22")]
