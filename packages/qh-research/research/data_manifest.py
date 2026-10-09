@@ -114,9 +114,51 @@ def load_ohlcv(path: Path) -> pd.DataFrame:
     return df[["open", "high", "low", "close"]].astype(float)
 
 
+#: Bar length in hours, by the timeframe suffix in the filename.
+TIMEFRAME_HOURS = {"M5": 5 / 60, "M15": 0.25, "H1": 1.0, "H4": 4.0, "D1": 24.0}
+
+#: A day is sparse when it holds fewer than this share of the bars its
+#: timeframe implies. A quarter tolerates holidays and early closes; a daily
+#: bar in an H1 file is 1 of 24 and fails it by a wide margin.
+SPARSE_DAY_SHARE = 0.25
+
+#: A leading run of sparse days counts as a coarser-granularity prefix only if
+#: it lasts at least this long. A series that starts mid-day has one partial
+#: first day, and that is not a different timeframe.
+SPARSE_PREFIX_MIN_DAYS = 5
+
+
+def timeframe_hours(name: str) -> float | None:
+    """Bar length implied by a ``SYMBOL_TF.csv`` filename, or None."""
+    tf = Path(name).stem.rsplit("_", 1)[-1]
+    return TIMEFRAME_HOURS.get(tf)
+
+
+def dense_start(index: pd.DatetimeIndex, tf_hours: float) -> pd.Timestamp:
+    """First bar after any leading stretch of coarser-granularity data.
+
+    A broker export can start with years of one bar per day under an ``_H1``
+    name: US500's begins with 897 daily bars from 2012-08-06 to 2016-01-22.
+    Nothing in the bars says so. Each looks like an hour with an implausibly
+    wide range, and an ATR or a percentile computed across them is wrong
+    without failing anything. This finds where the series becomes the
+    timeframe its name declares, so a caller can start there and say so.
+
+    Returns the first bar when there is no such prefix, and always for D1.
+    """
+    if tf_hours >= 24 or len(index) == 0:
+        return index[0]
+    per_day = pd.Series(1, index=index).groupby(index.normalize()).size()
+    sparse = per_day < SPARSE_DAY_SHARE * (24 / tf_hours)
+    lead = int(sparse.cumprod().sum())
+    if lead < SPARSE_PREFIX_MIN_DAYS or lead == len(per_day):
+        return index[0]
+    return index[index.normalize() >= per_day.index[lead]][0]
+
+
 def describe_ohlcv(path: Path) -> dict:
     df = load_ohlcv(path)
-    return {
+    entry = {
         "n_bars": int(len(df)),
         "first_bar_utc": str(df.index[0]),
         "last_bar_utc": str(df.index[-1]),
@@ -124,6 +166,12 @@ def describe_ohlcv(path: Path) -> dict:
             df.to_csv().encode("utf-8")
         ).hexdigest()[:16],
     }
+    tf = timeframe_hours(path.name)
+    if tf is not None:
+        start = dense_start(df.index, tf)
+        entry["dense_from_utc"] = str(start)
+        entry["sparse_prefix_bars"] = int((df.index < start).sum())
+    return entry
 
 
 def describe_raw(path: Path) -> dict:

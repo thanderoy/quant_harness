@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-01T14:20:08.264223+00:00",
+  "generated_at_utc": "2026-10-09T08:32:14.194237+00:00",
   "generator": "research/data_manifest.py",
   "data_dir": "/home/roy-thande/Local/wine-mt5-python-setup/research/data",
   "data_dir_env_override": "QH_DATA_DIR",
@@ -40,7 +40,9 @@
       "n_bars": 54958,
       "first_bar_utc": "2017-10-24 00:00:00+00:00",
       "last_bar_utc": "2026-08-28 23:00:00+00:00",
-      "ohlc_hash_sha16": "d50029ea1f7fbc34"
+      "ohlc_hash_sha16": "d50029ea1f7fbc34",
+      "dense_from_utc": "2017-10-24 00:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "DFII10.csv": {
       "size_bytes": 98703,
@@ -57,7 +59,9 @@
       "n_bars": 80000,
       "first_bar_utc": "2013-10-08 06:00:00+00:00",
       "last_bar_utc": "2026-08-28 23:00:00+00:00",
-      "ohlc_hash_sha16": "886870c371c872c5"
+      "ohlc_hash_sha16": "886870c371c872c5",
+      "dense_from_utc": "2013-10-08 06:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "GBPUSD_H1.csv": {
       "size_bytes": 4754105,
@@ -67,7 +71,9 @@
       "n_bars": 80000,
       "first_bar_utc": "2013-10-08 06:00:00+00:00",
       "last_bar_utc": "2026-08-28 23:00:00+00:00",
-      "ohlc_hash_sha16": "12287dd7026b9250"
+      "ohlc_hash_sha16": "12287dd7026b9250",
+      "dense_from_utc": "2013-10-08 06:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "NZDUSD_H1.csv": {
       "size_bytes": 533687,
@@ -77,7 +83,9 @@
       "n_bars": 10000,
       "first_bar_utc": "2025-01-22 00:00:00+00:00",
       "last_bar_utc": "2026-09-01 17:00:00+00:00",
-      "ohlc_hash_sha16": "365ddec7613c8c24"
+      "ohlc_hash_sha16": "365ddec7613c8c24",
+      "dense_from_utc": "2025-01-22 00:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "SYNDXY_H1.csv": {
       "size_bytes": 7474839,
@@ -87,7 +95,9 @@
       "n_bars": 79928,
       "first_bar_utc": "2013-10-08 13:00:00+00:00",
       "last_bar_utc": "2026-08-28 20:00:00+00:00",
-      "ohlc_hash_sha16": "3c2dd38d54cb7fa8"
+      "ohlc_hash_sha16": "3c2dd38d54cb7fa8",
+      "dense_from_utc": "2013-10-08 13:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "US500_H1.csv": {
       "size_bytes": 3118314,
@@ -97,7 +107,9 @@
       "n_bars": 62726,
       "first_bar_utc": "2012-08-06 00:00:00+00:00",
       "last_bar_utc": "2026-08-28 22:00:00+00:00",
-      "ohlc_hash_sha16": "ff5094dd8cea8b62"
+      "ohlc_hash_sha16": "ff5094dd8cea8b62",
+      "dense_from_utc": "2016-01-25 00:00:00+00:00",
+      "sparse_prefix_bars": 897
     },
     "USDCAD_H1.csv": {
       "size_bytes": 4667344,
@@ -107,7 +119,9 @@
       "n_bars": 80000,
       "first_bar_utc": "2013-10-08 16:00:00+00:00",
       "last_bar_utc": "2026-08-28 23:00:00+00:00",
-      "ohlc_hash_sha16": "733680c0c6eddbba"
+      "ohlc_hash_sha16": "733680c0c6eddbba",
+      "dense_from_utc": "2013-10-08 16:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "USDCHF_H1.csv": {
       "size_bytes": 4268584,
@@ -117,7 +131,9 @@
       "n_bars": 80000,
       "first_bar_utc": "2013-10-07 12:00:00+00:00",
       "last_bar_utc": "2026-08-28 23:00:00+00:00",
-      "ohlc_hash_sha16": "ca9cbc88af47528e"
+      "ohlc_hash_sha16": "ca9cbc88af47528e",
+      "dense_from_utc": "2013-10-07 12:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "USDJPY_H1.csv": {
       "size_bytes": 4279252,
@@ -127,7 +143,9 @@
       "n_bars": 80000,
       "first_bar_utc": "2013-10-08 11:00:00+00:00",
       "last_bar_utc": "2026-08-28 23:00:00+00:00",
-      "ohlc_hash_sha16": "c5965818153d3803"
+      "ohlc_hash_sha16": "c5965818153d3803",
+      "dense_from_utc": "2013-10-08 11:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "USDSEK_H1.csv": {
       "size_bytes": 4388412,
@@ -137,7 +155,9 @@
       "n_bars": 80000,
       "first_bar_utc": "2013-10-07 06:00:00+00:00",
       "last_bar_utc": "2026-08-28 23:00:00+00:00",
-      "ohlc_hash_sha16": "269fdb6717835c05"
+      "ohlc_hash_sha16": "269fdb6717835c05",
+      "dense_from_utc": "2013-10-07 06:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "USDX_H1.csv": {
       "size_bytes": 152538,
@@ -147,7 +167,9 @@
       "n_bars": 3548,
       "first_bar_utc": "2024-02-29 17:00:00+00:00",
       "last_bar_utc": "2026-08-28 23:00:00+00:00",
-      "ohlc_hash_sha16": "0976e321a12bf059"
+      "ohlc_hash_sha16": "0976e321a12bf059",
+      "dense_from_utc": "2024-03-22 16:00:00+00:00",
+      "sparse_prefix_bars": 39
     },
     "XAGUSD_H1.csv": {
       "size_bytes": 4887309,
@@ -157,7 +179,9 @@
       "n_bars": 99999,
       "first_bar_utc": "2009-08-18 20:00:00+00:00",
       "last_bar_utc": "2026-08-28 22:00:00+00:00",
-      "ohlc_hash_sha16": "9b1bf462fea0c5b9"
+      "ohlc_hash_sha16": "9b1bf462fea0c5b9",
+      "dense_from_utc": "2009-08-18 20:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "XAUUSD_D1.csv": {
       "size_bytes": 297131,
@@ -167,7 +191,9 @@
       "n_bars": 5531,
       "first_bar_utc": "2004-06-11 00:00:00+00:00",
       "last_bar_utc": "2026-01-30 00:00:00+00:00",
-      "ohlc_hash_sha16": "ea0a71be79b77489"
+      "ohlc_hash_sha16": "ea0a71be79b77489",
+      "dense_from_utc": "2004-06-11 00:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "XAUUSD_H1.csv": {
       "size_bytes": 6538802,
@@ -177,7 +203,9 @@
       "n_bars": 124887,
       "first_bar_utc": "2004-06-11 07:00:00+00:00",
       "last_bar_utc": "2025-12-31 23:00:00+00:00",
-      "ohlc_hash_sha16": "a8cd64270c5376ca"
+      "ohlc_hash_sha16": "a8cd64270c5376ca",
+      "dense_from_utc": "2004-06-11 07:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "XAUUSD_H4.csv": {
       "size_bytes": 1746277,
@@ -187,7 +215,9 @@
       "n_bars": 32960,
       "first_bar_utc": "2004-06-11 04:00:00+00:00",
       "last_bar_utc": "2026-01-30 20:00:00+00:00",
-      "ohlc_hash_sha16": "2a639c14f07ef6ba"
+      "ohlc_hash_sha16": "2a639c14f07ef6ba",
+      "dense_from_utc": "2004-06-11 04:00:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "XAUUSD_M15.csv": {
       "size_bytes": 25538469,
@@ -197,7 +227,9 @@
       "n_bars": 492964,
       "first_bar_utc": "2004-06-11 07:15:00+00:00",
       "last_bar_utc": "2025-12-31 23:45:00+00:00",
-      "ohlc_hash_sha16": "3bb5036bd470a4ec"
+      "ohlc_hash_sha16": "3bb5036bd470a4ec",
+      "dense_from_utc": "2004-06-11 07:15:00+00:00",
+      "sparse_prefix_bars": 0
     },
     "XAUUSD_M5.csv": {
       "size_bytes": 74361143,
@@ -207,7 +239,9 @@
       "n_bars": 1443451,
       "first_bar_utc": "2004-06-11 07:15:00+00:00",
       "last_bar_utc": "2026-01-30 23:55:00+00:00",
-      "ohlc_hash_sha16": "c9f13f1b494df59a"
+      "ohlc_hash_sha16": "c9f13f1b494df59a",
+      "dense_from_utc": "2004-06-11 07:15:00+00:00",
+      "sparse_prefix_bars": 0
     }
   }
 }
