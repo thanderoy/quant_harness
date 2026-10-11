@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-11 — execution cost measured from 179 live entries: gold slip about zero, FX fills about 0.5 pip beyond the quote feed (seq=133). CI is required to merge to `develop`. The ops canary is built and waits, disabled, for the demo week to end.
+**Last updated:** 2026-10-11 — **Phase 2b complete** (seq=136): three structures, admission as a standing gate, the three-structure panel DEAD_ON_AVERAGE (seq=135), and no gold verdict moved by SR*. No mechanism survives, so Phase 4 is not entered; R5's gate is open for a new pre-registration. The Phase 3 demo week ends 2026-10-13.
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -32,7 +32,7 @@ the next reader can check rather than trust.
 | Tests passing | **723 passed, 2 skipped** on CI; 725 tests total. At most three skips, each declared | 725 tests total, measured on run 38165526378 (the execution-cost record branch, which appends seq=133, so the log-rewrite check had something to diff and ran). Where the log matches `origin/develop` it skips, giving one fewer passed and one more skipped. The CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); `test_no_pre_existing_entry_was_rewritten` (nothing to diff when the log matches `origin/develop`); and one case in `test_parity_data_resolution.py` that exists to assert the recorded path wins *where it resolves*, so it skips on a runner by design. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
 | Packages | 4 built — `qh-resources`, `qh-strategies`, `qh-research`, and `qh-platform` as of the Phase 3 subtree merge | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; **2** CI-limited and declared (X17, X22) | `tests/test_x_coverage.py` |
-| Research log | 134 entries (to seq=133), chain verified; `trial_count()` = 26 | `research.log.verify()` |
+| Research log | 137 entries (to seq=136), chain verified; `trial_count()` = 26 | `research.log.verify()` |
 | Instruments | 9 — 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching | `snapshots/pepperstone_live_20260906.json` |
 | Gate detection floor | **1.2 annualised Sharpe**, false-positive rate 0% at n=2,000 pooled | seq=107, `research/reports/power.py` |
 
@@ -45,9 +45,9 @@ the next reader can check rather than trust.
 | 0 | Diagnostic — D1-D9, no code changes | ✅ done (`docs/phase0_memo.md`) |
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
-| 2b | Universe expansion — non-USD crosses, metals, indices | ⏭ **three structures settled** — FX, metals and, per R14, GER40 (seq=132). GER40 is admitted from 2018-07-13; every instrument now passes `research.admission` before entering a universe. Next: pre-register the first panel run across all three |
+| 2b | Universe expansion — non-USD crosses, metals, indices | ✅ **done** (seq=136) — FX, metals and GER40 (R14); every instrument passes `research.admission`; R3/R4 exercised on GER40's calendar; `flood_tide_h1` across ten instruments is DEAD_ON_AVERAGE, pooled p 0.534 (seq=135); the shelved gold mechanisms re-checked against SR*=D5, no verdict moved (#70) |
 | 3 | Execution merge | 🔨 **demo week running since 2026-10-07 11:33 UTC** (crest_n_keel + asqs on mt5-test, R13) — steps 1–6 done; criteria 1–6 and 8 met, criterion 5 on real orders (seq=126). Criterion 7 is decided by the week. What to watch: `docs/phase3_spec.md` §5.1 |
-| 4+ | Multi-symbol live, CPCV | ⏭ not entered until a mechanism survives 2b |
+| 4+ | Multi-symbol live, CPCV | ⏸ not entered — no mechanism survived 2b. R5's gate is open: the next step is a **new** mechanism pre-registered across the three structures, which is the owner's choice |
 
 ### Phase 1 acceptance criteria
 
@@ -185,13 +185,16 @@ depends on it rather than asserted in a docstring.
 
 ## What "done" looks like for Phase 2b
 
-R5 as re-scoped on 2026-10-05: **the research universe spans at least three
-distinct market structures** — FX, metals and, per R10, equity indices as
-US500 — before any new mechanism is pre-registered. The original target,
-effective N >= 3.5, was dropped because F1 showed no instrument count reaches
-it at the measured correlations.
+**Met 2026-10-11** (seq=136). R5 as re-scoped: the research universe spans three
+market structures — FX, metals and, per R14, GER40 — before any new mechanism is
+pre-registered. The original effective-N target was dropped because F1 showed no
+instrument count reaches it.
 
-Done means US500 is in the research universe on the same terms as the nine:
-registry spec (done, seq=127), H1 history through the panel loader, R3's mask
-and R4's tradable-bar horizon exercised against its exchange calendar, and
-the shelved XAUUSD mechanisms re-evaluated against the correct SR*.
+- Registry spec for the third structure: `pepperstone_live_20261009b.json` (seq=132).
+- H1 history through the panel loader, behind the admission gate: GER40 from 2018-07-13.
+- R3's mask and R4's tradable-bar horizon exercised against GER40's calendar (seq=134/135).
+- The shelved XAUUSD mechanisms re-evaluated against SR*=D5: no deciding verdict moves (#70).
+
+Two figures elsewhere in this repo were corrected along the way: cnk_momentum's
+OOS Sharpe of 1.20 counts overlapping folds twice and is about 0.85 at the true
+trade rate, and seq=94 misstates D5's window (it is 2004-06-14..2025-12-31).
