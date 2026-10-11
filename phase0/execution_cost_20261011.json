@@ -1,0 +1,2978 @@
+{
+  "task": "execution_cost",
+  "generated_at_utc": "2026-10-11T17:58:48.136904+00:00",
+  "source": {
+    "collector": "phase0.collectors.execution_fills",
+    "collected_at_utc": "2026-10-11T17:40:35.190418+00:00",
+    "broker": {
+      "server": "PepperstoneKE-MT5-Live01",
+      "trade_mode": 2,
+      "currency": "USD"
+    },
+    "endpoint": "/api/v1/deals + /api/v1/ticks (GET only)",
+    "n_trade_deals": 358,
+    "n_entries": 179,
+    "n_exits": 179,
+    "span": [
+      "2025-02-10",
+      "2026-04-13"
+    ],
+    "symbols": [
+      "AUDUSD",
+      "EURUSD",
+      "GBPUSD",
+      "NZDUSD",
+      "XAUUSD"
+    ],
+    "tick_size": {
+      "AUDUSD": 1e-05,
+      "EURUSD": 1e-05,
+      "GBPUSD": 1e-05,
+      "NZDUSD": 1e-05,
+      "XAUUSD": 0.01
+    },
+    "largest_lot": 0.03,
+    "entries_by_reason": {
+      "CLIENT": 4,
+      "EXPERT": 114,
+      "MOBILE": 61
+    },
+    "exits_by_reason": {
+      "CLIENT": 15,
+      "MOBILE": 6,
+      "SL": 35,
+      "SO": 8,
+      "TP": 115
+    }
+  },
+  "sign_convention": "positive = adverse; side +1 buy, -1 sell",
+  "clock_alignment": {
+    "assumption": "deal time_msc and tick times are the same MT5 server-clock epoch; compared with no offset",
+    "entry_fills_exactly_at_pre_touch": 0.1341,
+    "entry_fills_exactly_at_same_second_touch": 0.1503,
+    "pre_quote_staleness_s": {
+      "n": 179,
+      "price": {
+        "mean": 1.20111732,
+        "p50": 1.0,
+        "p75": 1.0,
+        "p90": 2.0
+      },
+      "ticks": {
+        "mean": 1.201,
+        "p50": 1.0,
+        "p75": 1.0,
+        "p90": 2.0
+      },
+      "share_adverse": 1.0,
+      "share_zero": 0.0
+    },
+    "m5_bar_containment_by_offset_h": {
+      "-3": {
+        "n": 200,
+        "inside": 19,
+        "share": 0.095
+      },
+      "-2": {
+        "n": 200,
+        "inside": 14,
+        "share": 0.07
+      },
+      "-1": {
+        "n": 200,
+        "inside": 37,
+        "share": 0.185
+      },
+      "0": {
+        "n": 200,
+        "inside": 197,
+        "share": 0.985
+      },
+      "1": {
+        "n": 200,
+        "inside": 31,
+        "share": 0.155
+      },
+      "2": {
+        "n": 200,
+        "inside": 24,
+        "share": 0.12
+      },
+      "3": {
+        "n": 200,
+        "inside": 16,
+        "share": 0.08
+      }
+    }
+  },
+  "quote_method": {
+    "description": "fill vs the last tick quote in a second strictly before the fill (tick times are 1 s resolution)",
+    "entries": {
+      "slip_vs_touch": {
+        "AUDUSD": {
+          "ALL": {
+            "n": 15,
+            "price": {
+              "mean": 2.2e-05,
+              "p50": 1e-05,
+              "p75": 3.5e-05,
+              "p90": 7.4e-05
+            },
+            "ticks": {
+              "mean": 2.2,
+              "p50": 1.0,
+              "p75": 3.5,
+              "p90": 7.4
+            },
+            "share_adverse": 0.7333,
+            "share_zero": 0.0667
+          },
+          "BUY": {
+            "n": 3,
+            "price": {
+              "mean": 3.667e-05,
+              "p50": 2e-05,
+              "p75": 5.5e-05,
+              "p90": 7.6e-05
+            },
+            "ticks": {
+              "mean": 3.667,
+              "p50": 2.0,
+              "p75": 5.5,
+              "p90": 7.6
+            },
+            "share_adverse": 0.6667,
+            "share_zero": 0.3333
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 1.833e-05,
+              "p50": 1e-05,
+              "p75": 3.25e-05,
+              "p90": 4.9e-05
+            },
+            "ticks": {
+              "mean": 1.833,
+              "p50": 1.0,
+              "p75": 3.25,
+              "p90": 4.9
+            },
+            "share_adverse": 0.75,
+            "share_zero": 0.0
+          }
+        },
+        "EURUSD": {
+          "ALL": {
+            "n": 21,
+            "price": {
+              "mean": 2.762e-05,
+              "p50": 3e-05,
+              "p75": 5e-05,
+              "p90": 5e-05
+            },
+            "ticks": {
+              "mean": 2.762,
+              "p50": 3.0,
+              "p75": 5.0,
+              "p90": 5.0
+            },
+            "share_adverse": 0.7619,
+            "share_zero": 0.0952
+          },
+          "BUY": {
+            "n": 7,
+            "price": {
+              "mean": 3.429e-05,
+              "p50": 5e-05,
+              "p75": 5e-05,
+              "p90": 5.8e-05
+            },
+            "ticks": {
+              "mean": 3.429,
+              "p50": 5.0,
+              "p75": 5.0,
+              "p90": 5.8
+            },
+            "share_adverse": 0.8571,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 14,
+            "price": {
+              "mean": 2.429e-05,
+              "p50": 3e-05,
+              "p75": 4e-05,
+              "p90": 5e-05
+            },
+            "ticks": {
+              "mean": 2.429,
+              "p50": 3.0,
+              "p75": 4.0,
+              "p90": 5.0
+            },
+            "share_adverse": 0.7143,
+            "share_zero": 0.1429
+          }
+        },
+        "GBPUSD": {
+          "ALL": {
+            "n": 16,
+            "price": {
+              "mean": 8.13e-06,
+              "p50": 1e-05,
+              "p75": 3e-05,
+              "p90": 4.5e-05
+            },
+            "ticks": {
+              "mean": 0.813,
+              "p50": 1.0,
+              "p75": 3.0,
+              "p90": 4.5
+            },
+            "share_adverse": 0.6875,
+            "share_zero": 0.0625
+          },
+          "BUY": {
+            "n": 5,
+            "price": {
+              "mean": 2.4e-05,
+              "p50": 1e-05,
+              "p75": 5e-05,
+              "p90": 5.6e-05
+            },
+            "ticks": {
+              "mean": 2.4,
+              "p50": 1.0,
+              "p75": 5.0,
+              "p90": 5.6
+            },
+            "share_adverse": 0.8,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 11,
+            "price": {
+              "mean": 9.1e-07,
+              "p50": 1e-05,
+              "p75": 3e-05,
+              "p90": 3e-05
+            },
+            "ticks": {
+              "mean": 0.091,
+              "p50": 1.0,
+              "p75": 3.0,
+              "p90": 3.0
+            },
+            "share_adverse": 0.6364,
+            "share_zero": 0.0909
+          }
+        },
+        "NZDUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": 1.857e-05,
+              "p50": 3e-05,
+              "p75": 4e-05,
+              "p90": 4e-05
+            },
+            "ticks": {
+              "mean": 1.857,
+              "p50": 3.0,
+              "p75": 4.0,
+              "p90": 4.0
+            },
+            "share_adverse": 0.7143,
+            "share_zero": 0.0714
+          },
+          "BUY": {
+            "n": 2,
+            "price": {
+              "mean": 3e-05,
+              "p50": 3e-05,
+              "p75": 3e-05,
+              "p90": 3e-05
+            },
+            "ticks": {
+              "mean": 3.0,
+              "p50": 3.0,
+              "p75": 3.0,
+              "p90": 3.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 1.667e-05,
+              "p50": 2.5e-05,
+              "p75": 4e-05,
+              "p90": 4e-05
+            },
+            "ticks": {
+              "mean": 1.667,
+              "p50": 2.5,
+              "p75": 4.0,
+              "p90": 4.0
+            },
+            "share_adverse": 0.6667,
+            "share_zero": 0.0833
+          }
+        },
+        "XAUUSD": {
+          "ALL": {
+            "n": 113,
+            "price": {
+              "mean": -0.15185841,
+              "p50": -0.06,
+              "p75": 0.0,
+              "p90": 0.108
+            },
+            "ticks": {
+              "mean": -15.186,
+              "p50": -6.0,
+              "p75": 0.0,
+              "p90": 10.8
+            },
+            "share_adverse": 0.2212,
+            "share_zero": 0.1681
+          },
+          "BUY": {
+            "n": 51,
+            "price": {
+              "mean": -0.20588235,
+              "p50": -0.17,
+              "p75": 0.0,
+              "p90": 0.09
+            },
+            "ticks": {
+              "mean": -20.588,
+              "p50": -17.0,
+              "p75": 0.0,
+              "p90": 9.0
+            },
+            "share_adverse": 0.2157,
+            "share_zero": 0.0588
+          },
+          "SELL": {
+            "n": 62,
+            "price": {
+              "mean": -0.10741935,
+              "p50": -0.01,
+              "p75": -0.0,
+              "p90": 0.16
+            },
+            "ticks": {
+              "mean": -10.742,
+              "p50": -1.0,
+              "p75": -0.0,
+              "p90": 16.0
+            },
+            "share_adverse": 0.2258,
+            "share_zero": 0.2581
+          }
+        }
+      },
+      "cost_vs_mid_per_side": {
+        "AUDUSD": {
+          "ALL": {
+            "n": 15,
+            "price": {
+              "mean": 2.833e-05,
+              "p50": 2e-05,
+              "p75": 4e-05,
+              "p90": 8.5e-05
+            },
+            "ticks": {
+              "mean": 2.833,
+              "p50": 2.0,
+              "p75": 4.0,
+              "p90": 8.5
+            },
+            "share_adverse": 0.8,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 3,
+            "price": {
+              "mean": 5e-05,
+              "p50": 2.5e-05,
+              "p75": 6.5e-05,
+              "p90": 8.9e-05
+            },
+            "ticks": {
+              "mean": 5.0,
+              "p50": 2.5,
+              "p75": 6.5,
+              "p90": 8.9
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 2.292e-05,
+              "p50": 1.5e-05,
+              "p75": 4e-05,
+              "p90": 5.35e-05
+            },
+            "ticks": {
+              "mean": 2.292,
+              "p50": 1.5,
+              "p75": 4.0,
+              "p90": 5.35
+            },
+            "share_adverse": 0.75,
+            "share_zero": 0.0
+          }
+        },
+        "EURUSD": {
+          "ALL": {
+            "n": 21,
+            "price": {
+              "mean": 2.762e-05,
+              "p50": 3e-05,
+              "p75": 5e-05,
+              "p90": 5e-05
+            },
+            "ticks": {
+              "mean": 2.762,
+              "p50": 3.0,
+              "p75": 5.0,
+              "p90": 5.0
+            },
+            "share_adverse": 0.7619,
+            "share_zero": 0.0952
+          },
+          "BUY": {
+            "n": 7,
+            "price": {
+              "mean": 3.429e-05,
+              "p50": 5e-05,
+              "p75": 5e-05,
+              "p90": 5.8e-05
+            },
+            "ticks": {
+              "mean": 3.429,
+              "p50": 5.0,
+              "p75": 5.0,
+              "p90": 5.8
+            },
+            "share_adverse": 0.8571,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 14,
+            "price": {
+              "mean": 2.429e-05,
+              "p50": 3e-05,
+              "p75": 4e-05,
+              "p90": 5e-05
+            },
+            "ticks": {
+              "mean": 2.429,
+              "p50": 3.0,
+              "p75": 4.0,
+              "p90": 5.0
+            },
+            "share_adverse": 0.7143,
+            "share_zero": 0.1429
+          }
+        },
+        "GBPUSD": {
+          "ALL": {
+            "n": 16,
+            "price": {
+              "mean": 1.813e-05,
+              "p50": 2.75e-05,
+              "p75": 4e-05,
+              "p90": 5.5e-05
+            },
+            "ticks": {
+              "mean": 1.813,
+              "p50": 2.75,
+              "p75": 4.0,
+              "p90": 5.5
+            },
+            "share_adverse": 0.75,
+            "share_zero": 0.125
+          },
+          "BUY": {
+            "n": 5,
+            "price": {
+              "mean": 3.2e-05,
+              "p50": 2.5e-05,
+              "p75": 5.5e-05,
+              "p90": 6.1e-05
+            },
+            "ticks": {
+              "mean": 3.2,
+              "p50": 2.5,
+              "p75": 5.5,
+              "p90": 6.1
+            },
+            "share_adverse": 0.8,
+            "share_zero": 0.2
+          },
+          "SELL": {
+            "n": 11,
+            "price": {
+              "mean": 1.182e-05,
+              "p50": 3e-05,
+              "p75": 3.75e-05,
+              "p90": 4e-05
+            },
+            "ticks": {
+              "mean": 1.182,
+              "p50": 3.0,
+              "p75": 3.75,
+              "p90": 4.0
+            },
+            "share_adverse": 0.7273,
+            "share_zero": 0.0909
+          }
+        },
+        "NZDUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": 2.857e-05,
+              "p50": 4e-05,
+              "p75": 5e-05,
+              "p90": 5e-05
+            },
+            "ticks": {
+              "mean": 2.857,
+              "p50": 4.0,
+              "p75": 5.0,
+              "p90": 5.0
+            },
+            "share_adverse": 0.7857,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 2,
+            "price": {
+              "mean": 4e-05,
+              "p50": 4e-05,
+              "p75": 4e-05,
+              "p90": 4e-05
+            },
+            "ticks": {
+              "mean": 4.0,
+              "p50": 4.0,
+              "p75": 4.0,
+              "p90": 4.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 2.667e-05,
+              "p50": 3.5e-05,
+              "p75": 5e-05,
+              "p90": 5e-05
+            },
+            "ticks": {
+              "mean": 2.667,
+              "p50": 3.5,
+              "p75": 5.0,
+              "p90": 5.0
+            },
+            "share_adverse": 0.75,
+            "share_zero": 0.0
+          }
+        },
+        "XAUUSD": {
+          "ALL": {
+            "n": 113,
+            "price": {
+              "mean": -0.05778761,
+              "p50": 0.04,
+              "p75": 0.095,
+              "p90": 0.239
+            },
+            "ticks": {
+              "mean": -5.779,
+              "p50": 4.0,
+              "p75": 9.5,
+              "p90": 23.9
+            },
+            "share_adverse": 0.5575,
+            "share_zero": 0.0088
+          },
+          "BUY": {
+            "n": 51,
+            "price": {
+              "mean": -0.10343137,
+              "p50": -0.055,
+              "p75": 0.0925,
+              "p90": 0.23
+            },
+            "ticks": {
+              "mean": -10.343,
+              "p50": -5.5,
+              "p75": 9.25,
+              "p90": 23.0
+            },
+            "share_adverse": 0.4314,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 62,
+            "price": {
+              "mean": -0.02024194,
+              "p50": 0.0675,
+              "p75": 0.0975,
+              "p90": 0.244
+            },
+            "ticks": {
+              "mean": -2.024,
+              "p50": 6.75,
+              "p75": 9.75,
+              "p90": 24.4
+            },
+            "share_adverse": 0.6613,
+            "share_zero": 0.0161
+          }
+        }
+      },
+      "slip_vs_touch_same_second": {
+        "AUDUSD": {
+          "ALL": {
+            "n": 15,
+            "price": {
+              "mean": 5.4e-05,
+              "p50": 5e-05,
+              "p75": 6.5e-05,
+              "p90": 7.6e-05
+            },
+            "ticks": {
+              "mean": 5.4,
+              "p50": 5.0,
+              "p75": 6.5,
+              "p90": 7.6
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 3,
+            "price": {
+              "mean": 5.667e-05,
+              "p50": 5e-05,
+              "p75": 6e-05,
+              "p90": 6.6e-05
+            },
+            "ticks": {
+              "mean": 5.667,
+              "p50": 5.0,
+              "p75": 6.0,
+              "p90": 6.6
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 5.333e-05,
+              "p50": 5e-05,
+              "p75": 6.25e-05,
+              "p90": 7.9e-05
+            },
+            "ticks": {
+              "mean": 5.333,
+              "p50": 5.0,
+              "p75": 6.25,
+              "p90": 7.9
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "EURUSD": {
+          "ALL": {
+            "n": 20,
+            "price": {
+              "mean": 5.95e-05,
+              "p50": 5e-05,
+              "p75": 6.25e-05,
+              "p90": 8.2e-05
+            },
+            "ticks": {
+              "mean": 5.95,
+              "p50": 5.0,
+              "p75": 6.25,
+              "p90": 8.2
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 6,
+            "price": {
+              "mean": 6e-05,
+              "p50": 5.5e-05,
+              "p75": 6.75e-05,
+              "p90": 8.5e-05
+            },
+            "ticks": {
+              "mean": 6.0,
+              "p50": 5.5,
+              "p75": 6.75,
+              "p90": 8.5
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 14,
+            "price": {
+              "mean": 5.929e-05,
+              "p50": 5e-05,
+              "p75": 6e-05,
+              "p90": 8e-05
+            },
+            "ticks": {
+              "mean": 5.929,
+              "p50": 5.0,
+              "p75": 6.0,
+              "p90": 8.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "GBPUSD": {
+          "ALL": {
+            "n": 16,
+            "price": {
+              "mean": 5e-05,
+              "p50": 5e-05,
+              "p75": 5.25e-05,
+              "p90": 6.5e-05
+            },
+            "ticks": {
+              "mean": 5.0,
+              "p50": 5.0,
+              "p75": 5.25,
+              "p90": 6.5
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 5,
+            "price": {
+              "mean": 6.8e-05,
+              "p50": 6e-05,
+              "p75": 7e-05,
+              "p90": 9.4e-05
+            },
+            "ticks": {
+              "mean": 6.8,
+              "p50": 6.0,
+              "p75": 7.0,
+              "p90": 9.4
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 11,
+            "price": {
+              "mean": 4.182e-05,
+              "p50": 5e-05,
+              "p75": 5e-05,
+              "p90": 5e-05
+            },
+            "ticks": {
+              "mean": 4.182,
+              "p50": 5.0,
+              "p75": 5.0,
+              "p90": 5.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "NZDUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": 4.571e-05,
+              "p50": 5e-05,
+              "p75": 6e-05,
+              "p90": 6e-05
+            },
+            "ticks": {
+              "mean": 4.571,
+              "p50": 5.0,
+              "p75": 6.0,
+              "p90": 6.0
+            },
+            "share_adverse": 0.9286,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 2,
+            "price": {
+              "mean": 4.5e-05,
+              "p50": 4.5e-05,
+              "p75": 5.25e-05,
+              "p90": 5.7e-05
+            },
+            "ticks": {
+              "mean": 4.5,
+              "p50": 4.5,
+              "p75": 5.25,
+              "p90": 5.7
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 4.583e-05,
+              "p50": 5e-05,
+              "p75": 6e-05,
+              "p90": 6e-05
+            },
+            "ticks": {
+              "mean": 4.583,
+              "p50": 5.0,
+              "p75": 6.0,
+              "p90": 6.0
+            },
+            "share_adverse": 0.9167,
+            "share_zero": 0.0
+          }
+        },
+        "XAUUSD": {
+          "ALL": {
+            "n": 108,
+            "price": {
+              "mean": -0.03185185,
+              "p50": -0.005,
+              "p75": 0.01,
+              "p90": 0.053
+            },
+            "ticks": {
+              "mean": -3.185,
+              "p50": -0.5,
+              "p75": 1.0,
+              "p90": 5.3
+            },
+            "share_adverse": 0.2593,
+            "share_zero": 0.2407
+          },
+          "BUY": {
+            "n": 50,
+            "price": {
+              "mean": -0.0358,
+              "p50": 0.0,
+              "p75": 0.01,
+              "p90": 0.09
+            },
+            "ticks": {
+              "mean": -3.58,
+              "p50": 0.0,
+              "p75": 1.0,
+              "p90": 9.0
+            },
+            "share_adverse": 0.28,
+            "share_zero": 0.3
+          },
+          "SELL": {
+            "n": 58,
+            "price": {
+              "mean": -0.02844828,
+              "p50": -0.01,
+              "p75": -0.0,
+              "p90": 0.023
+            },
+            "ticks": {
+              "mean": -2.845,
+              "p50": -1.0,
+              "p75": -0.0,
+              "p90": 2.3
+            },
+            "share_adverse": 0.2414,
+            "share_zero": 0.1897
+          }
+        }
+      },
+      "cost_vs_mid_same_second": {
+        "AUDUSD": {
+          "ALL": {
+            "n": 15,
+            "price": {
+              "mean": 6e-05,
+              "p50": 5.5e-05,
+              "p75": 6.75e-05,
+              "p90": 8.5e-05
+            },
+            "ticks": {
+              "mean": 6.0,
+              "p50": 5.5,
+              "p75": 6.75,
+              "p90": 8.5
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 3,
+            "price": {
+              "mean": 6.833e-05,
+              "p50": 6e-05,
+              "p75": 7.75e-05,
+              "p90": 8.8e-05
+            },
+            "ticks": {
+              "mean": 6.833,
+              "p50": 6.0,
+              "p75": 7.75,
+              "p90": 8.8
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 5.792e-05,
+              "p50": 5.5e-05,
+              "p75": 6.625e-05,
+              "p90": 8.35e-05
+            },
+            "ticks": {
+              "mean": 5.792,
+              "p50": 5.5,
+              "p75": 6.625,
+              "p90": 8.35
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "EURUSD": {
+          "ALL": {
+            "n": 20,
+            "price": {
+              "mean": 6.1e-05,
+              "p50": 5e-05,
+              "p75": 7.125e-05,
+              "p90": 8.2e-05
+            },
+            "ticks": {
+              "mean": 6.1,
+              "p50": 5.0,
+              "p75": 7.125,
+              "p90": 8.2
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 6,
+            "price": {
+              "mean": 6.417e-05,
+              "p50": 6.5e-05,
+              "p75": 7.375e-05,
+              "p90": 8.75e-05
+            },
+            "ticks": {
+              "mean": 6.417,
+              "p50": 6.5,
+              "p75": 7.375,
+              "p90": 8.75
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 14,
+            "price": {
+              "mean": 5.964e-05,
+              "p50": 5e-05,
+              "p75": 6e-05,
+              "p90": 8e-05
+            },
+            "ticks": {
+              "mean": 5.964,
+              "p50": 5.0,
+              "p75": 6.0,
+              "p90": 8.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "GBPUSD": {
+          "ALL": {
+            "n": 16,
+            "price": {
+              "mean": 5.938e-05,
+              "p50": 5.75e-05,
+              "p75": 6.625e-05,
+              "p90": 7.5e-05
+            },
+            "ticks": {
+              "mean": 5.938,
+              "p50": 5.75,
+              "p75": 6.625,
+              "p90": 7.5
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 5,
+            "price": {
+              "mean": 7.5e-05,
+              "p50": 6.5e-05,
+              "p75": 8e-05,
+              "p90": 0.000101
+            },
+            "ticks": {
+              "mean": 7.5,
+              "p50": 6.5,
+              "p75": 8.0,
+              "p90": 10.1
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 11,
+            "price": {
+              "mean": 5.227e-05,
+              "p50": 5.5e-05,
+              "p75": 6e-05,
+              "p90": 7e-05
+            },
+            "ticks": {
+              "mean": 5.227,
+              "p50": 5.5,
+              "p75": 6.0,
+              "p90": 7.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "NZDUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": 5.571e-05,
+              "p50": 6e-05,
+              "p75": 7e-05,
+              "p90": 7e-05
+            },
+            "ticks": {
+              "mean": 5.571,
+              "p50": 6.0,
+              "p75": 7.0,
+              "p90": 7.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0714
+          },
+          "BUY": {
+            "n": 2,
+            "price": {
+              "mean": 5.5e-05,
+              "p50": 5.5e-05,
+              "p75": 6.25e-05,
+              "p90": 6.7e-05
+            },
+            "ticks": {
+              "mean": 5.5,
+              "p50": 5.5,
+              "p75": 6.25,
+              "p90": 6.7
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 5.583e-05,
+              "p50": 6e-05,
+              "p75": 7e-05,
+              "p90": 7e-05
+            },
+            "ticks": {
+              "mean": 5.583,
+              "p50": 6.0,
+              "p75": 7.0,
+              "p90": 7.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0833
+          }
+        },
+        "XAUUSD": {
+          "ALL": {
+            "n": 108,
+            "price": {
+              "mean": 0.06152778,
+              "p50": 0.075,
+              "p75": 0.1025,
+              "p90": 0.1865
+            },
+            "ticks": {
+              "mean": 6.153,
+              "p50": 7.5,
+              "p75": 10.25,
+              "p90": 18.65
+            },
+            "share_adverse": 0.7593,
+            "share_zero": 0.0093
+          },
+          "BUY": {
+            "n": 50,
+            "price": {
+              "mean": 0.0649,
+              "p50": 0.0825,
+              "p75": 0.1425,
+              "p90": 0.211
+            },
+            "ticks": {
+              "mean": 6.49,
+              "p50": 8.25,
+              "p75": 14.25,
+              "p90": 21.1
+            },
+            "share_adverse": 0.72,
+            "share_zero": 0.02
+          },
+          "SELL": {
+            "n": 58,
+            "price": {
+              "mean": 0.05862069,
+              "p50": 0.0675,
+              "p75": 0.09375,
+              "p90": 0.138
+            },
+            "ticks": {
+              "mean": 5.862,
+              "p50": 6.75,
+              "p75": 9.375,
+              "p90": 13.8
+            },
+            "share_adverse": 0.7931,
+            "share_zero": 0.0
+          }
+        }
+      },
+      "spread_at_fill": {
+        "AUDUSD": {
+          "ALL": {
+            "n": 15,
+            "price": {
+              "mean": 1.267e-05,
+              "p50": 1e-05,
+              "p75": 1e-05,
+              "p90": 2.6e-05
+            },
+            "ticks": {
+              "mean": 1.267,
+              "p50": 1.0,
+              "p75": 1.0,
+              "p90": 2.6
+            },
+            "share_adverse": 0.8,
+            "share_zero": 0.2
+          },
+          "BUY": {
+            "n": 3,
+            "price": {
+              "mean": 2.667e-05,
+              "p50": 3e-05,
+              "p75": 4e-05,
+              "p90": 4.6e-05
+            },
+            "ticks": {
+              "mean": 2.667,
+              "p50": 3.0,
+              "p75": 4.0,
+              "p90": 4.6
+            },
+            "share_adverse": 0.6667,
+            "share_zero": 0.3333
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 9.17e-06,
+              "p50": 1e-05,
+              "p75": 1e-05,
+              "p90": 1e-05
+            },
+            "ticks": {
+              "mean": 0.917,
+              "p50": 1.0,
+              "p75": 1.0,
+              "p90": 1.0
+            },
+            "share_adverse": 0.8333,
+            "share_zero": 0.1667
+          }
+        },
+        "EURUSD": {
+          "ALL": {
+            "n": 21,
+            "price": {
+              "mean": 0.0,
+              "p50": 0.0,
+              "p75": 0.0,
+              "p90": 0.0
+            },
+            "ticks": {
+              "mean": 0.0,
+              "p50": 0.0,
+              "p75": 0.0,
+              "p90": 0.0
+            },
+            "share_adverse": 0.0,
+            "share_zero": 1.0
+          },
+          "BUY": {
+            "n": 7,
+            "price": {
+              "mean": 0.0,
+              "p50": 0.0,
+              "p75": 0.0,
+              "p90": 0.0
+            },
+            "ticks": {
+              "mean": 0.0,
+              "p50": 0.0,
+              "p75": 0.0,
+              "p90": 0.0
+            },
+            "share_adverse": 0.0,
+            "share_zero": 1.0
+          },
+          "SELL": {
+            "n": 14,
+            "price": {
+              "mean": 0.0,
+              "p50": 0.0,
+              "p75": 0.0,
+              "p90": 0.0
+            },
+            "ticks": {
+              "mean": 0.0,
+              "p50": 0.0,
+              "p75": 0.0,
+              "p90": 0.0
+            },
+            "share_adverse": 0.0,
+            "share_zero": 1.0
+          }
+        },
+        "GBPUSD": {
+          "ALL": {
+            "n": 16,
+            "price": {
+              "mean": 2e-05,
+              "p50": 2e-05,
+              "p75": 2.25e-05,
+              "p90": 3.5e-05
+            },
+            "ticks": {
+              "mean": 2.0,
+              "p50": 2.0,
+              "p75": 2.25,
+              "p90": 3.5
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 5,
+            "price": {
+              "mean": 1.6e-05,
+              "p50": 1e-05,
+              "p75": 2e-05,
+              "p90": 2.6e-05
+            },
+            "ticks": {
+              "mean": 1.6,
+              "p50": 1.0,
+              "p75": 2.0,
+              "p90": 2.6
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 11,
+            "price": {
+              "mean": 2.182e-05,
+              "p50": 2e-05,
+              "p75": 2.5e-05,
+              "p90": 4e-05
+            },
+            "ticks": {
+              "mean": 2.182,
+              "p50": 2.0,
+              "p75": 2.5,
+              "p90": 4.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "NZDUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": 2e-05,
+              "p50": 2e-05,
+              "p75": 2e-05,
+              "p90": 2e-05
+            },
+            "ticks": {
+              "mean": 2.0,
+              "p50": 2.0,
+              "p75": 2.0,
+              "p90": 2.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 2,
+            "price": {
+              "mean": 2e-05,
+              "p50": 2e-05,
+              "p75": 2e-05,
+              "p90": 2e-05
+            },
+            "ticks": {
+              "mean": 2.0,
+              "p50": 2.0,
+              "p75": 2.0,
+              "p90": 2.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 2e-05,
+              "p50": 2e-05,
+              "p75": 2e-05,
+              "p90": 2e-05
+            },
+            "ticks": {
+              "mean": 2.0,
+              "p50": 2.0,
+              "p75": 2.0,
+              "p90": 2.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "XAUUSD": {
+          "ALL": {
+            "n": 113,
+            "price": {
+              "mean": 0.18814159,
+              "p50": 0.16,
+              "p75": 0.2,
+              "p90": 0.248
+            },
+            "ticks": {
+              "mean": 18.814,
+              "p50": 16.0,
+              "p75": 20.0,
+              "p90": 24.8
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 51,
+            "price": {
+              "mean": 0.20490196,
+              "p50": 0.17,
+              "p75": 0.205,
+              "p90": 0.37
+            },
+            "ticks": {
+              "mean": 20.49,
+              "p50": 17.0,
+              "p75": 20.5,
+              "p90": 37.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 62,
+            "price": {
+              "mean": 0.17435484,
+              "p50": 0.155,
+              "p75": 0.2,
+              "p90": 0.23
+            },
+            "ticks": {
+              "mean": 17.435,
+              "p50": 15.5,
+              "p75": 20.0,
+              "p90": 23.0
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        }
+      },
+      "slip_vs_touch_by_reason": {
+        "CLIENT": {
+          "EURUSD": {
+            "ALL": {
+              "n": 2,
+              "price": {
+                "mean": 6e-05,
+                "p50": 6e-05,
+                "p75": 6.5e-05,
+                "p90": 6.8e-05
+              },
+              "ticks": {
+                "mean": 6.0,
+                "p50": 6.0,
+                "p75": 6.5,
+                "p90": 6.8
+              },
+              "share_adverse": 1.0,
+              "share_zero": 0.0
+            },
+            "BUY": {
+              "n": 2,
+              "price": {
+                "mean": 6e-05,
+                "p50": 6e-05,
+                "p75": 6.5e-05,
+                "p90": 6.8e-05
+              },
+              "ticks": {
+                "mean": 6.0,
+                "p50": 6.0,
+                "p75": 6.5,
+                "p90": 6.8
+              },
+              "share_adverse": 1.0,
+              "share_zero": 0.0
+            }
+          },
+          "XAUUSD": {
+            "ALL": {
+              "n": 2,
+              "price": {
+                "mean": 0.065,
+                "p50": 0.065,
+                "p75": 0.0775,
+                "p90": 0.085
+              },
+              "ticks": {
+                "mean": 6.5,
+                "p50": 6.5,
+                "p75": 7.75,
+                "p90": 8.5
+              },
+              "share_adverse": 1.0,
+              "share_zero": 0.0
+            },
+            "BUY": {
+              "n": 2,
+              "price": {
+                "mean": 0.065,
+                "p50": 0.065,
+                "p75": 0.0775,
+                "p90": 0.085
+              },
+              "ticks": {
+                "mean": 6.5,
+                "p50": 6.5,
+                "p75": 7.75,
+                "p90": 8.5
+              },
+              "share_adverse": 1.0,
+              "share_zero": 0.0
+            }
+          }
+        },
+        "EXPERT": {
+          "AUDUSD": {
+            "ALL": {
+              "n": 15,
+              "price": {
+                "mean": 2.2e-05,
+                "p50": 1e-05,
+                "p75": 3.5e-05,
+                "p90": 7.4e-05
+              },
+              "ticks": {
+                "mean": 2.2,
+                "p50": 1.0,
+                "p75": 3.5,
+                "p90": 7.4
+              },
+              "share_adverse": 0.7333,
+              "share_zero": 0.0667
+            },
+            "BUY": {
+              "n": 3,
+              "price": {
+                "mean": 3.667e-05,
+                "p50": 2e-05,
+                "p75": 5.5e-05,
+                "p90": 7.6e-05
+              },
+              "ticks": {
+                "mean": 3.667,
+                "p50": 2.0,
+                "p75": 5.5,
+                "p90": 7.6
+              },
+              "share_adverse": 0.6667,
+              "share_zero": 0.3333
+            },
+            "SELL": {
+              "n": 12,
+              "price": {
+                "mean": 1.833e-05,
+                "p50": 1e-05,
+                "p75": 3.25e-05,
+                "p90": 4.9e-05
+              },
+              "ticks": {
+                "mean": 1.833,
+                "p50": 1.0,
+                "p75": 3.25,
+                "p90": 4.9
+              },
+              "share_adverse": 0.75,
+              "share_zero": 0.0
+            }
+          },
+          "EURUSD": {
+            "ALL": {
+              "n": 14,
+              "price": {
+                "mean": 1.5e-05,
+                "p50": 2.5e-05,
+                "p75": 3e-05,
+                "p90": 4e-05
+              },
+              "ticks": {
+                "mean": 1.5,
+                "p50": 2.5,
+                "p75": 3.0,
+                "p90": 4.0
+              },
+              "share_adverse": 0.6429,
+              "share_zero": 0.1429
+            },
+            "BUY": {
+              "n": 3,
+              "price": {
+                "mean": 6.67e-06,
+                "p50": 2e-05,
+                "p75": 2.5e-05,
+                "p90": 2.8e-05
+              },
+              "ticks": {
+                "mean": 0.667,
+                "p50": 2.0,
+                "p75": 2.5,
+                "p90": 2.8
+              },
+              "share_adverse": 0.6667,
+              "share_zero": 0.0
+            },
+            "SELL": {
+              "n": 11,
+              "price": {
+                "mean": 1.727e-05,
+                "p50": 3e-05,
+                "p75": 3.5e-05,
+                "p90": 4e-05
+              },
+              "ticks": {
+                "mean": 1.727,
+                "p50": 3.0,
+                "p75": 3.5,
+                "p90": 4.0
+              },
+              "share_adverse": 0.6364,
+              "share_zero": 0.1818
+            }
+          },
+          "GBPUSD": {
+            "ALL": {
+              "n": 14,
+              "price": {
+                "mean": 1.43e-06,
+                "p50": 1e-05,
+                "p75": 2.75e-05,
+                "p90": 3e-05
+              },
+              "ticks": {
+                "mean": 0.143,
+                "p50": 1.0,
+                "p75": 2.75,
+                "p90": 3.0
+              },
+              "share_adverse": 0.6429,
+              "share_zero": 0.0714
+            },
+            "BUY": {
+              "n": 3,
+              "price": {
+                "mean": 3.33e-06,
+                "p50": 1e-05,
+                "p75": 1e-05,
+                "p90": 1e-05
+              },
+              "ticks": {
+                "mean": 0.333,
+                "p50": 1.0,
+                "p75": 1.0,
+                "p90": 1.0
+              },
+              "share_adverse": 0.6667,
+              "share_zero": 0.0
+            },
+            "SELL": {
+              "n": 11,
+              "price": {
+                "mean": 9.1e-07,
+                "p50": 1e-05,
+                "p75": 3e-05,
+                "p90": 3e-05
+              },
+              "ticks": {
+                "mean": 0.091,
+                "p50": 1.0,
+                "p75": 3.0,
+                "p90": 3.0
+              },
+              "share_adverse": 0.6364,
+              "share_zero": 0.0909
+            }
+          },
+          "NZDUSD": {
+            "ALL": {
+              "n": 14,
+              "price": {
+                "mean": 1.857e-05,
+                "p50": 3e-05,
+                "p75": 4e-05,
+                "p90": 4e-05
+              },
+              "ticks": {
+                "mean": 1.857,
+                "p50": 3.0,
+                "p75": 4.0,
+                "p90": 4.0
+              },
+              "share_adverse": 0.7143,
+              "share_zero": 0.0714
+            },
+            "BUY": {
+              "n": 2,
+              "price": {
+                "mean": 3e-05,
+                "p50": 3e-05,
+                "p75": 3e-05,
+                "p90": 3e-05
+              },
+              "ticks": {
+                "mean": 3.0,
+                "p50": 3.0,
+                "p75": 3.0,
+                "p90": 3.0
+              },
+              "share_adverse": 1.0,
+              "share_zero": 0.0
+            },
+            "SELL": {
+              "n": 12,
+              "price": {
+                "mean": 1.667e-05,
+                "p50": 2.5e-05,
+                "p75": 4e-05,
+                "p90": 4e-05
+              },
+              "ticks": {
+                "mean": 1.667,
+                "p50": 2.5,
+                "p75": 4.0,
+                "p90": 4.0
+              },
+              "share_adverse": 0.6667,
+              "share_zero": 0.0833
+            }
+          },
+          "XAUUSD": {
+            "ALL": {
+              "n": 57,
+              "price": {
+                "mean": -0.28403509,
+                "p50": -0.27,
+                "p75": -0.09,
+                "p90": 0.478
+              },
+              "ticks": {
+                "mean": -28.404,
+                "p50": -27.0,
+                "p75": -9.0,
+                "p90": 47.8
+              },
+              "share_adverse": 0.1579,
+              "share_zero": 0.0175
+            },
+            "BUY": {
+              "n": 33,
+              "price": {
+                "mean": -0.31666667,
+                "p50": -0.27,
+                "p75": -0.17,
+                "p90": -0.074
+              },
+              "ticks": {
+                "mean": -31.667,
+                "p50": -27.0,
+                "p75": -17.0,
+                "p90": -7.4
+              },
+              "share_adverse": 0.0909,
+              "share_zero": 0.0
+            },
+            "SELL": {
+              "n": 24,
+              "price": {
+                "mean": -0.23916667,
+                "p50": -0.225,
+                "p75": 0.1225,
+                "p90": 0.63
+              },
+              "ticks": {
+                "mean": -23.917,
+                "p50": -22.5,
+                "p75": 12.25,
+                "p90": 63.0
+              },
+              "share_adverse": 0.25,
+              "share_zero": 0.0417
+            }
+          }
+        },
+        "MOBILE": {
+          "EURUSD": {
+            "ALL": {
+              "n": 5,
+              "price": {
+                "mean": 5e-05,
+                "p50": 5e-05,
+                "p75": 5e-05,
+                "p90": 5e-05
+              },
+              "ticks": {
+                "mean": 5.0,
+                "p50": 5.0,
+                "p75": 5.0,
+                "p90": 5.0
+              },
+              "share_adverse": 1.0,
+              "share_zero": 0.0
+            },
+            "BUY": {
+              "n": 2,
+              "price": {
+                "mean": 5e-05,
+                "p50": 5e-05,
+                "p75": 5e-05,
+                "p90": 5e-05
+              },
+              "ticks": {
+                "mean": 5.0,
+                "p50": 5.0,
+                "p75": 5.0,
+                "p90": 5.0
+              },
+              "share_adverse": 1.0,
+              "share_zero": 0.0
+            },
+            "SELL": {
+              "n": 3,
+              "price": {
+                "mean": 5e-05,
+                "p50": 5e-05,
+                "p75": 5e-05,
+                "p90": 5e-05
+              },
+              "ticks": {
+                "mean": 5.0,
+                "p50": 5.0,
+                "p75": 5.0,
+                "p90": 5.0
+              },
+              "share_adverse": 1.0,
+              "share_zero": 0.0
+            }
+          },
+          "GBPUSD": {
+            "ALL": {
+              "n": 2,
+              "price": {
+                "mean": 5.5e-05,
+                "p50": 5.5e-05,
+                "p75": 5.75e-05,
+                "p90": 5.9e-05
+              },
+              "ticks": {
+                "mean": 5.5,
+                "p50": 5.5,
+                "p75": 5.75,
+                "p90": 5.9
+              },
+              "share_adverse": 1.0,
+              "share_zero": 0.0
+            },
+            "BUY": {
+              "n": 2,
+              "price": {
+                "mean": 5.5e-05,
+                "p50": 5.5e-05,
+                "p75": 5.75e-05,
+                "p90": 5.9e-05
+              },
+              "ticks": {
+                "mean": 5.5,
+                "p50": 5.5,
+                "p75": 5.75,
+                "p90": 5.9
+              },
+              "share_adverse": 1.0,
+              "share_zero": 0.0
+            }
+          },
+          "XAUUSD": {
+            "ALL": {
+              "n": 54,
+              "price": {
+                "mean": -0.02037037,
+                "p50": 0.0,
+                "p75": 0.0075,
+                "p90": 0.074
+              },
+              "ticks": {
+                "mean": -2.037,
+                "p50": 0.0,
+                "p75": 0.75,
+                "p90": 7.4
+              },
+              "share_adverse": 0.2593,
+              "share_zero": 0.3333
+            },
+            "BUY": {
+              "n": 16,
+              "price": {
+                "mean": -0.01125,
+                "p50": 0.0,
+                "p75": 0.01,
+                "p90": 0.09
+              },
+              "ticks": {
+                "mean": -1.125,
+                "p50": 0.0,
+                "p75": 1.0,
+                "p90": 9.0
+              },
+              "share_adverse": 0.375,
+              "share_zero": 0.1875
+            },
+            "SELL": {
+              "n": 38,
+              "price": {
+                "mean": -0.02421053,
+                "p50": -0.0,
+                "p75": -0.0,
+                "p90": 0.06
+              },
+              "ticks": {
+                "mean": -2.421,
+                "p50": -0.0,
+                "p75": -0.0,
+                "p90": 6.0
+              },
+              "share_adverse": 0.2105,
+              "share_zero": 0.3947
+            }
+          }
+        }
+      }
+    },
+    "exits": {
+      "slip_vs_touch": {
+        "AUDUSD": {
+          "ALL": {
+            "n": 15,
+            "price": {
+              "mean": 6.133e-05,
+              "p50": 3e-05,
+              "p75": 7e-05,
+              "p90": 0.000122
+            },
+            "ticks": {
+              "mean": 6.133,
+              "p50": 3.0,
+              "p75": 7.0,
+              "p90": 12.2
+            },
+            "share_adverse": 0.8667,
+            "share_zero": 0.1333
+          },
+          "BUY": {
+            "n": 12,
+            "price": {
+              "mean": 6.667e-05,
+              "p50": 3e-05,
+              "p75": 6e-05,
+              "p90": 0.000126
+            },
+            "ticks": {
+              "mean": 6.667,
+              "p50": 3.0,
+              "p75": 6.0,
+              "p90": 12.6
+            },
+            "share_adverse": 0.9167,
+            "share_zero": 0.0833
+          },
+          "SELL": {
+            "n": 3,
+            "price": {
+              "mean": 4e-05,
+              "p50": 1e-05,
+              "p75": 6e-05,
+              "p90": 9e-05
+            },
+            "ticks": {
+              "mean": 4.0,
+              "p50": 1.0,
+              "p75": 6.0,
+              "p90": 9.0
+            },
+            "share_adverse": 0.6667,
+            "share_zero": 0.3333
+          }
+        },
+        "EURUSD": {
+          "ALL": {
+            "n": 21,
+            "price": {
+              "mean": 3.81e-05,
+              "p50": 3e-05,
+              "p75": 5e-05,
+              "p90": 9e-05
+            },
+            "ticks": {
+              "mean": 3.81,
+              "p50": 3.0,
+              "p75": 5.0,
+              "p90": 9.0
+            },
+            "share_adverse": 0.9048,
+            "share_zero": 0.0476
+          },
+          "BUY": {
+            "n": 14,
+            "price": {
+              "mean": 3.714e-05,
+              "p50": 3e-05,
+              "p75": 5.75e-05,
+              "p90": 9.7e-05
+            },
+            "ticks": {
+              "mean": 3.714,
+              "p50": 3.0,
+              "p75": 5.75,
+              "p90": 9.7
+            },
+            "share_adverse": 0.8571,
+            "share_zero": 0.0714
+          },
+          "SELL": {
+            "n": 7,
+            "price": {
+              "mean": 4e-05,
+              "p50": 3e-05,
+              "p75": 5e-05,
+              "p90": 6.6e-05
+            },
+            "ticks": {
+              "mean": 4.0,
+              "p50": 3.0,
+              "p75": 5.0,
+              "p90": 6.6
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "GBPUSD": {
+          "ALL": {
+            "n": 16,
+            "price": {
+              "mean": 4.125e-05,
+              "p50": 3.5e-05,
+              "p75": 8e-05,
+              "p90": 0.00013
+            },
+            "ticks": {
+              "mean": 4.125,
+              "p50": 3.5,
+              "p75": 8.0,
+              "p90": 13.0
+            },
+            "share_adverse": 0.6875,
+            "share_zero": 0.0625
+          },
+          "BUY": {
+            "n": 11,
+            "price": {
+              "mean": 6.091e-05,
+              "p50": 6e-05,
+              "p75": 0.0001,
+              "p90": 0.00014
+            },
+            "ticks": {
+              "mean": 6.091,
+              "p50": 6.0,
+              "p75": 10.0,
+              "p90": 14.0
+            },
+            "share_adverse": 0.7273,
+            "share_zero": 0.0909
+          },
+          "SELL": {
+            "n": 5,
+            "price": {
+              "mean": -2e-06,
+              "p50": 2e-05,
+              "p75": 3e-05,
+              "p90": 4.8e-05
+            },
+            "ticks": {
+              "mean": -0.2,
+              "p50": 2.0,
+              "p75": 3.0,
+              "p90": 4.8
+            },
+            "share_adverse": 0.6,
+            "share_zero": 0.0
+          }
+        },
+        "NZDUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": 4.571e-05,
+              "p50": 5e-05,
+              "p75": 5e-05,
+              "p90": 7.8e-05
+            },
+            "ticks": {
+              "mean": 4.571,
+              "p50": 5.0,
+              "p75": 5.0,
+              "p90": 7.8
+            },
+            "share_adverse": 0.7857,
+            "share_zero": 0.1429
+          },
+          "BUY": {
+            "n": 12,
+            "price": {
+              "mean": 3.333e-05,
+              "p50": 4e-05,
+              "p75": 5e-05,
+              "p90": 5e-05
+            },
+            "ticks": {
+              "mean": 3.333,
+              "p50": 4.0,
+              "p75": 5.0,
+              "p90": 5.0
+            },
+            "share_adverse": 0.75,
+            "share_zero": 0.1667
+          },
+          "SELL": {
+            "n": 2,
+            "price": {
+              "mean": 0.00012,
+              "p50": 0.00012,
+              "p75": 0.000155,
+              "p90": 0.000176
+            },
+            "ticks": {
+              "mean": 12.0,
+              "p50": 12.0,
+              "p75": 15.5,
+              "p90": 17.6
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "XAUUSD": {
+          "ALL": {
+            "n": 113,
+            "price": {
+              "mean": -0.18283186,
+              "p50": -0.11,
+              "p75": 0.08,
+              "p90": 0.61
+            },
+            "ticks": {
+              "mean": -18.283,
+              "p50": -11.0,
+              "p75": 8.0,
+              "p90": 61.0
+            },
+            "share_adverse": 0.3363,
+            "share_zero": 0.0265
+          },
+          "BUY": {
+            "n": 62,
+            "price": {
+              "mean": -0.18629032,
+              "p50": -0.135,
+              "p75": 0.0575,
+              "p90": 0.22
+            },
+            "ticks": {
+              "mean": -18.629,
+              "p50": -13.5,
+              "p75": 5.75,
+              "p90": 22.0
+            },
+            "share_adverse": 0.2903,
+            "share_zero": 0.0484
+          },
+          "SELL": {
+            "n": 51,
+            "price": {
+              "mean": -0.17862745,
+              "p50": -0.07,
+              "p75": 0.08,
+              "p90": 0.81
+            },
+            "ticks": {
+              "mean": -17.863,
+              "p50": -7.0,
+              "p75": 8.0,
+              "p90": 81.0
+            },
+            "share_adverse": 0.3922,
+            "share_zero": 0.0
+          }
+        }
+      },
+      "cost_vs_mid_per_side": {
+        "AUDUSD": {
+          "ALL": {
+            "n": 15,
+            "price": {
+              "mean": 6.633e-05,
+              "p50": 3.5e-05,
+              "p75": 7.25e-05,
+              "p90": 0.00013
+            },
+            "ticks": {
+              "mean": 6.633,
+              "p50": 3.5,
+              "p75": 7.25,
+              "p90": 13.0
+            },
+            "share_adverse": 0.9333,
+            "share_zero": 0.0667
+          },
+          "BUY": {
+            "n": 12,
+            "price": {
+              "mean": 7.208e-05,
+              "p50": 3.5e-05,
+              "p75": 6.125e-05,
+              "p90": 0.0001355
+            },
+            "ticks": {
+              "mean": 7.208,
+              "p50": 3.5,
+              "p75": 6.125,
+              "p90": 13.55
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 3,
+            "price": {
+              "mean": 4.333e-05,
+              "p50": 1.5e-05,
+              "p75": 6.5e-05,
+              "p90": 9.5e-05
+            },
+            "ticks": {
+              "mean": 4.333,
+              "p50": 1.5,
+              "p75": 6.5,
+              "p90": 9.5
+            },
+            "share_adverse": 0.6667,
+            "share_zero": 0.3333
+          }
+        },
+        "EURUSD": {
+          "ALL": {
+            "n": 21,
+            "price": {
+              "mean": 3.857e-05,
+              "p50": 3e-05,
+              "p75": 5e-05,
+              "p90": 9e-05
+            },
+            "ticks": {
+              "mean": 3.857,
+              "p50": 3.0,
+              "p75": 5.0,
+              "p90": 9.0
+            },
+            "share_adverse": 0.9048,
+            "share_zero": 0.0476
+          },
+          "BUY": {
+            "n": 14,
+            "price": {
+              "mean": 3.786e-05,
+              "p50": 3e-05,
+              "p75": 5.75e-05,
+              "p90": 9.7e-05
+            },
+            "ticks": {
+              "mean": 3.786,
+              "p50": 3.0,
+              "p75": 5.75,
+              "p90": 9.7
+            },
+            "share_adverse": 0.8571,
+            "share_zero": 0.0714
+          },
+          "SELL": {
+            "n": 7,
+            "price": {
+              "mean": 4e-05,
+              "p50": 3e-05,
+              "p75": 5e-05,
+              "p90": 6.6e-05
+            },
+            "ticks": {
+              "mean": 4.0,
+              "p50": 3.0,
+              "p75": 5.0,
+              "p90": 6.6
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "GBPUSD": {
+          "ALL": {
+            "n": 16,
+            "price": {
+              "mean": 5.563e-05,
+              "p50": 5e-05,
+              "p75": 8.75e-05,
+              "p90": 0.0001525
+            },
+            "ticks": {
+              "mean": 5.563,
+              "p50": 5.0,
+              "p75": 8.75,
+              "p90": 15.25
+            },
+            "share_adverse": 0.875,
+            "share_zero": 0.0625
+          },
+          "BUY": {
+            "n": 11,
+            "price": {
+              "mean": 7.727e-05,
+              "p50": 8e-05,
+              "p75": 0.0001225,
+              "p90": 0.000155
+            },
+            "ticks": {
+              "mean": 7.727,
+              "p50": 8.0,
+              "p75": 12.25,
+              "p90": 15.5
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0909
+          },
+          "SELL": {
+            "n": 5,
+            "price": {
+              "mean": 8e-06,
+              "p50": 3e-05,
+              "p75": 4.5e-05,
+              "p90": 6.3e-05
+            },
+            "ticks": {
+              "mean": 0.8,
+              "p50": 3.0,
+              "p75": 4.5,
+              "p90": 6.3
+            },
+            "share_adverse": 0.6,
+            "share_zero": 0.0
+          }
+        },
+        "NZDUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": 5.571e-05,
+              "p50": 6e-05,
+              "p75": 6e-05,
+              "p90": 8.8e-05
+            },
+            "ticks": {
+              "mean": 5.571,
+              "p50": 6.0,
+              "p75": 6.0,
+              "p90": 8.8
+            },
+            "share_adverse": 0.9286,
+            "share_zero": 0.0714
+          },
+          "BUY": {
+            "n": 12,
+            "price": {
+              "mean": 4.333e-05,
+              "p50": 5e-05,
+              "p75": 6e-05,
+              "p90": 6e-05
+            },
+            "ticks": {
+              "mean": 4.333,
+              "p50": 5.0,
+              "p75": 6.0,
+              "p90": 6.0
+            },
+            "share_adverse": 0.9167,
+            "share_zero": 0.0833
+          },
+          "SELL": {
+            "n": 2,
+            "price": {
+              "mean": 0.00013,
+              "p50": 0.00013,
+              "p75": 0.000165,
+              "p90": 0.000186
+            },
+            "ticks": {
+              "mean": 13.0,
+              "p50": 13.0,
+              "p75": 16.5,
+              "p90": 18.6
+            },
+            "share_adverse": 1.0,
+            "share_zero": 0.0
+          }
+        },
+        "XAUUSD": {
+          "ALL": {
+            "n": 113,
+            "price": {
+              "mean": -0.06566372,
+              "p50": 0.005,
+              "p75": 0.23,
+              "p90": 0.7
+            },
+            "ticks": {
+              "mean": -6.566,
+              "p50": 0.5,
+              "p75": 23.0,
+              "p90": 70.0
+            },
+            "share_adverse": 0.5044,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 62,
+            "price": {
+              "mean": -0.06137097,
+              "p50": -0.0275,
+              "p75": 0.225,
+              "p90": 0.3295
+            },
+            "ticks": {
+              "mean": -6.137,
+              "p50": -2.75,
+              "p75": 22.5,
+              "p90": 32.95
+            },
+            "share_adverse": 0.4839,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 51,
+            "price": {
+              "mean": -0.07088235,
+              "p50": 0.02,
+              "p75": 0.245,
+              "p90": 0.905
+            },
+            "ticks": {
+              "mean": -7.088,
+              "p50": 2.0,
+              "p75": 24.5,
+              "p90": 90.5
+            },
+            "share_adverse": 0.5294,
+            "share_zero": 0.0
+          }
+        }
+      }
+    }
+  },
+  "bar_method": {
+    "description": "fill vs the admitted M5 bid bar containing it; a buy carries the full spread against a bid bar, a sell none; spread and slip not separable",
+    "bars": {
+      "AUDUSD": {
+        "verdict": "ADMIT",
+        "admit_from": "2025-06-09 06:20:00+00:00",
+        "first_bar": "2025-06-09 06:20:00+00:00",
+        "last_bar": "2026-10-09 23:45:00+00:00",
+        "reasons": []
+      },
+      "EURUSD": {
+        "verdict": "ADMIT",
+        "admit_from": "2025-06-09 08:05:00+00:00",
+        "first_bar": "2025-06-09 08:05:00+00:00",
+        "last_bar": "2026-10-09 23:45:00+00:00",
+        "reasons": []
+      },
+      "GBPUSD": {
+        "verdict": "REFUSE",
+        "admit_from": "2024-07-03 11:20:00+00:00",
+        "first_bar": "2024-07-03 11:20:00+00:00",
+        "last_bar": "2026-07-06 08:25:00+00:00",
+        "reasons": [
+          "1 undeclared holes over 144h"
+        ]
+      },
+      "NZDUSD": {
+        "verdict": "ADMIT",
+        "admit_from": "2025-06-06 18:20:00+00:00",
+        "first_bar": "2025-06-06 18:20:00+00:00",
+        "last_bar": "2026-10-09 23:45:00+00:00",
+        "reasons": []
+      },
+      "XAUUSD": {
+        "verdict": "ADMIT",
+        "admit_from": "2025-05-14 18:05:00+00:00",
+        "first_bar": "2025-05-14 18:05:00+00:00",
+        "last_bar": "2026-10-09 23:45:00+00:00",
+        "reasons": []
+      }
+    },
+    "n_entries_with_bar": 100,
+    "entries": {
+      "vs_open": {
+        "AUDUSD": {
+          "ALL": {
+            "n": 15,
+            "price": {
+              "mean": -5e-05,
+              "p50": -2e-05,
+              "p75": 5.5e-05,
+              "p90": 0.000246
+            },
+            "ticks": {
+              "mean": -5.0,
+              "p50": -2.0,
+              "p75": 5.5,
+              "p90": 24.6
+            },
+            "share_adverse": 0.2667,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 3,
+            "price": {
+              "mean": -5.333e-05,
+              "p50": -1e-05,
+              "p75": -1e-05,
+              "p90": -1e-05
+            },
+            "ticks": {
+              "mean": -5.333,
+              "p50": -1.0,
+              "p75": -1.0,
+              "p90": -1.0
+            },
+            "share_adverse": 0.0,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": -4.917e-05,
+              "p50": -2.5e-05,
+              "p75": 0.00015,
+              "p90": 0.000249
+            },
+            "ticks": {
+              "mean": -4.917,
+              "p50": -2.5,
+              "p75": 15.0,
+              "p90": 24.9
+            },
+            "share_adverse": 0.3333,
+            "share_zero": 0.0
+          }
+        },
+        "EURUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": -1.43e-06,
+              "p50": -5e-05,
+              "p75": 4.75e-05,
+              "p90": 0.000206
+            },
+            "ticks": {
+              "mean": -0.143,
+              "p50": -5.0,
+              "p75": 4.75,
+              "p90": 20.6
+            },
+            "share_adverse": 0.3571,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 3,
+            "price": {
+              "mean": -6e-05,
+              "p50": -5e-05,
+              "p75": -2e-05,
+              "p90": -2e-06
+            },
+            "ticks": {
+              "mean": -6.0,
+              "p50": -5.0,
+              "p75": -2.0,
+              "p90": -0.2
+            },
+            "share_adverse": 0.3333,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 11,
+            "price": {
+              "mean": 1.455e-05,
+              "p50": -5e-05,
+              "p75": 7e-05,
+              "p90": 0.00026
+            },
+            "ticks": {
+              "mean": 1.455,
+              "p50": -5.0,
+              "p75": 7.0,
+              "p90": 26.0
+            },
+            "share_adverse": 0.3636,
+            "share_zero": 0.0
+          }
+        },
+        "NZDUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": 1.143e-05,
+              "p50": -1e-05,
+              "p75": 3e-05,
+              "p90": 0.000261
+            },
+            "ticks": {
+              "mean": 1.143,
+              "p50": -1.0,
+              "p75": 3.0,
+              "p90": 26.1
+            },
+            "share_adverse": 0.3571,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 2,
+            "price": {
+              "mean": -0.0001,
+              "p50": -0.0001,
+              "p75": -3.5e-05,
+              "p90": 4e-06
+            },
+            "ticks": {
+              "mean": -10.0,
+              "p50": -10.0,
+              "p75": -3.5,
+              "p90": 0.4
+            },
+            "share_adverse": 0.5,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 3e-05,
+              "p50": -1e-05,
+              "p75": 8.25e-05,
+              "p90": 0.000267
+            },
+            "ticks": {
+              "mean": 3.0,
+              "p50": -1.0,
+              "p75": 8.25,
+              "p90": 26.7
+            },
+            "share_adverse": 0.3333,
+            "share_zero": 0.0
+          }
+        },
+        "XAUUSD": {
+          "ALL": {
+            "n": 57,
+            "price": {
+              "mean": -0.59368421,
+              "p50": -0.53,
+              "p75": 0.84,
+              "p90": 2.516
+            },
+            "ticks": {
+              "mean": -59.368,
+              "p50": -53.0,
+              "p75": 84.0,
+              "p90": 251.6
+            },
+            "share_adverse": 0.4035,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 33,
+            "price": {
+              "mean": -1.02757576,
+              "p50": -0.94,
+              "p75": -0.53,
+              "p90": 0.494
+            },
+            "ticks": {
+              "mean": -102.758,
+              "p50": -94.0,
+              "p75": -53.0,
+              "p90": 49.4
+            },
+            "share_adverse": 0.2121,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 24,
+            "price": {
+              "mean": 0.00291667,
+              "p50": 0.72,
+              "p75": 1.3775,
+              "p90": 4.01
+            },
+            "ticks": {
+              "mean": 0.292,
+              "p50": 72.0,
+              "p75": 137.75,
+              "p90": 401.0
+            },
+            "share_adverse": 0.6667,
+            "share_zero": 0.0
+          }
+        }
+      },
+      "vs_mid": {
+        "AUDUSD": {
+          "ALL": {
+            "n": 15,
+            "price": {
+              "mean": 2.833e-05,
+              "p50": -1.5e-05,
+              "p75": 0.000155,
+              "p90": 0.00025
+            },
+            "ticks": {
+              "mean": 2.833,
+              "p50": -1.5,
+              "p75": 15.5,
+              "p90": 25.0
+            },
+            "share_adverse": 0.4667,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 3,
+            "price": {
+              "mean": 8.833e-05,
+              "p50": 0.00018,
+              "p75": 0.0002075,
+              "p90": 0.000224
+            },
+            "ticks": {
+              "mean": 8.833,
+              "p50": 18.0,
+              "p75": 20.75,
+              "p90": 22.4
+            },
+            "share_adverse": 0.6667,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 1.333e-05,
+              "p50": -2e-05,
+              "p75": 7.75e-05,
+              "p90": 0.000247
+            },
+            "ticks": {
+              "mean": 1.333,
+              "p50": -2.0,
+              "p75": 7.75,
+              "p90": 24.7
+            },
+            "share_adverse": 0.4167,
+            "share_zero": 0.0
+          }
+        },
+        "EURUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": 1.071e-05,
+              "p50": 1.75e-05,
+              "p75": 5e-05,
+              "p90": 0.000133
+            },
+            "ticks": {
+              "mean": 1.071,
+              "p50": 1.75,
+              "p75": 5.0,
+              "p90": 13.3
+            },
+            "share_adverse": 0.7143,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 3,
+            "price": {
+              "mean": -1.333e-05,
+              "p50": 1.5e-05,
+              "p75": 3.25e-05,
+              "p90": 4.3e-05
+            },
+            "ticks": {
+              "mean": -1.333,
+              "p50": 1.5,
+              "p75": 3.25,
+              "p90": 4.3
+            },
+            "share_adverse": 0.6667,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 11,
+            "price": {
+              "mean": 1.727e-05,
+              "p50": 2e-05,
+              "p75": 6e-05,
+              "p90": 0.00016
+            },
+            "ticks": {
+              "mean": 1.727,
+              "p50": 2.0,
+              "p75": 6.0,
+              "p90": 16.0
+            },
+            "share_adverse": 0.7273,
+            "share_zero": 0.0
+          }
+        },
+        "NZDUSD": {
+          "ALL": {
+            "n": 14,
+            "price": {
+              "mean": 7.679e-05,
+              "p50": 6e-05,
+              "p75": 9e-05,
+              "p90": 0.0002445
+            },
+            "ticks": {
+              "mean": 7.679,
+              "p50": 6.0,
+              "p75": 9.0,
+              "p90": 24.45
+            },
+            "share_adverse": 0.6429,
+            "share_zero": 0.0714
+          },
+          "BUY": {
+            "n": 2,
+            "price": {
+              "mean": 3.25e-05,
+              "p50": 3.25e-05,
+              "p75": 5.125e-05,
+              "p90": 6.25e-05
+            },
+            "ticks": {
+              "mean": 3.25,
+              "p50": 3.25,
+              "p75": 5.125,
+              "p90": 6.25
+            },
+            "share_adverse": 0.5,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 12,
+            "price": {
+              "mean": 8.417e-05,
+              "p50": 6e-05,
+              "p75": 0.00011375,
+              "p90": 0.0002615
+            },
+            "ticks": {
+              "mean": 8.417,
+              "p50": 6.0,
+              "p75": 11.375,
+              "p90": 26.15
+            },
+            "share_adverse": 0.6667,
+            "share_zero": 0.0833
+          }
+        },
+        "XAUUSD": {
+          "ALL": {
+            "n": 57,
+            "price": {
+              "mean": -0.01587719,
+              "p50": 0.32,
+              "p75": 1.175,
+              "p90": 1.734
+            },
+            "ticks": {
+              "mean": -1.588,
+              "p50": 32.0,
+              "p75": 117.5,
+              "p90": 173.4
+            },
+            "share_adverse": 0.5439,
+            "share_zero": 0.0
+          },
+          "BUY": {
+            "n": 33,
+            "price": {
+              "mean": -0.31954545,
+              "p50": 0.32,
+              "p75": 0.565,
+              "p90": 1.175
+            },
+            "ticks": {
+              "mean": -31.955,
+              "p50": 32.0,
+              "p75": 56.5,
+              "p90": 117.5
+            },
+            "share_adverse": 0.5758,
+            "share_zero": 0.0
+          },
+          "SELL": {
+            "n": 24,
+            "price": {
+              "mean": 0.40166667,
+              "p50": 0.27,
+              "p75": 1.71375,
+              "p90": 2.887
+            },
+            "ticks": {
+              "mean": 40.167,
+              "p50": 27.0,
+              "p75": 171.375,
+              "p90": 288.7
+            },
+            "share_adverse": 0.5,
+            "share_zero": 0.0
+          }
+        }
+      },
+      "range_pos_worst_is_1": {
+        "AUDUSD": {
+          "mean": 0.5054,
+          "min": 0.1905,
+          "50%": 0.4359,
+          "75%": 0.7281,
+          "90%": 0.8183,
+          "max": 0.9859
+        },
+        "EURUSD": {
+          "mean": 0.5079,
+          "min": 0.2162,
+          "50%": 0.5545,
+          "75%": 0.6108,
+          "90%": 0.6931,
+          "max": 0.8026
+        },
+        "NZDUSD": {
+          "mean": 0.6816,
+          "min": 0.2727,
+          "50%": 0.6923,
+          "75%": 0.9142,
+          "90%": 0.9606,
+          "max": 0.9821
+        },
+        "XAUUSD": {
+          "mean": 0.5035,
+          "min": 0.0305,
+          "50%": 0.5427,
+          "75%": 0.6582,
+          "90%": 0.7946,
+          "max": 1.0
+        }
+      }
+    }
+  }
+}
