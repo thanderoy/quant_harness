@@ -86,9 +86,9 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 703 tests.
-# Locally with the out-of-repo data present: 703 passed, 0 skipped.
-# On CI, which has no WMPS checkout: 701 / 2.
+# expected: 725 tests.
+# Locally with the out-of-repo data present: 725 passed, 0 skipped.
+# On CI, which has no WMPS checkout: 723 / 2.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.
@@ -180,7 +180,9 @@ from research.datasets import PepperstoneXAUUSDCostModel
 from datetime import datetime
 
 cost = PepperstoneXAUUSDCostModel()
-# Defaults: $0.22/oz spread, $7 RT/lot commission (MT5 Razor), placeholder swaps
+# Defaults are MEASURED on the live account: $0.17/oz spread, $0.00 commission
+# (seq=105). PepperstoneXAUUSDCostModel.for_scenario("conservative") gives the
+# published Razor figures ($0.22, $7 RT/lot). Swaps are documented values.
 breakdown = cost.trade_cost(
     lots=0.10, direction="BUY",
     entry_dt=datetime(2024, 5, 6, 12, 0),

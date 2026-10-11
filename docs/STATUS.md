@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-09 — R14: the third market structure is GER40, declared after an integrity-only admission check that is now a standing gate (seq=132). The Phase 3 demo week is still running.
+**Last updated:** 2026-10-11 — execution cost measured from 179 live entries: gold slip about zero, FX fills about 0.5 pip beyond the quote feed (seq=133). CI is required to merge to `develop`. The ops canary is built and waits, disabled, for the demo week to end.
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -29,10 +29,10 @@ the next reader can check rather than trust.
 
 | Metric | Value | How it was measured |
 |---|---|---|
-| Tests passing | **701 passed, 2 skipped** on CI; 703 tests total. At most three skips, each declared | 703 tests total, measured on run 37915160198 (the admission-gate branch, which appends seq=132, so the log-rewrite check had something to diff and ran). Where the log matches `origin/develop` it skips, giving one fewer passed and one more skipped. The CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); `test_no_pre_existing_entry_was_rewritten` (nothing to diff when the log matches `origin/develop`); and one case in `test_parity_data_resolution.py` that exists to assert the recorded path wins *where it resolves*, so it skips on a runner by design. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
+| Tests passing | **723 passed, 2 skipped** on CI; 725 tests total. At most three skips, each declared | 725 tests total, measured on run 38165526378 (the execution-cost record branch, which appends seq=133, so the log-rewrite check had something to diff and ran). Where the log matches `origin/develop` it skips, giving one fewer passed and one more skipped. The CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); `test_no_pre_existing_entry_was_rewritten` (nothing to diff when the log matches `origin/develop`); and one case in `test_parity_data_resolution.py` that exists to assert the recorded path wins *where it resolves*, so it skips on a runner by design. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
 | Packages | 4 built — `qh-resources`, `qh-strategies`, `qh-research`, and `qh-platform` as of the Phase 3 subtree merge | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; **2** CI-limited and declared (X17, X22) | `tests/test_x_coverage.py` |
-| Research log | 133 entries (to seq=132), chain verified; `trial_count()` = 26 | `research.log.verify()` |
+| Research log | 134 entries (to seq=133), chain verified; `trial_count()` = 26 | `research.log.verify()` |
 | Instruments | 9 — 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching | `snapshots/pepperstone_live_20260906.json` |
 | Gate detection floor | **1.2 annualised Sharpe**, false-positive rate 0% at n=2,000 pooled | seq=107, `research/reports/power.py` |
 
@@ -93,13 +93,14 @@ Three consequences worth carrying:
 
 | Item | Why it is blocked |
 |---|---|
-| Branch protection | CI runs again; making it required to merge is a repo setting only you can change. |
-| Slip is `HAND_ENTERED` at 1 tick | The only cost input with no source at all, and no document can supply it — only a real fill measures it. The 358 deals carry the fill price but not the requested price, so they cannot close this. |
 
 ### Resolved since the last update
 
 | Item | Outcome |
 |---|---|
+| Branch protection | **Applied 2026-10-11.** `develop` requires the "Test suite" check; force-pushes and deletion are blocked; no review is required and admins can override. **CI green is not all tests green:** X22's port-vs-WMPS comparison cannot run on a runner (`CI_LIMITED`), so a change touching parity needs a local run with the WMPS checkout before merge. |
+| Slip is `HAND_ENTERED` at 1 tick | **Measured 2026-10-11** (seq=133, #68) from 179 live entries against the same-second quote. XAUUSD: median −0.5 ticks, p90 5.3 — the 1-tick default stays. **FX: fills land about 0.5 pip beyond the quote feed on every pair and both sides**, so any FX cost built from the feed is too low for this account by roughly a pip per round trip; an FX panel run must cost from fills. No default moved. The reference quote was chosen after seeing both candidates; the FX result holds under either. |
+| Operational monitoring after the demo week | **Built 2026-10-11** (#67): `quant.canary.run`, read-only by construction — no order, close, modify or trade-record path exists on its MT5 handle, and tests prove it end to end. Its beat entry is committed **disabled**; it is enabled when crest_n_keel and asqs come off, with the owner's approval. |
 | Phase 2b's third market structure | **Ruled 2026-10-09** (R14, seq=132): GER40, with UK100 as fallback, chosen on drivers before any data was pulled and declared only after `research.admission` passed it on integrity alone. Its H1 file holds monthly, daily and H4 bars before 2018-07-13, so it is admitted from there. The same gate refuses US500 for an undeclared 55-day hole (2025-07-16..09-09). |
 | Re-run seq=74 on hourly data? | **Done 2026-10-09** (seq=131), at the owner's request. Same specification and decisive stream; seq=74's observed figures were first reproduced exactly on the original window. On 2016-01-25..2025-12-31: advantage +0.0879, p=0.9055, against a null mean of +0.1562 (was +0.0687, p=0.9701). **The kill holds.** Five folds instead of nine. Not a new trial. |
 | Phase 2b — blocked on a registry snapshot | **Closed 2026-10-09** (seq=127). The live `mt5` container had run no terminal since 2026-09-29; rebuilding it on `main` brought it back, and the D1 collector, now taking `--symbols`, dumped fourteen symbols from PepperstoneKE-MT5-Live01 with `--expect-server` armed. IOC holds on all fourteen, US500 included. Pinned as `pepperstone_live_20261009.json` beside the 20260906 snapshot, which the live sizer still reads. Two things it does not settle: swaps read exactly 0.0 on eight symbols, cause unknown and read by no code; and the build is 6182, from the terminal log, with 6230 on offer. |
