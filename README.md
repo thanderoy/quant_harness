@@ -180,7 +180,9 @@ from research.datasets import PepperstoneXAUUSDCostModel
 from datetime import datetime
 
 cost = PepperstoneXAUUSDCostModel()
-# Defaults: $0.22/oz spread, $7 RT/lot commission (MT5 Razor), placeholder swaps
+# Defaults are MEASURED on the live account: $0.17/oz spread, $0.00 commission
+# (seq=105). PepperstoneXAUUSDCostModel.for_scenario("conservative") gives the
+# published Razor figures ($0.22, $7 RT/lot). Swaps are documented values.
 breakdown = cost.trade_cost(
     lots=0.10, direction="BUY",
     entry_dt=datetime(2024, 5, 6, 12, 0),
