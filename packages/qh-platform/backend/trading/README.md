@@ -180,6 +180,13 @@ print(resp.json())
 
 - **run_strategy_tick**: Executes a strategy tick (bar or tick event).
 - **place_order_task**: Places an order asynchronously via the adapter.
+- **quant.canary.run** (`app/quant/canary.py`): read-only operational canary.
+  Walks a strategy's live read path (API health, connect, account equity and
+  server, XAUUSD H1/M5 closed-bar freshness in open-market minutes, the shared
+  indicators, positions by magic number, the drawdown-guard and partial-close
+  state files) and logs one `[CANARY] summary {...}` line per run. It cannot
+  signal or order; `tests/test_canary.py` enforces that. Its beat entry ships
+  commented out in `app/config/settings.py`.
 
 ---
 
