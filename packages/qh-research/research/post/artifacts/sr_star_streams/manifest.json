@@ -1,0 +1,134 @@
+{
+  "cnk_momentum_wf": {
+    "distinct_entries": 1970,
+    "harness_oos_profit_factor": 1.2640361704731486,
+    "harness_oos_sharpe": 1.1998687785021103,
+    "n": 3829,
+    "n_folds": 33,
+    "ppy": 116.10977584059775,
+    "ppy_basis": "trades per 365D test window (n / n_folds), the rate the seq=36 DSR used (int 116)",
+    "runner": "examples/run_cnk_momentum.py path (run_walk_forward, CostScenario.CONSERVATIVE)",
+    "sha256": "c823abdbc365b2e98a6487df17817c745735f36863a9c93545147624db31b3fd",
+    "source": "regenerated",
+    "timeframe": "H1",
+    "var_sr_basis": "harness twin: Var(IS Sharpes, annualised) / 116",
+    "var_sr_per_obs": 0.002898890803036882,
+    "window": [
+      "2008-06-10",
+      "2025-03-18"
+    ]
+  },
+  "cnk_sweep_leader": {
+    "from": "QH_DATA_DIR/crest_n_keel/cnk_leader_returns.csv (px_return)",
+    "n": 2141,
+    "ppy": 99.03751899696049,
+    "ppy_basis": "n / first-entry..last-exit span, as cnk_engine.metrics",
+    "sha256": "11dbc210b9089207b071bd035d225b8bcfb4c1db6eca7dfaf96c196e92dbcdad",
+    "source": "read",
+    "source_sha256": "ab273d4d1161d2a4aca999acdd8b48c6da3604cc321ec9343f7e56f317bcf5fc",
+    "timeframe": "H4",
+    "window": [
+      "2004-06-11",
+      "2026-01-30"
+    ]
+  },
+  "crest_n_keel_wf_24h": {
+    "from": "QH_DATA_DIR/crest_n_keel/crest_n_keel_oos_returns_24h.csv",
+    "n": 323,
+    "ppy": 9.794582814445828,
+    "ppy_basis": "trades per 365D test window (n / 33 folds)",
+    "sha256": "32672a264ce57db6620291405fecefbc5bd09b1a05bf426c27b98bb7470ebdb4",
+    "source": "read",
+    "source_sha256": "d1308073dcda25d3bda75ab34e77bcf8892e50a4e639a76950b054627b37684f",
+    "timeframe": "H1",
+    "var_sr_basis": "harness twin: 0.103499 / 9 (recompute_dsr.py)",
+    "var_sr_per_obs": 0.011499888888888888,
+    "window_from": "cnk_momentum_wf (identical 1460D/365D/180D geometry)"
+  },
+  "crest_n_keel_wf_session": {
+    "from": "QH_DATA_DIR/crest_n_keel/crest_n_keel_oos_returns_session.csv",
+    "n": 146,
+    "ppy": 4.427272727272727,
+    "ppy_basis": "trades per 365D test window (n / 33 folds)",
+    "sha256": "032a67c9c6fe4cf54d1f6d27a2180be8686fc723b5d20c5f8a9f5eb60af5a38d",
+    "source": "read",
+    "source_sha256": "0f9452e232c94b9b4437ebc99b3fb8babcddcea0d5ecb2c1f441892abe8e5fd3",
+    "timeframe": "H1",
+    "var_sr_basis": "harness twin: 0.21937 / 4 (recompute_dsr.py)",
+    "var_sr_per_obs": 0.0548425,
+    "window_from": "cnk_momentum_wf (identical 1460D/365D/180D geometry)"
+  },
+  "flood_tide_median_config": {
+    "config": {
+      "atr_period": 21,
+      "direction": "long",
+      "entry": [
+        20,
+        0.3,
+        200
+      ],
+      "exit": "bracket",
+      "min_atr": 0.0,
+      "sl_mult": 1.0,
+      "tp_mult": 2.0
+    },
+    "n": 2094,
+    "ppy": 97.20812150482969,
+    "ppy_basis": "the engine's trades_per_year (n / first-entry..last-exit span), as the sweep annualised",
+    "runner": "research.post.sweeps.run_signal_sweep (cnk_engine.simulate)",
+    "sha256": "a21e56ac8e05d40320d69a3fe21953f63e76865e9f534f4338c2c9c160c02853",
+    "source": "regenerated",
+    "timeframe": "H1",
+    "window": [
+      "2004-06-11",
+      "2025-12-31"
+    ]
+  },
+  "h1_momentum_lowvol": {
+    "n": 374,
+    "ppy": 22.015068493150682,
+    "ppy_basis": "realised trades per year over the contiguous OOS window (17 x 365D), as momentum_nested_wf annualises",
+    "runner": "research.post.sweeps.momentum_dsr.fold_returns",
+    "sha256": "d82906ebb8369ff766a0849453f339f98d230c17ddd6d5b7ed702f6045ea6c92",
+    "source": "regenerated",
+    "timeframe": "H1",
+    "window": [
+      "2008-06-10",
+      "2025-06-06"
+    ]
+  },
+  "h1_momentum_unfiltered": {
+    "n": 1132,
+    "ppy": 66.63384367445607,
+    "ppy_basis": "realised trades per year over the contiguous OOS window (17 x 365D), as momentum_nested_wf annualises",
+    "runner": "research.post.sweeps.momentum_dsr.fold_returns",
+    "sha256": "3f78ab914e800398f6f59f58fa7eabf2a88d4e2b63f26875f0803338c5591818",
+    "source": "regenerated",
+    "timeframe": "H1",
+    "window": [
+      "2008-06-10",
+      "2025-06-06"
+    ]
+  },
+  "zlch_sweep_leader": {
+    "config": {
+      "atr_mult": 2.0,
+      "atr_period": 8,
+      "bias_tf": "none",
+      "direction": "long",
+      "min_atr": 1.0,
+      "zlsma_len": 0
+    },
+    "n": 890,
+    "ppy": 41.16926291793313,
+    "ppy_basis": "the sweep's trades_per_year (n / first-entry..last-exit span); the seq=40 DSR displayed at a rounded 41",
+    "runner": "research.post.sweeps.deepdive._build (seq=40 leader row)",
+    "sha256": "7f53d1a82f1adf14dc0ed1f3656d00f943dfea1f7127e901c778007738fe7b37",
+    "source": "regenerated",
+    "timeframe": "H4",
+    "window": [
+      "2004-06-11",
+      "2026-01-30"
+    ]
+  }
+}

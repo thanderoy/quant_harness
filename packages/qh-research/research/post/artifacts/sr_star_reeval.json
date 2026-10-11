@@ -1,0 +1,1032 @@
+{
+  "generator": "research.post.sr_star_reeval",
+  "d5_artifact": "phase0/phase0_universe_20260907.json",
+  "d5_xauusd": {
+    "symbol": "XAUUSD",
+    "start": "2004-06-14",
+    "end": "2025-12-31",
+    "n_days": 5515,
+    "mean_daily_log_return": 0.0004387539518003802,
+    "daily_vol": 0.010980184450098008,
+    "buy_and_hold_sharpe_annualised": 0.634324777595297
+  },
+  "threshold": 0.95,
+  "rule": "A positive SR* only lowers DSR, so only readings that passed against zero can change verdict.",
+  "evaluations": [
+    {
+      "key": "h1_momentum_unfiltered",
+      "seq": 62,
+      "hypothesis_id": "h1_momentum_nested_wf",
+      "label": "H1 intraday momentum, frozen intraday_ret/h=12, unfiltered",
+      "source": "regenerated",
+      "stream": {
+        "n": 1132,
+        "ppy": 66.63384367445607,
+        "ppy_basis": "realised trades per year over the contiguous OOS window (17 x 365D), as momentum_nested_wf annualises",
+        "runner": "research.post.sweeps.momentum_dsr.fold_returns",
+        "source": "regenerated",
+        "timeframe": "H1",
+        "window": [
+          "2008-06-10",
+          "2025-06-06"
+        ]
+      },
+      "n_obs": 1132,
+      "sr_hat_per_obs": 0.07627330303514011,
+      "sr_hat_annualised_at_ppy": 0.622615584024277,
+      "skew": 0.9980276910137583,
+      "kurtosis": 11.426603481579408,
+      "benchmarks_per_obs": {
+        "zero": 0.0,
+        "d5": 0.07770773367333099,
+        "same_window": 0.05521901593600895,
+        "exposure": 0.024970569205545176
+      },
+      "benchmarks_annualised": {
+        "zero": 0.0,
+        "d5": 0.634324777595297,
+        "same_window": 0.4507503738287648,
+        "exposure": 0.20383364703855028
+      },
+      "same_window_buy_and_hold": {
+        "start": "2008-06-10",
+        "end": "2025-06-06",
+        "n_days": 4377,
+        "sharpe_annualised": 0.4507503738287648
+      },
+      "exposure_matched_always_long": {
+        "hold_bars": 12,
+        "n_holds": 99436,
+        "sharpe_per_trade": 0.024970569205545176
+      },
+      "var_sr_path": "estimated",
+      "rows": [
+        {
+          "n_trials": 1,
+          "decisive_n": false,
+          "logged_dsr": 0.9959400806723786,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.9959400806723786,
+            "d5": 0.48014823387816674,
+            "same_window": 0.7675138138052675,
+            "exposure": 0.9624986955381081
+          },
+          "passes": {
+            "zero": true,
+            "d5": false,
+            "same_window": false,
+            "exposure": true
+          },
+          "sr_star_selection": 0.0,
+          "var_sr": 0.0008302755325077024,
+          "var_sr_source": "estimated"
+        },
+        {
+          "n_trials": 21,
+          "decisive_n": false,
+          "logged_dsr": 0.7657554992912876,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.7657554992912876,
+            "d5": 0.024311226222459015,
+            "same_window": 0.11674393537277927,
+            "exposure": 0.44367525569859895
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.0553845254407288,
+          "var_sr": 0.0008302755325077024,
+          "var_sr_source": "estimated"
+        },
+        {
+          "n_trials": 126,
+          "decisive_n": true,
+          "logged_dsr": 0.5144277457742589,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.5144277457742589,
+            "d5": 0.003899448765414759,
+            "same_window": 0.03004115642534655,
+            "exposure": 0.2031494377155807
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.0752309994351548,
+          "var_sr": 0.0008302755325077024,
+          "var_sr_source": "estimated"
+        },
+        {
+          "n_trials": 276,
+          "decisive_n": false,
+          "logged_dsr": 0.4121051184338076,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.4121051184338076,
+            "d5": 0.001756004371369968,
+            "same_window": 0.01623829027889634,
+            "exposure": 0.13813639020927548
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.08267395899417401,
+          "var_sr": 0.0008302755325077024,
+          "var_sr_source": "estimated"
+        }
+      ],
+      "verdict_flips_at_any_n": {
+        "d5": [
+          1
+        ],
+        "same_window": [
+          1
+        ],
+        "exposure": []
+      },
+      "verdict_flips_at_decisive_n": false,
+      "verdict_then": "FAIL DSR 0.95 at every N except N=1 (seq=62)",
+      "decided_by_now": "seq=63 replaced DSR with a within-day permutation null; seq=65 killed on the nested stream, p=0.1045. The null mean is +0.011 per trade: it already carries gold's drift.",
+      "caveats": []
+    },
+    {
+      "key": "h1_momentum_lowvol",
+      "seq": 62,
+      "hypothesis_id": "h1_momentum_nested_wf",
+      "label": "H1 intraday momentum, low-volatility filter variant",
+      "source": "regenerated",
+      "stream": {
+        "n": 374,
+        "ppy": 22.015068493150682,
+        "ppy_basis": "realised trades per year over the contiguous OOS window (17 x 365D), as momentum_nested_wf annualises",
+        "runner": "research.post.sweeps.momentum_dsr.fold_returns",
+        "source": "regenerated",
+        "timeframe": "H1",
+        "window": [
+          "2008-06-10",
+          "2025-06-06"
+        ]
+      },
+      "n_obs": 374,
+      "sr_hat_per_obs": 0.11784741158084037,
+      "sr_hat_annualised_at_ppy": 0.5529426232247424,
+      "skew": 1.729430789857942,
+      "kurtosis": 12.439532836797701,
+      "benchmarks_per_obs": {
+        "zero": 0.0,
+        "d5": 0.13519220620981967,
+        "same_window": 0.09606740843204212,
+        "exposure": 0.024970569205545176
+      },
+      "benchmarks_annualised": {
+        "zero": 0.0,
+        "d5": 0.634324777595297,
+        "same_window": 0.4507503738287648,
+        "exposure": 0.1171624548618759
+      },
+      "same_window_buy_and_hold": {
+        "start": "2008-06-10",
+        "end": "2025-06-06",
+        "n_days": 4377,
+        "sharpe_annualised": 0.4507503738287648
+      },
+      "exposure_matched_always_long": {
+        "hold_bars": 12,
+        "n_holds": 99436,
+        "sharpe_per_trade": 0.024970569205545176
+      },
+      "var_sr_path": "estimated",
+      "rows": [
+        {
+          "n_trials": 1,
+          "decisive_n": false,
+          "logged_dsr": 0.9936020791347699,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.9936020791347699,
+            "d5": 0.35703690619798223,
+            "same_window": 0.6772703949902342,
+            "exposure": 0.9751143696943739
+          },
+          "passes": {
+            "zero": true,
+            "d5": false,
+            "same_window": false,
+            "exposure": true
+          },
+          "sr_star_selection": 0.0,
+          "var_sr": 0.002241043301409046,
+          "var_sr_source": "estimated"
+        },
+        {
+          "n_trials": 21,
+          "decisive_n": false,
+          "logged_dsr": 0.714743261814088,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.714743261814088,
+            "d5": 0.011054317931415314,
+            "same_window": 0.07186697354699817,
+            "exposure": 0.5158811628474823
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.09099183909842998,
+          "var_sr": 0.002241043301409046,
+          "var_sr_source": "estimated"
+        },
+        {
+          "n_trials": 126,
+          "decisive_n": true,
+          "logged_dsr": 0.4516588263883289,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.4516588263883289,
+            "d5": 0.0014541713382275057,
+            "same_window": 0.015746256772705025,
+            "exposure": 0.2581859411631891
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.1235978270346195,
+          "var_sr": 0.002241043301409046,
+          "var_sr_source": "estimated"
+        },
+        {
+          "n_trials": 276,
+          "decisive_n": false,
+          "logged_dsr": 0.3520553135540311,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.3520553135540311,
+            "d5": 0.0006070023323261897,
+            "same_window": 0.007995971206021857,
+            "exposure": 0.18213619659268893
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.13582594622894523,
+          "var_sr": 0.002241043301409046,
+          "var_sr_source": "estimated"
+        }
+      ],
+      "verdict_flips_at_any_n": {
+        "d5": [
+          1
+        ],
+        "same_window": [
+          1
+        ],
+        "exposure": []
+      },
+      "verdict_flips_at_decisive_n": false,
+      "verdict_then": "FAIL DSR 0.95 at every N except N=1 (seq=62)",
+      "decided_by_now": "Same as unfiltered; the gate itself was later killed on its own null (seq=71, advantage p=0.0647) and failed replication (seq=74).",
+      "caveats": []
+    },
+    {
+      "key": "cnk_momentum_wf",
+      "seq": 36,
+      "hypothesis_id": "crest_n_keel_momentum",
+      "label": "crest_n_keel MOMENTUM walk-forward (TradingView Config A)",
+      "source": "regenerated",
+      "stream": {
+        "distinct_entries": 1970,
+        "harness_oos_profit_factor": 1.2640361704731486,
+        "harness_oos_sharpe": 1.1998687785021103,
+        "n": 3829,
+        "n_folds": 33,
+        "ppy": 116.10977584059775,
+        "ppy_basis": "trades per 365D test window (n / n_folds), the rate the seq=36 DSR used (int 116)",
+        "runner": "examples/run_cnk_momentum.py path (run_walk_forward, CostScenario.CONSERVATIVE)",
+        "source": "regenerated",
+        "timeframe": "H1",
+        "var_sr_basis": "harness twin: Var(IS Sharpes, annualised) / 116",
+        "var_sr_per_obs": 0.002898890803036882,
+        "window": [
+          "2008-06-10",
+          "2025-03-18"
+        ]
+      },
+      "n_obs": 3829,
+      "sr_hat_per_obs": 0.07928956069395227,
+      "sr_hat_annualised_at_ppy": 0.8543786847759244,
+      "skew": 2.1370013089345457,
+      "kurtosis": 12.068727075788095,
+      "benchmarks_per_obs": {
+        "zero": 0.0,
+        "d5": 0.05886772908667648,
+        "same_window": 0.03987595303492755,
+        "exposure": 0.031773631992950004
+      },
+      "benchmarks_annualised": {
+        "zero": 0.0,
+        "d5": 0.634324777595297,
+        "same_window": 0.42968032626225067,
+        "exposure": 0.3423743765900502
+      },
+      "same_window_buy_and_hold": {
+        "start": "2008-06-10",
+        "end": "2025-03-18",
+        "n_days": 4320,
+        "sharpe_annualised": 0.42968032626225067
+      },
+      "exposure_matched_always_long": {
+        "hold_bars": 22,
+        "n_holds": 98118,
+        "sharpe_per_trade": 0.031773631992950004
+      },
+      "var_sr_path": "override (harness twin)",
+      "rows": [
+        {
+          "n_trials": 1,
+          "decisive_n": false,
+          "logged_dsr": 1.0,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.9999999501866697,
+            "d5": 0.9149880291543174,
+            "same_window": 0.9959535525873688,
+            "exposure": 0.9992949070523239
+          },
+          "passes": {
+            "zero": true,
+            "d5": false,
+            "same_window": true,
+            "exposure": true
+          },
+          "sr_star_selection": 0.0,
+          "var_sr": 0.002898890803036882,
+          "var_sr_source": "override"
+        },
+        {
+          "n_trials": 20,
+          "decisive_n": true,
+          "logged_dsr": 0.061,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.06074883467730835,
+            "d5": 1.858514064867478e-08,
+            "same_window": 1.1801891540597076e-05,
+            "exposure": 0.0001150883673206593
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.10233667899314988,
+          "var_sr": 0.002898890803036882,
+          "var_sr_source": "override"
+        }
+      ],
+      "verdict_flips_at_any_n": {
+        "d5": [
+          1
+        ],
+        "same_window": [],
+        "exposure": []
+      },
+      "verdict_flips_at_decisive_n": false,
+      "verdict_then": "FAIL (DSR only); PASS at num_trials=1 (seq=36)",
+      "decided_by_now": "seq=64: the stream is contaminated -- parameters were selected on full history. The family died on seq=49's nested pool control (NK2 p=0.430), not on DSR.",
+      "caveats": [
+        "Fold geometry 1460D/365D/180D overlaps test windows, so the 3829-trade stream holds 1970 distinct trades counted ~twice. The logged OOS Sharpe 1.20 annualises the duplicated stream over its calendar span (~229/yr); at the true rate it is ~0.86.",
+        "Regenerated under CostScenario.CONSERVATIVE (7.0 USD/lot, 0.22 USD/oz), the cost model in force at seq=36. The current default (MEASURED) gives OOS Sharpe 1.317 and does not reproduce."
+      ]
+    },
+    {
+      "key": "zlch_sweep_leader",
+      "seq": 40,
+      "hypothesis_id": "zlch_param_sweep",
+      "label": "zerolag_chandelier sweep leader, H4 atr8 x2.0 long, IN-SAMPLE",
+      "source": "regenerated",
+      "stream": {
+        "config": {
+          "atr_mult": 2.0,
+          "atr_period": 8,
+          "bias_tf": "none",
+          "direction": "long",
+          "min_atr": 1.0,
+          "zlsma_len": 0
+        },
+        "n": 890,
+        "ppy": 41.16926291793313,
+        "ppy_basis": "the sweep's trades_per_year (n / first-entry..last-exit span); the seq=40 DSR displayed at a rounded 41",
+        "runner": "research.post.sweeps.deepdive._build (seq=40 leader row)",
+        "source": "regenerated",
+        "timeframe": "H4",
+        "window": [
+          "2004-06-11",
+          "2026-01-30"
+        ]
+      },
+      "n_obs": 890,
+      "sr_hat_per_obs": 0.12986737237075668,
+      "sr_hat_annualised_at_ppy": 0.8332716365219802,
+      "skew": 3.008834316749334,
+      "kurtosis": 21.028704582268617,
+      "benchmarks_per_obs": {
+        "zero": 0.0,
+        "d5": 0.09886102980752648,
+        "same_window": 0.09886102980752648,
+        "exposure": 0.0862663964643966
+      },
+      "benchmarks_annualised": {
+        "zero": 0.0,
+        "d5": 0.634324777595297,
+        "same_window": 0.634324777595297,
+        "exposure": 0.553513481073005
+      },
+      "same_window_buy_and_hold": {
+        "start": "2004-06-14",
+        "end": "2025-12-31",
+        "n_days": 5515,
+        "sharpe_annualised": 0.634324777595297
+      },
+      "exposure_matched_always_long": {
+        "hold_bars": 19,
+        "n_holds": 32936,
+        "sharpe_per_trade": 0.0862663964643966
+      },
+      "var_sr_path": "estimated",
+      "rows": [
+        {
+          "n_trials": 15,
+          "decisive_n": false,
+          "logged_dsr": 0.9980013712709273,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.9980013712709273,
+            "d5": 0.2544017380704532,
+            "same_window": 0.2544017380704532,
+            "exposure": 0.4168991942726837
+          },
+          "passes": {
+            "zero": true,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.0494624594263545,
+          "var_sr": 0.000780314167544652,
+          "var_sr_source": "estimated"
+        },
+        {
+          "n_trials": 18480,
+          "decisive_n": true,
+          "logged_dsr": 0.7391681696382162,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.7391681696382162,
+            "d5": 0.0018759755021063862,
+            "same_window": 0.0018759755021063862,
+            "exposure": 0.007194001778122239
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.11196767258748849,
+          "var_sr": 0.000780314167544652,
+          "var_sr_source": "estimated"
+        }
+      ],
+      "verdict_flips_at_any_n": {
+        "d5": [
+          15
+        ],
+        "same_window": [
+          15
+        ],
+        "exposure": [
+          15
+        ]
+      },
+      "verdict_flips_at_decisive_n": false,
+      "verdict_then": "K3 FAIL at N=18,480; 0.998 at N=15 noted as the wrong N",
+      "decided_by_now": "seq=68 nested walk-forward: ZK1 and ZK2 fail (pool p=1.0000). Refuted on the selection control.",
+      "caveats": [
+        "In-sample full-history leader of an 18,480-config grid; a sweep leader is not a candidate (seq=49, seq=68)."
+      ]
+    },
+    {
+      "key": "cnk_sweep_leader",
+      "seq": 45,
+      "hypothesis_id": "cnk_param_sweep",
+      "label": "crest_n_keel sweep leader, H4 momentum long, IN-SAMPLE",
+      "source": "read",
+      "stream": {
+        "from": "QH_DATA_DIR/crest_n_keel/cnk_leader_returns.csv (px_return)",
+        "n": 2141,
+        "ppy": 99.03751899696049,
+        "ppy_basis": "n / first-entry..last-exit span, as cnk_engine.metrics",
+        "source": "read",
+        "source_sha256": "ab273d4d1161d2a4aca999acdd8b48c6da3604cc321ec9343f7e56f317bcf5fc",
+        "timeframe": "H4",
+        "window": [
+          "2004-06-11",
+          "2026-01-30"
+        ]
+      },
+      "n_obs": 2141,
+      "sr_hat_per_obs": 0.09897372668853684,
+      "sr_hat_annualised_at_ppy": 0.9849627340280688,
+      "skew": 3.916127053865383,
+      "kurtosis": 42.23236558990772,
+      "benchmarks_per_obs": {
+        "zero": 0.0,
+        "d5": 0.06373996193006704,
+        "same_window": 0.06373996193006704,
+        "exposure": 0.04921564429465981
+      },
+      "benchmarks_annualised": {
+        "zero": 0.0,
+        "d5": 0.634324777595297,
+        "same_window": 0.634324777595297,
+        "exposure": 0.48978226023528637
+      },
+      "same_window_buy_and_hold": {
+        "start": "2004-06-14",
+        "end": "2025-12-31",
+        "n_days": 5515,
+        "sharpe_annualised": 0.634324777595297
+      },
+      "exposure_matched_always_long": {
+        "hold_bars": 6,
+        "n_holds": 32949,
+        "sharpe_per_trade": 0.04921564429465981
+      },
+      "var_sr_path": "estimated",
+      "rows": [
+        {
+          "n_trials": 17,
+          "decisive_n": false,
+          "logged_dsr": 0.9998,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.9998363870048761,
+            "d5": 0.5404917987772871,
+            "same_window": 0.5404917987772871,
+            "exposure": 0.8151872619532227
+          },
+          "passes": {
+            "zero": true,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.033377418405766864,
+          "var_sr": 0.00033335621416428547,
+          "var_sr_source": "estimated"
+        },
+        {
+          "n_trials": 119917,
+          "decisive_n": true,
+          "logged_dsr": 0.8391,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.8390723977730852,
+            "d5": 0.006202499909336745,
+            "same_window": 0.006202499909336745,
+            "exposure": 0.04410591681423004
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.08088634528016063,
+          "var_sr": 0.00033335621416428547,
+          "var_sr_source": "estimated"
+        }
+      ],
+      "verdict_flips_at_any_n": {
+        "d5": [
+          17
+        ],
+        "same_window": [
+          17
+        ],
+        "exposure": [
+          17
+        ]
+      },
+      "verdict_flips_at_decisive_n": false,
+      "verdict_then": "K3 FAIL at N=119,917; 0.9998 at N=17 noted as the wrong N",
+      "decided_by_now": "seq=49 nested walk-forward: NK2 fails (p=0.430). Selection carries no OOS information.",
+      "caveats": [
+        "In-sample full-history leader; not a candidate."
+      ]
+    },
+    {
+      "key": "flood_tide_median_config",
+      "seq": 56,
+      "hypothesis_id": "flood_tide_h1",
+      "label": "flood_tide median-ranked config, bracket atr21 sl1 tp2 long, IN-SAMPLE",
+      "source": "regenerated",
+      "stream": {
+        "config": {
+          "atr_period": 21,
+          "direction": "long",
+          "entry": [
+            20,
+            0.3,
+            200
+          ],
+          "exit": "bracket",
+          "min_atr": 0.0,
+          "sl_mult": 1.0,
+          "tp_mult": 2.0
+        },
+        "n": 2094,
+        "ppy": 97.20812150482969,
+        "ppy_basis": "the engine's trades_per_year (n / first-entry..last-exit span), as the sweep annualised",
+        "runner": "research.post.sweeps.run_signal_sweep (cnk_engine.simulate)",
+        "source": "regenerated",
+        "timeframe": "H1",
+        "window": [
+          "2004-06-11",
+          "2025-12-31"
+        ]
+      },
+      "n_obs": 2094,
+      "sr_hat_per_obs": 0.03360561699079747,
+      "sr_hat_annualised_at_ppy": 0.3313318220029491,
+      "skew": 9.43087532884569,
+      "kurtosis": 246.46399593102063,
+      "benchmarks_per_obs": {
+        "zero": 0.0,
+        "d5": 0.06433693991351849,
+        "same_window": 0.06433693991351849,
+        "exposure": 0.019287672264457614
+      },
+      "benchmarks_annualised": {
+        "zero": 0.0,
+        "d5": 0.634324777595297,
+        "same_window": 0.634324777595297,
+        "exposure": 0.1901652213476244
+      },
+      "same_window_buy_and_hold": {
+        "start": "2004-06-14",
+        "end": "2025-12-31",
+        "n_days": 5515,
+        "sharpe_annualised": 0.634324777595297
+      },
+      "exposure_matched_always_long": {
+        "hold_bars": 4,
+        "n_holds": 124860,
+        "sharpe_per_trade": 0.019287672264457614
+      },
+      "var_sr_path": "estimated",
+      "rows": [
+        {
+          "n_trials": 1,
+          "decisive_n": false,
+          "logged_dsr": 0.9618420957333165,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.9618420957333165,
+            "d5": 0.052522273350445126,
+            "same_window": 0.052522273350445126,
+            "exposure": 0.7749286447271169
+          },
+          "passes": {
+            "zero": true,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.0,
+          "var_sr": 0.00035947087399802204,
+          "var_sr_source": "estimated"
+        },
+        {
+          "n_trials": 19,
+          "decisive_n": false,
+          "logged_dsr": 0.4579731462762655,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.4579731462762655,
+            "d5": 0.00023359924370303098,
+            "same_window": 0.00023359924370303098,
+            "exposure": 0.1307529861488616
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.03560665037055615,
+          "var_sr": 0.00035947087399802204,
+          "var_sr_source": "estimated"
+        },
+        {
+          "n_trials": 3744,
+          "decisive_n": true,
+          "logged_dsr": 0.03282083511263301,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.03282083511263301,
+            "d5": 8.284513280942818e-08,
+            "same_window": 8.284513280942818e-08,
+            "exposure": 0.002130525721199983
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false,
+            "exposure": false
+          },
+          "sr_star_selection": 0.06850785455797918,
+          "var_sr": 0.00035947087399802204,
+          "var_sr_source": "estimated"
+        }
+      ],
+      "verdict_flips_at_any_n": {
+        "d5": [
+          1
+        ],
+        "same_window": [
+          1
+        ],
+        "exposure": [
+          1
+        ]
+      },
+      "verdict_flips_at_decisive_n": false,
+      "verdict_then": "FAIL at grid N (seq=56); verdict left OPEN",
+      "decided_by_now": "Shelving at seq=32/34 rests on the regime-filtered E-Ratio null; the median config already beat its drift-matched random-entry null (p=0.000, null mean -0.356).",
+      "caveats": [
+        "The N=1 reading (0.9618) is in the seq=56 artifact but not its log metrics, so seq=94's list of zero-benchmark passes omits it."
+      ]
+    },
+    {
+      "key": "crest_n_keel_wf_24h",
+      "seq": 29,
+      "hypothesis_id": "crest_n_keel",
+      "label": "crest_n_keel pullback walk-forward, 24/7",
+      "source": "read",
+      "stream": {
+        "from": "QH_DATA_DIR/crest_n_keel/crest_n_keel_oos_returns_24h.csv",
+        "n": 323,
+        "ppy": 9.794582814445828,
+        "ppy_basis": "trades per 365D test window (n / 33 folds)",
+        "source": "read",
+        "source_sha256": "d1308073dcda25d3bda75ab34e77bcf8892e50a4e639a76950b054627b37684f",
+        "timeframe": "H1",
+        "var_sr_basis": "harness twin: 0.103499 / 9 (recompute_dsr.py)",
+        "var_sr_per_obs": 0.011499888888888888,
+        "window_from": "cnk_momentum_wf (identical 1460D/365D/180D geometry)"
+      },
+      "n_obs": 323,
+      "sr_hat_per_obs": 0.060948379424756116,
+      "sr_hat_annualised_at_ppy": 0.19074586576941058,
+      "skew": 1.226581290183785,
+      "kurtosis": 5.020684235852748,
+      "benchmarks_per_obs": {
+        "zero": 0.0,
+        "d5": 0.20268364437391742,
+        "same_window": 0.13729429705199098
+      },
+      "benchmarks_annualised": {
+        "zero": 0.0,
+        "d5": 0.634324777595297,
+        "same_window": 0.42968032626225067
+      },
+      "same_window_buy_and_hold": {
+        "start": "2008-06-10",
+        "end": "2025-03-18",
+        "n_days": 4320,
+        "sharpe_annualised": 0.42968032626225067
+      },
+      "exposure_matched_always_long": null,
+      "var_sr_path": "override (harness twin)",
+      "rows": [
+        {
+          "n_trials": 5,
+          "decisive_n": true,
+          "logged_dsr": 0.106,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.10632459872411293,
+            "d5": 2.586068100773886e-07,
+            "same_window": 7.164587228580821e-05
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false
+          },
+          "sr_star_selection": 0.12789084085156582,
+          "var_sr": 0.011499888888888888,
+          "var_sr_source": "override"
+        }
+      ],
+      "verdict_flips_at_any_n": {
+        "d5": [],
+        "same_window": []
+      },
+      "verdict_flips_at_decisive_n": false,
+      "verdict_then": "FAIL DSR (0.106) and PF (1.15) (seq=29)",
+      "decided_by_now": "seq=45 P7: deployed region median Sharpe -0.074; seq=49 NK2 kills the family.",
+      "caveats": [
+        "Same overlapping fold geometry as seq=36 (duplicated trades). N=5 and the twin's Var(SR) are what reproduce the logged figure (data/crest_n_keel/recompute_dsr.py)."
+      ]
+    },
+    {
+      "key": "crest_n_keel_wf_session",
+      "seq": 29,
+      "hypothesis_id": "crest_n_keel",
+      "label": "crest_n_keel pullback walk-forward, 08-17 session (mislabelled tz)",
+      "source": "read",
+      "stream": {
+        "from": "QH_DATA_DIR/crest_n_keel/crest_n_keel_oos_returns_session.csv",
+        "n": 146,
+        "ppy": 4.427272727272727,
+        "ppy_basis": "trades per 365D test window (n / 33 folds)",
+        "source": "read",
+        "source_sha256": "0f9452e232c94b9b4437ebc99b3fb8babcddcea0d5ecb2c1f441892abe8e5fd3",
+        "timeframe": "H1",
+        "var_sr_basis": "harness twin: 0.21937 / 4 (recompute_dsr.py)",
+        "var_sr_per_obs": 0.0548425,
+        "window_from": "cnk_momentum_wf (identical 1460D/365D/180D geometry)"
+      },
+      "n_obs": 146,
+      "sr_hat_per_obs": 0.13795702057162623,
+      "sr_hat_annualised_at_ppy": 0.2902765444549082,
+      "skew": 1.7335444829066184,
+      "kurtosis": 8.195535748018653,
+      "benchmarks_per_obs": {
+        "zero": 0.0,
+        "d5": 0.3014696091140786,
+        "same_window": 0.20421015318581
+      },
+      "benchmarks_annualised": {
+        "zero": 0.0,
+        "d5": 0.634324777595297,
+        "same_window": 0.42968032626225067
+      },
+      "same_window_buy_and_hold": {
+        "start": "2008-06-10",
+        "end": "2025-03-18",
+        "n_days": 4320,
+        "sharpe_annualised": 0.42968032626225067
+      },
+      "exposure_matched_always_long": null,
+      "var_sr_path": "override (harness twin)",
+      "rows": [
+        {
+          "n_trials": 5,
+          "decisive_n": true,
+          "logged_dsr": 0.028,
+          "reproduced": true,
+          "dsr": {
+            "zero": 0.028157294747164774,
+            "d5": 1.1171602531945268e-09,
+            "same_window": 1.5330141568403732e-06
+          },
+          "passes": {
+            "zero": false,
+            "d5": false,
+            "same_window": false
+          },
+          "sr_star_selection": 0.279287335412169,
+          "var_sr": 0.0548425,
+          "var_sr_source": "override"
+        }
+      ],
+      "verdict_flips_at_any_n": {
+        "d5": [],
+        "same_window": []
+      },
+      "verdict_flips_at_decisive_n": false,
+      "verdict_then": "FAIL DSR (0.028) (seq=29)",
+      "decided_by_now": "seq=52: the session filter read broker time as UTC; on true UTC the arm is net-losing (-0.239).",
+      "caveats": [
+        "The stream itself is invalid (seq=52); carried only so every seq=29 DSR has a row."
+      ]
+    }
+  ],
+  "moot": [
+    {
+      "seq": "30, 51",
+      "hypothesis_id": "asqs / asqs_param_sweep",
+      "decided_by": "OOS Sharpe -1.06 (net-losing); AK4 grid median negative at every timeframe",
+      "why_moot": "Negative raw Sharpe; DSR was ~0 against zero already and a positive SR* only lowers it."
+    },
+    {
+      "seq": "43",
+      "hypothesis_id": "ebb_n_flow_sweep",
+      "decided_by": "K1: leader loses to matched random entry, p=1.000",
+      "why_moot": "Killed on the drift-matched control; DSR failed at every N including the log floor (0.8008 at N=16)."
+    },
+    {
+      "seq": "46",
+      "hypothesis_id": "cnk_param_sweep (walk-forward)",
+      "decided_by": "Contaminated stream (seq=64); family killed by seq=49 NK2",
+      "why_moot": "DSR 0.0 at grid N, 0.042/0.359 at N=17 -- failed against zero, so cannot change."
+    },
+    {
+      "seq": "49",
+      "hypothesis_id": "cnk_nested_walk_forward",
+      "decided_by": "NK2 pool control, p=0.430",
+      "why_moot": "Selection control compares configs with each other; drift is common to both arms."
+    },
+    {
+      "seq": "65",
+      "hypothesis_id": "h1_momentum_nested_wf (final verdict)",
+      "decided_by": "Within-day permutation null, nested stream p=0.1045",
+      "why_moot": "The null re-runs the long-only pipeline on permuted bars, so its mean (+0.011 fixed, +0.005 nested) is the drift benchmark. The seq=62 DSR is re-priced above for completeness only."
+    },
+    {
+      "seq": "68",
+      "hypothesis_id": "zlch_nested_walk_forward",
+      "decided_by": "ZK1 mean OOS +0.012; ZK2 pool control p=1.0000",
+      "why_moot": "ZK1 is a Sharpe-vs-zero test, but it FAILED against zero; a higher bar cannot rescue it. ZK2 is relative."
+    },
+    {
+      "seq": "70-72",
+      "hypothesis_id": "state_gate_nested_wf (low-vol gate)",
+      "decided_by": "V2 pool control (p=0.0384 worse than chance); advantage stream null p=0.0647",
+      "why_moot": "The advantage stream is gated minus ungated on the same long-only signal, so drift cancels; the null mean (+0.0158) prices the residual."
+    },
+    {
+      "seq": "74, 131",
+      "hypothesis_id": "vol_gate_cross_instrument",
+      "decided_by": "Advantage stream vs own permutation null on XAG/US500",
+      "why_moot": "Not XAUUSD-decided; per-instrument nulls carry each drift."
+    },
+    {
+      "seq": "32, 34",
+      "hypothesis_id": "flood_tide_h1 / _iter2 (shelving)",
+      "decided_by": "Regime-filtered E-Ratio null",
+      "why_moot": "Entry-only MFE/MAE null, not a Sharpe. The seq=56 DSR is re-priced above."
+    },
+    {
+      "seq": "38",
+      "hypothesis_id": "regime_align_h1",
+      "decided_by": "K2: edge explained by the bias-eligible drift null",
+      "why_moot": "Already benchmarked against drift."
+    },
+    {
+      "seq": "54, 55",
+      "hypothesis_id": "avwap_sweep_reclaim / multibar",
+      "decided_by": "Drift-matched random-entry control; surface median",
+      "why_moot": "No DSR in the verdict."
+    },
+    {
+      "seq": "20",
+      "hypothesis_id": "zerolag_chandelier (entry)",
+      "decided_by": "E-Ratio 0.98, p=0.772 (hard gate)",
+      "why_moot": "Entry-only statistic."
+    },
+    {
+      "seq": "48, 75, 80",
+      "hypothesis_id": "asian_session_fade, gold_dxy_divergence, gold_real_yields",
+      "decided_by": "Gross USD/oz vs round-trip cost; lead-lag; rule-3 excess over always-long (seq=80)",
+      "why_moot": "Economic and prerequisite tests, not Sharpe; seq=80 already measured against always-long."
+    },
+    {
+      "seq": "58",
+      "hypothesis_id": "feature_edge_screen",
+      "decided_by": "Top-minus-bottom decile spread vs cost",
+      "why_moot": "A long-short spread nets drift out."
+    },
+    {
+      "seq": "78",
+      "hypothesis_id": "ensemble_vs_selection",
+      "decided_by": "E1 total return, sign test",
+      "why_moot": "Methodology test, decided in dollars, relative."
+    }
+  ],
+  "log_writes": 0
+}

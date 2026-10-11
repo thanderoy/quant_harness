@@ -22,7 +22,9 @@ research/
 │   ├── scripts/          runnable edge reports (write to pre/artifacts/)
 │   └── artifacts/        signal-edge JSON outputs
 ├── post/             ← POST-backtest validation
-│   └── dsr.py            Deflated Sharpe Ratio (consumes harness returns + trial_count)
+│   ├── dsr.py            Deflated Sharpe Ratio (consumes harness returns + trial_count)
+│   └── sr_star_reeval.py the shelved XAUUSD DSRs re-priced against SR* (Phase 2b);
+│                         streams in artifacts/sr_star_streams/, table in artifacts/sr_star_reeval.json
 ├── data/             ← INPUTS + harness outputs (not code)
 │   ├── XAUUSD_{M5,M15,H1,H4,D1}.csv   OHLCV price series the pre/ edge scripts read
 │   └── crest_n_keel/
@@ -132,4 +134,5 @@ research/.venv/bin/python -m pytest research/tests        # full suite
 research/.venv/bin/python -m research.seed_log            # inspect log (dry-run; --commit to write)
 research/.venv/bin/python -m research.pre.scripts.run_zlch_edge   # an edge report
 research/.venv/bin/python research/data/crest_n_keel/recompute_dsr.py   # recompute crest_n_keel DSR
+python -m research.post.sr_star_reeval                    # SR* re-evaluation table from saved streams
 ```
