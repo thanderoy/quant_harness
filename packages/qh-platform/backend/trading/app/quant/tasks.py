@@ -7,6 +7,7 @@ from app.quant.strategies.forexero.tasks import (
     execute_forexero_trade,
     run_forexero_listener,
 )
+from app.quant.canary import run_canary
 from app.adapters.mt5_api import MT5APIClient
 from app.config import settings
 from app.trades.models import Trade
@@ -17,6 +18,7 @@ LOGGER = logging.getLogger(__name__)
 __all__ = [
     "execute_forexero_trade",
     "run_forexero_listener",
+    "run_canary",
     "sync_trades",
     "sync_account_status",
 ]
