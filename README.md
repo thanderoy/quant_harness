@@ -192,6 +192,25 @@ breakdown = cost.trade_cost(
 **Override swap rates with current values from MT5 Symbol Specifications**
 for production accuracy. Pepperstone updates these weekly.
 
+### Execution cost from live fills
+
+Slip measured from the account's real deals against the tick quote at each
+fill (GET-only; the per-fill dump is gitignored, only the aggregate is
+committed as `phase0/execution_cost_<date>.json`):
+
+```bash
+# On a host that can reach mt5-api
+python -m phase0.collectors.execution_fills --expect-server Pepperstone \
+  --date-from 2024-01-01T00:00:00 --date-to 2026-10-12T00:00:00 --out-dir <dir>
+
+# Reduce to per-symbol, per-side aggregates (M5 bars for the bar cross-check)
+cd packages/qh-research && python -m research.datasets.execution_cost \
+  <dir>/execution_fills_raw_<UTC>.json --bar-dir <dir> --out <artifact>
+```
+
+`SlipModel()` still defaults to 1 tick `HAND_ENTERED`; the measurement is
+asked for by name with `research.datasets.cost_model.measured_slip_model(symbol)`.
+
 ### Walk-forward splits with exclusion
 
 ```python

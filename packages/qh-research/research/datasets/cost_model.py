@@ -35,6 +35,8 @@ from enum import Enum
 from datetime import datetime
 from typing import Optional
 
+from resources.execution import SlipModel
+
 
 # -- Constants from Pepperstone published docs -------------------------------
 #
@@ -154,6 +156,173 @@ COMMISSION_PROVENANCE = {
 # under-cost.
 PEPPERSTONE_XAUUSD_SPREAD_USD_PER_OZ_TYPICAL = 0.22
 PEPPERSTONE_XAUUSD_SPREAD_USD_PER_OZ_NEWS = 0.50    # rough NFP/FOMC estimate
+
+# -- Slip / execution cost per fill -----------------------------------------
+#
+# Slip was the last cost input with no source: ``SlipModel`` charges one tick,
+# provenance HAND_ENTERED. Measured 2026-10-11 from the same account and the
+# same 358 trade deals as COMMISSION_MEASURED, using the tick quotes around
+# each fill (phase0.collectors.execution_fills -> research.datasets.
+# execution_cost; aggregate artifact phase0/execution_cost_20261011.json).
+#
+# Method. A deal carries the fill price but not the requested price, so classic
+# slip (fill - requested) is unavailable. Each fill is compared instead with
+# the tick quote around it, signed by side (positive = adverse):
+#
+#   slip_vs_touch  = side * (fill - touch)      ask for a buy, bid for a sell
+#   cost_vs_mid    = side * (fill - mid)        half spread + slip, per side
+#
+# against two quotes that bracket the fill, because /api/v1/ticks resolves time
+# only to the second: ``same_second`` (last tick in the fill's own second —
+# closest in time, may postdate the fill) and ``pre`` (last tick in a strictly
+# earlier second — unambiguously before it, ~1 s stale at the median).
+#
+# Entry-conditional (R7): IN legs only, 179 of the 358. Exits (TP/SL/stop-out
+# fills) are a different mechanism and are in the artifact, not here.
+#
+# Which quote is primary. ``same_second`` — chosen AFTER seeing both, for a
+# mechanical reason: on XAUUSD the ``pre`` estimator differs by who sent the
+# order (EXPERT median -27 ticks, MOBILE 0), which a broker execution property
+# cannot do. It is 1-2 s of price drift correlated with the entry direction of
+# the strategies that traded, not slip. ``pre`` is kept as the bracket.
+#
+# Clock alignment, verified not assumed: deal ``time_msc`` and tick/bar times
+# are compared with no offset. 98.5% of fills lie inside the admitted M5 bar
+# containing them at offset 0, against 7-19% at every offset in +/-1..3 h; and
+# the XAUUSD same-second slip has median -0.5 ticks, p75 +1 tick, which a
+# mis-clocked quote could not produce.
+#
+# What it measures and what it does not:
+#   - Slip past the touch at FILL time. Drift between the request and the fill
+#     is in it only inside the one-second tick resolution. Latency before that
+#     is not measured, because the request price is not recorded anywhere.
+#   - The M5 fill-vs-bar cross-check (bid bars; a buy carries the full spread
+#     against a bid bar, a sell none) cannot separate spread from slip at all
+#     and is dominated by intrabar drift; fills sit mid-range (median range
+#     position 0.44-0.69). It agrees nothing is grossly wrong and is too noisy
+#     to supply a number.
+#   - Small samples. FX: 14-21 entries per symbol, 2-7 of them buys, all
+#     from 2025-02..2026-04, lots <= 0.03. Nothing here speaks to size impact.
+#
+# Finding, stated without interpretation:
+#   - XAUUSD: slip past the same-second touch is ~0 (p50 -0.5 ticks, p75 +1,
+#     p90 +5.3; n=108 of 113 entries had a same-second tick). Per-side cost vs
+#     mid p50 0.075 USD/oz (7.5 ticks), p90 0.187 — about half the spread at
+#     the fills (p50 0.16). The 1-tick HAND_ENTERED value sits between the
+#     measured p50 and p75.
+#   - FX (EURUSD, GBPUSD, AUDUSD, NZDUSD): fills sit a near-constant ~5 ticks
+#     (0.5 pip) beyond the same-second touch, on both sides, on all four pairs,
+#     while the tick-feed spread at the fills is 0-2 ticks. Per-side cost vs mid
+#     p50 5-6 ticks. The tick stream does not show this cost; only the fills do.
+#
+# No default moves. SlipModel() is still 1 tick, HAND_ENTERED:
+#   - XAUUSD: the measured median (0 after SlipModel's floor) is BELOW 1 tick,
+#     so adopting it lowers every REALISTIC cost — the flattering direction,
+#     which is a choice for the user, not a side effect of a measurement.
+#   - FX: the measured ~5 ticks is ABOVE 1 tick, but every FX symbol has no
+#     measured spread (resources.execution.spreads refuses them), so REALISTIC
+#     cannot run on FX and the slip value changes nothing today. The
+#     measurement also says an FX spread taken from the tick feed would miss
+#     the ~5 tick markup; spread and slip are not separable from it.
+# Use ``measured_slip_model(symbol)`` to ask for the measured value by name.
+EXECUTION_COST_MEASURED = {
+    "provenance": "MEASURED",
+    "source": ("/api/v1/deals + /api/v1/ticks on PepperstoneKE-MT5-Live01 "
+               "(GET only)"),
+    "artifact": "phase0/execution_cost_20261011.json",
+    "measured_on": "2026-10-11",
+    "n_trade_deals": 358,
+    "n_entries": 179,
+    "span": "2025-02-10 .. 2026-04-13",
+    "largest_lot": 0.03,
+    "estimator": "entry-conditional (IN legs only, R7)",
+    "method": ("fill vs tick quote, signed by side; primary quote = last tick "
+               "in the fill's own second, bracket = last tick strictly before"),
+    "cross_check": "fill vs admitted M5 bid bar (noisy; not a source)",
+    "caveat": ("measured against the quote at fill time, not the requested "
+               "price; request-to-fill latency beyond 1 s is not captured; "
+               "the M5 fill-vs-bar cross-check cannot separate spread from "
+               "slip"),
+    #: Ticks. ``slip_vs_touch`` is primary (same-second quote); ``_pre`` is
+    #: the bracket. ``cost_vs_mid_per_side_price`` is in price units.
+    "per_symbol": {
+        "XAUUSD": {
+            "tick_size": 0.01, "n_entries": 113, "n_same_second": 108,
+            "slip_vs_touch": {"p50": -0.5, "p75": 1.0, "p90": 5.3},
+            "slip_vs_touch_pre": {"p50": -6.0, "p75": 0.0, "p90": 10.8},
+            "cost_vs_mid_per_side_price": {"p50": 0.075, "p75": 0.1025,
+                                           "p90": 0.1865},
+            "spread_at_fill_price_p50": 0.16,
+        },
+        "EURUSD": {
+            "tick_size": 1e-05, "n_entries": 21, "n_same_second": 20,
+            "slip_vs_touch": {"p50": 5.0, "p75": 6.25, "p90": 8.2},
+            "slip_vs_touch_pre": {"p50": 3.0, "p75": 5.0, "p90": 5.0},
+            "cost_vs_mid_per_side_price": {"p50": 5e-05, "p75": 7.125e-05,
+                                           "p90": 8.2e-05},
+            "spread_at_fill_price_p50": 0.0,
+        },
+        "GBPUSD": {
+            "tick_size": 1e-05, "n_entries": 16, "n_same_second": 16,
+            "slip_vs_touch": {"p50": 5.0, "p75": 5.25, "p90": 6.5},
+            "slip_vs_touch_pre": {"p50": 1.0, "p75": 3.0, "p90": 4.5},
+            "cost_vs_mid_per_side_price": {"p50": 5.75e-05, "p75": 6.625e-05,
+                                           "p90": 7.5e-05},
+            "spread_at_fill_price_p50": 2e-05,
+        },
+        "AUDUSD": {
+            "tick_size": 1e-05, "n_entries": 15, "n_same_second": 15,
+            "slip_vs_touch": {"p50": 5.0, "p75": 6.5, "p90": 7.6},
+            "slip_vs_touch_pre": {"p50": 1.0, "p75": 3.5, "p90": 7.4},
+            "cost_vs_mid_per_side_price": {"p50": 5.5e-05, "p75": 6.75e-05,
+                                           "p90": 8.5e-05},
+            "spread_at_fill_price_p50": 1e-05,
+        },
+        "NZDUSD": {
+            "tick_size": 1e-05, "n_entries": 14, "n_same_second": 14,
+            "slip_vs_touch": {"p50": 5.0, "p75": 6.0, "p90": 6.0},
+            "slip_vs_touch_pre": {"p50": 3.0, "p75": 4.0, "p90": 4.0},
+            "cost_vs_mid_per_side_price": {"p50": 6e-05, "p75": 7e-05,
+                                           "p90": 7e-05},
+            "spread_at_fill_price_p50": 2e-05,
+        },
+    },
+    "default_changed": False,
+}
+
+#: The value SlipModel() still charges. Superseded as EVIDENCE by
+#: EXECUTION_COST_MEASURED — it is no longer the only number — but still the
+#: default VALUE, for the reasons above.
+SLIP_HAND_ENTERED = {
+    "ticks": 1.0,
+    "provenance": "HAND_ENTERED",
+    "superseded_as_evidence_by": "EXECUTION_COST_MEASURED (2026-10-11)",
+    "still_default": True,
+}
+
+
+def measured_slip_model(symbol: str, quantile: str = "p50",
+                        estimator: str = "slip_vs_touch") -> SlipModel:
+    """A ``SlipModel`` carrying the measured slip for ``symbol``, by name.
+
+    ``estimator`` is ``slip_vs_touch`` (same-second quote, primary) or
+    ``slip_vs_touch_pre`` (the bracket). A negative measured value is floored
+    at 0 ticks: the simulator never lets a cost improve a fill, and the floor
+    is recorded in the returned model's provenance rather than hidden.
+
+    Raises ``KeyError`` for a symbol with no live fills — there is no
+    measurement to borrow from another instrument.
+    """
+    try:
+        rec = EXECUTION_COST_MEASURED["per_symbol"][symbol]
+    except KeyError:
+        raise KeyError(
+            f"no live fills measured for {symbol!r}; measured symbols are "
+            f"{sorted(EXECUTION_COST_MEASURED['per_symbol'])}") from None
+    ticks = float(rec[estimator][quantile])
+    provenance = "MEASURED" if ticks >= 0 else "MEASURED_FLOORED_AT_ZERO"
+    return SlipModel(ticks=max(0.0, ticks), provenance=provenance)
+
 
 # Placeholder swaps (USD per 1.0 lot per night). Pepperstone updates these
 # weekly; override in code with values from MT5 Symbol Specifications.
