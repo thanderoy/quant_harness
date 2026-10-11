@@ -114,6 +114,32 @@ class TradabilityMask:
         hours = deltas.dt.total_seconds() / 3600.0
         return self.flag(MaskReason.WEEKEND_GAP, (hours > max_gap_hours).fillna(False))
 
+    def flag_gap(self, reason: MaskReason, *, timeframe: pd.Timedelta | str,
+                 n_bars: float) -> "TradabilityMask":
+        """Flag the first bar after any gap longer than ``n_bars`` timeframes.
+
+        The general form of :meth:`flag_weekend_gap`, for calendars that close
+        on days other than weekends — an exchange holiday, a Christmas closure
+        in the middle of the week. ``n_bars`` is a declaration, not a tuning
+        knob: it says how long an absence must be before the bar after it is
+        treated as carrying stale state, and the caller has to state it.
+
+        The threshold is in bars of ``timeframe`` rather than hours so the
+        same declaration reads the same way on any series it is applied to;
+        ``n_bars=24`` at H1 is "a full day of bars missing".
+
+        Gaps at or below the threshold are left alone on purpose. A market
+        that closes every night (an equity index, or gold's daily break)
+        would otherwise have a flag every session, and under R3 a recurring
+        flag caps every clean run at one session: any WINDOW indicator
+        longer than that is NaN everywhere.
+        """
+        if n_bars <= 0:
+            raise ValueError(f"n_bars must be positive; got {n_bars}")
+        limit = pd.Timedelta(timeframe) * n_bars
+        deltas = self.index.to_series().diff()
+        return self.flag(reason, (deltas > limit).fillna(False))
+
     def flag_rollover(self, utc_hour: int = 21, minutes: int = 15) -> "TradabilityMask":
         """Flag the daily rollover window, where spreads widen sharply."""
         mins = (self.index.hour - utc_hour) * 60 + self.index.minute
@@ -149,6 +175,24 @@ class TradabilityMask:
         return {r.value: int(c.sum()) for r, c in sorted(
             self._reasons.items(), key=lambda kv: kv[0].value)}
 
+    def attribution_exclusive(self) -> dict[str, int]:
+        """Bars masked by this reason *and no other*, per reason.
+
+        The complement of :meth:`attribution`. Where two flags overlap by
+        construction — a holiday-gap flag also fires on every weekend — the
+        overlapping count says nothing about what the second flag added.
+        This does: it is the number of bars that would become tradable if
+        only that one reason were removed.
+        """
+        out = {}
+        for r, c in sorted(self._reasons.items(), key=lambda kv: kv[0].value):
+            others = pd.Series(False, index=self.index)
+            for r2, c2 in self._reasons.items():
+                if r2 is not r:
+                    others |= c2
+            out[r.value] = int((c & ~others).sum())
+        return out
+
     def summary(self) -> dict:
         t = self.tradable
         return {
@@ -157,6 +201,7 @@ class TradabilityMask:
             "n_masked": int((~t).sum()),
             "masked_pct": float((~t).mean() * 100.0),
             "attribution": self.attribution(),
+            "attribution_exclusive": self.attribution_exclusive(),
             "attribution_note": "counts overlap; a bar may have several reasons",
         }
 
