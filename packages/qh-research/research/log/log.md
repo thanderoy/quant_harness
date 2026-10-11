@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 136
+- **Entries:** 137
 - **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (136 entries)
+- **Hash chain:** OK — chain ok (137 entries)
 
 ## Principles
 
@@ -2173,3 +2173,13 @@ _Metrics_: `artifact`=research/pre/artifacts/phase2b_panel_20261011.json, `mask_
 > Run against the pre-registration at seq=134. Decisive: pooled_p_min p=0.534 >= 0.05 -> FAIL. Instruments alive at their own gate: ['XAUUSD', 'XAGUSD']. Untested structures: none. Not a trial: a falsified mechanism re-run to validate the harness.
 
 _hash_: `a68af519a4a3b3c4…` · _prev_: `a8240c70fcbeee84…`
+
+### seq 136 · 2026-10-11T20:36:10Z · audit · `record:phase2b-complete`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `corrections`={'seq29_seq36_overlapping_folds': {'distinct': 1970, 'oos_sharpe_logged': 1.2, 'oos_sharpe_true_rate': 0.85, 'trades_logged': 3829}, 'seq94_d5_window': '2004-06-14..2025-12-31', 'seq94_missing_zero_benchmark_passes': ['seq=56 N=1 0.962', 'seq=45 N=17 0.9998']}, `metals_matched_null_p_range`=[0.099, 0.84], `metals_raw_e_ratio_ge_1_15`=['XAUUSD', 'XAGUSD'], `panel_pooled_p_min`=0.534, `panel_verdict`=DEAD_ON_AVERAGE, `phase`=2b, `phase4_entered`=False, `prs`=[70, 71], `r5_gate`=open, `sr_star_readings_reproduced`=19, `sr_star_verdicts_changed`=0, `status`=complete, `structures`=['fx', 'metals', 'european_equity_index:GER40']
+
+> Phase 2b's done criteria are met. (1) Three market structures: FX, metals, and GER40 per R14 (seq=132). (2) GER40's H1 history passes the admission gate from 2018-07-13 and runs through the panel loader. (3) R3 and R4 were exercised against an exchange calendar (seq=134/135, #71). The mask now also flags the bar after any closure longer than 24 H1 bars, because GER40 and the metals close mid-week for 26-40h, which the 40h weekend flag missed; session breaks stay unflagged. R4 was demonstrated by test: positional horizons count bars present, and on GER40 70% of h=20 windows span more than 20 hours. (4) The shelved XAUUSD mechanisms were re-evaluated against SR*=D5 (#70). THE PANEL (seq=135) is DEAD_ON_AVERAGE under its pre-registered rule: pooled_p_min 0.534 against 0.05, so no edge. The label is not DEAD_EVERYWHERE because XAUUSD and XAGUSD reach a raw E-Ratio of 1.15; neither beats its own regime-matched null (p 0.10-0.84), and my reading is that this is the metals' drift, per screen-hygiene rule 3. That reading was not pre-registered, so the recorded label stands. The run's artifact carries no timestamp of its own; the pre-registration is seq=134 at 20:26:51Z and the result seq=135 at 20:29:03Z, committed in that order. THE SR* RE-EVALUATION moves no verdict at a deciding N. Its zero-benchmark column reproduces all 19 logged DSR readings first. Every DSR-decided verdict had already failed at SR*=0, and a positive SR* only lowers DSR. The zero-benchmark passes, all at N=1 or a log-floor N, all fail against D5. Most shelved verdicts were decided by permutation nulls, pool controls or random-entry nulls that already carry drift, and are listed as moot rather than recomputed. THREE CORRECTIONS IT SURFACED. (a) seq=29 and seq=36 walk-forwards use overlapping test windows (1460D/365D/180D), so cnk_momentum's 3,829 OOS trades are 1,970 distinct ones and its logged OOS Sharpe of 1.20 is about 0.85 at the true trade rate. Its verdict was already do-not-promote; the figure, which has travelled into docs and notes, was overstated. (b) seq=94 gives D5's window as 2013-10..2026-08; the artifact covers 2004-06-14..2025-12-31, reproduced exactly. (c) seq=94's list of zero-benchmark passes omits seq=56 at N=1 (0.962) and seq=45 at N=17 (0.9998). Also recorded: cnk_momentum reproduces seq=36 only under the CONSERVATIVE cost scenario, which was the default then. WHAT FOLLOWS. No mechanism survives Phase 2b, so Phase 4 is not entered. R5's gate is open: a new mechanism may now be pre-registered across three structures, with FX costed from fills (seq=133).
+
+_hash_: `706cae8151fe27fe…` · _prev_: `a68af519a4a3b3c4…`
