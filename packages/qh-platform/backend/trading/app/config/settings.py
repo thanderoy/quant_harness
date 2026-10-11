@@ -348,6 +348,26 @@ CELERY_BEAT_SCHEDULE = {
         "task": "quant.asqs.audit",
         "schedule": crontab(hour=20, minute=5, day_of_week="mon-fri"),
     },
+    # ── Operational canary (app/quant/canary.py) -- DISABLED until enabled ──
+    #
+    # Enabled when crest_n_keel and asqs come off this schedule at the end of
+    # the demo week (2026-10-13): a killed mechanism must not sit on a live
+    # schedule (X29), and this keeps the monitoring value they provided. It
+    # walks the same read path -- API health, connect, account, XAUUSD H1/M5
+    # closed-bar freshness, the shared indicators, positions by magic, the
+    # three state files -- and structurally cannot signal or order (see
+    # tests/test_canary.py). Flip only with the owner's approval.
+    #
+    # Every 15 minutes, every day (a closed market is graded, not alerted), on
+    # minutes clear of :00/:30 and of asqs's 1,6,11,... fires. To also watch
+    # the live terminal read-only, add a second entry with environment "prod".
+    #
+    # "ops-canary": {
+    #     "task": "quant.canary.run",
+    #     "schedule": crontab(minute="7,22,37,52"),
+    #     "kwargs": {"environment": "test"},
+    #     "options": {"expires": 600},
+    # },
 }
 
 # Telegram API Credentials
