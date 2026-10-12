@@ -9,6 +9,7 @@ trial arithmetic, which is the whole point of the extension.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -69,8 +70,25 @@ def test_the_real_log_still_verifies_under_the_new_schema():
     assert ok, msg
 
 
-def test_the_real_log_trial_count_is_unchanged():
-    assert log.trial_count(REAL_LOG) == 26
+def _log_up_to(src: Path, record_id: str, dst: Path) -> Path:
+    """Copy of the log ending at ``record_id``'s entry."""
+    lines = (src / "entries.jsonl").read_text().splitlines()
+    cut = next(json.loads(line)["seq"] for line in lines
+               if json.loads(line)["hypothesis_id"] == record_id)
+    kept = [line for line in lines if json.loads(line)["seq"] <= cut]
+    (dst / "entries.jsonl").write_text("\n".join(kept) + "\n")
+    return dst
+
+
+def test_the_real_log_trial_count_is_unchanged(tmp_path):
+    """The migration did not move the count of the entries it migrated.
+
+    Read up to the marker, not the live tail: a later registration
+    legitimately raises the count (seq=137 took it to 27) and is not a
+    migration effect. The log is append-only, so this prefix never changes.
+    """
+    prefix = _log_up_to(REAL_LOG, log.SCHEMA_MIGRATION_ID, tmp_path)
+    assert log.trial_count(prefix) == 26
 
 
 def test_verify_passes_across_the_migration_boundary(live):
