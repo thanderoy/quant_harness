@@ -211,6 +211,22 @@ feed. Declared feed breaks blank the baseline window that crosses them. The
 test is two-sided and the null rotates each instrument's labels, which keeps
 activity's autocorrelation.
 
+### Event drift — scheduled releases against the same clock without them
+
+```bash
+cd packages/qh-research
+QH_DATA_DIR=<data dir> python -m research.pre.event_drift --count
+python -m research.pre.event_drift --preregister
+QH_DATA_DIR=<data dir> python -m research.pre.event_drift \
+  --run --out research/pre/artifacts/<name>.json
+```
+
+Releases come from `research/datasets/calendar/macro_events.csv`: FOMC, NFP,
+CPI, ECB, BoE and BoJ, 2004-06 onward, from central-bank and BLS pages, with
+`sources.md` and the scripts that built it. Times are placed in broker server
+time (Europe/Athens, EU DST). Each event is compared with placebo bars at the
+same hour of the week in release-free weeks.
+
 ### Cost model
 
 ```python
