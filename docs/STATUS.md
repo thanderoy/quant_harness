@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-11 — **Phase 2b complete** (seq=136): three structures, admission as a standing gate, the three-structure panel DEAD_ON_AVERAGE (seq=135), and no gold verdict moved by SR*. No mechanism survives, so Phase 4 is not entered; R5's gate is open for a new pre-registration. The Phase 3 demo week ends 2026-10-13.
+**Last updated:** 2026-10-12 — **Phase 4's first mechanism is dead** (seq=138). `activity_reversal_h1`, the first on a non-price input (MT5 tick activity), was pre-registered two-sided across FX, metals and GER40 (seq=137) and failed at pooled p=0.585. No mechanism survives; R5's gate stays open for the next. Phase 2b complete (seq=136). The Phase 3 demo week ends 2026-10-13.
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -29,10 +29,10 @@ the next reader can check rather than trust.
 
 | Metric | Value | How it was measured |
 |---|---|---|
-| Tests passing | **750 passed, 10 skipped** on CI; 760 tests total. Every skip is declared and is for data the runner does not have | 760 tests total, measured on run 38216760290 (#73, which appends seq=136, so the log-rewrite check had something to diff and ran). Locally with `QH_DATA_DIR` pointing at the WMPS `research/data/` and a WMPS checkout present, all 760 pass with none skipped. Where the log matches `origin/develop` the rewrite check skips, giving one fewer passed and one more skipped. The CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); one case in `test_parity_data_resolution.py` that asserts the recorded path wins *where it resolves*, so it skips on a runner by design; five Phase 2b panel checks (`test_panel_edge_phase2b.py` ×4, `test_panel_edge_r4.py` ×1) that need the GER40, XAUUSD and FX H1 CSVs; and three `test_sr_star_reeval.py` cases that re-hash the committed SR\* streams against their raw crest_n_keel sources. So the Phase 2b panel result (seq=135) is reproduced locally only, never on CI. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
+| Tests passing | **768 passed, 10 skipped** on CI; 778 tests total. Every skip is declared and is for data the runner does not have | 778 tests total, measured on run 38294033844 (#74, which appends seq=137 and seq=138, so the log-rewrite check had something to diff and ran). Locally with `QH_DATA_DIR` pointing at the WMPS `research/data/` and a WMPS checkout present, all 778 pass with none skipped. Where the log matches `origin/develop` the rewrite check skips, giving one fewer passed and one more skipped. The CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); one case in `test_parity_data_resolution.py` that asserts the recorded path wins *where it resolves*, so it skips on a runner by design; five Phase 2b panel checks (`test_panel_edge_phase2b.py` ×4, `test_panel_edge_r4.py` ×1) that need the GER40, XAUUSD and FX H1 CSVs; and three `test_sr_star_reeval.py` cases that re-hash the committed SR\* streams against their raw crest_n_keel sources. So the Phase 2b panel result (seq=135) is reproduced locally only, never on CI. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
 | Packages | 4 built — `qh-resources`, `qh-strategies`, `qh-research`, and `qh-platform` as of the Phase 3 subtree merge | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; **2** CI-limited and declared (X17, X22) | `tests/test_x_coverage.py` |
-| Research log | 137 entries (to seq=136), chain verified; `trial_count()` = 26 | `research.log.verify()` |
+| Research log | 139 entries (to seq=138), chain verified; `trial_count()` = 27 | `research.log.verify()` |
 | Instruments | 9 — 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching | `snapshots/pepperstone_live_20260906.json` |
 | Gate detection floor | **1.2 annualised Sharpe**, false-positive rate 0% at n=2,000 pooled | seq=107, `research/reports/power.py` |
 
@@ -47,7 +47,7 @@ the next reader can check rather than trust.
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
 | 2b | Universe expansion — non-USD crosses, metals, indices | ✅ **done** (seq=136) — FX, metals and GER40 (R14); every instrument passes `research.admission`; R3/R4 exercised on GER40's calendar; `flood_tide_h1` across ten instruments is DEAD_ON_AVERAGE, pooled p 0.534 (seq=135); the shelved gold mechanisms re-checked against SR*=D5, no verdict moved (#70) |
 | 3 | Execution merge | 🔨 **demo week running since 2026-10-07 11:33 UTC** (crest_n_keel + asqs on mt5-test, R13) — steps 1–6 done; criteria 1–6 and 8 met, criterion 5 on real orders (seq=126). Criterion 7 is decided by the week. What to watch: `docs/phase3_spec.md` §5.1 |
-| 4+ | Multi-symbol live, CPCV | ⏸ not entered — no mechanism survived 2b. R5's gate is open: the next step is a **new** mechanism pre-registered across the three structures, which is the owner's choice |
+| 4+ | Multi-symbol live, CPCV | ⏸ **first candidate dead** — `activity_reversal_h1` (seq=137/138): relative quote activity does not separate H1 follow-through on any structure or horizon (pooled p 0.46–0.63, structures 0.41–0.97). Nothing to take to costing or CPCV. The next mechanism is again the owner's choice |
 
 ### Phase 1 acceptance criteria
 
@@ -98,6 +98,7 @@ Three consequences worth carrying:
 
 | Item | Outcome |
 |---|---|
+| Order flow as Phase 4's input | **Not available; tested activity instead** (2026-10-12). The live Pepperstone feed carries quote updates only: `volume` and `last` are zero on every tick and the BUY/SELL flags never appear. Raw ticks are retained from 2025-01-08 (plus a 4-week island in 2021-10); EURUSD's flag encoding changes on 2025-12-31. Bar `tick_volume` covers 10–20 years but its level moves with the feed (XAUUSD median 33→5,263 ticks/h over 2004–13), so the mechanism used it relative to the same hour of the week. Result: DEAD (seq=138). Depth scan: `phase0/tick_depth_20261012.csv` (live `mt5`, GET-only, one 10-minute window each Wednesday 14:00 UTC, 2016–2026, EURUSD, XAUUSD, GER40; counts and modal flags only). |
 | Branch protection | **Applied 2026-10-11.** `develop` requires the "Test suite" check; force-pushes and deletion are blocked; no review is required and admins can override. **CI green is not all tests green:** X22's port-vs-WMPS comparison cannot run on a runner (`CI_LIMITED`), so a change touching parity needs a local run with the WMPS checkout before merge. |
 | Slip is `HAND_ENTERED` at 1 tick | **Measured 2026-10-11** (seq=133, #68) from 179 live entries against the same-second quote. XAUUSD: median −0.5 ticks, p90 5.3 — the 1-tick default stays. **FX: fills land about 0.5 pip beyond the quote feed on every pair and both sides**, so any FX cost built from the feed is too low for this account by roughly a pip per round trip; an FX panel run must cost from fills. No default moved. The reference quote was chosen after seeing both candidates; the FX result holds under either. |
 | Operational monitoring after the demo week | **Built 2026-10-11** (#67): `quant.canary.run`, read-only by construction — no order, close, modify or trade-record path exists on its MT5 handle, and tests prove it end to end. Its beat entry is committed **disabled**; it is enabled when crest_n_keel and asqs come off, with the owner's approval. |

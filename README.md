@@ -86,11 +86,11 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 760 tests.
-# Locally with the out-of-repo data present: 760 passed, 0 skipped. The H1 and
+# expected: 778 tests.
+# Locally with the out-of-repo data present: 778 passed, 0 skipped. The H1 and
 # crest_n_keel CSVs are read from $QH_DATA_DIR (default research/data/), e.g.
 #   QH_DATA_DIR=../wine-mt5-python-setup/research/data uv run pytest -q
-# On CI, which has neither those CSVs nor a WMPS checkout: 750 / 10.
+# On CI, which has neither those CSVs nor a WMPS checkout: 768 / 10.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.
@@ -191,6 +191,25 @@ QH_DATA_DIR=<data dir> python -m research.pre.panel_edge \
 The mask (R3) flags the first bar after a weekend (>40h) or after a whole day
 missing (>24 H1 bars); session breaks such as GER40's nightly close are not
 flagged. Horizons count present bars (R4), so closed hours are never exposure.
+
+### Activity reversal — Phase 4's first non-price input
+
+```bash
+cd packages/qh-research
+# Event and cell counts only; reads no forward outcome.
+QH_DATA_DIR=<data dir> python -m research.pre.activity_reversal --count
+# Register, then run. --run refuses until the registration is in the log.
+python -m research.pre.activity_reversal --preregister
+QH_DATA_DIR=<data dir> python -m research.pre.activity_reversal \
+  --run --out research/pre/artifacts/<name>.json
+```
+
+The feature is MT5 `tick_volume`, a bar's count of quote updates (the feed
+has no traded volume or aggressor side), taken relative to the same hour of
+the week over the previous 8 weeks, because its absolute level moves with the
+feed. Declared feed breaks blank the baseline window that crosses them. The
+test is two-sided and the null rotates each instrument's labels, which keeps
+activity's autocorrelation.
 
 ### Cost model
 

@@ -308,12 +308,18 @@ def test_the_commit_comparison_was_actually_run():
 # --------------------------------------------------------------------------- #
 
 @pytest.mark.x("X18")
-def test_the_log_survived_the_rename():
+def test_the_log_survived_the_rename(tmp_path):
+    """Counted up to the T10 split, not at the live tail: a registration made
+    after it (seq=137) legitimately raises the count, and is not the rename."""
     from research import log
 
     ok, msg = log.verify()
     assert ok, msg
-    assert log.trial_count() == 26, (
+    cut = _rename_entry(log)["seq"]
+    lines = (RESEARCH / "log" / "entries.jsonl").read_text().splitlines()
+    kept = [line for line in lines if json.loads(line)["seq"] <= cut]
+    (tmp_path / "entries.jsonl").write_text("\n".join(kept) + "\n")
+    assert log.trial_count(tmp_path) == 26, (
         "a namespace split must not move the DSR haircut denominator")
 
 
