@@ -169,3 +169,14 @@ def test_min_decidable_matches_the_intended_sample():
     from research.post.mintrl import min_decidable_sharpe
     got = min_decidable_sharpe(n_obs=ar.INTENDED_N_OBS, sr_star=0.0)
     assert round(got, 6) == ar.MIN_DECIDABLE_SHARPE
+
+
+def test_log_result_kills_unless_alive(tmp_path):
+    from research import log as research_log
+    (tmp_path / "entries.jsonl").write_text("")
+    ar.preregister(log_dir=tmp_path)
+    res = {"verdict": "DEAD", "reason": "p", "streams": {},
+           "results": {"h4": {"observed": 0.0, "per_structure": {}}},
+           "instruments": []}
+    e = ar.log_result(res, "a.json", log_dir=tmp_path)
+    assert e.verdict == research_log.Verdict.KILLED and not e.counts_as_trial

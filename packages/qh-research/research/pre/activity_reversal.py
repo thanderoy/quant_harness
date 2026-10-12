@@ -491,6 +491,35 @@ def preregister(log_dir: Optional[Path] = None):
         **kwargs,
     )
 
+def log_result(res: dict, artifact: str, log_dir: Optional[Path] = None):
+    """Record a :func:`run` result against the registration. Not a trial."""
+    from research import log as research_log
+    kwargs = {"log_dir": log_dir} if log_dir is not None else {}
+    h = res["results"]
+    alive = res["verdict"] == "ALIVE"
+    return research_log.update_hypothesis(
+        HYPOTHESIS_ID,
+        stage=research_log.Stage.SIGNAL_EDGE,
+        verdict=(research_log.Verdict.OPEN if alive
+                 else research_log.Verdict.KILLED),
+        metrics={
+            "verdict": res["verdict"], "reason": res["reason"],
+            "artifact": artifact, "streams": res["streams"],
+            "pooled_spread_sigma": {k: v["observed"] for k, v in h.items()},
+            "per_structure_h4": h[f"h{DECISIVE_HORIZON}"]["per_structure"],
+            "per_instrument_spread_sigma": {
+                i["symbol"]: i["spread"] for i in res["instruments"]},
+            "n_events": {i["symbol"]: i["n_events"] for i in res["instruments"]},
+        },
+        note=(
+            f"Registered run: {res['verdict']} ({res['reason']}). Decided by "
+            "the pre-declared stream alone. Spreads are mean(HIGH) - "
+            "mean(LOW) of the drift-removed, sign-aligned forward move in "
+            "trailing-sigma units; negative would mean high-activity moves "
+            "reverse more (CGW), positive that they continue (Llorente)."),
+        **kwargs,
+    )
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--count", action="store_true",
@@ -501,6 +530,8 @@ def main() -> int:
                     help="the registered test; refuses before registration")
     ap.add_argument("--data-dir", type=Path, default=None)
     ap.add_argument("--out", type=Path, default=None)
+    ap.add_argument("--log-artifact", type=Path, default=None,
+                    help="record a saved --run artifact against the registration")
     args = ap.parse_args()
     if args.count:
         print(json.dumps(count_events(args.data_dir), indent=1))
@@ -508,6 +539,11 @@ def main() -> int:
     if args.preregister:
         entry = preregister()
         print(f"registered seq={entry.seq} {entry.hypothesis_id}")
+        return 0
+    if args.log_artifact:
+        res = json.loads(args.log_artifact.read_text())
+        entry = log_result(res, args.log_artifact.name)
+        print(f"logged seq={entry.seq} {res['verdict']}")
         return 0
     if args.run:
         res = run(args.data_dir)
