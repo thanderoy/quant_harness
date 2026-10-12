@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 137
-- **Trial count (floor N for DSR):** 26
-- **Hash chain:** OK — chain ok (137 entries)
+- **Entries:** 138
+- **Trial count (floor N for DSR):** 27
+- **Hash chain:** OK — chain ok (138 entries)
 
 ## Principles
 
@@ -18,6 +18,7 @@ Edge-gate role is shown on every row: a **hard_gate** entry must show E-Ratio ed
 
 | hypothesis | family | role | stage | verdict | latest metrics |
 |---|---|---|---|---|---|
+| `activity_reversal_h1` — Relative quote activity and H1 follow-through, across FX, metals and GER40 | activity_reversal | unset | 0_hypothesis | open | — |
 | `asian_session_fade` — Asian-session ATR-channel fade | mean_reversion | diagnostic | 1_signal_edge | shelved | allday_fade_gross_t=0.83, allday_fade_gross_usd_per_oz=0.0973, beta_fwd_on_overshoot=-0.0337, beta_p_shuffle_one_sided=0.046, beta_r_squared=0.0006, beta_t=-1.66, decile_fade_gross_t=0.28, decile_fade_gross_usd_per_oz=0.0823, decile_fade_net_usd_per_oz=-0.2077, edge_cost_ratio=0.284, london_control_beta=0.0422, london_control_t=1.84, median_daily_atr_usd=19.07, n_days=4317, roundtrip_cost_usd_per_oz=0.29 |
 | `asqs` — ASQ SafeScalping v1.20 — M5 7-condition breakout | breakout | hard_gate | 5_walk_forward | open | profit_factor=1.55, sharpe_oos=5.14, dsr_prob_24h=0.0, dsr_prob_session=0.0, folds=33, oos_max_dd_24h=0.67, oos_max_dd_session=0.72, oos_trades_24h=11763, oos_trades_session=11048, profit_factor_24h=0.91, profit_factor_session=0.9, sharpe_oos_24h=-1.06, sharpe_oos_session=-1.04 |
 | `asqs_param_sweep` — Exhaustive parameter + timeframe sweep of ASQ SafeScalping v1.20 | asqs | hard_gate | 3_is_backtest | open | ak1_null_mean=-2.077, ak1_p_value=0.0, ak2_bh_calmar=0.274, ak2_calmar=0.675, ak2_n_beating_bh=2, ak3_dsr_at_grid_n=0.0384, ak4_all_tf_medians_negative=1, dir_median_long=0.016, dir_median_short=-0.417, leader_cagr_acct=0.0538, leader_max_dd_px=0.0669, leader_n_trades=1147, leader_profit_factor_px=1.1876, leader_session=7-16, leader_sharpe_px=1.0664, leader_timeframe=M5, n_configs=52488, n_countable=51277, n_survivors=533, session_error_cost_sharpe=0.0717, session_median_7_16=-0.0726, session_median_8_17=-0.1443, session_median_off=-0.4569, tf_median_H1=-0.071, tf_median_M15=-0.164, tf_median_M5=-0.383 |
@@ -2183,3 +2184,20 @@ _Metrics_: `corrections`={'seq29_seq36_overlapping_folds': {'distinct': 1970, 'o
 > Phase 2b's done criteria are met. (1) Three market structures: FX, metals, and GER40 per R14 (seq=132). (2) GER40's H1 history passes the admission gate from 2018-07-13 and runs through the panel loader. (3) R3 and R4 were exercised against an exchange calendar (seq=134/135, #71). The mask now also flags the bar after any closure longer than 24 H1 bars, because GER40 and the metals close mid-week for 26-40h, which the 40h weekend flag missed; session breaks stay unflagged. R4 was demonstrated by test: positional horizons count bars present, and on GER40 70% of h=20 windows span more than 20 hours. (4) The shelved XAUUSD mechanisms were re-evaluated against SR*=D5 (#70). THE PANEL (seq=135) is DEAD_ON_AVERAGE under its pre-registered rule: pooled_p_min 0.534 against 0.05, so no edge. The label is not DEAD_EVERYWHERE because XAUUSD and XAGUSD reach a raw E-Ratio of 1.15; neither beats its own regime-matched null (p 0.10-0.84), and my reading is that this is the metals' drift, per screen-hygiene rule 3. That reading was not pre-registered, so the recorded label stands. The run's artifact carries no timestamp of its own; the pre-registration is seq=134 at 20:26:51Z and the result seq=135 at 20:29:03Z, committed in that order. THE SR* RE-EVALUATION moves no verdict at a deciding N. Its zero-benchmark column reproduces all 19 logged DSR readings first. Every DSR-decided verdict had already failed at SR*=0, and a positive SR* only lowers DSR. The zero-benchmark passes, all at N=1 or a log-floor N, all fail against D5. Most shelved verdicts were decided by permutation nulls, pool controls or random-entry nulls that already carry drift, and are listed as moot rather than recomputed. THREE CORRECTIONS IT SURFACED. (a) seq=29 and seq=36 walk-forwards use overlapping test windows (1460D/365D/180D), so cnk_momentum's 3,829 OOS trades are 1,970 distinct ones and its logged OOS Sharpe of 1.20 is about 0.85 at the true trade rate. Its verdict was already do-not-promote; the figure, which has travelled into docs and notes, was overstated. (b) seq=94 gives D5's window as 2013-10..2026-08; the artifact covers 2004-06-14..2025-12-31, reproduced exactly. (c) seq=94's list of zero-benchmark passes omits seq=56 at N=1 (0.962) and seq=45 at N=17 (0.9998). Also recorded: cnk_momentum reproduces seq=36 only under the CONSERVATIVE cost scenario, which was the default then. WHAT FOLLOWS. No mechanism survives Phase 2b, so Phase 4 is not entered. R5's gate is open: a new mechanism may now be pre-registered across three structures, with FX costed from fills (seq=133).
 
 _hash_: `706cae8151fe27fe…` · _prev_: `a68af519a4a3b3c4…`
+
+### seq 137 · 2026-10-12T18:40:52Z · hypothesis · `activity_reversal_h1`
+
+**Relative quote activity and H1 follow-through, across FX, metals and GER40**
+
+_Mechanism_: An H1 bar moving at least 1 trailing sigma is followed over the next 4 bars differently when its quote activity, relative to the same hour of the week over the prior 8 weeks, is high than when it is low. CGW (1993) predict high-activity moves reverse more; Llorente et al. (2002) predict they continue. Two-sided.
+
+market=FX majors, XAUUSD, XAGUSD, GER40· timeframe=H1· family=activity_reversal· edge_gate_role=unset· counts_as_trial=True
+
+_Predictions_:
+- pooled_p_h4 < 0.05, two-sided, decides; h=1, h=12 and per-structure p are reported, never decisive
+- ALIVE requires every structure's spread to share the pooled sign; ALIVE_POOLED_ONLY does not proceed
+- an instrument whose HIGH or LOW cell holds < 100 events is reported, not pooled; a structure with none is UNTESTED_STRUCTURE
+
+> Phase 4's first mechanism, chosen by input class (tick activity) on 2026-10-12. Pre-registered before any outcome was computed: run() refuses until this entry exists. E-Ratio does not apply — the decisive stream is the gate. Tick volume has been seen before, on XAUUSD only: as the weight in VWAP and volume-profile levels (seq 13, 25, 27) and as a conditioner of an intraday-momentum rule (seq 57/58, F4, 'weakly consistent'). Neither measured bar-level follow-through by relative activity, and FX and GER40 volume behaviour has not been inspected. Integrity only was read before this registration: zero-volume share, yearly median level, tick retention and flag encodings. Declared limitations: feed breaks before 2025-01 cannot be detected from tick flags and are not masked; XAUUSD's 2004-08 bars carry median 33-349 ticks, so its early activity ratios are coarse; activity terciles are cut on each instrument's full event set (activity only, no outcome), so the labels are descriptive, not a causal trading rule. Costs are not in this test; a live mechanism goes to costing (FX from fills, #68) before anything else.
+
+_hash_: `868c73374ca3887f…` · _prev_: `706cae8151fe27fe…`
