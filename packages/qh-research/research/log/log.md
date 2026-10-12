@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 139
-- **Trial count (floor N for DSR):** 27
-- **Hash chain:** OK — chain ok (139 entries)
+- **Entries:** 140
+- **Trial count (floor N for DSR):** 28
+- **Hash chain:** OK — chain ok (140 entries)
 
 ## Principles
 
@@ -33,6 +33,7 @@ Edge-gate role is shown on every row: a **hard_gate** entry must show E-Ratio ed
 | `ebb_n_flow` — Bollinger mean-reversion with KER gate | mean_reversion | diagnostic | 3_is_backtest | killed | e_ratio_w30=0.97, gross_expectancy=-1.0 |
 | `ebb_n_flow_sweep` — Exhaustive parameter + timeframe sweep of ebb_n_flow (post-kill asymmetry probe) | mean_reversion | diagnostic | 3_is_backtest | killed | K1_configs_clearing=9 of 15, K1_leader_null_mean=0.662, K1_leader_p=1.0, K1_result=FAIL, K2_configs_beating_bh_calmar=3 of 15, K2_result=FAIL, K3_dsr_N16_logfloor=0.8008, K3_dsr_N43200=0.0594, K3_dsr_N9600=0.114, K3_result=FAIL at every N, K4_neighbourhood_frac_positive=1.0, K4_result=PASS (moot), artifact=research/data/ebb_n_flow/ebb_report_data.json, leader=H1 bb_n=10 bb_k=1.5 er_max=0.30 sl=3.0xATR ts=8 long/all-hours, leader_exposure=0.027, leader_max_dd_px=0.063, leader_pf=1.4231, leader_sharpe_px=0.6138, leader_win_rate=0.6013, long_pct_positive_D1=41.2, median_sharpe_D1=-0.2, median_sharpe_H1=-0.373, median_sharpe_H4=-0.341, median_sharpe_M15=-0.572, median_sharpe_M5=-1.284, n_configs=43200, n_survivors=268, short_pct_positive_D1=10.4, survivor_rate_pct=0.62 |
 | `ensemble_vs_selection` — Should we average gate-passers instead of picking the best? | methodology | diagnostic | 0_hypothesis | killed | e1_pass=0, e2_sharpe_pass=1, e3_frac_members_positive=0.5648, h1_delta=0.00023, h1_ens_sharpe=0.023, h1_ens_total=0.01592, h1_sign_p=0.6291, h1_top1_sharpe=-0.0168, h1_top1_total=0.0157, h4_delta=0.00332, h4_ens_sharpe=0.05, h4_ens_total=0.02619, h4_sign_p=0.4545, h4_top1_sharpe=0.0171, h4_top1_total=0.02287, k=50, n_folds=33, nothing_revived=1, pooled_delta_pct=9.0, pooled_ens_total=0.0209, pooled_top1_total=0.01918, sharpe_would_have_inverted_verdict=1 |
+| `event_drift_h1` — Scheduled-release follow-through on H1, against the same clock without the news, across FX, metals and GER40 | event_drift | unset | 0_hypothesis | open | — |
 | `feature_edge_screen` — Feature-level edge screen: which inputs carry cost-clearing information? | feature_screen | diagnostic | 1_signal_edge | open | best_feature_net_usd=1.14, best_feature_spread_usd=1.43, best_feature_t=4.35, composite_all5_spread=1.147, composite_momentum_spread=1.431, cost_round_trip=0.29, h1_paying=21, highvol_spread=1.256, highvol_spread_causal=1.182, lowvol_spread=2.831, lowvol_spread_causal=2.314, m15_paying=1, m5_paying=0, n_fdr_significant=186, n_paying_costs=22, n_tests=264, overall_spread_causal=1.456 |
 | `flood_tide_h1` — flood_tide_h1 — Donchian-55 H1 breakout with H4-EMA + Efficiency-Ratio regime gate (XAUUSD, long-only) | trend_following_breakout | hard_gate | 3_is_backtest | open | e_ratio_H100=1.1835210145765311, e_ratio_H20=1.1348806858949592, e_ratio_H50=1.1294091836142026, null_mean_H100=1.211763812660675, p_H100=0.714, p_H20=0.096, p_H50=0.456, best_sharpe_px=0.719, bracket_median_sharpe=0.285, bracket_pct_positive=91.1, drift_actual=0.719, drift_null_mean=0.262, drift_p=0.005, median_sharpe_px=0.331, median_trades=1550, n_configs=3744, pct_countable=100.0, pct_positive=93.2, survivors=550, trail_median_sharpe=0.517, trail_pct_positive=100.0, beats_drift_at_median=1, median_config_dsr_at_19=0.458, median_config_dsr_at_grid_n=0.0328, median_config_null_mean=-0.3556, median_config_null_p95=-0.0391, median_config_p=0.0, median_config_sharpe=0.3313, median_config_trades=2094, median_trail_null_mean=0.0646, median_trail_p=0.013, median_trail_sharpe=0.5164 |
 | `flood_tide_h1_iter2` — flood_tide_h1_iter2 — Donchian-20 (faster) H1 breakout, H4-EMA + Efficiency-Ratio regime gate (XAUUSD, long-only). Iteration 2 of seq=31. | trend_following_breakout | hard_gate | 1_signal_edge | shelved | e_ratio_H100=1.2250291493927423, e_ratio_H20=1.1661315377843247, e_ratio_H50=1.1637030632714933, null_mean_H100=1.212674656363149, p_H100=0.357, p_H20=0.011, p_H50=0.16 |
@@ -2211,3 +2212,20 @@ _Metrics_: `artifact`=activity_reversal_20261012.json, `n_events`={'AUDUSD': 290
 > Registered run: DEAD (pooled_p_h4 p=0.5854 >= 0.05). Decided by the pre-declared stream alone. Spreads are mean(HIGH) - mean(LOW) of the drift-removed, sign-aligned forward move in trailing-sigma units; negative would mean high-activity moves reverse more (CGW), positive that they continue (Llorente).
 
 _hash_: `b45f879dd02ac9ed…` · _prev_: `868c73374ca3887f…`
+
+### seq 139 · 2026-10-12T19:59:52Z · hypothesis · `event_drift_h1`
+
+**Scheduled-release follow-through on H1, against the same clock without the news, across FX, metals and GER40**
+
+_Mechanism_: On the H1 bar containing a scheduled FOMC, NFP, CPI, ECB or BoE release, the bar's direction persists over the next 4 bars differently from placebo bars at the same hour of the week in release-free weeks. Gradual diffusion predicts continuation; overshoot predicts reversal. Two-sided.
+
+market=FX majors, XAUUSD, XAGUSD, GER40· timeframe=H1· family=event_drift· edge_gate_role=unset· counts_as_trial=True
+
+_Predictions_:
+- pooled_p_h4 < 0.05, two-sided, decides; h=1, h=12, per-structure p and the verified-times-only run are reported, never decisive
+- ALIVE requires every structure's excess to share the pooled sign; ALIVE_POOLED_ONLY does not proceed
+- an instrument with < 100 events at h=4 is reported, not pooled (NZDUSD, 46); a structure with none is UNTESTED_STRUCTURE
+
+> Phase 4's second mechanism (input class event/calendar, chosen 2026-10-12) after activity_reversal_h1 died at seq=138. Pre-registered before any outcome was computed; run() refuses until this entry exists. E-Ratio does not apply. Calendar: 1,438 official-source releases 2004-06..2026-10; scheduled and time-known only; BoJ excluded (no times). 384 calendar rows are verified=false: the date is confirmed and the time is the central bank's documented standard practice (ECB before 2022-06, BoE before 2015-08, FOMC 2004-10). Intraday momentum on XAUUSD H1 was explored at seq 57-62, including first-bar returns predicting the session; release hours were inside those samples but were never separated out. The calendar was compiled by a subagent barred from price data; it reported incidental exposure to text about market reactions: BoE minutes on gilts and sterling after the 2020-03-19 special meeting, a transcript line on Treasury yields around 2:15 p.m. FOMC statements, decision outcomes in page titles, and one CPI figure (Dec 2004). None bears on the instruments' H1 follow-through, and none changed which rows the calendar holds. Before this registration only integrity and counts were read: the server DST rule from bar spacing, and event counts per horizon. A forward window must be clean only for its own horizon, because a Friday 15:00-server NFP bar has 8 bars before the weekend; requiring the 12-bar window everywhere had dropped NFP from every horizon in the first count, and this was fixed from counts alone, before any outcome existed. Costs are not in this test; FX costs come from fills (#68).
+
+_hash_: `4027f569668cb51f…` · _prev_: `b45f879dd02ac9ed…`
