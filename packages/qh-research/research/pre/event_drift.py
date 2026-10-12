@@ -514,7 +514,8 @@ def preregister(log_dir: Optional[Path] = None):
     )
 
 
-def log_result(res: dict, artifact: str, log_dir: Optional[Path] = None):
+def log_result(res: dict, artifact: str, log_dir: Optional[Path] = None,
+               extra_note: str = ""):
     """Record a :func:`run` result against the registration. Not a trial."""
     from research import log as research_log
     kwargs = {"log_dir": log_dir} if log_dir is not None else {}
@@ -538,7 +539,8 @@ def log_result(res: dict, artifact: str, log_dir: Optional[Path] = None):
             f"Registered run: {res['verdict']} ({res['reason']}). Decided by "
             "the pre-declared stream alone. Excess is the event bars' mean "
             "sign-aligned, drift-removed forward move minus the placebo "
-            "mean, in trailing-sigma units; positive is continuation."),
+            "mean, in trailing-sigma units; positive is continuation."
+            + (" " + extra_note if extra_note else "")),
         **kwargs,
     )
 
