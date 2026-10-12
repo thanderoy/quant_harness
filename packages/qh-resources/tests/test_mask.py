@@ -85,6 +85,60 @@ def test_summary_reports_counts_and_note():
     assert "overlap" in s["attribution_note"]
 
 
+def _index_with_gaps(*gap_hours: float) -> pd.DatetimeIndex:
+    """Runs of 5 H1 bars separated by gaps of the given lengths."""
+    parts, start = [], pd.Timestamp("2026-01-05 00:00", tz="UTC")
+    for g in (*gap_hours, None):
+        run = pd.date_range(start, periods=5, freq="h")
+        parts.append(run)
+        if g is not None:
+            start = run[-1] + pd.Timedelta(hours=g)
+    out = parts[0]
+    for p in parts[1:]:
+        out = out.append(p)
+    return out
+
+
+def test_flag_gap_flags_only_gaps_longer_than_the_declared_bar_count():
+    """A nightly close (5h) is the instrument's own cadence; a mid-week
+    holiday (28h) is a closure. The threshold separates them in bars."""
+    idx = _index_with_gaps(5.0, 28.0, 24.0)
+    m = TradabilityMask(idx).flag_gap(MaskReason.HOLIDAY, timeframe="1h",
+                                      n_bars=24)
+    flagged = m.reason(MaskReason.HOLIDAY)
+    assert flagged.sum() == 1
+    assert flagged.iloc[10]          # first bar after the 28h gap
+    assert not flagged.iloc[5]       # after the 5h nightly close
+    assert not flagged.iloc[15]      # exactly 24 bars is not "longer than"
+
+
+def test_flag_gap_reads_the_threshold_in_bars_of_the_timeframe():
+    """n_bars=6 at H4 is the same 24 hours as n_bars=24 at H1."""
+    idx = _index_with_gaps(28.0)
+    h1 = TradabilityMask(idx).flag_gap(MaskReason.HOLIDAY, timeframe="1h", n_bars=24)
+    h4 = TradabilityMask(idx).flag_gap(MaskReason.HOLIDAY, timeframe="4h", n_bars=6)
+    assert h1.reason(MaskReason.HOLIDAY).equals(h4.reason(MaskReason.HOLIDAY))
+
+
+def test_flag_gap_refuses_a_non_positive_declaration():
+    with pytest.raises(ValueError, match="n_bars"):
+        TradabilityMask(_index_with_gaps(5.0)).flag_gap(
+            MaskReason.HOLIDAY, timeframe="1h", n_bars=0)
+
+
+def test_exclusive_attribution_separates_what_an_overlapping_flag_added():
+    """A holiday-gap flag also fires on every weekend. Overlapping counts
+    cannot say what it added; exclusive counts can."""
+    idx = _index_with_gaps(28.0, 63.0)
+    m = (TradabilityMask(idx).flag_weekend_gap()
+         .flag_gap(MaskReason.HOLIDAY, timeframe="1h", n_bars=24))
+    assert m.attribution() == {"holiday": 2, "weekend_gap": 1}
+    assert m.attribution_exclusive() == {"holiday": 1, "weekend_gap": 0}
+    s = m.summary()
+    assert s["n_masked"] == 2
+    assert s["attribution_exclusive"] == m.attribution_exclusive()
+
+
 # --------------------------------------------------------------------------- #
 # X25 — class declaration is mandatory                                         #
 # --------------------------------------------------------------------------- #

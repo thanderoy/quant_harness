@@ -173,6 +173,23 @@ exports can open with years of coarser bars under an `_H1` name (US500, GER40),
 so `panel_edge.check_panel` runs this on every instrument and reads an
 `ADMIT_FROM` one from its admitted date.
 
+### Panel edge — a mechanism across instruments, with a pooled null
+
+```bash
+cd packages/qh-research
+# Phase 2: the seven FX majors, mask off (reproduces seq=109)
+QH_DATA_DIR=<data dir> python -m research.pre.panel_edge
+# Phase 2b: majors + XAUUSD, XAGUSD, GER40, run mask-on and mask-off.
+# Pre-register first; the run is then recorded against that seq.
+python -m research.pre.panel_edge --preregister-phase2b
+QH_DATA_DIR=<data dir> python -m research.pre.panel_edge \
+  --phase2b research/pre/artifacts/<name>.json --log --prereg-seq <seq>
+```
+
+The mask (R3) flags the first bar after a weekend (>40h) or after a whole day
+missing (>24 H1 bars); session breaks such as GER40's nightly close are not
+flagged. Horizons count present bars (R4), so closed hours are never exposure.
+
 ### Cost model
 
 ```python

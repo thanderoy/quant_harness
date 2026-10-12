@@ -1,0 +1,1147 @@
+{
+  "mask_on": {
+    "mechanism": "flood_tide_h1",
+    "panel": [
+      "EURUSD",
+      "GBPUSD",
+      "USDJPY",
+      "USDCHF",
+      "USDCAD",
+      "AUDUSD",
+      "NZDUSD",
+      "XAUUSD",
+      "XAGUSD",
+      "GER40"
+    ],
+    "masked": true,
+    "horizons": [
+      20,
+      50,
+      100
+    ],
+    "n_permutations": 1000,
+    "pooled_e_ratio": {
+      "20": 0.9996297012921636,
+      "50": 0.9966193506406813,
+      "100": 1.011080590414474
+    },
+    "pooled_p_value": {
+      "20": 0.534,
+      "50": 0.576,
+      "100": 0.869
+    },
+    "null_mean": {
+      "20": 1.0017060081006195,
+      "50": 1.0011109207840136,
+      "100": 1.0342591728994277
+    },
+    "alive_anywhere": [
+      "XAUUSD",
+      "XAGUSD"
+    ],
+    "resampling_check": {
+      "common_bars": 32876,
+      "native_bars": 32960,
+      "exact_match_rate": {
+        "open": 1.0,
+        "high": 1.0,
+        "low": 1.0,
+        "close": 1.0
+      }
+    },
+    "per_instrument": [
+      {
+        "symbol": "EURUSD",
+        "n_bars": 80000,
+        "start": "2013-10-08",
+        "end": "2026-08-28",
+        "n_signals": 493,
+        "eligible_bars": 8501,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.9850650912676782,
+          "50": 0.9314724266451934,
+          "100": 0.9328171972248065
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.637,
+          "50": 0.827,
+          "100": 0.918
+        },
+        "mask": {
+          "n_bars": 80000,
+          "n_tradable": 79317,
+          "n_masked": 683,
+          "masked_pct": 0.85375,
+          "attribution": {
+            "holiday": 683,
+            "weekend_gap": 672
+          },
+          "attribution_exclusive": {
+            "holiday": 11,
+            "weekend_gap": 0
+          },
+          "attribution_note": "counts overlap; a bar may have several reasons"
+        },
+        "h4_structure": {
+          "h1_bars": 80000,
+          "h4_bars": 20042,
+          "nonempty_bins": 20042,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 11,
+            "2": 17,
+            "3": 101,
+            "4": 19913
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 4,
+          "h4_bars_per_day": {
+            "1": 3,
+            "4": 6,
+            "5": 13,
+            "6": 3325
+          }
+        }
+      },
+      {
+        "symbol": "GBPUSD",
+        "n_bars": 80000,
+        "start": "2013-10-08",
+        "end": "2026-08-28",
+        "n_signals": 527,
+        "eligible_bars": 8922,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.9574511221784412,
+          "50": 0.8716678065665973,
+          "100": 0.8580162491504896
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.572,
+          "50": 0.792,
+          "100": 0.948
+        },
+        "mask": {
+          "n_bars": 80000,
+          "n_tradable": 79317,
+          "n_masked": 683,
+          "masked_pct": 0.85375,
+          "attribution": {
+            "holiday": 683,
+            "weekend_gap": 672
+          },
+          "attribution_exclusive": {
+            "holiday": 11,
+            "weekend_gap": 0
+          },
+          "attribution_note": "counts overlap; a bar may have several reasons"
+        },
+        "h4_structure": {
+          "h1_bars": 80000,
+          "h4_bars": 20042,
+          "nonempty_bins": 20042,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 10,
+            "2": 17,
+            "3": 104,
+            "4": 19911
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 5,
+          "h4_bars_per_day": {
+            "1": 3,
+            "4": 6,
+            "5": 13,
+            "6": 3325
+          }
+        }
+      },
+      {
+        "symbol": "USDJPY",
+        "n_bars": 80000,
+        "start": "2013-10-08",
+        "end": "2026-08-28",
+        "n_signals": 659,
+        "eligible_bars": 10311,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.9309561678953787,
+          "50": 1.0664365530467121,
+          "100": 1.1108222613725638
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.458,
+          "50": 0.074,
+          "100": 0.087
+        },
+        "mask": {
+          "n_bars": 80000,
+          "n_tradable": 79318,
+          "n_masked": 682,
+          "masked_pct": 0.8524999999999999,
+          "attribution": {
+            "holiday": 682,
+            "weekend_gap": 672
+          },
+          "attribution_exclusive": {
+            "holiday": 10,
+            "weekend_gap": 0
+          },
+          "attribution_note": "counts overlap; a bar may have several reasons"
+        },
+        "h4_structure": {
+          "h1_bars": 80000,
+          "h4_bars": 20042,
+          "nonempty_bins": 20042,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 13,
+            "2": 10,
+            "3": 109,
+            "4": 19910
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 4,
+          "h4_bars_per_day": {
+            "1": 4,
+            "4": 7,
+            "5": 12,
+            "6": 3325
+          }
+        }
+      },
+      {
+        "symbol": "USDCHF",
+        "n_bars": 80000,
+        "start": "2013-10-07",
+        "end": "2026-08-28",
+        "n_signals": 512,
+        "eligible_bars": 8620,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.9150004028269793,
+          "50": 0.8923282504303728,
+          "100": 0.9781277594161606
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.254,
+          "50": 0.321,
+          "100": 0.064
+        },
+        "mask": {
+          "n_bars": 80000,
+          "n_tradable": 79317,
+          "n_masked": 683,
+          "masked_pct": 0.85375,
+          "attribution": {
+            "holiday": 683,
+            "weekend_gap": 672
+          },
+          "attribution_exclusive": {
+            "holiday": 11,
+            "weekend_gap": 0
+          },
+          "attribution_note": "counts overlap; a bar may have several reasons"
+        },
+        "h4_structure": {
+          "h1_bars": 80000,
+          "h4_bars": 20042,
+          "nonempty_bins": 20042,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 12,
+            "2": 12,
+            "3": 108,
+            "4": 19910
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 5,
+          "h4_bars_per_day": {
+            "1": 3,
+            "3": 1,
+            "4": 5,
+            "5": 12,
+            "6": 3326
+          }
+        }
+      },
+      {
+        "symbol": "USDCAD",
+        "n_bars": 80000,
+        "start": "2013-10-08",
+        "end": "2026-08-28",
+        "n_signals": 553,
+        "eligible_bars": 9567,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.9093395029555085,
+          "50": 0.9543857307083389,
+          "100": 0.9907486552889397
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.936,
+          "50": 0.913,
+          "100": 0.956
+        },
+        "mask": {
+          "n_bars": 80000,
+          "n_tradable": 79317,
+          "n_masked": 683,
+          "masked_pct": 0.85375,
+          "attribution": {
+            "holiday": 683,
+            "weekend_gap": 672
+          },
+          "attribution_exclusive": {
+            "holiday": 11,
+            "weekend_gap": 0
+          },
+          "attribution_note": "counts overlap; a bar may have several reasons"
+        },
+        "h4_structure": {
+          "h1_bars": 80000,
+          "h4_bars": 20039,
+          "nonempty_bins": 20039,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 11,
+            "2": 11,
+            "3": 101,
+            "4": 19916
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 4,
+          "h4_bars_per_day": {
+            "1": 3,
+            "2": 1,
+            "4": 6,
+            "5": 12,
+            "6": 3325
+          }
+        }
+      },
+      {
+        "symbol": "AUDUSD",
+        "n_bars": 54958,
+        "start": "2017-10-24",
+        "end": "2026-08-28",
+        "n_signals": 366,
+        "eligible_bars": 6001,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.8444178668354921,
+          "50": 0.7704102956047196,
+          "100": 0.7961836154230889
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.939,
+          "50": 0.968,
+          "100": 0.973
+        },
+        "mask": {
+          "n_bars": 54958,
+          "n_tradable": 54491,
+          "n_masked": 467,
+          "masked_pct": 0.849739801302813,
+          "attribution": {
+            "holiday": 467,
+            "weekend_gap": 461
+          },
+          "attribution_exclusive": {
+            "holiday": 6,
+            "weekend_gap": 0
+          },
+          "attribution_note": "counts overlap; a bar may have several reasons"
+        },
+        "h4_structure": {
+          "h1_bars": 54958,
+          "h4_bars": 13761,
+          "nonempty_bins": 13761,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 9,
+            "2": 9,
+            "3": 41,
+            "4": 13702
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 4,
+          "h4_bars_per_day": {
+            "1": 3,
+            "4": 3,
+            "5": 6,
+            "6": 2286
+          }
+        }
+      },
+      {
+        "symbol": "NZDUSD",
+        "n_bars": 10000,
+        "start": "2025-01-22",
+        "end": "2026-09-01",
+        "n_signals": 67,
+        "eligible_bars": 1278,
+        "decidable": true,
+        "e_ratio": {
+          "20": 1.0201271625350026,
+          "50": 1.0081050173970598,
+          "100": 0.9437133009661887
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.468,
+          "50": 0.378,
+          "100": 0.495
+        },
+        "mask": {
+          "n_bars": 10000,
+          "n_tradable": 9914,
+          "n_masked": 86,
+          "masked_pct": 0.86,
+          "attribution": {
+            "holiday": 86,
+            "weekend_gap": 84
+          },
+          "attribution_exclusive": {
+            "holiday": 2,
+            "weekend_gap": 0
+          },
+          "attribution_note": "counts overlap; a bar may have several reasons"
+        },
+        "h4_structure": {
+          "h1_bars": 10000,
+          "h4_bars": 2505,
+          "nonempty_bins": 2505,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 2,
+            "2": 3,
+            "3": 8,
+            "4": 2492
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 1,
+          "h4_bars_per_day": {
+            "4": 1,
+            "5": 1,
+            "6": 416
+          }
+        }
+      },
+      {
+        "symbol": "XAUUSD",
+        "n_bars": 124887,
+        "start": "2004-06-11",
+        "end": "2025-12-31",
+        "n_signals": 949,
+        "eligible_bars": 15004,
+        "decidable": true,
+        "e_ratio": {
+          "20": 1.150244419715897,
+          "50": 1.1489156224276535,
+          "100": 1.1235690422543987
+        },
+        "structure": "metals",
+        "p_value": {
+          "20": 0.388,
+          "50": 0.49,
+          "100": 0.838
+        },
+        "mask": {
+          "n_bars": 124887,
+          "n_tradable": 123736,
+          "n_masked": 1151,
+          "masked_pct": 0.9216331563733615,
+          "attribution": {
+            "holiday": 1151,
+            "weekend_gap": 1125
+          },
+          "attribution_exclusive": {
+            "holiday": 26,
+            "weekend_gap": 0
+          },
+          "attribution_note": "counts overlap; a bar may have several reasons"
+        },
+        "h4_structure": {
+          "h1_bars": 124887,
+          "h4_bars": 32876,
+          "nonempty_bins": 32876,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 68,
+            "2": 140,
+            "3": 6133,
+            "4": 26535
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 30,
+          "h4_bars_per_day": {
+            "1": 2,
+            "2": 4,
+            "3": 5,
+            "4": 36,
+            "5": 107,
+            "6": 5362
+          }
+        }
+      },
+      {
+        "symbol": "XAGUSD",
+        "n_bars": 99999,
+        "start": "2009-08-18",
+        "end": "2026-08-28",
+        "n_signals": 629,
+        "eligible_bars": 9989,
+        "decidable": true,
+        "e_ratio": {
+          "20": 1.1348190333099175,
+          "50": 1.1843882423943604,
+          "100": 1.209162430339254
+        },
+        "structure": "metals",
+        "p_value": {
+          "20": 0.187,
+          "50": 0.099,
+          "100": 0.134
+        },
+        "mask": {
+          "n_bars": 99999,
+          "n_tradable": 99094,
+          "n_masked": 905,
+          "masked_pct": 0.9050090500905008,
+          "attribution": {
+            "holiday": 905,
+            "weekend_gap": 888
+          },
+          "attribution_exclusive": {
+            "holiday": 17,
+            "weekend_gap": 0
+          },
+          "attribution_note": "counts overlap; a bar may have several reasons"
+        },
+        "h4_structure": {
+          "h1_bars": 99999,
+          "h4_bars": 26243,
+          "nonempty_bins": 26243,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 39,
+            "2": 85,
+            "3": 4686,
+            "4": 21433
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 16,
+          "h4_bars_per_day": {
+            "1": 1,
+            "3": 1,
+            "4": 9,
+            "5": 65,
+            "6": 4313
+          }
+        }
+      },
+      {
+        "symbol": "GER40",
+        "n_bars": 45316,
+        "start": "2018-07-13",
+        "end": "2026-10-09",
+        "n_signals": 390,
+        "eligible_bars": 6005,
+        "decidable": true,
+        "e_ratio": {
+          "20": 1.0493365867764168,
+          "50": 0.9122362329285101,
+          "100": 0.8895962358405839
+        },
+        "structure": "equity_index",
+        "p_value": {
+          "20": 0.19,
+          "50": 0.639,
+          "100": 0.777
+        },
+        "mask": {
+          "n_bars": 45316,
+          "n_tradable": 44877,
+          "n_masked": 439,
+          "masked_pct": 0.9687527584076264,
+          "attribution": {
+            "holiday": 439,
+            "weekend_gap": 434
+          },
+          "attribution_exclusive": {
+            "holiday": 5,
+            "weekend_gap": 0
+          },
+          "attribution_note": "counts overlap; a bar may have several reasons"
+        },
+        "h4_structure": {
+          "h1_bars": 45316,
+          "h4_bars": 12224,
+          "nonempty_bins": 12224,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 423,
+            "2": 200,
+            "3": 1911,
+            "4": 9690
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 0,
+          "h4_bars_per_day": {
+            "3": 2,
+            "4": 206,
+            "6": 1899
+          }
+        }
+      }
+    ],
+    "structures_decided": {
+      "fx": [
+        "EURUSD",
+        "GBPUSD",
+        "USDJPY",
+        "USDCHF",
+        "USDCAD",
+        "AUDUSD",
+        "NZDUSD"
+      ],
+      "metals": [
+        "XAUUSD",
+        "XAGUSD"
+      ],
+      "equity_index": [
+        "GER40"
+      ]
+    }
+  },
+  "mask_off": {
+    "mechanism": "flood_tide_h1",
+    "panel": [
+      "EURUSD",
+      "GBPUSD",
+      "USDJPY",
+      "USDCHF",
+      "USDCAD",
+      "AUDUSD",
+      "NZDUSD",
+      "XAUUSD",
+      "XAGUSD",
+      "GER40"
+    ],
+    "masked": false,
+    "horizons": [
+      20,
+      50,
+      100
+    ],
+    "n_permutations": 1000,
+    "pooled_e_ratio": {
+      "20": 1.0198059323458477,
+      "50": 1.0196557970148519,
+      "100": 1.0471091403055532
+    },
+    "pooled_p_value": {
+      "20": 0.23,
+      "50": 0.37,
+      "100": 0.312
+    },
+    "null_mean": {
+      "20": 1.0079085551633264,
+      "50": 1.0146097851479658,
+      "100": 1.0386615532511672
+    },
+    "alive_anywhere": [
+      "XAUUSD",
+      "XAGUSD"
+    ],
+    "resampling_check": {
+      "common_bars": 32876,
+      "native_bars": 32960,
+      "exact_match_rate": {
+        "open": 1.0,
+        "high": 1.0,
+        "low": 1.0,
+        "close": 1.0
+      }
+    },
+    "per_instrument": [
+      {
+        "symbol": "EURUSD",
+        "n_bars": 80000,
+        "start": "2013-10-08",
+        "end": "2026-08-28",
+        "n_signals": 835,
+        "eligible_bars": 15815,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.9944351745740351,
+          "50": 0.981873588909948,
+          "100": 0.9671068824339911
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.626,
+          "50": 0.768,
+          "100": 0.894
+        },
+        "mask": null,
+        "h4_structure": {
+          "h1_bars": 80000,
+          "h4_bars": 20042,
+          "nonempty_bins": 20042,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 11,
+            "2": 17,
+            "3": 101,
+            "4": 19913
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 4,
+          "h4_bars_per_day": {
+            "1": 3,
+            "4": 6,
+            "5": 13,
+            "6": 3325
+          }
+        }
+      },
+      {
+        "symbol": "GBPUSD",
+        "n_bars": 80000,
+        "start": "2013-10-08",
+        "end": "2026-08-28",
+        "n_signals": 888,
+        "eligible_bars": 16801,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.9541025999429922,
+          "50": 0.9069830816659791,
+          "100": 0.8993232177764537
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.728,
+          "50": 0.89,
+          "100": 0.938
+        },
+        "mask": null,
+        "h4_structure": {
+          "h1_bars": 80000,
+          "h4_bars": 20042,
+          "nonempty_bins": 20042,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 10,
+            "2": 17,
+            "3": 104,
+            "4": 19911
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 5,
+          "h4_bars_per_day": {
+            "1": 3,
+            "4": 6,
+            "5": 13,
+            "6": 3325
+          }
+        }
+      },
+      {
+        "symbol": "USDJPY",
+        "n_bars": 80000,
+        "start": "2013-10-08",
+        "end": "2026-08-28",
+        "n_signals": 1166,
+        "eligible_bars": 19645,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.9892077162999618,
+          "50": 1.0632563462374143,
+          "100": 1.0832442116324053
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.301,
+          "50": 0.085,
+          "100": 0.067
+        },
+        "mask": null,
+        "h4_structure": {
+          "h1_bars": 80000,
+          "h4_bars": 20042,
+          "nonempty_bins": 20042,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 13,
+            "2": 10,
+            "3": 109,
+            "4": 19910
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 4,
+          "h4_bars_per_day": {
+            "1": 4,
+            "4": 7,
+            "5": 12,
+            "6": 3325
+          }
+        }
+      },
+      {
+        "symbol": "USDCHF",
+        "n_bars": 80000,
+        "start": "2013-10-07",
+        "end": "2026-08-28",
+        "n_signals": 875,
+        "eligible_bars": 15905,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.9131786964817641,
+          "50": 0.9098778211321785,
+          "100": 0.9752343152070687
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.69,
+          "50": 0.381,
+          "100": 0.031
+        },
+        "mask": null,
+        "h4_structure": {
+          "h1_bars": 80000,
+          "h4_bars": 20042,
+          "nonempty_bins": 20042,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 12,
+            "2": 12,
+            "3": 108,
+            "4": 19910
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 5,
+          "h4_bars_per_day": {
+            "1": 3,
+            "3": 1,
+            "4": 5,
+            "5": 12,
+            "6": 3326
+          }
+        }
+      },
+      {
+        "symbol": "USDCAD",
+        "n_bars": 80000,
+        "start": "2013-10-08",
+        "end": "2026-08-28",
+        "n_signals": 975,
+        "eligible_bars": 18075,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.9560245640246086,
+          "50": 1.0053911854241775,
+          "100": 1.0399532180447935
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.953,
+          "50": 0.893,
+          "100": 0.919
+        },
+        "mask": null,
+        "h4_structure": {
+          "h1_bars": 80000,
+          "h4_bars": 20039,
+          "nonempty_bins": 20039,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 11,
+            "2": 11,
+            "3": 101,
+            "4": 19916
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 4,
+          "h4_bars_per_day": {
+            "1": 3,
+            "2": 1,
+            "4": 6,
+            "5": 12,
+            "6": 3325
+          }
+        }
+      },
+      {
+        "symbol": "AUDUSD",
+        "n_bars": 54958,
+        "start": "2017-10-24",
+        "end": "2026-08-28",
+        "n_signals": 643,
+        "eligible_bars": 11008,
+        "decidable": true,
+        "e_ratio": {
+          "20": 0.8984646507798342,
+          "50": 0.8494955151619173,
+          "100": 0.8727155128561536
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.982,
+          "50": 0.986,
+          "100": 0.963
+        },
+        "mask": null,
+        "h4_structure": {
+          "h1_bars": 54958,
+          "h4_bars": 13761,
+          "nonempty_bins": 13761,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 9,
+            "2": 9,
+            "3": 41,
+            "4": 13702
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 4,
+          "h4_bars_per_day": {
+            "1": 3,
+            "4": 3,
+            "5": 6,
+            "6": 2286
+          }
+        }
+      },
+      {
+        "symbol": "NZDUSD",
+        "n_bars": 10000,
+        "start": "2025-01-22",
+        "end": "2026-09-01",
+        "n_signals": 124,
+        "eligible_bars": 2316,
+        "decidable": true,
+        "e_ratio": {
+          "20": 1.0846668431418245,
+          "50": 1.0389040667193754,
+          "100": 1.0821666827202245
+        },
+        "structure": "fx",
+        "p_value": {
+          "20": 0.32,
+          "50": 0.296,
+          "100": 0.111
+        },
+        "mask": null,
+        "h4_structure": {
+          "h1_bars": 10000,
+          "h4_bars": 2505,
+          "nonempty_bins": 2505,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 2,
+            "2": 3,
+            "3": 8,
+            "4": 2492
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 1,
+          "h4_bars_per_day": {
+            "4": 1,
+            "5": 1,
+            "6": 416
+          }
+        }
+      },
+      {
+        "symbol": "XAUUSD",
+        "n_bars": 124887,
+        "start": "2004-06-11",
+        "end": "2025-12-31",
+        "n_signals": 1669,
+        "eligible_bars": 30771,
+        "decidable": true,
+        "e_ratio": {
+          "20": 1.1348806858949592,
+          "50": 1.1294091836142026,
+          "100": 1.1835210145765311
+        },
+        "structure": "metals",
+        "p_value": {
+          "20": 0.082,
+          "50": 0.47,
+          "100": 0.736
+        },
+        "mask": null,
+        "h4_structure": {
+          "h1_bars": 124887,
+          "h4_bars": 32876,
+          "nonempty_bins": 32876,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 68,
+            "2": 140,
+            "3": 6133,
+            "4": 26535
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 30,
+          "h4_bars_per_day": {
+            "1": 2,
+            "2": 4,
+            "3": 5,
+            "4": 36,
+            "5": 107,
+            "6": 5362
+          }
+        }
+      },
+      {
+        "symbol": "XAGUSD",
+        "n_bars": 99999,
+        "start": "2009-08-18",
+        "end": "2026-08-28",
+        "n_signals": 1142,
+        "eligible_bars": 20297,
+        "decidable": true,
+        "e_ratio": {
+          "20": 1.1520407352826916,
+          "50": 1.181666564041737,
+          "100": 1.2540558735625007
+        },
+        "structure": "metals",
+        "p_value": {
+          "20": 0.017,
+          "50": 0.015,
+          "100": 0.006
+        },
+        "mask": null,
+        "h4_structure": {
+          "h1_bars": 99999,
+          "h4_bars": 26243,
+          "nonempty_bins": 26243,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 39,
+            "2": 85,
+            "3": 4686,
+            "4": 21433
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 16,
+          "h4_bars_per_day": {
+            "1": 1,
+            "3": 1,
+            "4": 9,
+            "5": 65,
+            "6": 4313
+          }
+        }
+      },
+      {
+        "symbol": "GER40",
+        "n_bars": 45316,
+        "start": "2018-07-13",
+        "end": "2026-10-09",
+        "n_signals": 713,
+        "eligible_bars": 12780,
+        "decidable": true,
+        "e_ratio": {
+          "20": 1.0317109503244561,
+          "50": 0.935705709681244,
+          "100": 0.8941214406428659
+        },
+        "structure": "equity_index",
+        "p_value": {
+          "20": 0.023,
+          "50": 0.221,
+          "100": 0.543
+        },
+        "mask": null,
+        "h4_structure": {
+          "h1_bars": 45316,
+          "h4_bars": 12224,
+          "nonempty_bins": 12224,
+          "empty_bins_emitted": 0,
+          "members_per_bin": {
+            "1": 423,
+            "2": 200,
+            "3": 1911,
+            "4": 9690
+          },
+          "max_member_span_hours": 3.0,
+          "bins_spanning_more_than_width": 0,
+          "bins_straddling_a_session_break": 0,
+          "h4_bars_per_day": {
+            "3": 2,
+            "4": 206,
+            "6": 1899
+          }
+        }
+      }
+    ],
+    "structures_decided": {
+      "fx": [
+        "EURUSD",
+        "GBPUSD",
+        "USDJPY",
+        "USDCHF",
+        "USDCAD",
+        "AUDUSD",
+        "NZDUSD"
+      ],
+      "metals": [
+        "XAUUSD",
+        "XAGUSD"
+      ],
+      "equity_index": [
+        "GER40"
+      ]
+    }
+  },
+  "verdict": {
+    "verdict": "DEAD_ON_AVERAGE",
+    "decisive": "FAIL",
+    "decisive_reason": "pooled_p_min p=0.534 >= 0.05",
+    "streams": {
+      "pooled_p_h20": 0.534,
+      "pooled_p_h50": 0.576,
+      "pooled_p_h100": 0.869,
+      "pooled_p_min": 0.534,
+      "pooled_p_min_mask_off": 0.23
+    },
+    "alive_anywhere": [
+      "XAUUSD",
+      "XAGUSD"
+    ],
+    "untested_structures": []
+  }
+}
