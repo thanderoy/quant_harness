@@ -192,6 +192,25 @@ The mask (R3) flags the first bar after a weekend (>40h) or after a whole day
 missing (>24 H1 bars); session breaks such as GER40's nightly close are not
 flagged. Horizons count present bars (R4), so closed hours are never exposure.
 
+### Activity reversal — Phase 4's first non-price input
+
+```bash
+cd packages/qh-research
+# Event and cell counts only; reads no forward outcome.
+QH_DATA_DIR=<data dir> python -m research.pre.activity_reversal --count
+# Register, then run. --run refuses until the registration is in the log.
+python -m research.pre.activity_reversal --preregister
+QH_DATA_DIR=<data dir> python -m research.pre.activity_reversal \
+  --run --out research/pre/artifacts/<name>.json
+```
+
+The feature is MT5 `tick_volume`, a bar's count of quote updates (the feed
+has no traded volume or aggressor side), taken relative to the same hour of
+the week over the previous 8 weeks, because its absolute level moves with the
+feed. Declared feed breaks blank the baseline window that crosses them. The
+test is two-sided and the null rotates each instrument's labels, which keeps
+activity's autocorrelation.
+
 ### Cost model
 
 ```python
