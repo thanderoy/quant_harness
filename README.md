@@ -86,9 +86,11 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 725 tests.
-# Locally with the out-of-repo data present: 725 passed, 0 skipped.
-# On CI, which has no WMPS checkout: 723 / 2.
+# expected: 760 tests.
+# Locally with the out-of-repo data present: 760 passed, 0 skipped. The H1 and
+# crest_n_keel CSVs are read from $QH_DATA_DIR (default research/data/), e.g.
+#   QH_DATA_DIR=../wine-mt5-python-setup/research/data uv run pytest -q
+# On CI, which has neither those CSVs nor a WMPS checkout: 750 / 10.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.
