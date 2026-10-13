@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-13 — **Phase 4: no mechanism established.** COT positioning first passed (seq=142, p=0.022) and passed again net of past returns (seq=144, p=0.047). Costing then showed only 2.3 bp a week, which exposed a design flaw: the outcome subtracted a trailing 52-week mean that the trend-following signal correlates with, manufacturing most of the contrarian spread (seq=146). Tick activity (seq=138) and scheduled releases (seq=140) are dead. A corrected COT test can only be judged on reports after 2026-10-13. The Phase 3 demo week ended with no orders placed; the close-out awaits the owner.
+**Last updated:** 2026-10-13 — **Phase 4: no mechanism established.** COT positioning first passed (seq=142, p=0.022) and passed again net of past returns (seq=144, p=0.047). Costing then showed only 2.3 bp a week, which exposed a design flaw: the outcome subtracted a trailing 52-week mean that the trend-following signal correlates with, manufacturing most of the contrarian spread (seq=146). Tick activity (seq=138) and scheduled releases (seq=140) are dead. A corrected COT test can only be judged on reports after 2026-10-13. Phase 3 is closed: the demo strategies are off the schedule and the canary is running (#76).
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -46,7 +46,7 @@ the next reader can check rather than trust.
 | 1 | Registry, mask, panel, normalisation, sizing, log schema, parity | ✅ **done — 10/10 criteria** |
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
 | 2b | Universe expansion — non-USD crosses, metals, indices | ✅ **done** (seq=136) — FX, metals and GER40 (R14); every instrument passes `research.admission`; R3/R4 exercised on GER40's calendar; `flood_tide_h1` across ten instruments is DEAD_ON_AVERAGE, pooled p 0.534 (seq=135); the shelved gold mechanisms re-checked against SR*=D5, no verdict moved (#70) |
-| 3 | Execution merge | 🔨 **demo week running since 2026-10-07 11:33 UTC** (crest_n_keel + asqs on mt5-test, R13) — steps 1–6 done; criteria 1–6 and 8 met, criterion 5 on real orders (seq=126). Criterion 7 is decided by the week. What to watch: `docs/phase3_spec.md` §5.1 |
+| 3 | Execution merge | ✅ **closed 2026-10-13** — demo week 2026-10-07..13 placed 0 orders. Criterion 7 is not falsified but weakly evidenced: the sizer and order paths were never exercised. crest_n_keel and asqs came off the schedule with no asqs position open (#76). The read-only canary has run every 15 minutes on `mt5-test` since 08:52Z that day; all runs were OK in the first 3 hours. Rollback images are tagged `:pre-closeout` |
 | 4+ | Multi-symbol live, CPCV | ⏸ **nothing established** — COT positioning's two passes (seq=142, seq=144) are withdrawn as a drift-term artifact (seq=146): on raw returns only GBPUSD and USDCAD lean contrarian, and pooled FX makes 2.3 bp a week gross. Dead: tick activity (seq=138), scheduled releases (seq=140). Trial count 30. **Paused by the owner 2026-10-13.** If it resumes, the open options are an out-of-sample COT test on raw returns (reports after 2026-10-13) and cross-asset, the one input class not yet tried |
 
 ### Phase 1 acceptance criteria
