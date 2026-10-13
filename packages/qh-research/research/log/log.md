@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 146
+- **Entries:** 147
 - **Trial count (floor N for DSR):** 30
-- **Hash chain:** OK — chain ok (146 entries)
+- **Hash chain:** OK — chain ok (147 entries)
 
 ## Principles
 
@@ -2305,3 +2305,13 @@ _Metrics_: `family_trials_phase4`=4, `raw_same_sample_h1`=-0.146273190355492, `r
 > Not a new result: context for seq=144 so its pass is not over-read. Removing positioning's relation to past returns cut the pooled effect from -0.146 (raw, same sample, p=0.002) to -0.092 (p=0.047): about 37% of seq=142's effect was weekly price reversal. What survives is carried by FX (-0.143, p=0.001, all six decidable pairs negative); metals weaken to -0.118 (p=0.059) and ES->GER40 is inert (p=0.919) as at seq=142. p=0.047 sits on the threshold, in a family of four Phase 4 trials registered 2026-10-12/13. Established: an FX contrarian positioning effect not explained by 1- and 13-interval returns, in-sample. Not established: metals or equity, out-of-sample stability, or anything net of costs. Next: costs (FX from fills, #68), then an out-of-sample hold on reports released from 2026-10-16.
 
 _hash_: `57b365412afeda44…` · _prev_: `c5d165285653e36a…`
+
+### seq 146 · 2026-10-13T08:20:07Z · audit · `record:cot-drift-term-artifact`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `corr_signal_trailing_mu`={'AUDUSD': 0.543, 'EURUSD': 0.365, 'GBPUSD': 0.318, 'GER40': 0.419, 'USDCAD': 0.315, 'USDCHF': 0.318, 'USDJPY': 0.216, 'XAGUSD': 0.095, 'XAUUSD': 0.118}, `fx_pooled_gross_bp`=2.27, `fx_pooled_net_t_base`=0.56, `fx_pooled_net_t_stress`=0.18, `spread_drift_term_sigma`={'AUDUSD': -0.146, 'EURUSD': -0.13, 'GBPUSD': -0.085, 'GER40': -0.096, 'USDCAD': -0.08, 'USDCHF': -0.069, 'USDJPY': -0.06, 'XAGUSD': -0.045, 'XAUUSD': -0.063}, `spread_raw_returns_sigma`={'AUDUSD': -0.032, 'EURUSD': 0.024, 'GBPUSD': -0.146, 'GER40': 0.081, 'USDCAD': -0.126, 'USDCHF': 0.005, 'USDJPY': -0.013, 'XAGUSD': -0.091, 'XAUUSD': -0.035}, `supersedes_reading_of`=[142, 144, 145]
+
+> Supersedes the reading of seq=142, seq=144 and seq=145; their verdicts stand as recorded in this append-only log but are not to be relied on. The outcome subtracted h times the trailing 52-interval mean return. Speculators follow trends, so the signal correlates with that trailing mean (0.10 to 0.54 by instrument, residual signal), and subtracting it adds a mechanical contrarian term to the HIGH-LOW spread on every instrument: -0.13 EURUSD, -0.085 GBPUSD, -0.06 USDJPY, -0.07 USDCHF, -0.08 USDCAD, -0.15 AUDUSD (sigma units). On raw returns the spreads are +0.024, -0.146, -0.013, +0.005, -0.126, -0.032: contrarian of any size only in GBPUSD and USDCAD. The costing that exposed it (cot_costing_20261013.json) agrees: pooled FX gross 2.3 bp per weekly trade, net t 0.56 (base), 0.18 (stress), with in-sample terciles, which is an upper bound. The R1/R13 control in seq=143 could not catch this: the drift term spans 52 intervals. Found post hoc, after both results, while costing. Consequence: no Phase 4 mechanism is established. The in-sample period is now seen; any corrected test (raw returns, no trailing-mean subtraction, or the drift term in the control) can only be judged on reports released after 2026-10-13. Hygiene, in the spirit of rules 1 and 3: a drift term built from trailing returns is itself a function of past returns; check corr(feature, drift term) at registration, as normalizer_check does for the denominator.
+
+_hash_: `162f10340f0f679c…` · _prev_: `57b365412afeda44…`
