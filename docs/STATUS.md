@@ -5,7 +5,7 @@ built is `docs/REWRITE.md`; the authority on *what was found* is the research
 log (`packages/qh-research/research/log/`). This file is the short answer to
 "where are we".
 
-**Last updated:** 2026-10-13 — **Phase 4 has a live candidate, at the margin.** COT positioning extremes are contrarian across FX and metals (seq=142, p=0.022), and the part not explained by past returns survives (seq=144, p=0.047), carried by FX (p=0.001). Metals weaken, and the ES→GER40 proxy is inert. Tick activity (seq=138) and scheduled releases (seq=140) are dead. Next: costs, then an out-of-sample hold. The Phase 3 demo week ended 2026-10-13 with no orders placed; the close-out awaits the owner.
+**Last updated:** 2026-10-13 — **Phase 4: no mechanism established.** COT positioning first passed (seq=142, p=0.022) and passed again net of past returns (seq=144, p=0.047). Costing then showed only 2.3 bp a week, which exposed a design flaw: the outcome subtracted a trailing 52-week mean that the trend-following signal correlates with, manufacturing most of the contrarian spread (seq=146). Tick activity (seq=138) and scheduled releases (seq=140) are dead. A corrected COT test can only be judged on reports after 2026-10-13. The Phase 3 demo week ended with no orders placed; the close-out awaits the owner.
 
 > **Note on this file's history.** Until 2026-09-20 it described the
 > pre-rewrite package layout and a Phase 1/2a/2b/2c *module* numbering that
@@ -32,7 +32,7 @@ the next reader can check rather than trust.
 | Tests passing | **784 passed, 10 skipped** on CI; 794 tests total. Every skip is declared and is for data the runner does not have | 794 tests total, measured on run 38302297860 (#75, which appends seq=139 and seq=140, so the log-rewrite check had something to diff and ran). Locally with `QH_DATA_DIR` pointing at the WMPS `research/data/` and a WMPS checkout present, all 794 pass with none skipped. Where the log matches `origin/develop` the rewrite check skips, giving one fewer passed and one more skipped. The CI skips are: X22's port-vs-WMPS comparison (needs a WMPS checkout, a separate repository); one case in `test_parity_data_resolution.py` that asserts the recorded path wins *where it resolves*, so it skips on a runner by design; five Phase 2b panel checks (`test_panel_edge_phase2b.py` ×4, `test_panel_edge_r4.py` ×1) that need the GER40, XAUUSD and FX H1 CSVs; and three `test_sr_star_reeval.py` cases that re-hash the committed SR\* streams against their raw crest_n_keel sources. So the Phase 2b panel result (seq=135) is reproduced locally only, never on CI. 23 further checks used to skip for want of out-of-repo CSVs and no longer do — see the parity-data note below. |
 | Packages | 4 built — `qh-resources`, `qh-strategies`, `qh-research`, and `qh-platform` as of the Phase 3 subtree merge | `ls packages/` |
 | Acceptance tests | 35 of 35 X ids covered, `DEFERRED` empty; **2** CI-limited and declared (X17, X22) | `tests/test_x_coverage.py` |
-| Research log | 146 entries (to seq=145), chain verified; `trial_count()` = 30 | `research.log.verify()` |
+| Research log | 147 entries (to seq=146), chain verified; `trial_count()` = 30 | `research.log.verify()` |
 | Instruments | 9 — 7 FX majors + XAUUSD + XAGUSD, no symbol-specific branching | `snapshots/pepperstone_live_20260906.json` |
 | Gate detection floor | **1.2 annualised Sharpe**, false-positive rate 0% at n=2,000 pooled | seq=107, `research/reports/power.py` |
 
@@ -47,7 +47,7 @@ the next reader can check rather than trust.
 | 2 | Panel harness — `signal_edge` per-instrument across the FX majors | ✅ **done** — run at H1, `flood_tide_h1` dead everywhere (seq=109) |
 | 2b | Universe expansion — non-USD crosses, metals, indices | ✅ **done** (seq=136) — FX, metals and GER40 (R14); every instrument passes `research.admission`; R3/R4 exercised on GER40's calendar; `flood_tide_h1` across ten instruments is DEAD_ON_AVERAGE, pooled p 0.534 (seq=135); the shelved gold mechanisms re-checked against SR*=D5, no verdict moved (#70) |
 | 3 | Execution merge | 🔨 **demo week running since 2026-10-07 11:33 UTC** (crest_n_keel + asqs on mt5-test, R13) — steps 1–6 done; criteria 1–6 and 8 met, criterion 5 on real orders (seq=126). Criterion 7 is decided by the week. What to watch: `docs/phase3_spec.md` §5.1 |
-| 4+ | Multi-symbol live, CPCV | 🔨 **one marginal candidate** — `cot_positioning_extremes` ALIVE (seq=141/142, pooled p 0.022), and net of 1- and 13-week returns still ALIVE (seq=143/144, p 0.047; FX p 0.001, metals 0.059, equity inert). In-sample only, four Phase 4 trials in the family. Dead: `activity_reversal_h1` (seq=138), `event_drift_h1` (seq=140). Next: FX costs from fills (#68), then an out-of-sample hold on reports from 2026-10-16 |
+| 4+ | Multi-symbol live, CPCV | ⏸ **nothing established** — COT positioning's two passes (seq=142, seq=144) are withdrawn as a drift-term artifact (seq=146): on raw returns only GBPUSD and USDCAD lean contrarian, and pooled FX makes 2.3 bp a week gross. Dead: tick activity (seq=138), scheduled releases (seq=140). Trial count 30. Next: an out-of-sample COT test on raw returns, or a new input class, at the owner's choice |
 
 ### Phase 1 acceptance criteria
 
