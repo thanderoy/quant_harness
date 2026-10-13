@@ -309,65 +309,33 @@ CELERY_BEAT_SCHEDULE = {
     #     "schedule": crontab(minute=2, day_of_week="mon-fri"),
     #     "options": {"expires": 300},
     # },
-    # ── Phase 3 demo week: crest_n_keel + asqs, as ENGINEERING FIXTURES ──
+    # ── Phase 3 demo week ended 2026-10-13 ──
     #
-    # Both were retired on 2026-08-30 (WMPS 717b729) because their evidence was
-    # refuted: crest_n_keel's deployed pullback is edgeless (seq=45, seq=49),
-    # asqs is net-losing out of sample (seq=30, DSR 0.038 at seq=51). That
-    # retirement said re-enabling needs new out-of-sample evidence. Nothing here
-    # claims any. These run under ruling R13 (REWRITE.md section 10.1) for one
-    # purpose: the Phase 3 demo week (criterion 7), which exercises the code the
-    # merge changed -- shared sizing and its refusal, the broker port, the three
-    # state files, both drawdown guards, the daily cap.
+    # crest_n_keel and asqs ran here 2026-10-07..13 as engineering fixtures
+    # under R13 and came off at the end of the week, with no asqs position
+    # open, as R13 required. Both stay retired: their evidence was refuted
+    # (crest_n_keel seq=45/49, asqs seq=30/51), and a killed mechanism must not
+    # sit on a live schedule (X29). Re-enabling either needs new out-of-sample
+    # evidence, not a config change. tests/test_beat_schedule.py holds this.
+    # ── Operational canary (app/quant/canary.py) ──
     #
-    # Conditions R13 attaches, so this cannot drift into a redeployment:
-    #   - demo only. Both strategies default to environment="test" (mt5-test);
-    #     tests/test_demo_week_schedule.py fails if a scheduled strategy
-    #     resolves to "prod".
-    #   - time-boxed to the demo week. Remove both entries when it ends -- but
-    #     never while an asqs position is open: asqs.evaluate() also drives
-    #     manage_positions() (breakeven, trailing, partial close).
-    #   - their P&L is not evidence. Nothing from this week is logged as a
-    #     trial or read as a performance result.
-    #
-    # Schedules are restored exactly as they ran before retirement.
-    "crest-n-keel": {
-        "task": "quant.crest_n_keel.run",
-        "schedule": crontab(minute=1, day_of_week="mon-fri"),
-    },
-    "asqs": {
-        "task": "quant.asqs.run",
-        "schedule": crontab(
-            minute="1,6,11,16,21,26,31,36,41,46,51,56", day_of_week="mon-fri"
-        ),
-        # Discard if not picked up within 4 min — by then iloc[-2] has shifted
-        # to the next bar and the signal would be stale.
-        "options": {"expires": 240},
-    },
-    "asqs-audit": {
-        "task": "quant.asqs.audit",
-        "schedule": crontab(hour=20, minute=5, day_of_week="mon-fri"),
-    },
-    # ── Operational canary (app/quant/canary.py) -- DISABLED until enabled ──
-    #
-    # Enabled when crest_n_keel and asqs come off this schedule at the end of
-    # the demo week (2026-10-13): a killed mechanism must not sit on a live
-    # schedule (X29), and this keeps the monitoring value they provided. It
+    # Enabled 2026-10-13, with the owner's approval, as crest_n_keel and asqs
+    # came off: it keeps the monitoring value they provided. It
     # walks the same read path -- API health, connect, account, XAUUSD H1/M5
     # closed-bar freshness, the shared indicators, positions by magic, the
     # three state files -- and structurally cannot signal or order (see
-    # tests/test_canary.py). Flip only with the owner's approval.
+    # tests/test_canary.py).
     #
     # Every 15 minutes, every day (a closed market is graded, not alerted), on
     # minutes clear of :00/:30 and of asqs's 1,6,11,... fires. To also watch
     # the live terminal read-only, add a second entry with environment "prod".
     #
-    # "ops-canary": {
-    #     "task": "quant.canary.run",
-    #     "schedule": crontab(minute="7,22,37,52"),
-    #     "kwargs": {"environment": "test"},
-    #     "options": {"expires": 600},
-    # },
+    "ops-canary": {
+        "task": "quant.canary.run",
+        "schedule": crontab(minute="7,22,37,52"),
+        "kwargs": {"environment": "test"},
+        "options": {"expires": 600},
+    },
 }
 
 # Telegram API Credentials
