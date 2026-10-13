@@ -86,11 +86,11 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 778 tests.
-# Locally with the out-of-repo data present: 778 passed, 0 skipped. The H1 and
+# expected: 794 tests.
+# Locally with the out-of-repo data present: 794 passed, 0 skipped. The H1 and
 # crest_n_keel CSVs are read from $QH_DATA_DIR (default research/data/), e.g.
 #   QH_DATA_DIR=../wine-mt5-python-setup/research/data uv run pytest -q
-# On CI, which has neither those CSVs nor a WMPS checkout: 768 / 10.
+# On CI, which has neither those CSVs nor a WMPS checkout: 784 / 10.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.
@@ -210,6 +210,22 @@ the week over the previous 8 weeks, because its absolute level moves with the
 feed. Declared feed breaks blank the baseline window that crosses them. The
 test is two-sided and the null rotates each instrument's labels, which keeps
 activity's autocorrelation.
+
+### Event drift — scheduled releases against the same clock without them
+
+```bash
+cd packages/qh-research
+QH_DATA_DIR=<data dir> python -m research.pre.event_drift --count
+python -m research.pre.event_drift --preregister
+QH_DATA_DIR=<data dir> python -m research.pre.event_drift \
+  --run --out research/pre/artifacts/<name>.json
+```
+
+Releases come from `research/datasets/calendar/macro_events.csv`: FOMC, NFP,
+CPI, ECB, BoE and BoJ, 2004-06 onward, from central-bank and BLS pages, with
+`sources.md` and the scripts that built it. Times are placed in broker server
+time (Europe/Athens, EU DST). Each event is compared with placebo bars at the
+same hour of the week in release-free weeks.
 
 ### Cost model
 
