@@ -227,6 +227,23 @@ CPI, ECB, BoE and BoJ, 2004-06 onward, from central-bank and BLS pages, with
 time (Europe/Athens, EU DST). Each event is compared with placebo bars at the
 same hour of the week in release-free weeks.
 
+### COT positioning — speculators' extremes and the next report interval
+
+```bash
+cd packages/qh-research
+QH_DATA_DIR=<data dir> python -m research.pre.cot_positioning --count
+python -m research.pre.cot_positioning --preregister
+QH_DATA_DIR=<data dir> python -m research.pre.cot_positioning \
+  --run --out research/pre/artifacts/<name>.json
+```
+
+Positioning comes from `research/datasets/cot/cot_positions.csv` (CFTC TFF and
+Disaggregated futures-only, 2006 onward, with `sources.md` and its build
+script). Each report is used only from `release_conservative_utc`, and rows
+dated before their report type launched are excluded because the CFTC
+backcast their categories. GER40 has no COT report; E-mini S&P positioning
+stands in for it.
+
 ### Cost model
 
 ```python
