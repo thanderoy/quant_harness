@@ -1,0 +1,199 @@
+{
+ "instruments": {
+  "EURUSD": {
+   "structure": "fx",
+   "base": {
+    "n_trades": 368,
+    "gross_mean_bp": -1.1074218175034687,
+    "gross_t": -0.21304589073860847,
+    "cost_mean_bp": 0.5804691462694936,
+    "net_mean_bp": -1.687890963772962,
+    "net_t": -0.3247174155698696,
+    "cost_share_of_gross": null
+   },
+   "stress": {
+    "n_trades": 368,
+    "gross_mean_bp": -1.1074218175034687,
+    "gross_t": -0.21304589073860847,
+    "cost_mean_bp": 1.2369205552165767,
+    "net_mean_bp": -2.344342372720044,
+    "net_t": -0.4510071712317817,
+    "cost_share_of_gross": null
+   }
+  },
+  "GBPUSD": {
+   "structure": "fx",
+   "base": {
+    "n_trades": 369,
+    "gross_mean_bp": 7.806505172495639,
+    "gross_t": 1.1159999177995028,
+    "cost_mean_bp": 0.45508009663977245,
+    "net_mean_bp": 7.351425075855865,
+    "net_t": 1.0509583398703064,
+    "cost_share_of_gross": 0.05829498432193945
+   },
+   "stress": {
+    "n_trades": 369,
+    "gross_mean_bp": 7.806505172495639,
+    "gross_t": 1.1159999177995028,
+    "cost_mean_bp": 1.4964691204849179,
+    "net_mean_bp": 6.31003605201072,
+    "net_t": 0.9021121450431122,
+    "cost_share_of_gross": 0.19169514237399987
+   }
+  },
+  "USDJPY": {
+   "structure": "fx",
+   "base": {
+    "n_trades": 368,
+    "gross_mean_bp": 1.5648761076716855,
+    "gross_t": 0.22090302268954895,
+    "cost_mean_bp": 0.7698325789911145,
+    "net_mean_bp": 0.7950435286805728,
+    "net_t": 0.11222597663805697,
+    "cost_share_of_gross": 0.4919447457962129
+   },
+   "stress": {
+    "n_trades": 368,
+    "gross_mean_bp": 1.5648761076716855,
+    "gross_t": 0.22090302268954895,
+    "cost_mean_bp": 1.6997375270328996,
+    "net_mean_bp": -0.13486141936121235,
+    "net_t": -0.019035603807491256,
+    "cost_share_of_gross": 1.0861802533121097
+   }
+  },
+  "USDCHF": {
+   "structure": "fx",
+   "base": {
+    "n_trades": 369,
+    "gross_mean_bp": 0.5518447742015179,
+    "gross_t": 0.09523087524203515,
+    "cost_mean_bp": 1.012312256222631,
+    "net_mean_bp": -0.46046748202111165,
+    "net_t": -0.079461848227705,
+    "cost_share_of_gross": 1.834414863649617
+   },
+   "stress": {
+    "n_trades": 369,
+    "gross_mean_bp": 0.5518447742015179,
+    "gross_t": 0.09523087524203515,
+    "cost_mean_bp": 2.235116021241822,
+    "net_mean_bp": -1.683271247040304,
+    "net_t": -0.29047725802373253,
+    "cost_share_of_gross": 4.050262185550065
+   }
+  },
+  "USDCAD": {
+   "structure": "fx",
+   "base": {
+    "n_trades": 369,
+    "gross_mean_bp": 4.511124898452781,
+    "gross_t": 0.9653455315425677,
+    "cost_mean_bp": 0.7042320720224112,
+    "net_mean_bp": 3.8068928264303694,
+    "net_t": 0.8146464987114685,
+    "cost_share_of_gross": 0.1561100807171062
+   },
+   "stress": {
+    "n_trades": 369,
+    "gross_mean_bp": 4.511124898452781,
+    "gross_t": 0.9653455315425677,
+    "cost_mean_bp": 1.5548961075735983,
+    "net_mean_bp": 2.9562287908791833,
+    "net_t": 0.6326117742807988,
+    "cost_share_of_gross": 0.34468034970765143
+   }
+  },
+  "AUDUSD": {
+   "structure": "fx",
+   "base": {
+    "n_trades": 229,
+    "gross_mean_bp": -0.9676843079440729,
+    "gross_t": -0.09052627696609312,
+    "cost_mean_bp": 1.3516900635240485,
+    "net_mean_bp": -2.3193743714681196,
+    "net_t": -0.21698532988189603,
+    "cost_share_of_gross": null
+   },
+   "stress": {
+    "n_trades": 229,
+    "gross_mean_bp": -0.9676843079440729,
+    "gross_t": -0.09052627696609312,
+    "cost_mean_bp": 2.984438939828018,
+    "net_mean_bp": -3.95212324777209,
+    "net_t": -0.36975346698340306,
+    "cost_share_of_gross": null
+   }
+  },
+  "XAUUSD": {
+   "structure": "metals",
+   "base": {
+    "n_trades": 425,
+    "gross_mean_bp": 5.030759928650643,
+    "gross_t": 0.534410814881859,
+    "cost_mean_bp": 0.9577105467880062,
+    "net_mean_bp": 4.073049381862634,
+    "net_t": 0.4327027429877663,
+    "cost_share_of_gross": 0.19037094998983276
+   },
+   "stress": {
+    "n_trades": 425,
+    "gross_mean_bp": 5.030759928650643,
+    "gross_t": 0.534410814881859,
+    "cost_mean_bp": 5.797341176556731,
+    "net_mean_bp": -0.7665812479060906,
+    "net_t": -0.0814626749555774,
+    "cost_share_of_gross": 1.1523788172717877
+   }
+  },
+  "XAGUSD": {
+   "structure": "metals",
+   "base": {
+    "n_trades": 449,
+    "gross_mean_bp": 15.310161198196296,
+    "gross_t": 0.7637452068766916,
+    "cost_mean_bp": 15.199046036863765,
+    "net_mean_bp": 0.11111516133252743,
+    "net_t": 0.005538517619242115,
+    "cost_share_of_gross": 0.9927423911548611
+   },
+   "stress": {
+    "n_trades": 449,
+    "gross_mean_bp": 15.310161198196296,
+    "gross_t": 0.7637452068766916,
+    "cost_mean_bp": 82.50910705726044,
+    "net_mean_bp": -67.19894585906414,
+    "net_t": -3.3321275559924577,
+    "cost_share_of_gross": 5.389172980554961
+   }
+  },
+  "GER40": {
+   "structure": "equity_index",
+   "base": {
+    "n_trades": 207,
+    "gross_mean_bp": -13.169108529299443,
+    "gross_t": -0.836654392094531
+   },
+   "stress": {
+    "n_trades": 207,
+    "gross_mean_bp": -13.169108529299443,
+    "gross_t": -0.836654392094531
+   }
+  }
+ },
+ "fx_pooled": {
+  "base": {
+   "n_trades": 2072,
+   "gross_mean_bp": 2.2662064141520455,
+   "net_mean_bp": 1.4902520356648814,
+   "net_t": 0.5581951737351999
+  },
+  "stress": {
+   "n_trades": 2072,
+   "gross_mean_bp": 2.2662064141520455,
+   "net_mean_bp": 0.47333080002065153,
+   "net_t": 0.17729134821481235
+  }
+ }
+}

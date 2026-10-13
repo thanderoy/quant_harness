@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 141
-- **Trial count (floor N for DSR):** 28
-- **Hash chain:** OK — chain ok (141 entries)
+- **Entries:** 147
+- **Trial count (floor N for DSR):** 30
+- **Hash chain:** OK — chain ok (147 entries)
 
 ## Principles
 
@@ -27,6 +27,8 @@ Edge-gate role is shown on every row: a **hard_gate** entry must show E-Ratio ed
 | `avwap_sweep_reclaim_m15` — AVWAP/POC/HVN sweep-and-reclaim on XAUUSD M15 with H1 HMA bias | mean-reversion | diagnostic | 3_is_backtest | open | artifact_path=research/artifacts/avwap_sweep_reclaim_signal_edge_20260614T083827Z.json, e_ratio_16bar_avwap=0.6105235797712227, e_ratio_16bar_combined=0.806326708871015, e_ratio_16bar_hvn=0.9389136831082255, e_ratio_16bar_long=0.8362129729640871, e_ratio_16bar_poc=0.5316155984971189, e_ratio_16bar_short=0.7813945766834295, e_ratio_32bar_combined=0.8981169691816416, e_ratio_8bar_combined=0.8630572252818496, p_value_16bar=0.942, random_baseline_ci_hi=1.2329962317847916, random_baseline_ci_lo=0.7953614436587528, random_baseline_mean=1.0407515046105003, signal_hash=35d6b60e498f3813, trigger_count_avwap=40, trigger_count_hvn=97, trigger_count_long=58, trigger_count_poc=8, trigger_count_short=87, trigger_count_total=145, best_sharpe_px=0.492, drift_actual=0.492, drift_null_mean=-0.156, drift_p=0.001, median_sharpe_px=-0.101, median_trades=122, n_configs=2808, pct_countable=60.2, pct_positive=29.9 |
 | `cnk_nested_walk_forward` — crest_n_keel nested walk-forward: does the selection procedure generalise? | crest_n_keel | diagnostic | 5_walk_forward | killed | h1_fixed_mean=0.76, h1_folds=17, h1_nk2_n=17, h1_nk2_p=0.5, h1_nk2_wins=9, h1_oos_mean=0.079, h1_oos_median=-0.041, h1_oos_positive=8, h1_oos_trades_median=27, h1_pool_mean=-0.176, h1_train_sharpe_mean=1.648, h4_fixed_mean=0.452, h4_folds=16, h4_nk2_n=15, h4_nk2_p=0.5, h4_nk2_wins=8, h4_oos_mean=-0.353, h4_oos_median=0.24, h4_oos_positive=8, h4_oos_trades_median=10, h4_pool_mean=-0.116, h4_train_sharpe_mean=1.448, lookahead_gap_h1=0.681, lookahead_gap_h4=0.805, pooled_nk2_n=32, pooled_nk2_p=0.43, pooled_nk2_wins=17, pooled_pool_mean=-0.149, pooled_selected_mean=-0.124, pooled_selection_value=0.025 |
 | `cnk_param_sweep` — Exhaustive parameter + timeframe sweep of crest_n_keel, both entry modes | crest_n_keel | diagnostic | 5_walk_forward | open | deployed_pullback_region_median_sharpe=-0.0738, k1_null_mean=0.435, k1_p_value=0.0, k2_bh_calmar=0.2768, k2_calmar=0.4675, k3_dsr_at_grid_n=0.8391, k4_neighbour_min_sharpe=0.6771984633116068, leader_cagr_acct=0.0769028726896998, leader_direction=long, leader_max_dd_px=0.2693262706455639, leader_mode=momentum, leader_n_trades=2141, leader_profit_factor_px=1.3726347675526729, leader_sharpe_px=0.9849627340280688, leader_timeframe=H4, leader_win_rate=0.4072863148061653, n_configs_distinct=119917, n_configs_raw=150660, n_countable=98995, n_survivors=2789, gate_passed=0, h1_dsr_at_grid_n=0.0, h1_folds_positive=12, h1_folds_total=17, h1_is_oos_gap=-0.02, h1_oos_max_dd=0.187, h1_oos_profit_factor=1.29, h1_oos_sharpe_mean_folds=0.761, h1_oos_sharpe_median_folds=0.429, h1_oos_sharpe_pooled=0.91, h1_oos_trades=1973, h4_dsr_at_grid_n=0.0, h4_folds_positive=11, h4_folds_total=16, h4_is_oos_gap=0.07, h4_oos_max_dd=0.273, h4_oos_profit_factor=1.23, h4_oos_sharpe_mean_folds=0.454, h4_oos_sharpe_median_folds=0.301, h4_oos_sharpe_pooled=0.71, h4_oos_trades=1595 |
+| `cot_positioning_extremes` — Speculator positioning extremes and the next report interval, across FX, metals and GER40 | cot_positioning | unset | 1_signal_edge | open | artifact=cot_positioning_20261013.json, n_intervals={'AUDUSD': 421, 'EURUSD': 630, 'GBPUSD': 630, 'GER40': 389, 'NZDUSD': 43, 'USDCAD': 630, 'USDCHF': 630, 'USDJPY': 630, 'XAGUSD': 779, 'XAUUSD': 743}, per_instrument_spread={'AUDUSD': {'1': -0.10475855548781116, '4': -0.2651565295421246}, 'EURUSD': {'1': -0.05788140564643128, '4': -0.22752603195519436}, 'GBPUSD': {'1': -0.2535032873326679, '4': -0.47315793261164935}, 'GER40': {'1': -0.013767897086755555, '4': 0.09277942772255905}, 'NZDUSD': {'1': None, '4': None}, 'USDCAD': {'1': -0.2921369489229934, '4': -0.49567599292003073}, 'USDCHF': {'1': -0.2057024454200084, '4': -0.22937475371793298}, 'USDJPY': {'1': -0.14397346590711804, '4': -0.17616324790955804}, 'XAGUSD': {'1': -0.16384353802611445, '4': -0.3507575579830652}, 'XAUUSD': {'1': -0.17261615337532668, '4': -0.2958693942303228}}, per_structure_h1={'equity_index': {'observed': -0.013767897086755555, 'p': 0.9100899100899101}, 'fx': {'observed': -0.17632601811950502, 'p': 0.000999000999000999}, 'metals': {'observed': -0.16822984570072058, 'p': 0.003996003996003996}}, pooled_spread={'h1': -0.1194412536356604, 'h4': -0.18056993216451667}, reason=pooled_p_h1 p=0.02198 < 0.05, streams={'equity_index_p_h1': 0.9100899100899101, 'fx_p_h1': 0.000999000999000999, 'metals_p_h1': 0.003996003996003996, 'pooled_p_h1': 0.02197802197802198, 'pooled_p_h4': 0.03696303696303696}, verdict=ALIVE |
+| `cot_positioning_residual` — COT positioning extremes net of past returns — is seq=142 positioning, or price reversal? | cot_positioning | unset | 1_signal_edge | open | artifact=cot_residual_20261013.json, n_intervals={'AUDUSD': 344, 'EURUSD': 553, 'GBPUSD': 553, 'GER40': 312, 'NZDUSD': 0, 'USDCAD': 553, 'USDCHF': 553, 'USDJPY': 553, 'XAGUSD': 675, 'XAUUSD': 639}, per_structure_h1={'equity_index': {'observed': -0.014708388059898117, 'p': 0.919080919080919}, 'fx': {'observed': -0.14284163705845046, 'p': 0.000999000999000999}, 'metals': {'observed': -0.11760473692587742, 'p': 0.058941058941058944}}, pooled_spread={'h1': -0.091718254014742, 'h4': -0.1927341700215194}, raw_same_sample_h1={'observed': -0.146273190355492, 'p': 0.001998001998001998}, reading=positioning carries information beyond past returns, reason=pooled_p_h1 p=0.04695 < 0.05, streams={'equity_index_p_h1': 0.919080919080919, 'fx_p_h1': 0.000999000999000999, 'metals_p_h1': 0.058941058941058944, 'pooled_p_h1': 0.04695304695304695, 'pooled_p_h4': 0.008991008991008992, 'raw_same_sample_p_h1': 0.001998001998001998}, verdict=ALIVE |
 | `crest_n_keel` — HMA+Stoch 1H pullback (a.k.a. hma_stoch_1h) | pullback | diagnostic | 5_walk_forward | open | e_ratio_w30=0.9, p_value=0.34, sharpe_oos=1.76, dsr_prob_24h=0.106, dsr_prob_session=0.028, folds=33, oos_max_dd_session=0.1, oos_trades_24h=323, oos_trades_session=146, profit_factor_24h=1.15, profit_factor_session=1.45, sharpe_oos_24h=0.27, sharpe_oos_session=0.41, spread_stress_survives_2x=True, n_folds=17, seq29_247_corrected=0.1717, seq29_247_delta=-0.002, seq29_247_logged_basis=0.1738, seq29_session_corrected=-0.2386, seq29_session_corrected_dd=0.124, seq29_session_corrected_pf=0.783, seq29_session_delta=-0.5581, seq29_session_logged_basis=0.3196, seq29_session_logged_dd=0.053, seq29_session_logged_pf=1.534 |
 | `crest_n_keel_momentum` — crest_n_keel MOMENTUM (HMA-slope-flip, long-only, ATR chandelier trail) | crest_n_keel | hard_gate | 5_walk_forward | open | dsr_prob_num_trials_1=1.0, dsr_prob_num_trials_20=0.061, gate_verdict=FAIL (DSR only); PASS at num_trials=1, harness=qhf_harness run_cnk_momentum, 21.6y H1 2004-2025, 33 folds, is_oos_gap=-0.34, mean_is_sharpe=0.86, oos_max_dd_pct=29.9, oos_profit_factor=1.26, oos_sharpe=1.2, oos_trades=3829 |
 | `donchian_50_control` — Donchian-50 breakout (positive control) | breakout | hard_gate | 1_signal_edge | shelved | e_ratio_w10=1.11, e_ratio_w50=1.17, p_value=0.0, artifact_path=None, e_ratio_32bar_combined=None, e_ratio_32bar_long=None, e_ratio_32bar_short=None, p_value_32bar=0.0, random_baseline_mean=None, signal_hash=None, trigger_count_long=None, trigger_count_short=None, trigger_count_total=None |
@@ -2239,3 +2241,77 @@ _Metrics_: `artifact`=event_drift_20261012.json, `n_events_h4`={'AUDUSD': 273, '
 > Registered run: DEAD (pooled_p_h4 p=0.09191 >= 0.05). Decided by the pre-declared stream alone. Excess is the event bars' mean sign-aligned, drift-removed forward move minus the placebo mean, in trailing-sigma units; positive is continuation. Not evidence, recorded so it cannot be quietly reused: at h=4 the non-decisive per-structure streams diverge — metals +0.219 sigma (continuation, p=0.010), GER40 -0.402 (reversal, p=0.003), FX -0.094 (p=0.072) — and cancel in the pool. They are 9 descriptive streams, GER40 is one instrument with 305 events, and choosing a structure after seeing it is the post-hoc selection the registration excludes. Any test of a structure-specific effect is a new trial, needs its own registration, and must be run on data this run did not see.
 
 _hash_: `be474ae33a0940b3…` · _prev_: `4027f569668cb51f…`
+
+### seq 141 · 2026-10-13T08:04:10Z · hypothesis · `cot_positioning_extremes`
+
+**Speculator positioning extremes and the next report interval, across FX, metals and GER40**
+
+_Mechanism_: When speculators' net position (leveraged funds, or managed money for metals) as a share of open interest is extreme against its prior three years, the instrument's move from that report's release to the next differs between the high and low terciles. Contrarian unwinding and persistence predict opposite signs. Two-sided.
+
+market=FX majors, XAUUSD, XAGUSD, GER40 (via ES)· timeframe=H1· family=cot_positioning· edge_gate_role=unset· counts_as_trial=True
+
+_Predictions_:
+- pooled_p_h1 < 0.05, two-sided, decides; h=4 (overlapping) and per-structure p are reported, never decisive
+- ALIVE requires every structure's spread to share the pooled sign; ALIVE_POOLED_ONLY does not proceed
+- an instrument with < 50 intervals in its HIGH or LOW tercile is reported, not pooled (NZDUSD, 28)
+
+> Phase 4's third mechanism (input class COT positioning, chosen 2026-10-13; signal: extremes, chosen the same day). Pre-registered before any outcome was computed; run() refuses until this entry exists. Positioning is weekly, so power is low: in synthetic checks a planted effect needs to be large to clear 0.05 on ~300 intervals per instrument, and the real panel has 430-780. A DEAD verdict here is weaker evidence of absence than seq=138's. Prior exposure: none of this repo's work has used positioning data; the dataset was built by a subagent barred from price data, which reported no incidental exposure. Before this registration only counts and point-in-time properties were read. GER40 uses E-mini S&P positioning by the owner's ruling (no CFTC report covers Eurex). Reports dated before each report type's launch are excluded because their categories were backcast. release_conservative_utc is the CFTC's actual release where known and otherwise Friday 15:30 ET pushed past federal holidays; 7,749 of 10,607 rows rely on that rule because the CFTC does not host past schedules. Costs are not in this test.
+
+_hash_: `78c092b4d7ff2e9d…` · _prev_: `be474ae33a0940b3…`
+
+### seq 142 · 2026-10-13T08:04:55Z · update · `cot_positioning_extremes`
+
+stage=1_signal_edge · verdict=open · counts_as_trial=False
+
+_Metrics_: `artifact`=cot_positioning_20261013.json, `n_intervals`={'AUDUSD': 421, 'EURUSD': 630, 'GBPUSD': 630, 'GER40': 389, 'NZDUSD': 43, 'USDCAD': 630, 'USDCHF': 630, 'USDJPY': 630, 'XAGUSD': 779, 'XAUUSD': 743}, `per_instrument_spread`={'AUDUSD': {'1': -0.10475855548781116, '4': -0.2651565295421246}, 'EURUSD': {'1': -0.05788140564643128, '4': -0.22752603195519436}, 'GBPUSD': {'1': -0.2535032873326679, '4': -0.47315793261164935}, 'GER40': {'1': -0.013767897086755555, '4': 0.09277942772255905}, 'NZDUSD': {'1': None, '4': None}, 'USDCAD': {'1': -0.2921369489229934, '4': -0.49567599292003073}, 'USDCHF': {'1': -0.2057024454200084, '4': -0.22937475371793298}, 'USDJPY': {'1': -0.14397346590711804, '4': -0.17616324790955804}, 'XAGUSD': {'1': -0.16384353802611445, '4': -0.3507575579830652}, 'XAUUSD': {'1': -0.17261615337532668, '4': -0.2958693942303228}}, `per_structure_h1`={'equity_index': {'observed': -0.013767897086755555, 'p': 0.9100899100899101}, 'fx': {'observed': -0.17632601811950502, 'p': 0.000999000999000999}, 'metals': {'observed': -0.16822984570072058, 'p': 0.003996003996003996}}, `pooled_spread`={'h1': -0.1194412536356604, 'h4': -0.18056993216451667}, `reason`=pooled_p_h1 p=0.02198 < 0.05, `streams`={'equity_index_p_h1': 0.9100899100899101, 'fx_p_h1': 0.000999000999000999, 'metals_p_h1': 0.003996003996003996, 'pooled_p_h1': 0.02197802197802198, 'pooled_p_h4': 0.03696303696303696}, `verdict`=ALIVE
+
+> Registered run: ALIVE (pooled_p_h1 p=0.02198 < 0.05). Decided by the pre-declared stream alone. Spread is mean(HIGH) - mean(LOW) of the drift-removed interval return in trailing-std units, signal oriented to the instrument; positive is persistence, negative contrarian. Read with three caveats, none of which changes the verdict. (1) The equity leg is inert: ES->GER40 spread -0.014, p=0.910; its sign agreed by chance and the result rests on FX (-0.176, p=0.001; all six decidable pairs negative, including the three with flipped orientation) and metals (-0.168, p=0.004). (2) Positioning extremes follow large moves, so the contrarian sign may be weekly price reversal seen through COT rather than information in positioning; separating them is a new trial with lagged returns controlled. (3) This is the third Phase 4 mechanism registered 2026-10-12/13 (trial_count 29); p=0.022 clears its own threshold but the family has three draws. Next, before any strategy: the confound test, then costs (FX from fills, #68).
+
+_hash_: `d439c47597b277a1…` · _prev_: `78c092b4d7ff2e9d…`
+
+### seq 143 · 2026-10-13T08:09:54Z · hypothesis · `cot_positioning_residual`
+
+**COT positioning extremes net of past returns — is seq=142 positioning, or price reversal?**
+
+_Mechanism_: The part of speculators' positioning z that a rolling, past-only regression on prior 1- and 13-interval returns does not explain predicts the next report interval's move. Two-sided.
+
+market=FX majors, XAUUSD, XAGUSD, GER40 (via ES)· timeframe=H1· family=cot_positioning· edge_gate_role=unset· counts_as_trial=True
+
+_Predictions_:
+- pooled_p_h1 < 0.05, two-sided, decides
+- residual DEAD with raw_same_sample_p_h1 < 0.05 is read as price reversal; both DEAD as undecided for power
+- same ALIVE/ALIVE_POOLED_ONLY rule and cell minimum as seq=141
+
+> A decomposition of seq=142 on the same data, not out of sample; registered after seeing seq=142's result, which is why it is a new trial. The test's design was fixed before any residual outcome was computed: only interval counts were read. The R1/R13 lags were chosen to cover the short-term reversal and the quarter-scale trend that speculators are known to follow, not tuned. Positioning is weekly, so power is low: in synthetic checks a planted effect needs to be large to clear 0.05 on ~300 intervals per instrument, and the real panel has 430-780. A DEAD verdict here is weaker evidence of absence than seq=138's.
+
+_hash_: `1a8e974d85810106…` · _prev_: `d439c47597b277a1…`
+
+### seq 144 · 2026-10-13T08:10:45Z · update · `cot_positioning_residual`
+
+stage=1_signal_edge · verdict=open · counts_as_trial=False
+
+_Metrics_: `artifact`=cot_residual_20261013.json, `n_intervals`={'AUDUSD': 344, 'EURUSD': 553, 'GBPUSD': 553, 'GER40': 312, 'NZDUSD': 0, 'USDCAD': 553, 'USDCHF': 553, 'USDJPY': 553, 'XAGUSD': 675, 'XAUUSD': 639}, `per_structure_h1`={'equity_index': {'observed': -0.014708388059898117, 'p': 0.919080919080919}, 'fx': {'observed': -0.14284163705845046, 'p': 0.000999000999000999}, 'metals': {'observed': -0.11760473692587742, 'p': 0.058941058941058944}}, `pooled_spread`={'h1': -0.091718254014742, 'h4': -0.1927341700215194}, `raw_same_sample_h1`={'observed': -0.146273190355492, 'p': 0.001998001998001998}, `reading`=positioning carries information beyond past returns, `reason`=pooled_p_h1 p=0.04695 < 0.05, `streams`={'equity_index_p_h1': 0.919080919080919, 'fx_p_h1': 0.000999000999000999, 'metals_p_h1': 0.058941058941058944, 'pooled_p_h1': 0.04695304695304695, 'pooled_p_h4': 0.008991008991008992, 'raw_same_sample_p_h1': 0.001998001998001998}, `verdict`=ALIVE
+
+> Registered run: ALIVE (pooled_p_h1 p=0.04695 < 0.05). Reading, by the rule fixed at registration: positioning carries information beyond past returns.
+
+_hash_: `c5d165285653e36a…` · _prev_: `1a8e974d85810106…`
+
+### seq 145 · 2026-10-13T08:10:45Z · audit · `record:cot-residual-reading`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `family_trials_phase4`=4, `raw_same_sample_h1`=-0.146273190355492, `residual_h1`=-0.091718254014742, `share_removed`=0.373
+
+> Not a new result: context for seq=144 so its pass is not over-read. Removing positioning's relation to past returns cut the pooled effect from -0.146 (raw, same sample, p=0.002) to -0.092 (p=0.047): about 37% of seq=142's effect was weekly price reversal. What survives is carried by FX (-0.143, p=0.001, all six decidable pairs negative); metals weaken to -0.118 (p=0.059) and ES->GER40 is inert (p=0.919) as at seq=142. p=0.047 sits on the threshold, in a family of four Phase 4 trials registered 2026-10-12/13. Established: an FX contrarian positioning effect not explained by 1- and 13-interval returns, in-sample. Not established: metals or equity, out-of-sample stability, or anything net of costs. Next: costs (FX from fills, #68), then an out-of-sample hold on reports released from 2026-10-16.
+
+_hash_: `57b365412afeda44…` · _prev_: `c5d165285653e36a…`
+
+### seq 146 · 2026-10-13T08:20:07Z · audit · `record:cot-drift-term-artifact`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `corr_signal_trailing_mu`={'AUDUSD': 0.543, 'EURUSD': 0.365, 'GBPUSD': 0.318, 'GER40': 0.419, 'USDCAD': 0.315, 'USDCHF': 0.318, 'USDJPY': 0.216, 'XAGUSD': 0.095, 'XAUUSD': 0.118}, `fx_pooled_gross_bp`=2.27, `fx_pooled_net_t_base`=0.56, `fx_pooled_net_t_stress`=0.18, `spread_drift_term_sigma`={'AUDUSD': -0.146, 'EURUSD': -0.13, 'GBPUSD': -0.085, 'GER40': -0.096, 'USDCAD': -0.08, 'USDCHF': -0.069, 'USDJPY': -0.06, 'XAGUSD': -0.045, 'XAUUSD': -0.063}, `spread_raw_returns_sigma`={'AUDUSD': -0.032, 'EURUSD': 0.024, 'GBPUSD': -0.146, 'GER40': 0.081, 'USDCAD': -0.126, 'USDCHF': 0.005, 'USDJPY': -0.013, 'XAGUSD': -0.091, 'XAUUSD': -0.035}, `supersedes_reading_of`=[142, 144, 145]
+
+> Supersedes the reading of seq=142, seq=144 and seq=145; their verdicts stand as recorded in this append-only log but are not to be relied on. The outcome subtracted h times the trailing 52-interval mean return. Speculators follow trends, so the signal correlates with that trailing mean (0.10 to 0.54 by instrument, residual signal), and subtracting it adds a mechanical contrarian term to the HIGH-LOW spread on every instrument: -0.13 EURUSD, -0.085 GBPUSD, -0.06 USDJPY, -0.07 USDCHF, -0.08 USDCAD, -0.15 AUDUSD (sigma units). On raw returns the spreads are +0.024, -0.146, -0.013, +0.005, -0.126, -0.032: contrarian of any size only in GBPUSD and USDCAD. The costing that exposed it (cot_costing_20261013.json) agrees: pooled FX gross 2.3 bp per weekly trade, net t 0.56 (base), 0.18 (stress), with in-sample terciles, which is an upper bound. The R1/R13 control in seq=143 could not catch this: the drift term spans 52 intervals. Found post hoc, after both results, while costing. Consequence: no Phase 4 mechanism is established. The in-sample period is now seen; any corrected test (raw returns, no trailing-mean subtraction, or the drift term in the control) can only be judged on reports released after 2026-10-13. Hygiene, in the spirit of rules 1 and 3: a drift term built from trailing returns is itself a function of past returns; check corr(feature, drift term) at registration, as normalizer_check does for the denominator.
+
+_hash_: `162f10340f0f679c…` · _prev_: `57b365412afeda44…`

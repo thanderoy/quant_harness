@@ -86,11 +86,11 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 794 tests.
-# Locally with the out-of-repo data present: 794 passed, 0 skipped. The H1 and
+# expected: 816 tests.
+# Locally with the out-of-repo data present: 816 passed, 0 skipped. The H1 and
 # crest_n_keel CSVs are read from $QH_DATA_DIR (default research/data/), e.g.
 #   QH_DATA_DIR=../wine-mt5-python-setup/research/data uv run pytest -q
-# On CI, which has neither those CSVs nor a WMPS checkout: 784 / 10.
+# On CI, which has neither those CSVs nor a WMPS checkout: 806 / 10.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.
@@ -226,6 +226,29 @@ CPI, ECB, BoE and BoJ, 2004-06 onward, from central-bank and BLS pages, with
 `sources.md` and the scripts that built it. Times are placed in broker server
 time (Europe/Athens, EU DST). Each event is compared with placebo bars at the
 same hour of the week in release-free weeks.
+
+### COT positioning — speculators' extremes and the next report interval
+
+```bash
+cd packages/qh-research
+QH_DATA_DIR=<data dir> python -m research.pre.cot_positioning --count
+python -m research.pre.cot_positioning --preregister
+QH_DATA_DIR=<data dir> python -m research.pre.cot_positioning \
+  --run --out research/pre/artifacts/<name>.json
+```
+
+Positioning comes from `research/datasets/cot/cot_positions.csv` (CFTC TFF and
+Disaggregated futures-only, 2006 onward, with `sources.md` and its build
+script). Each report is used only from `release_conservative_utc`, and rows
+dated before their report type launched are excluded because the CFTC
+backcast their categories. GER40 has no COT report; E-mini S&P positioning
+stands in for it.
+
+`research.pre.cot_residual` re-runs the same test with positioning's relation
+to the prior 1- and 13-interval returns removed by a rolling, past-only
+regression, to separate positioning information from weekly price reversal.
+It also reports the raw signal on the residual's sample, so a power loss is
+not read as a confound.
 
 ### Cost model
 
