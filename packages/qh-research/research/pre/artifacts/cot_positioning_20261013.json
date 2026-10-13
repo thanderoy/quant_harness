@@ -1,0 +1,207 @@
+{
+ "hypothesis_id": "cot_positioning_extremes",
+ "verdict": "ALIVE",
+ "reason": "pooled_p_h1 p=0.02198 < 0.05",
+ "decisive_stream": "pooled_p_h1",
+ "streams": {
+  "pooled_p_h1": 0.02197802197802198,
+  "pooled_p_h4": 0.03696303696303696,
+  "fx_p_h1": 0.000999000999000999,
+  "metals_p_h1": 0.003996003996003996,
+  "equity_index_p_h1": 0.9100899100899101
+ },
+ "results": {
+  "h1": {
+   "observed": -0.1194412536356604,
+   "p": 0.02197802197802198,
+   "per_structure": {
+    "fx": {
+     "observed": -0.17632601811950502,
+     "p": 0.000999000999000999
+    },
+    "metals": {
+     "observed": -0.16822984570072058,
+     "p": 0.003996003996003996
+    },
+    "equity_index": {
+     "observed": -0.013767897086755555,
+     "p": 0.9100899100899101
+    }
+   },
+   "per_instrument": {
+    "EURUSD": -0.05788140564643128,
+    "GBPUSD": -0.2535032873326679,
+    "USDJPY": -0.14397346590711804,
+    "USDCHF": -0.2057024454200084,
+    "USDCAD": -0.2921369489229934,
+    "AUDUSD": -0.10475855548781116,
+    "XAUUSD": -0.17261615337532668,
+    "XAGUSD": -0.16384353802611445,
+    "GER40": -0.013767897086755555
+   }
+  },
+  "h4": {
+   "observed": -0.18056993216451667,
+   "p": 0.03696303696303696,
+   "per_structure": {
+    "fx": {
+     "observed": -0.311175748109415,
+     "p": 0.000999000999000999
+    },
+    "metals": {
+     "observed": -0.32331347610669403,
+     "p": 0.005994005994005994
+    },
+    "equity_index": {
+     "observed": 0.09277942772255905,
+     "p": 0.7212787212787213
+    }
+   },
+   "per_instrument": {
+    "EURUSD": -0.22752603195519436,
+    "GBPUSD": -0.47315793261164935,
+    "USDJPY": -0.17616324790955804,
+    "USDCHF": -0.22937475371793298,
+    "USDCAD": -0.49567599292003073,
+    "AUDUSD": -0.2651565295421246,
+    "XAUUSD": -0.2958693942303228,
+    "XAGUSD": -0.3507575579830652,
+    "GER40": 0.09277942772255905
+   }
+  }
+ },
+ "instruments": [
+  {
+   "symbol": "EURUSD",
+   "structure": "fx",
+   "cot_market": "EUR",
+   "admitted_from": "2013-10-08",
+   "n_intervals": 630,
+   "min_cell": 210,
+   "decidable": true,
+   "spread": {
+    "1": -0.05788140564643128,
+    "4": -0.22752603195519436
+   }
+  },
+  {
+   "symbol": "GBPUSD",
+   "structure": "fx",
+   "cot_market": "GBP",
+   "admitted_from": "2013-10-08",
+   "n_intervals": 630,
+   "min_cell": 210,
+   "decidable": true,
+   "spread": {
+    "1": -0.2535032873326679,
+    "4": -0.47315793261164935
+   }
+  },
+  {
+   "symbol": "USDJPY",
+   "structure": "fx",
+   "cot_market": "JPY",
+   "admitted_from": "2013-10-08",
+   "n_intervals": 630,
+   "min_cell": 210,
+   "decidable": true,
+   "spread": {
+    "1": -0.14397346590711804,
+    "4": -0.17616324790955804
+   }
+  },
+  {
+   "symbol": "USDCHF",
+   "structure": "fx",
+   "cot_market": "CHF",
+   "admitted_from": "2013-10-07",
+   "n_intervals": 630,
+   "min_cell": 210,
+   "decidable": true,
+   "spread": {
+    "1": -0.2057024454200084,
+    "4": -0.22937475371793298
+   }
+  },
+  {
+   "symbol": "USDCAD",
+   "structure": "fx",
+   "cot_market": "CAD",
+   "admitted_from": "2013-10-08",
+   "n_intervals": 630,
+   "min_cell": 210,
+   "decidable": true,
+   "spread": {
+    "1": -0.2921369489229934,
+    "4": -0.49567599292003073
+   }
+  },
+  {
+   "symbol": "AUDUSD",
+   "structure": "fx",
+   "cot_market": "AUD",
+   "admitted_from": "2017-10-24",
+   "n_intervals": 421,
+   "min_cell": 140,
+   "decidable": true,
+   "spread": {
+    "1": -0.10475855548781116,
+    "4": -0.2651565295421246
+   }
+  },
+  {
+   "symbol": "NZDUSD",
+   "structure": "fx",
+   "cot_market": "NZD",
+   "admitted_from": "2025-01-22",
+   "n_intervals": 43,
+   "min_cell": 14,
+   "decidable": false,
+   "spread": {
+    "1": null,
+    "4": null
+   }
+  },
+  {
+   "symbol": "XAUUSD",
+   "structure": "metals",
+   "cot_market": "XAU",
+   "admitted_from": "2004-06-11",
+   "n_intervals": 743,
+   "min_cell": 248,
+   "decidable": true,
+   "spread": {
+    "1": -0.17261615337532668,
+    "4": -0.2958693942303228
+   }
+  },
+  {
+   "symbol": "XAGUSD",
+   "structure": "metals",
+   "cot_market": "XAG",
+   "admitted_from": "2009-08-18",
+   "n_intervals": 779,
+   "min_cell": 260,
+   "decidable": true,
+   "spread": {
+    "1": -0.16384353802611445,
+    "4": -0.3507575579830652
+   }
+  },
+  {
+   "symbol": "GER40",
+   "structure": "equity_index",
+   "cot_market": "ES",
+   "admitted_from": "2018-07-13",
+   "n_intervals": 389,
+   "min_cell": 130,
+   "decidable": true,
+   "spread": {
+    "1": -0.013767897086755555,
+    "4": 0.09277942772255905
+   }
+  }
+ ],
+ "n_permutations": 1000,
+ "random_seed": 42
+}
