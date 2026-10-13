@@ -244,6 +244,12 @@ dated before their report type launched are excluded because the CFTC
 backcast their categories. GER40 has no COT report; E-mini S&P positioning
 stands in for it.
 
+`research.pre.cot_residual` re-runs the same test with positioning's relation
+to the prior 1- and 13-interval returns removed by a rolling, past-only
+regression, to separate positioning information from weekly price reversal.
+It also reports the raw signal on the residual's sample, so a power loss is
+not read as a confound.
+
 ### Cost model
 
 ```python

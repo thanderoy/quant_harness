@@ -156,31 +156,54 @@ def entry_positions(index: pd.DatetimeIndex, release: pd.Series) -> np.ndarray:
     return np.where(j < labels.size, j, -1)
 
 
-def instrument_frame(df: pd.DataFrame, sig: pd.DataFrame,
-                     with_outcomes: bool = False) -> pd.DataFrame:
-    """One row per report interval inside ``df``: signal and outcomes.
+def interval_frame(df: pd.DataFrame, sig: pd.DataFrame) -> pd.DataFrame:
+    """One row per report interval inside ``df``, signal possibly NaN.
 
-    Interval k runs from report k's release to report k+1's. The outcome is
-    the instrument's log return over it (or over h intervals), less h times
-    the trailing mean interval return, over the trailing interval std.
+    No outcome is computed here.
     """
     pos = entry_positions(df.index, sig["release"])
-    keep = (pos >= 0) & (pos > 0)
+    keep = pos > 0
     out = sig[keep].copy()
     out["pos"] = pos[keep]
-    out = out.drop_duplicates("pos", keep="last").reset_index(drop=True)
-    if not with_outcomes:
-        return out[np.isfinite(out["signal"])].reset_index(drop=True)
+    return out.drop_duplicates("pos", keep="last").reset_index(drop=True)
+
+
+def add_outcomes(df: pd.DataFrame, fr: pd.DataFrame) -> pd.DataFrame:
+    """Attach y_h: the log return over h intervals from each row's entry,
+    less h times the trailing mean interval return, over the trailing
+    interval std scaled by sqrt(h). Computed over every row of ``fr``.
+    """
+    fr = fr.copy()
     logc = np.log(df["close"].to_numpy(float))
-    r1 = np.r_[logc[out["pos"].to_numpy()[1:]] - logc[out["pos"].to_numpy()[:-1]],
-               np.nan]
+    p = fr["pos"].to_numpy()
+    r1 = np.r_[logc[p[1:]] - logc[p[:-1]], np.nan]
     prior = pd.Series(r1).shift(1).rolling(RET_WINDOW, min_periods=RET_MIN)
     mu, sd = prior.mean().to_numpy(), prior.std().to_numpy()
     for h in HORIZONS:
         fwd = pd.Series(r1).rolling(h).sum().shift(-(h - 1)).to_numpy()
-        out[f"y_h{h}"] = (fwd - h * mu) / (sd * np.sqrt(h))
-    ok = np.isfinite(out["signal"]) & np.isfinite(out[f"y_h{DECISIVE_HORIZON}"])
-    return out[ok].reset_index(drop=True)
+        fr[f"y_h{h}"] = (fwd - h * mu) / (sd * np.sqrt(h))
+    return fr
+
+
+def outcome_available(n: int) -> np.ndarray:
+    """Rows whose decisive outcome will exist, from position alone.
+
+    y_h1 needs a next interval and RET_MIN prior intervals; nothing about
+    their values. Lets a count match a run without computing an outcome.
+    """
+    i = np.arange(n)
+    return (i >= RET_MIN + 1) & (i < n - 1)
+
+
+def instrument_frame(df: pd.DataFrame, sig: pd.DataFrame,
+                     with_outcomes: bool = False) -> pd.DataFrame:
+    """Interval rows with a finite signal, and outcomes when asked."""
+    fr = interval_frame(df, sig)
+    if not with_outcomes:
+        return fr[np.isfinite(fr["signal"])].reset_index(drop=True)
+    fr = add_outcomes(df, fr)
+    ok = np.isfinite(fr["signal"]) & np.isfinite(fr[f"y_h{DECISIVE_HORIZON}"])
+    return fr[ok].reset_index(drop=True)
 
 
 def _spread(y: np.ndarray, labels: np.ndarray) -> float:
