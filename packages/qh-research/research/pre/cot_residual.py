@@ -158,8 +158,9 @@ def run(data_dir: Optional[Path] = None, log_dir: Optional[Path] = None,
         df, start = _admitted_frame(sym, data_dir)
         fr = instrument_frame(df, cp.positioning_z(cot, market, orient),
                               with_outcomes=True)
-        lab = label_terciles(fr["signal"])
-        cell = int(min((lab == 0).sum(), (lab == 2).sum()))
+        # An instrument the warm-up leaves empty (NZDUSD) has no cells.
+        lab = label_terciles(fr["signal"]) if len(fr) >= 3 else np.array([])
+        cell = int(min((lab == 0).sum(), (lab == 2).sum())) if lab.size else 0
         decidable = cell >= cp.MIN_CELL
         insts.append(cp.InstrumentResult(sym, STRUCTURE[sym], market,
                                          str(start.date()), len(fr), cell,
