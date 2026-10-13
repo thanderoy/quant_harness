@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 141
-- **Trial count (floor N for DSR):** 28
-- **Hash chain:** OK — chain ok (141 entries)
+- **Entries:** 142
+- **Trial count (floor N for DSR):** 29
+- **Hash chain:** OK — chain ok (142 entries)
 
 ## Principles
 
@@ -27,6 +27,7 @@ Edge-gate role is shown on every row: a **hard_gate** entry must show E-Ratio ed
 | `avwap_sweep_reclaim_m15` — AVWAP/POC/HVN sweep-and-reclaim on XAUUSD M15 with H1 HMA bias | mean-reversion | diagnostic | 3_is_backtest | open | artifact_path=research/artifacts/avwap_sweep_reclaim_signal_edge_20260614T083827Z.json, e_ratio_16bar_avwap=0.6105235797712227, e_ratio_16bar_combined=0.806326708871015, e_ratio_16bar_hvn=0.9389136831082255, e_ratio_16bar_long=0.8362129729640871, e_ratio_16bar_poc=0.5316155984971189, e_ratio_16bar_short=0.7813945766834295, e_ratio_32bar_combined=0.8981169691816416, e_ratio_8bar_combined=0.8630572252818496, p_value_16bar=0.942, random_baseline_ci_hi=1.2329962317847916, random_baseline_ci_lo=0.7953614436587528, random_baseline_mean=1.0407515046105003, signal_hash=35d6b60e498f3813, trigger_count_avwap=40, trigger_count_hvn=97, trigger_count_long=58, trigger_count_poc=8, trigger_count_short=87, trigger_count_total=145, best_sharpe_px=0.492, drift_actual=0.492, drift_null_mean=-0.156, drift_p=0.001, median_sharpe_px=-0.101, median_trades=122, n_configs=2808, pct_countable=60.2, pct_positive=29.9 |
 | `cnk_nested_walk_forward` — crest_n_keel nested walk-forward: does the selection procedure generalise? | crest_n_keel | diagnostic | 5_walk_forward | killed | h1_fixed_mean=0.76, h1_folds=17, h1_nk2_n=17, h1_nk2_p=0.5, h1_nk2_wins=9, h1_oos_mean=0.079, h1_oos_median=-0.041, h1_oos_positive=8, h1_oos_trades_median=27, h1_pool_mean=-0.176, h1_train_sharpe_mean=1.648, h4_fixed_mean=0.452, h4_folds=16, h4_nk2_n=15, h4_nk2_p=0.5, h4_nk2_wins=8, h4_oos_mean=-0.353, h4_oos_median=0.24, h4_oos_positive=8, h4_oos_trades_median=10, h4_pool_mean=-0.116, h4_train_sharpe_mean=1.448, lookahead_gap_h1=0.681, lookahead_gap_h4=0.805, pooled_nk2_n=32, pooled_nk2_p=0.43, pooled_nk2_wins=17, pooled_pool_mean=-0.149, pooled_selected_mean=-0.124, pooled_selection_value=0.025 |
 | `cnk_param_sweep` — Exhaustive parameter + timeframe sweep of crest_n_keel, both entry modes | crest_n_keel | diagnostic | 5_walk_forward | open | deployed_pullback_region_median_sharpe=-0.0738, k1_null_mean=0.435, k1_p_value=0.0, k2_bh_calmar=0.2768, k2_calmar=0.4675, k3_dsr_at_grid_n=0.8391, k4_neighbour_min_sharpe=0.6771984633116068, leader_cagr_acct=0.0769028726896998, leader_direction=long, leader_max_dd_px=0.2693262706455639, leader_mode=momentum, leader_n_trades=2141, leader_profit_factor_px=1.3726347675526729, leader_sharpe_px=0.9849627340280688, leader_timeframe=H4, leader_win_rate=0.4072863148061653, n_configs_distinct=119917, n_configs_raw=150660, n_countable=98995, n_survivors=2789, gate_passed=0, h1_dsr_at_grid_n=0.0, h1_folds_positive=12, h1_folds_total=17, h1_is_oos_gap=-0.02, h1_oos_max_dd=0.187, h1_oos_profit_factor=1.29, h1_oos_sharpe_mean_folds=0.761, h1_oos_sharpe_median_folds=0.429, h1_oos_sharpe_pooled=0.91, h1_oos_trades=1973, h4_dsr_at_grid_n=0.0, h4_folds_positive=11, h4_folds_total=16, h4_is_oos_gap=0.07, h4_oos_max_dd=0.273, h4_oos_profit_factor=1.23, h4_oos_sharpe_mean_folds=0.454, h4_oos_sharpe_median_folds=0.301, h4_oos_sharpe_pooled=0.71, h4_oos_trades=1595 |
+| `cot_positioning_extremes` — Speculator positioning extremes and the next report interval, across FX, metals and GER40 | cot_positioning | unset | 0_hypothesis | open | — |
 | `crest_n_keel` — HMA+Stoch 1H pullback (a.k.a. hma_stoch_1h) | pullback | diagnostic | 5_walk_forward | open | e_ratio_w30=0.9, p_value=0.34, sharpe_oos=1.76, dsr_prob_24h=0.106, dsr_prob_session=0.028, folds=33, oos_max_dd_session=0.1, oos_trades_24h=323, oos_trades_session=146, profit_factor_24h=1.15, profit_factor_session=1.45, sharpe_oos_24h=0.27, sharpe_oos_session=0.41, spread_stress_survives_2x=True, n_folds=17, seq29_247_corrected=0.1717, seq29_247_delta=-0.002, seq29_247_logged_basis=0.1738, seq29_session_corrected=-0.2386, seq29_session_corrected_dd=0.124, seq29_session_corrected_pf=0.783, seq29_session_delta=-0.5581, seq29_session_logged_basis=0.3196, seq29_session_logged_dd=0.053, seq29_session_logged_pf=1.534 |
 | `crest_n_keel_momentum` — crest_n_keel MOMENTUM (HMA-slope-flip, long-only, ATR chandelier trail) | crest_n_keel | hard_gate | 5_walk_forward | open | dsr_prob_num_trials_1=1.0, dsr_prob_num_trials_20=0.061, gate_verdict=FAIL (DSR only); PASS at num_trials=1, harness=qhf_harness run_cnk_momentum, 21.6y H1 2004-2025, 33 folds, is_oos_gap=-0.34, mean_is_sharpe=0.86, oos_max_dd_pct=29.9, oos_profit_factor=1.26, oos_sharpe=1.2, oos_trades=3829 |
 | `donchian_50_control` — Donchian-50 breakout (positive control) | breakout | hard_gate | 1_signal_edge | shelved | e_ratio_w10=1.11, e_ratio_w50=1.17, p_value=0.0, artifact_path=None, e_ratio_32bar_combined=None, e_ratio_32bar_long=None, e_ratio_32bar_short=None, p_value_32bar=0.0, random_baseline_mean=None, signal_hash=None, trigger_count_long=None, trigger_count_short=None, trigger_count_total=None |
@@ -2239,3 +2240,20 @@ _Metrics_: `artifact`=event_drift_20261012.json, `n_events_h4`={'AUDUSD': 273, '
 > Registered run: DEAD (pooled_p_h4 p=0.09191 >= 0.05). Decided by the pre-declared stream alone. Excess is the event bars' mean sign-aligned, drift-removed forward move minus the placebo mean, in trailing-sigma units; positive is continuation. Not evidence, recorded so it cannot be quietly reused: at h=4 the non-decisive per-structure streams diverge — metals +0.219 sigma (continuation, p=0.010), GER40 -0.402 (reversal, p=0.003), FX -0.094 (p=0.072) — and cancel in the pool. They are 9 descriptive streams, GER40 is one instrument with 305 events, and choosing a structure after seeing it is the post-hoc selection the registration excludes. Any test of a structure-specific effect is a new trial, needs its own registration, and must be run on data this run did not see.
 
 _hash_: `be474ae33a0940b3…` · _prev_: `4027f569668cb51f…`
+
+### seq 141 · 2026-10-13T08:04:10Z · hypothesis · `cot_positioning_extremes`
+
+**Speculator positioning extremes and the next report interval, across FX, metals and GER40**
+
+_Mechanism_: When speculators' net position (leveraged funds, or managed money for metals) as a share of open interest is extreme against its prior three years, the instrument's move from that report's release to the next differs between the high and low terciles. Contrarian unwinding and persistence predict opposite signs. Two-sided.
+
+market=FX majors, XAUUSD, XAGUSD, GER40 (via ES)· timeframe=H1· family=cot_positioning· edge_gate_role=unset· counts_as_trial=True
+
+_Predictions_:
+- pooled_p_h1 < 0.05, two-sided, decides; h=4 (overlapping) and per-structure p are reported, never decisive
+- ALIVE requires every structure's spread to share the pooled sign; ALIVE_POOLED_ONLY does not proceed
+- an instrument with < 50 intervals in its HIGH or LOW tercile is reported, not pooled (NZDUSD, 28)
+
+> Phase 4's third mechanism (input class COT positioning, chosen 2026-10-13; signal: extremes, chosen the same day). Pre-registered before any outcome was computed; run() refuses until this entry exists. Positioning is weekly, so power is low: in synthetic checks a planted effect needs to be large to clear 0.05 on ~300 intervals per instrument, and the real panel has 430-780. A DEAD verdict here is weaker evidence of absence than seq=138's. Prior exposure: none of this repo's work has used positioning data; the dataset was built by a subagent barred from price data, which reported no incidental exposure. Before this registration only counts and point-in-time properties were read. GER40 uses E-mini S&P positioning by the owner's ruling (no CFTC report covers Eurex). Reports dated before each report type's launch are excluded because their categories were backcast. release_conservative_utc is the CFTC's actual release where known and otherwise Friday 15:30 ET pushed past federal holidays; 7,749 of 10,607 rows rely on that rule because the CFTC does not host past schedules. Costs are not in this test.
+
+_hash_: `78c092b4d7ff2e9d…` · _prev_: `be474ae33a0940b3…`

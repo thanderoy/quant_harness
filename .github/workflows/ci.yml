@@ -84,9 +84,9 @@ jobs:
           # The D7 baseline. It moves only when a genuine new trial is
           # registered, which is a deliberate act — never a side effect of a
           # refactor, a migration, or a parity fixture.
-          if n != 28:
+          if n != 29:
               raise SystemExit(
-                  f"trial_count() is {n}, expected 28: the D7 baseline of 26 plus activity_reversal_h1 (seq=137) and event_drift_h1 (seq=139). "
+                  f"trial_count() is {n}, expected 29: the D7 baseline of 26 plus activity_reversal_h1 (seq=137), event_drift_h1 (seq=139) and cot_positioning_extremes (seq=141). "
                   "If a new hypothesis was registered on purpose, update this "
                   "number and say so in the PR."
               )
