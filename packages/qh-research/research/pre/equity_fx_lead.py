@@ -171,7 +171,14 @@ def rotation_test(frames: dict[str, pd.DataFrame], h: int,
                                for s in frames}}
 
 
-def verdict(result: dict, stream: DecisiveStream) -> tuple[str, str]:
+def verdict(result: dict, stream: DecisiveStream,
+            same_hour: dict[str, float]) -> tuple[str, str]:
+    """The registered rule. VOID first: a decidable follower whose same-hour
+    product is not positive has an orientation the data does not support,
+    and the registration declared that run void, not a verdict."""
+    bad = {s: round(v, 4) for s, v in same_hour.items() if not v > 0}
+    if bad:
+        return "VOID", f"orientation check failed: same-hour product {bad}"
     d = result[f"h{DECISIVE_HORIZON}"]
     passed, why = stream.verdict({stream.name: d["p"]})
     if passed == "FAIL":
@@ -241,7 +248,8 @@ def run(data_dir: Optional[Path] = None, log_dir: Optional[Path] = None,
         inst.statistic = {h: result[f"h{h}"]["per_instrument"].get(inst.symbol)
                           for h in HORIZONS}
     stream = decisive_stream()
-    label, why = verdict(result, stream)
+    label, why = verdict(result, stream, {i.symbol: i.same_hour
+                                          for i in insts if i.decidable})
     return {"hypothesis_id": HYPOTHESIS_ID, "verdict": label, "reason": why,
             "decisive_stream": stream.name,
             "streams": {f"pooled_p_h{h}": result[f"h{h}"]["p"] for h in HORIZONS},
@@ -266,7 +274,7 @@ def registration_parameters() -> dict:
         "streams_emitted": sorted(STREAMS), **feature_spec(),
         "diagnostic_only": "same-hour product (lookahead): orientation check",
         "admission": "research.admission.require per instrument",
-        "verdict_labels": ["ALIVE", "ALIVE_POOLED_ONLY", "DEAD"],
+        "verdict_labels": ["ALIVE", "ALIVE_POOLED_ONLY", "DEAD", "VOID"],
     }
 
 
@@ -330,7 +338,8 @@ def preregister(log_dir: Optional[Path] = None):
     )
 
 
-def log_result(res: dict, artifact: str, log_dir: Optional[Path] = None):
+def log_result(res: dict, artifact: str, log_dir: Optional[Path] = None,
+               extra_note: str = ""):
     """Record a :func:`run` result against the registration. Not a trial."""
     from research import log as research_log
     kwargs = {"log_dir": log_dir} if log_dir is not None else {}
@@ -351,7 +360,8 @@ def log_result(res: dict, artifact: str, log_dir: Optional[Path] = None):
         note=(f"Registered run: {res['verdict']} ({res['reason']}). Decided "
               "by the pre-declared stream alone. Statistic is the mean "
               "product of scaled GER40 return and the scaled, risk-oriented "
-              "follower return; positive is continuation, negative reversal."),
+              "follower return; positive is continuation, negative reversal."
+              + (" " + extra_note if extra_note else "")),
         **kwargs,
     )
 

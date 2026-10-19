@@ -112,3 +112,11 @@ def test_min_decidable_matches_the_intended_sample():
     from research.post.mintrl import min_decidable_sharpe
     assert round(min_decidable_sharpe(n_obs=ef.INTENDED_N_OBS, sr_star=0.0), 6) \
         == ef.MIN_DECIDABLE_SHARPE
+
+
+def test_a_follower_without_same_hour_co_movement_voids_the_run():
+    stream = ef.decisive_stream()
+    res = {"h1": {"observed": 0.01, "p": 0.01,
+                  "per_instrument": {"A": {"observed": 0.01}, "B": {"observed": 0.01}}}}
+    assert ef.verdict(res, stream, {"A": 0.3, "B": -0.01})[0] == "VOID"
+    assert ef.verdict(res, stream, {"A": 0.3, "B": 0.2})[0] == "ALIVE"
