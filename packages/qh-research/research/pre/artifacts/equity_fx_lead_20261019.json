@@ -1,0 +1,132 @@
+{
+ "hypothesis_id": "equity_fx_lead_h1",
+ "verdict": "VOID",
+ "reason": "orientation check failed: same-hour product {'USDCHF': -0.0163}",
+ "decisive_stream": "pooled_p_h1",
+ "streams": {
+  "pooled_p_h1": 0.025974025974025976,
+  "pooled_p_h4": 0.13786213786213786
+ },
+ "results": {
+  "h1": {
+   "observed": 0.009066072100623487,
+   "p": 0.025974025974025976,
+   "per_instrument": {
+    "AUDUSD": {
+     "observed": 0.008353745898402291,
+     "p": 0.14285714285714285
+    },
+    "NZDUSD": {
+     "observed": 0.006253172790847929,
+     "p": 0.6423576423576424
+    },
+    "USDJPY": {
+     "observed": 0.013102087332100786,
+     "p": 0.02197802197802198
+    },
+    "USDCHF": {
+     "observed": 0.008555282381142943,
+     "p": 0.13886113886113885
+    }
+   }
+  },
+  "h4": {
+   "observed": 0.006123801738341117,
+   "p": 0.13786213786213786,
+   "per_instrument": {
+    "AUDUSD": {
+     "observed": 0.0009369931369464896,
+     "p": 0.8561438561438561
+    },
+    "NZDUSD": {
+     "observed": 0.015195373472040809,
+     "p": 0.23676323676323677
+    },
+    "USDJPY": {
+     "observed": 0.0033647354778424507,
+     "p": 0.5414585414585414
+    },
+    "USDCHF": {
+     "observed": 0.00499810486653472,
+     "p": 0.36663336663336665
+    }
+   }
+  }
+ },
+ "instruments": [
+  {
+   "symbol": "AUDUSD",
+   "orientation": 1,
+   "admitted_from": "2017-10-24",
+   "n_rows": 40811,
+   "decidable": true,
+   "same_hour": 0.39319223457460434,
+   "statistic": {
+    "1": {
+     "observed": 0.008353745898402291,
+     "p": 0.14285714285714285
+    },
+    "4": {
+     "observed": 0.0009369931369464896,
+     "p": 0.8561438561438561
+    }
+   }
+  },
+  {
+   "symbol": "NZDUSD",
+   "orientation": 1,
+   "admitted_from": "2025-01-22",
+   "n_rows": 7219,
+   "decidable": true,
+   "same_hour": 0.3108267009964684,
+   "statistic": {
+    "1": {
+     "observed": 0.006253172790847929,
+     "p": 0.6423576423576424
+    },
+    "4": {
+     "observed": 0.015195373472040809,
+     "p": 0.23676323676323677
+    }
+   }
+  },
+  {
+   "symbol": "USDJPY",
+   "orientation": 1,
+   "admitted_from": "2013-10-08",
+   "n_rows": 40811,
+   "decidable": true,
+   "same_hour": 0.13280574834726042,
+   "statistic": {
+    "1": {
+     "observed": 0.013102087332100786,
+     "p": 0.02197802197802198
+    },
+    "4": {
+     "observed": 0.0033647354778424507,
+     "p": 0.5414585414585414
+    }
+   }
+  },
+  {
+   "symbol": "USDCHF",
+   "orientation": 1,
+   "admitted_from": "2013-10-07",
+   "n_rows": 40810,
+   "decidable": true,
+   "same_hour": -0.016320775289375335,
+   "statistic": {
+    "1": {
+     "observed": 0.008555282381142943,
+     "p": 0.13886113886113885
+    },
+    "4": {
+     "observed": 0.00499810486653472,
+     "p": 0.36663336663336665
+    }
+   }
+  }
+ ],
+ "n_permutations": 1000,
+ "random_seed": 42
+}
