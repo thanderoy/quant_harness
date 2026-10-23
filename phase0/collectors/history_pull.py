@@ -80,20 +80,25 @@ def _rates(symbol: str, timeframe: str, count: int, start_pos: int) -> list[dict
 
 def _largest_served(symbol: str, timeframe: str, start_pos: int,
                     hi: int) -> list[dict]:
-    """The longest request at ``start_pos`` the terminal answers, by bisection.
+    """The longest request at ``start_pos`` the terminal answers.
 
-    [] when it answers none, which means history ends at ``start_pos``.
+    Bisects for the oldest position that still serves a single bar, which is
+    cheap, then fetches up to it in one request. [] when nothing at
+    ``start_pos`` is served, which means history ends there.
     """
-    lo, best = 1, []
-    while lo <= hi:
-        mid = (lo + hi) // 2
+    lo, last = start_pos, start_pos - 1
+    hi_pos = start_pos + hi - 1
+    while lo <= hi_pos:
+        mid = (lo + hi_pos) // 2
         try:
-            rows = _rates(symbol, timeframe, mid, start_pos)
+            _rates(symbol, timeframe, 1, mid)
         except EndpointMissing:
-            hi = mid - 1
+            hi_pos = mid - 1
             continue
-        best, lo = rows, mid + 1
-    return best
+        last, lo = mid, mid + 1
+    if last < start_pos:
+        return []
+    return _rates(symbol, timeframe, last - start_pos + 1, start_pos)
 
 
 def validate(bars: list[dict]) -> list[str]:
