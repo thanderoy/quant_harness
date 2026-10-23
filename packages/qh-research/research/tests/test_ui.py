@@ -75,6 +75,13 @@ def test_status_reads_the_phase_table():
     st = data.status()
     assert st["available"] and st["headline"]
     assert {p["phase"] for p in st["phases"]} >= {"0", "1", "2"}
+    assert st["invariants"] and all(i and not i[0].isdigit() for i in st["invariants"])
+
+
+def test_numbered_joins_continuation_lines():
+    text = "## Rules\n\nIntro.\n\n1. **One** first\n   continued.\n2. Two.\n\n---\n3. not this\n"
+    assert data._numbered(text, "Rules") == ["**One** first continued.", "Two."]
+    assert data._numbered(text, "Missing") == []
 
 
 def test_pending_counts_down_to_the_cot_look():
@@ -100,3 +107,12 @@ def test_router(monkeypatch, log_dir):
 def test_static_files_exist():
     for name in server.STATIC_FILES.values():
         assert (server.STATIC_DIR / name).is_file()
+
+
+def test_every_page_serves_the_shell():
+    for page in server.PAGES:
+        assert server.STATIC_FILES[page] == "index.html"
+
+
+def test_trial_breakdown_totals_trial_count(log_dir):
+    assert data.trial_breakdown(log_dir)["total"] == research_log.trial_count(log_dir)

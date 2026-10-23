@@ -26,13 +26,18 @@ logger = logging.getLogger(__name__)
 HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 STATIC_DIR = Path(__file__).resolve().parent / "static"
-STATIC_FILES = {"/": "index.html", "/app.js": "app.js", "/app.css": "app.css"}
+#: Pages are rendered client-side; each path serves the same shell.
+PAGES = ("/", "/experiments", "/divisions", "/trials", "/observation",
+         "/log", "/protocols", "/artifacts")
+STATIC_FILES = {**{p: "index.html" for p in PAGES},
+                "/app.js": "app.js", "/app.css": "app.css"}
 
 ROUTES: dict[str, Callable[[], object]] = {
     "/api/summary": data.summary,
     "/api/hypotheses": data.hypotheses,
     "/api/ledger": data.ledger,
     "/api/trials": data.trial_timeline,
+    "/api/trial_breakdown": data.trial_breakdown,
     "/api/status": data.status,
     "/api/pending": data.pending,
     "/api/artifacts": data.artifacts,
@@ -72,7 +77,8 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(code, body if body is not None else {"error": "not found"})
             return
-        self._json(HTTPStatus.NOT_FOUND, {"error": "not found"})
+        # Any other path gets the page shell, which renders its own 404.
+        self._static("index.html", HTTPStatus.NOT_FOUND)
 
     def _refuse(self) -> None:
         self._json(HTTPStatus.METHOD_NOT_ALLOWED, {"error": "read-only"})
@@ -88,10 +94,10 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
 
-    def _static(self, name: str) -> None:
+    def _static(self, name: str, code: HTTPStatus = HTTPStatus.OK) -> None:
         p = STATIC_DIR / name
         raw = p.read_bytes()
-        self.send_response(HTTPStatus.OK)
+        self.send_response(code)
         self.send_header("Content-Type", mimetypes.guess_type(name)[0] or "text/plain")
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(raw)))

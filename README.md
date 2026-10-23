@@ -133,16 +133,18 @@ cd packages/qh-research && uv run python -m research.ui      # http://127.0.0.1:
 # --port N to move it
 ```
 
-A read-only page over what the harness already records. It shows:
+A read-only research terminal over what the harness already records. Each
+tab on the rail is its own page:
 
-- whether the hash chain verifies, and `trial_count()`;
-- the phase table from `docs/STATUS.md`;
-- every registered hypothesis, with its current verdict and decisive p
-  against the threshold it was registered with;
-- the cumulative trial count over time;
-- the whole ledger with its hash links;
-- the tests waiting for data;
-- the JSON artifacts.
+- **Overview:** the programme's status in one statement, four summary
+  tiles and the phase schematic.
+- **Experiments:** every hypothesis, with a dossier for the one you select.
+- **Divisions:** one sector per family, one cell per experiment.
+- **Trial load:** `trial_count()` over time and by selection rule.
+- **Observation:** the pending COT look's countdown and checklist.
+- **Log:** the hash-chained ledger, greppable.
+- **Protocols:** the architecture invariants from STATUS.
+- **Artifacts:** the JSON results.
 
 A reading that a later record withdrew (for example the COT passes at seq=146)
 shows as WITHDRAWN, not by its original label.

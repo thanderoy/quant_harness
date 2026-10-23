@@ -144,6 +144,11 @@ def trial_timeline(log_dir: Path = research_log.DEFAULT_LOG_DIR) -> list[dict]:
     return out
 
 
+def trial_breakdown(log_dir: Path = research_log.DEFAULT_LOG_DIR) -> dict:
+    """Where trial_count() comes from, by selection rule."""
+    return research_log.trial_breakdown(log_dir)
+
+
 def _md_table(lines: list[str]) -> list[list[str]]:
     rows = []
     for ln in lines:
@@ -167,7 +172,22 @@ def status(path: Path = STATUS_MD) -> dict:
         phases = rows[1:] if rows else []
     return {"available": True, "headline": head.replace("**Last updated:**", "").strip(),
             "phases": [{"phase": r[0], "scope": r[1], "status": r[2]}
-                       for r in phases if len(r) >= 3]}
+                       for r in phases if len(r) >= 3],
+            "invariants": _numbered(text, "Architecture invariants")}
+
+
+def _numbered(text: str, heading: str) -> list[str]:
+    """A section's numbered list, continuation lines joined. [] if absent."""
+    m = re.search(rf"^## {re.escape(heading)}\n(.*?)(?=^## |^---|\Z)", text, re.M | re.S)
+    if not m:
+        return []
+    items: list[str] = []
+    for ln in m.group(1).splitlines():
+        if re.match(r"^\d+\. ", ln):
+            items.append(re.sub(r"^\d+\. ", "", ln).strip())
+        elif items and ln.startswith("   ") and ln.strip():
+            items[-1] += " " + ln.strip()
+    return items
 
 
 def pending(today: Optional[date] = None,
