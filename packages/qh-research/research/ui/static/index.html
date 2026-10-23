@@ -5,97 +5,113 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Harness Ledger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=tanker@400&display=swap">
 <link rel="stylesheet" href="/app.css">
 </head>
 <body>
-<header class="top">
-  <div class="brand">
-    <h1>Harness Ledger</h1>
-    <p class="sub">quant_harness · every hypothesis tested, in the order it was tested</p>
-  </div>
-  <div class="vitals" id="vitals" aria-live="polite"></div>
-  <button class="theme" id="theme" type="button" aria-label="Switch colour theme">System</button>
-</header>
+<nav class="rail" aria-label="Sections">
+  <a href="#top" class="rail-mark" title="Top" aria-label="Top">QH</a>
+  <a href="#overview" title="Overview" aria-label="Overview"><svg viewBox="0 0 20 20"><rect x="3" y="3" width="6" height="6"/><rect x="11" y="3" width="6" height="6"/><rect x="3" y="11" width="6" height="6"/><rect x="11" y="11" width="6" height="6"/></svg></a>
+  <a href="#experiments" title="Experiments" aria-label="Experiments"><svg viewBox="0 0 20 20"><path d="M8 3v5l-4 8h12l-4-8V3M7 3h6"/></svg></a>
+  <a href="#log" title="Research log" aria-label="Research log"><svg viewBox="0 0 20 20"><path d="M4 5l4 4-4 4M10 15h6"/></svg></a>
+  <a href="#artifacts" title="Artifacts" aria-label="Artifacts"><svg viewBox="0 0 20 20"><path d="M5 3h7l3 3v11H5zM12 3v3h3"/></svg></a>
+</nav>
 
-<main class="layout">
-  <div class="main">
-    <section aria-labelledby="h-status">
-      <div class="sec-head"><h2 id="h-status">Where the programme stands</h2></div>
-      <p class="headline" id="headline"></p>
-      <ol class="phases" id="phases"></ol>
-    </section>
+<div class="shell" id="top">
+  <header class="bar">
+    <div class="bar-row">
+      <span class="sys">QH // RESEARCH TERMINAL</span>
+      <span class="tag tag-red">[READ-ONLY]</span>
+      <span class="sync" id="sync">Last entry: —</span>
+    </div>
+    <div class="bar-row sub" id="vitals"></div>
+  </header>
 
-    <section aria-labelledby="h-hyp">
-      <div class="sec-head">
-        <h2 id="h-hyp">Hypotheses</h2>
-        <span class="count" id="hyp-count"></span>
+  <main>
+    <section class="grid-top" id="overview" aria-label="Overview">
+      <div class="panel schematic">
+        <div class="ph"><span>Programme schematic</span><span class="ph-r" id="phase-note"></span></div>
+        <div id="schematic" class="schematic-body"></div>
+        <p class="headline" id="headline"></p>
       </div>
-      <div class="filters">
-        <div class="chips" id="chips" role="group" aria-label="Filter by verdict"></div>
-        <label class="search"><span class="sr">Search hypotheses</span>
-          <input id="q" type="search" placeholder="Search title, id, family…" autocomplete="off">
-        </label>
-      </div>
-      <div class="table-wrap">
-        <table class="hyp">
-          <thead><tr>
-            <th class="num">seq</th><th>Hypothesis</th><th>Family</th>
-            <th>Verdict</th><th>Decisive p</th><th class="num">Trials</th>
-          </tr></thead>
-          <tbody id="hyp-body"></tbody>
-        </table>
-      </div>
-    </section>
 
-    <section aria-labelledby="h-trials">
-      <div class="sec-head">
-        <h2 id="h-trials">The multiple-testing tax</h2>
-        <span class="count">cumulative trials feeding the Deflated Sharpe haircut</span>
+      <div class="stack">
+        <div class="panel">
+          <div class="ph"><span>Experiment census</span></div>
+          <div class="stats" id="stats"></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><span>Trial load</span><span class="ph-r">feeds the Deflated Sharpe haircut</span></div>
+          <div class="trial-head"><span class="big" id="trial-big">—</span><span class="unit">trials</span><span class="chip-ok" id="chain-chip"></span></div>
+          <figure id="trials-chart" class="chart"></figure>
+        </div>
+        <div class="panel" id="window-panel">
+          <div class="ph"><span>Observation window</span></div>
+          <div id="pending"></div>
+        </div>
       </div>
-      <figure class="chart" id="trials-chart"></figure>
     </section>
 
-    <section aria-labelledby="h-ledger">
-      <div class="sec-head">
-        <h2 id="h-ledger">Ledger</h2>
-        <label class="select"><span class="sr">Event type</span>
-          <select id="etype"><option value="">All event types</option></select>
-        </label>
+    <section class="grid-mid" id="experiments" aria-label="Experiments">
+      <div class="panel">
+        <div class="ph">
+          <span>Experiment table</span>
+          <span class="ph-r controls">
+            <label class="sr" for="status-filter">Filter by status</label>
+            <select id="status-filter"><option value="">All statuses</option></select>
+            <label class="sr" for="family-filter">Filter by family</label>
+            <select id="family-filter"><option value="">All families</option></select>
+            <label class="sr" for="q">Search</label>
+            <input id="q" type="search" placeholder="search…" autocomplete="off">
+          </span>
+        </div>
+        <div class="table-wrap">
+          <table class="exp">
+            <thead><tr>
+              <th>Designation</th><th>Experiment</th><th>Family</th><th>Status</th><th>Decisive p</th><th class="num">Trials</th><th>Registered</th>
+            </tr></thead>
+            <tbody id="exp-body"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="table-wrap">
-        <table class="ledger">
-          <thead><tr>
-            <th class="num">seq</th><th>When</th><th>Type</th><th>Subject</th>
-            <th>Label</th><th class="num">+N</th><th>Chain</th>
-          </tr></thead>
-          <tbody id="ledger-body"></tbody>
-        </table>
-      </div>
-      <button class="more" id="ledger-more" type="button"></button>
-    </section>
-  </div>
 
-  <aside class="side">
-    <section aria-labelledby="h-pending">
-      <h2 id="h-pending">Waiting for data</h2>
-      <div id="pending"></div>
+      <div class="panel assess" id="assess">
+        <div class="ph"><span>Assessment</span><span class="ph-r" id="assess-id"></span></div>
+        <div id="assess-body"><p class="dim">&gt; Select an experiment.</p></div>
+      </div>
     </section>
-    <section aria-labelledby="h-types">
-      <h2 id="h-types">What the log holds</h2>
-      <dl class="types" id="types"></dl>
+
+    <section class="grid-bot" aria-label="Log and artifacts">
+      <div class="panel" id="log">
+        <div class="ph">
+          <span>Research log</span>
+          <span class="ph-r controls">
+            <label class="sr" for="grep">Filter log lines</label>
+            <input id="grep" type="search" placeholder="grep…" autocomplete="off">
+          </span>
+        </div>
+        <div class="term" id="term" tabindex="0" aria-label="Research log lines"></div>
+      </div>
+      <div class="stack">
+        <div class="panel">
+          <div class="ph"><span>Log composition</span></div>
+          <div id="types" class="types"></div>
+        </div>
+        <div class="panel" id="artifacts">
+          <div class="ph"><span>Artifacts</span><span class="ph-r" id="art-count"></span></div>
+          <ul class="arts" id="arts"></ul>
+        </div>
+      </div>
     </section>
-    <section aria-labelledby="h-art">
-      <h2 id="h-art">Artifacts</h2>
-      <ul class="artifacts" id="artifacts"></ul>
-    </section>
-  </aside>
-</main>
+  </main>
+</div>
 
 <div class="scrim" id="scrim" hidden></div>
-<aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="d-title" role="dialog">
-  <button class="close" id="close" type="button" aria-label="Close">×</button>
-  <div id="drawer-body"></div>
+<aside class="viewer" id="viewer" aria-hidden="true" role="dialog" aria-labelledby="viewer-title">
+  <div class="ph"><span id="viewer-title">Artifact</span><button type="button" class="x" id="viewer-close" aria-label="Close">[ X ]</button></div>
+  <pre id="viewer-body"></pre>
 </aside>
 
 <script src="/app.js"></script>
