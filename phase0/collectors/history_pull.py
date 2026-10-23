@@ -52,14 +52,17 @@ def fetch_pages(symbol: str, timeframe: str, page: int = PAGE,
     by_time: dict[str, dict] = {}
     pages = 0
     for k in range(max_pages):
-        params = {"symbol": symbol, "timeframe": timeframe,
-                  "count": page, "start_pos": k * page}
         try:
-            rows = get("/api/v1/rates", params, timeout=120).payload.get("rates", [])
+            rows = _rates(symbol, timeframe, page, k * page)
         except EndpointMissing:
-            if k == 0:
-                raise
-            break
+            # The terminal fails a request that reaches past its oldest bar
+            # instead of returning what it has ("Terminal: Call failed"), so a
+            # 404 here means "fewer than ``page`` bars remain", not "none".
+            rows = _largest_served(symbol, timeframe, k * page, page - 1)
+            if not rows:
+                if k == 0:
+                    raise
+                break
         pages += 1
         for r in rows:
             by_time[r["time"]] = r
@@ -67,6 +70,30 @@ def fetch_pages(symbol: str, timeframe: str, page: int = PAGE,
             break
     bars = [by_time[t] for t in sorted(by_time)]
     return bars[:-1], pages
+
+
+def _rates(symbol: str, timeframe: str, count: int, start_pos: int) -> list[dict]:
+    params = {"symbol": symbol, "timeframe": timeframe,
+              "count": count, "start_pos": start_pos}
+    return get("/api/v1/rates", params, timeout=120).payload.get("rates", [])
+
+
+def _largest_served(symbol: str, timeframe: str, start_pos: int,
+                    hi: int) -> list[dict]:
+    """The longest request at ``start_pos`` the terminal answers, by bisection.
+
+    [] when it answers none, which means history ends at ``start_pos``.
+    """
+    lo, best = 1, []
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        try:
+            rows = _rates(symbol, timeframe, mid, start_pos)
+        except EndpointMissing:
+            hi = mid - 1
+            continue
+        best, lo = rows, mid + 1
+    return best
 
 
 def validate(bars: list[dict]) -> list[str]:
