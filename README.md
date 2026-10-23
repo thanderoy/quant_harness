@@ -149,7 +149,8 @@ shows as WITHDRAWN, not by its original label.
 
 Standard library only. It binds to `127.0.0.1`, answers GET and nothing else,
 and re-reads the log on every request, so a new entry appears on refresh. It
-never writes. Fonts come from Google Fonts and fall back to system faces
+never writes. Space Grotesk comes from Google Fonts and Tanker from Fontshare;
+both fall back to system faces
 offline.
 
 ## Calibration (verified)
