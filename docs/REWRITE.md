@@ -1131,6 +1131,26 @@ produced none anywhere despite the largest raw differences. The deviating indica
 comparisons are not the ones any deployed strategy reads. Narrow, not general: a future strategy
 reading `wma` directly needs this measured again.
 
+**F5 — a daily-horizon trend test on this panel cannot be decided.** Logged at seq=153, under the
+rule pre-declared at seq=150 before any daily history was pulled. Native D1 from
+PepperstoneKE-MT5-Live01 reaches 1983 (EURUSD, USDJPY, USDCHF) to 2007 (XAGUSD); seven of ten
+instruments pass `research.admission` at D1, and GBPUSD, USDJPY and GER40 are refused for holes.
+With the prior per-instrument trend Sharpe fixed at 0.25 and pooling as
+`0.25 × √N_eff`, `N_eff = N / (1 + (N − 1)·ρ̄)` over raw daily returns, the best case is four
+instruments (USDCHF, EURUSD, AUDUSD, NZDUSD) over 1994–2026: ρ̄ 0.546, N_eff 1.52, pooled prior
+0.308 against a decidability floor of 0.276 annualised. The margin is +0.032, and the floor
+itself corresponds to about 50% power.
+
+Three data choices not declared at seq=150 each move the margin by more than its width: the
+admission refusals of GBPUSD and USDJPY (one hole each), GER40's 391 holes, and EURUSD before
+1999, which predates the euro. Five of the 32.7 years are a reconstruction from legacy currencies,
+a different instrument with a different central bank. Length did not convert into decidability
+because breadth stayed near 1.5; F1 already said it would.
+
+Consequence: the trial was not registered and `trial_count()` stays 32. What would change it is
+more instruments with non-USD drivers (crosses, metals, indices, cheap at D1 where granularity
+does not bind) and data-handling rules declared on their merits before any power number exists.
+
 
 
 ---

@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 152
+- **Entries:** 154
 - **Trial count (floor N for DSR):** 32
-- **Hash chain:** OK — chain ok (152 entries)
+- **Hash chain:** OK — chain ok (154 entries)
 
 ## Principles
 
@@ -2382,3 +2382,23 @@ _Metrics_: `admissions`={'AUDUSD': {'admitted_from': '1993-04-27', 'last': '2026
 > The seq=150 cross-check compared native D1, pulled from PepperstoneKE-MT5-Live01 on 2026-10-23, with the stored H1 files in WMPS research/data resampled by server date. It disagrees on all seven instruments it could test: correlation 0.988-0.997, but 59-82% of days differ by more than 1 bp, and no one-day shift aligns them. Diagnosis: live H1 from the same terminal, resampled the same way, matches live D1 on 96.8% of days for EURUSD (125 days) and 100% for XAUUSD (131 days). Live H1 against stored H1 matches exactly on only 21.9% of 2,052 overlapping EURUSD hours (2026-05-01 to 2026-08-28), typically 0.1-1 pip apart. So the native D1 is consistent with the broker's own feed, and the stored H1 files are not the same feed as the live terminal. Every Phase 2, 2b and 4 panel run used those stored H1 files; their source is now an open question. Per seq=150, nothing downstream runs until this is ruled on. No outcome was read. The declared power rule was computed on the admitted native D1 before this ruling, as a description only: k*=4 (USDCHF, EURUSD, AUDUSD, NZDUSD, 1994-2026), prior_pooled 0.308 against floor 0.276, margin +0.032. GBPUSD and USDJPY D1 were refused for one undeclared hole each, and GER40 D1 for 391. EURUSD before 1999 predates the euro.
 
 _hash_: `65ad972fc37580e7…` · _prev_: `a8521ba94048b722…`
+
+### seq 152 · 2026-10-23T13:43:38Z · audit · `record:d1-cross-check-ruling-20261023`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `comparator_declared`=stored H1, resampled by server date, `comparator_valid`=live H1 from the same terminal, resampled by server date, `live_agreement`={'EURUSD': 0.968, 'XAUUSD': 1.0}, `stored_vs_live_h1_exact`={'EURUSD': 0.219}, `supersedes_seq`=None
+
+> Owner ruling, 2026-10-23. The seq=150 cross-check compared native D1 with the stored H1 files and assumed those files were a sound baseline. They are not the same feed as the live terminal (seq=151: 21.9% exact agreement with live H1), so the check failed for a reason unrelated to the D1. It looked like a data problem only because the baseline was assumed sound. Live H1 from the same terminal matches live D1 on 96.8% (EURUSD) and 100% (XAUUSD) of days, which establishes the native D1 as internally consistent with the live feed. Native D1 is accepted. The source of the stored H1 files, which every Phase 2, 2b and 4 panel run used, stays open.
+
+_hash_: `d94ae60c614591a8…` · _prev_: `65ad972fc37580e7…`
+
+### seq 153 · 2026-10-23T13:43:59Z · audit · `record:F5-daily-panel-undecidable`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `finding`=F5, `floor`=0.2759, `instruments`=['USDCHF', 'EURUSD', 'AUDUSD', 'NZDUSD'], `k_star`=4, `margin`=0.032, `n_eff`=1.517, `prior_pooled`=0.3079, `rho_bar`=0.5455, `trial_registered`=False, `window`=1994-02-02..2026-10-22
+
+> Owner ruling 2026-10-23 under the seq=150 stopping rule. The declared calculation gives a best-case margin of +0.032 (k=4, 1994-2026, pooled prior 0.308 against floor 0.276) on a floor that already means about 50% power. Three data-handling choices not declared before the number was seen (the GBPUSD/USDJPY and GER40 admission refusals, and EURUSD's five pre-euro years) each move it by more than its width, so fixing them now would choose a rule knowing which way it pushes. The margin is treated as noise. Recorded as finding F5 in REWRITE.md section 10.4. No trial is registered and trial_count() stays 32.
+
+_hash_: `d6d8de45afc53c52…` · _prev_: `d94ae60c614591a8…`
