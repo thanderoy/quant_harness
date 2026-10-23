@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 150
+- **Entries:** 151
 - **Trial count (floor N for DSR):** 32
-- **Hash chain:** OK — chain ok (150 entries)
+- **Hash chain:** OK — chain ok (151 entries)
 
 ## Principles
 
@@ -2362,3 +2362,13 @@ _Metrics_: `artifact`=research/pre/artifacts/equity_fx_lead_20261019.json, `n_ro
 > Registered run: VOID (orientation check failed: same-hour product {'USDCHF': -0.0163}). Decided by the pre-declared stream alone. Statistic is the mean product of scaled GER40 return and the scaled, risk-oriented follower return; positive is continuation, negative reversal. The decisive stream alone would have read ALIVE: pooled_p_h1 0.026, every follower positive (continuation), pooled correlation 0.0091 against a minimum decidable 0.0046; h=4 p=0.138. The verdict is VOID because the registration declared any non-positive same-hour product a void run, and USDCHF's is -0.016: hourly, the franc does not move as a haven against GER40. Re-running without USDCHF would be a choice made after the result, so it is not done. Cost settles it either way: a 0.009 correlation on an H1 move of about 0.1% gives roughly 0.07 bp, about 0.05 pip, gross per trade, against about a pip per round trip once the 0.5-pip fill gap (seq=133) is counted. Even if real, it cannot be traded at H1.
 
 _hash_: `224fc7ed940723db…` · _prev_: `39f81c45583efaf7…`
+
+### seq 150 · 2026-10-23T08:44:25Z · audit · `record:daily-panel-power-predeclaration`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `cross_check`=Native D1 against H1 resampled by server date over their overlap: correlation of daily close-to-close returns, maximum absolute difference, and days differing by more than 1 bp. Native D1 is used only if they agree. A disagreement is recorded and investigated before anything else runs., `floor`=min_decidable_sharpe(n_obs = trading days in the common window, sr_star = 0, alpha = 0.05) from research.post.mintrl, annualised by sqrt(252). Normal moments. Matches the p < 0.05 convention of seq=137-148., `mechanism_if_registered`=Time-series momentum: position = sign of the trailing 252-day log return, evaluated at each daily close and changed only when the sign flips. Size is set at entry by a volatility target from the trailing 60-day std. Turnover is checked on the signal alone, before outcomes, against a cap of 30 round trips per instrument per year. One fixed rule, no parameter grid., `outliers`=The decisive run includes every admitted bar, with no exclusion and no winsorisation: a trend position would have lived through them. One non-decisive sensitivity drops 2015-01-15 to 2015-01-16 on USDCHF (SNB floor removal). Bad data is research.admission's job, not this rule's., `pooling`=SR_pooled = SR_instrument * sqrt(N_eff), N_eff = N / (1 + (N - 1) * rho_bar), `prior_rationale`=Time-series momentum literature (Moskowitz, Ooi and Pedersen 2012; Hurst, Ooi and Pedersen 2017) puts per-instrument trend Sharpes around 0.2-0.4 before pooling, on panels broader and longer than this one. This panel is FX-heavy and CFD-financed, so the prior sits near the bottom of that band., `prior_sr_instrument_annual`=0.25, `rho_bar`=mean |corr| of daily raw log returns across the included instruments over the common window. Raw returns, not strategy returns, so it reads no outcome. Taken as the strategy-return correlation, which is conservative. F1's 0.44-0.62 is the cross-check., `stopping_rule`={'clearable': 'prior_pooled(k*) >= floor(k*): write the mechanism below, register it (trial 33), run it once, and bump the CI guard.', 'not_clearable': 'Do not register. Record the calculation as finding F5 in REWRITE.md section 10.4 and as an audit record; trial_count() stays 32.'}, `universe`=['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'USDCAD', 'AUDUSD', 'NZDUSD', 'XAUUSD', 'XAGUSD', 'GER40'], `window_selection`=Order the instruments by admitted daily history length. For each k, the window is the common span of the top k and N = k. k* maximises prior_pooled(k) - floor(k). Uses history lengths and raw-return correlations only.
+
+> Declared 2026-10-23 before any daily history beyond the existing XAUUSD_D1.csv is pulled. Question: can a low-turnover trend test across the ten-instrument panel be decided at all with the history the broker holds? O1 (seq=106/108) set the research horizon to H1 for lot-size reasons at $100, so every panel run so far was hourly; daily bars were only ever tested on gold (seq=39/44, seq=79). The prior is fixed here, before the decidability floor is computed, so it cannot be chosen against it. If the floor is not clearable, nothing is registered, trial_count() does not move, and the calculation is recorded as finding F5. Prior exposure: gold's daily trend behaviour was seen in the seq=39/44 sweeps; no other instrument's daily trend behaviour has been looked at.
+
+_hash_: `a8521ba94048b722…` · _prev_: `224fc7ed940723db…`
