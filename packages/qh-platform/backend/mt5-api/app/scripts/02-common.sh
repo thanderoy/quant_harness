@@ -69,12 +69,37 @@ api_healthy() {
 
 # True if the Wine MT5 terminal process is present.
 terminal_running() {
-    pgrep -f "terminal64.exe" >/dev/null 2>&1
+    pgrep -f "terminal6[4].exe" >/dev/null 2>&1
 }
 
 # True if the Wine python process hosting the API is present.
 fastapi_running() {
     pgrep -f "main.py" >/dev/null 2>&1
+}
+
+# Number of terminal processes in the container.
+terminal_count() {
+    local n
+    n=$(pgrep -fc "terminal6[4].exe" 2>/dev/null)
+    echo "${n:-0}"
+}
+
+# Kill every terminal when more than one is running.
+#
+# mt5.initialize() launches a fresh "/portable" terminal whenever it cannot
+# attach to one, and a terminal that never answers is never reaped. On
+# 2026-10-18 a terminal update showed a modal "debugger has been found" dialog
+# under Wine; each failed connect left one more hung terminal behind until 17
+# of them exhausted the 2 GB limit and the OOM killer took the API. One
+# terminal is normal; more than one means the extras are stuck.
+reap_extra_terminals() {
+    local n
+    n=$(terminal_count)
+    if [ "$n" -gt 1 ]; then
+        log_message "WARN" "${n} terminal processes running; killing all before reconnecting."
+        pkill -f "terminal6[4].exe" || true
+        sleep 5
+    fi
 }
 
 # Start the MT5 terminal under Wine if it is not already running.

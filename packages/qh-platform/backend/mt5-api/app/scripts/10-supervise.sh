@@ -45,6 +45,8 @@ recover() {
 
     log_message "WARN" "API unhealthy on port ${api_port} — attempting recovery."
 
+    reap_extra_terminals
+
     if ! terminal_running; then
         log_message "WARN" "MT5 terminal is not running."
         ensure_terminal || log_message "ERROR" "Failed to start MT5 terminal."
