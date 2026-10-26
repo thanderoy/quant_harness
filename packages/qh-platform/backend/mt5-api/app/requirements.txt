@@ -1,5 +1,19 @@
-fastapi[standard]>=0.103.2
+# Installed into the Wine Python at every container start by
+# scripts/08-install-libraries.sh. These are floors, not pins: pip upgrades
+# only what is below them, so a restart never pulls in a surprise release.
+# To move to newer versions, raise the floors here deliberately.
+MetaTrader5>=5.0.6231
+fastapi[standard]>=0.161.1
 fastapi-swagger-dark>=0.0.9
-MetaTrader5
-pandas
-uvicorn>=0.23.0
+pandas>=3.1.0
+uvicorn>=0.54.0
+# Security floors for transitive dependencies. Mirrors
+# [tool.uv] constraint-dependencies in pyproject.toml, which only reaches
+# uv.lock; the container installs from this file, so they must be here too.
+starlette>=1.9.0
+python-multipart>=0.0.32
+idna>=3.20
+pydantic-settings>=2.16.1
+anyio>=4.15.1
+urllib3>=2.8.0
+certifi>=2026.10.19
