@@ -86,11 +86,11 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 843 tests.
-# Locally with the out-of-repo data present: 843 passed, 0 skipped. The H1 and
+# expected: 855 tests.
+# Locally with the out-of-repo data present: 855 passed, 0 skipped. The H1 and
 # crest_n_keel CSVs are read from $QH_DATA_DIR (default research/data/), e.g.
 #   QH_DATA_DIR=../wine-mt5-python-setup/research/data uv run pytest -q
-# On CI, which has neither those CSVs nor a WMPS checkout: 833 / 10.
+# On CI, which has neither those CSVs nor a WMPS checkout: 845 / 10.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.
@@ -125,6 +125,35 @@ Two things worth knowing before the commands surprise you:
 > import at all.
 
 ---
+
+## Harness Ledger — a local view of the research log
+
+```bash
+cd packages/qh-research && uv run python -m research.ui      # http://127.0.0.1:8765
+# --port N to move it
+```
+
+A read-only research terminal over what the harness already records. Each
+tab on the rail is its own page:
+
+- **Overview:** the programme's status in one statement, four summary
+  tiles and the phase schematic.
+- **Experiments:** every hypothesis, with a dossier for the one you select.
+- **Divisions:** one sector per family, one cell per experiment.
+- **Trial load:** `trial_count()` over time and by selection rule.
+- **Observation:** the pending COT look's countdown and checklist.
+- **Log:** the hash-chained ledger, greppable.
+- **Protocols:** the architecture invariants from STATUS.
+- **Artifacts:** the JSON results.
+
+A reading that a later record withdrew (for example the COT passes at seq=146)
+shows as WITHDRAWN, not by its original label.
+
+Standard library only. It binds to `127.0.0.1`, answers GET and nothing else,
+and re-reads the log on every request, so a new entry appears on refresh. It
+never writes. Space Grotesk comes from Google Fonts and Tanker from Fontshare;
+both fall back to system faces
+offline.
 
 ## Calibration (verified)
 
