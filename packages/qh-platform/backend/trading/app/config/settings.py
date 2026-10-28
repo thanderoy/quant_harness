@@ -49,6 +49,9 @@ ALLOWED_HOSTS = list(
             os.getenv("HOST_IP"),
             "localhost",
             "127.0.0.1",
+            # Compose service name, so containers on the stack's default
+            # network can reach http://trading:8000.
+            "trading",
             DJANGO_SERVICE_DOMAIN,
         ],
     )
