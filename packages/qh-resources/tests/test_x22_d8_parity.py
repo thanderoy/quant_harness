@@ -535,14 +535,15 @@ def test_no_cell_in_the_whole_grid_exceeds_its_budget(sized):
 # The claim the fixture is a proxy for, asserted directly where possible.      #
 # --------------------------------------------------------------------------- #
 
-#: Where the WMPS checkout lives. Overridable so the check can be pointed at a
-#: pinned copy, and so it can be deliberately hidden to rehearse a CI run.
+#: WMPS is archived, so its indicators.py is frozen beside this test and the
+#: comparison runs everywhere, CI included. ``QH_WMPS_DIR`` still points it at
+#: a WMPS checkout instead, should the reference ever need re-checking.
 WMPS_ENV = "QH_WMPS_DIR"
-WMPS_DEFAULT = pathlib.Path.home() / "Local" / "wine-mt5-python-setup"
+WMPS_FROZEN = pathlib.Path(__file__).parent / "fixtures" / "wmps_indicators_345c9a6.py"
 
 
 def wmps_indicators():
-    """Import the live module directly, or None if the checkout is absent.
+    """Import the WMPS reference module directly, or None if it is absent.
 
     Loaded by path rather than by installing it: `resources` must not grow a
     dependency on WMPS, and this is a test reaching across to a reference
@@ -551,8 +552,9 @@ def wmps_indicators():
     import importlib.util
     import os
 
-    root = pathlib.Path(os.environ.get(WMPS_ENV) or WMPS_DEFAULT)
-    path = root / "backend/trading/app/quant/strategies/indicators.py"
+    override = os.environ.get(WMPS_ENV)
+    path = (pathlib.Path(override) / "backend/trading/app/quant/strategies/indicators.py"
+            if override else WMPS_FROZEN)
     if not path.is_file():
         return None
     spec = importlib.util.spec_from_file_location("_wmps_indicators", path)
@@ -574,24 +576,25 @@ def test_the_port_matches_the_code_it_was_ported_from(sample, manifest):
     bounded here rather than ignored, because "a few ULP" is the difference
     between re-associating a sum and getting the window wrong.
 
-    ``live`` here is the **frozen WMPS checkout**, which is a separate
-    repository and still reduces with ``np.dot``. It is no longer the only
+    ``live`` here is WMPS's ``indicators.py`` at 345c9a6, frozen in
+    ``fixtures/`` because WMPS is archived, and it still reduces with
+    ``np.dot``. It is no longer the only
     live copy: Phase 3 step 4.1 deleted the duplicate in
     ``qh-platform/backend/trading`` and re-exported these four functions from
     ``resources``, so the in-repo app now runs this reduction exactly. The gap
-    bounded here is therefore specifically a WMPS-versus-port gap, and it
-    closes only if that frozen repository is ever mirrored too.
+    bounded here is therefore specifically a WMPS-versus-port gap, and it is
+    permanent: the reference is frozen.
 
     The difference is far below any decision boundary either way — see
     ``test_the_last_bits_never_change_a_decision``, and the measurement in
     ``qh-platform``'s ``indicators`` module, which found 0 signal flips in
     157,727 bars of XAUUSD H1 and H4 against 3.49 ULP of arithmetic drift.
 
-    It needs the WMPS checkout, so it skips on a runner.
+    The frozen reference is in this repository, so it runs on a runner too.
     """
     live = wmps_indicators()
     if live is None:
-        pytest.skip(f"WMPS checkout not present; set ${WMPS_ENV} to run this")
+        pytest.fail(f"WMPS reference not found; check {WMPS_FROZEN.name} or ${WMPS_ENV}")
 
     ind = manifest["indicators"]
     k_p, d_p, s_k = (ind["stoch_params"][x]

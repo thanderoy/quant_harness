@@ -14,3 +14,16 @@ phase0/d3a_spread_samples.jsonl
 phase0/d1_contract_specs_*.json
 phase0/d3b_spread_history_*.json
 phase0/execution_fills_*.json
+
+# Market data moved from wine-mt5-python-setup. Broker price history stays out
+# of this public repository; only the XAUUSD series, tracked since Phase 0, are
+# committed. Everything else in this folder is local to the checkout.
+packages/qh-research/research/data/*
+!packages/qh-research/research/data/XAUUSD_*.csv
+
+# Files that were deliberately untracked in wine-mt5-python-setup (vendor EA
+# source, scratch backtests, private notes), kept locally at their old paths.
+archive/wmps-local/
+
+# Local agent rules ported from wine-mt5-python-setup's private CLAUDE.md.
+CLAUDE.local.md

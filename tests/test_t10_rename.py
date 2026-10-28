@@ -37,11 +37,16 @@ RESEARCH = REPO / "packages" / "qh-research" / "research"
 sys.path.insert(0, str(REPO / "packages" / "qh-research"))
 
 #: X16's own carve-outs, from docs/REWRITE.md §7: the log and the stored
-#: artifacts are intentionally preserved, and so is git history.
+#: artifacts are intentionally preserved, and so is git history. `data/` and
+#: `archive/` hold untracked material moved from WMPS (sweep outputs with
+#: their generating scripts, private files) — stored artifacts by the same
+#: rule, and absent on a runner.
 EXCLUDED_TREES = (
     RESEARCH / "log",
     RESEARCH / "pre" / "artifacts",
     RESEARCH / "post" / "artifacts",
+    RESEARCH / "data",
+    REPO / "archive",
 )
 
 #: The live state files the execution rename had to migrate, not rename.

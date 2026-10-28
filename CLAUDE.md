@@ -93,9 +93,12 @@ an anti-rot check, and each of those was watched to fire.
   fixture back needs `float_precision="round_trip"`, or Python's own
   `float(str)`. A harness written without it reports ULP drift that is not in
   the file.
-- **WMPS is frozen** under spec §1.3 — mirrored bug fixes only. The port may
-  deliberately diverge from it (see `wma`), but the divergence is measured and
-  recorded, never silent.
+- **This repository is authoritative; WMPS is archived.** Fix things here,
+  never in wine-mt5-python-setup. Production builds only from
+  `services/docker-compose.yml`, run as `docker compose -p
+  wine-mt5-python-setup --env-file ../packages/qh-platform/.env` from
+  `services/`. The port still diverges from WMPS on purpose in places (see
+  `wma`); X22 measures that against WMPS's frozen `indicators.py`.
 - **Parity fixtures and audits are not trials.** They use
   `append_record(...)`, which forces `counts_as_trial=False`. `trial_count()`
   is the DSR haircut denominator and only real hypotheses move it.
