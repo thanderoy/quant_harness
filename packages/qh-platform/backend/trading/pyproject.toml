@@ -41,7 +41,7 @@ dependencies = [
     "telethon>=1.41.2",
     "typing-extensions>=4.12.2",
     "tzdata==2024.1",
-    "urllib3>=2.2.1",
+    "urllib3>=2.8.0",
     "vine==5.1.0",
     "wcwidth==0.2.13",
     "whitenoise==6.6.0",
