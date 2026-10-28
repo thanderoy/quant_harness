@@ -1,4 +1,4 @@
-"""Where the seq=31 CSVs are found, and why a fallback is safe here.
+"""Where the seq=31 CSVs are found, and why reading them from here is safe.
 
 23 checks skipped on CI for want of data that was in the checkout the whole
 time. Both CSVs are tracked in this repository and are byte-identical to the
@@ -37,16 +37,22 @@ def test_an_explicit_override_wins_over_everything():
         del os.environ[t9a.DATA_DIR_ENV]
 
 
-def test_the_recorded_path_is_preferred_when_it_resolves(monkeypatch):
-    """The artifact's own path stays authoritative where it exists, so a
-    machine that has the originals keeps reading the originals."""
+def test_the_in_repo_copies_win_even_where_the_recorded_path_resolves(
+        monkeypatch, tmp_path):
+    """This repository is authoritative and WMPS is archived, so the tracked
+    copies are read even on a machine that still has the WMPS originals.
+    Used to assert the opposite, and skipped on every runner by design."""
     monkeypatch.delenv(t9a.DATA_DIR_ENV, raising=False)
-    real_h1, _ = t9a.default_data_paths()
-    recorded = Path(t9a.load_reference()["inputs"]["h1_path"])
-    if recorded.exists():
-        assert real_h1 == recorded
-    else:
-        pytest.skip("the recorded WMPS path is absent on this machine")
+    for name in ("XAUUSD_H1.csv", "XAUUSD_H4.csv"):
+        (tmp_path / name).write_text("stand-in for the WMPS original\n")
+    ref = t9a.load_reference()
+    stub = {**ref, "inputs": {**ref["inputs"],
+                              "h1_path": str(tmp_path / "XAUUSD_H1.csv"),
+                              "h4_path": str(tmp_path / "XAUUSD_H4.csv")}}
+    monkeypatch.setattr(t9a, "load_reference", lambda *a, **k: stub)
+    h1, h4 = t9a.default_data_paths()
+    assert h1 == t9a.IN_REPO_DATA_DIR / "XAUUSD_H1.csv"
+    assert h4 == t9a.IN_REPO_DATA_DIR / "XAUUSD_H4.csv"
 
 
 def test_the_in_repo_copies_are_used_when_the_recorded_path_is_gone(monkeypatch):

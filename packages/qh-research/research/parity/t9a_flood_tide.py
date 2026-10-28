@@ -140,10 +140,12 @@ def default_data_paths() -> tuple[Path, Path]:
     CSVs were on the machine that produced them and nowhere else — a CI runner
     has no such directory, which is how the first CI run failed.
 
-    Resolution order: ``$QH_PARITY_DATA_DIR`` if set, else the path recorded
-    in the artifact, else the copies tracked in this repository.
+    Resolution order: ``$QH_PARITY_DATA_DIR`` if set, else the copies tracked
+    in this repository, else the path recorded in the artifact. The in-repo
+    copies used to be the last resort; they come first now that WMPS is
+    archived and this repository is authoritative.
 
-    That last fallback is why 23 checks stopped skipping on CI. They had been
+    The in-repo copies are why 23 checks stopped skipping on CI. They had been
     declared CI-limited for want of data that was sitting in the checkout the
     whole time: both CSVs are tracked here and are byte-identical to the WMPS
     originals. Two of them carry Phase 1 acceptance criteria #2 and #3, so the
@@ -164,8 +166,6 @@ def default_data_paths() -> tuple[Path, Path]:
     if override:
         d = Path(override)
         return d / h1.name, d / h4.name
-    if h1.exists() and h4.exists():
-        return h1, h4
     in_repo = (IN_REPO_DATA_DIR / h1.name, IN_REPO_DATA_DIR / h4.name)
     if in_repo[0].exists() and in_repo[1].exists():
         return in_repo
