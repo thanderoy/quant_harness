@@ -87,10 +87,11 @@ uv sync --group test
 # Verify on your machine
 uv run pytest -q
 # expected: 868 tests.
-# Locally with the out-of-repo data present: 868 passed, 0 skipped. The H1 and
-# crest_n_keel CSVs are read from $QH_DATA_DIR (default research/data/), e.g.
-#   QH_DATA_DIR=../wine-mt5-python-setup/research/data uv run pytest -q
-# On CI, which has neither those CSVs nor a WMPS checkout: 858 / 10.
+# Locally with the market data present: 868 passed, 0 skipped. The H1 panel
+# and crest_n_keel CSVs are read from $QH_DATA_DIR, which defaults to
+# packages/qh-research/research/data/. Only the XAUUSD series there are
+# tracked; the rest is gitignored broker data, so a fresh clone lacks it.
+# On CI, which has only the tracked XAUUSD series: 860 / 8.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.
@@ -110,14 +111,13 @@ Two things worth knowing before the commands surprise you:
   `[tool.pytest.ini_options] pythonpath`, so pytest finds them and nothing else
   does — `examples/` fails with `ModuleNotFoundError: No module named
   'research'` without the prefix above.
-- **Three checks skip on CI, and each is declared.** X22's port-vs-WMPS
-  comparison needs a separate checkout (`$QH_WMPS_DIR`); the append-only log
-  check has nothing to diff when the log matches `origin/develop`; and one
-  parity-resolution case asserts the recorded path wins *where it resolves*,
-  so it skips on a runner by design. `CI_LIMITED` in
-  `tests/test_x_coverage.py` names what that costs. The seq=31 CSVs are
-  tracked here, so the parity checks that once needed out-of-repo data now
-  run everywhere.
+- **CI skips only what needs untracked data, plus one log check.** The
+  append-only log check has nothing to diff when the log matches
+  `origin/develop`. The other eight skips need the gitignored panel and
+  crest_n_keel CSVs. X22's port-vs-WMPS comparison no longer needs a WMPS
+  checkout: the reference `indicators.py` is frozen in
+  `packages/qh-resources/tests/fixtures/`. `CI_LIMITED` in
+  `tests/test_x_coverage.py` names what CI still cannot see.
 
 > Until 2026-09-20 this section said `pip install -r requirements.txt`,
 > `python -m unittest discover tests -v` and "Ran 53 tests — OK". Following it
