@@ -55,17 +55,6 @@ DEFERRED: dict[str, tuple[str, str]] = {}
 #: runner, and a green tick that hides that is exactly the reassurance this
 #: file exists to refuse.
 CI_LIMITED: dict[str, str] = {
-    "X22": ("CI now asserts every fixture column exactly. The ULP bound that "
-            "used to be the limitation is gone: at seq=102 `wma` stopped "
-            "reducing with `np.dot`, whose summation order came from the "
-            "OpenBLAS kernel, and now uses `math.fsum`, which is correctly "
-            "rounded and therefore identical on any conforming platform. "
-            "What still needs the WMPS checkout is the direct port-vs-WMPS "
-            "comparison, which skips on a runner; set $QH_WMPS_DIR to run "
-            "it. That comparison is now bounded rather than exact for the "
-            "five reduced columns, because the port uses `fsum` where the "
-            "frozen live app still uses `np.dot` — a deliberate gap a runner "
-            "never sees."),
     "X17": ("behaviour-neutrality is proven two ways and CI sees one of "
             "them. The commit-vs-parent comparison cannot be re-run from a "
             "later commit at all, so it is recorded in the seq=96 metrics "
@@ -191,14 +180,17 @@ def test_partially_exercised_coverage_is_declared_not_implied():
     back to them, so 23 checks stopped skipping. X15a is out, and X17's note
     is narrowed to the half that no data can fix.
 
-    X22 is the remaining case and is a different kind: it needs a WMPS
-    checkout, which is a separate repository rather than a path, so no
-    fallback resolves it.
+    X22 followed. Its port-vs-WMPS comparison needed a WMPS checkout, a
+    separate repository rather than a path. WMPS is archived, so its
+    ``indicators.py`` is frozen in ``qh-resources/tests/fixtures`` and the
+    comparison runs on a runner. X17's permanent half is what remains.
     """
     assert "X15a" not in CI_LIMITED, (
         "X15a's limitation was the out-of-repo CSVs, which CI can now reach")
-    assert "X22" in CI_LIMITED
-    assert "QH_WMPS_DIR" in CI_LIMITED["X22"]
+    assert "X22" not in CI_LIMITED, (
+        "X22's limitation was the WMPS checkout, now frozen in this repository")
+    assert (REPO / "packages/qh-resources/tests/fixtures"
+            / "wmps_indicators_345c9a6.py").is_file()
 
 
 def test_markers_are_registered_so_they_cannot_be_typos():
