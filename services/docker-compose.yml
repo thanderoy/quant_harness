@@ -155,27 +155,18 @@ services:
     depends_on:
       - postgres
       - redis
+    # Internal only: no traefik-public membership and no traefik.* labels,
+    # so this is unreachable from the public internet. Other containers on
+    # the `default` network (celery, celery-beat, postgres, redis) still
+    # reach it at http://trading:8000. The 127.0.0.1-only port binding below
+    # lets an operator reach it from the host itself (or via `ssh -L
+    # 8000:localhost:8000`) without re-exposing it publicly.
+    ports:
+      - "127.0.0.1:8000:8000"
     networks:
       - default
-      - traefik-public
     labels:
       <<: *default-labels
-      traefik.enable: true
-      traefik.docker.network: traefik-public
-
-      # HTTPS Router
-      traefik.http.routers.trading-https.rule: Host(`${DJANGO_SERVICE_DOMAIN}`)
-      traefik.http.routers.trading-https.entrypoints: https
-      traefik.http.routers.trading-https.tls: true
-      traefik.http.routers.trading-https.tls.certresolver: le
-      traefik.http.routers.trading-https.service: trading-service
-      traefik.http.services.trading-service.loadbalancer.server.port: 8000
-
-      # Static Files Router
-      traefik.http.routers.trading-static.rule: Host(`${DJANGO_SERVICE_DOMAIN}`) && PathPrefix(`/static/`)
-      traefik.http.routers.trading-static.entrypoints: https
-      traefik.http.routers.trading-static.tls: true
-      traefik.http.routers.trading-static.service: trading-service
     logging: *default-logging
 
   redis:
