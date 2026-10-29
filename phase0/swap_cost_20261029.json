@@ -1,0 +1,178 @@
+{
+  "task": "swap_cost",
+  "generated_at_utc": "2026-10-29T14:21:26.758465+00:00",
+  "source": {
+    "collector": "phase0.collectors.swap_deals",
+    "collected_at_utc": "2026-10-29T14:19:31.861104+00:00",
+    "broker": {
+      "server": "PepperstoneKE-MT5-Live01",
+      "trade_mode": 2,
+      "currency": "USD"
+    },
+    "endpoint": "/api/v1/deals + /api/v1/symbol_info (GET only)",
+    "n_positions": 179,
+    "n_nonzero_swap": 24,
+    "span": [
+      "2025-02-10",
+      "2026-04-13"
+    ],
+    "largest_lot": 0.03,
+    "specs_source": "pepperstone_live_20261009b.json"
+  },
+  "sign_convention": "MT5: negative is a charge, positive a credit",
+  "triple_weekday": 2,
+  "booked": {
+    "by_symbol": {
+      "AUDUSD": {
+        "BUY": {
+          "n": 2,
+          "median_usd_per_lot_night": -1.08,
+          "span": [
+            "2026-02-23",
+            "2026-03-12"
+          ]
+        },
+        "SELL": {
+          "n": 3,
+          "median_usd_per_lot_night": -1.67,
+          "span": [
+            "2026-02-25",
+            "2026-03-10"
+          ]
+        }
+      },
+      "EURUSD": {
+        "BUY": {
+          "n": 3,
+          "median_usd_per_lot_night": -8.0,
+          "span": [
+            "2026-02-23",
+            "2026-03-12"
+          ]
+        },
+        "SELL": {
+          "n": 3,
+          "median_usd_per_lot_night": 3.33,
+          "span": [
+            "2026-02-19",
+            "2026-03-05"
+          ]
+        }
+      },
+      "GBPUSD": {
+        "BUY": {
+          "n": 2,
+          "median_usd_per_lot_night": -2.75,
+          "span": [
+            "2026-02-23",
+            "2026-03-12"
+          ]
+        },
+        "SELL": {
+          "n": 3,
+          "median_usd_per_lot_night": -2.67,
+          "span": [
+            "2026-02-19",
+            "2026-03-05"
+          ]
+        }
+      },
+      "NZDUSD": {
+        "BUY": {
+          "n": 2,
+          "median_usd_per_lot_night": -3.92,
+          "span": [
+            "2026-02-23",
+            "2026-03-12"
+          ]
+        },
+        "SELL": {
+          "n": 5,
+          "median_usd_per_lot_night": 1.0,
+          "span": [
+            "2026-02-19",
+            "2026-03-10"
+          ]
+        }
+      },
+      "XAUUSD": {
+        "SELL": {
+          "n": 1,
+          "median_usd_per_lot_night": -8.0,
+          "span": [
+            "2025-02-10",
+            "2025-02-11"
+          ]
+        }
+      }
+    },
+    "n_crossed_rollover": 24,
+    "crossed_but_uncharged": 0,
+    "charged_but_not_crossed": 0,
+    "triple_day_ratio": {
+      "AUDUSD_SELL": 3.33,
+      "EURUSD_BUY": 2.88,
+      "EURUSD_SELL": 3.33,
+      "GBPUSD_BUY": 2.5,
+      "GBPUSD_SELL": 2.5,
+      "NZDUSD_SELL": 3.0
+    }
+  },
+  "quoted": {
+    "as_of": "2026-10-29",
+    "raw": {
+      "AUDUSD": {
+        "swap_mode": 1,
+        "swap_long": -0.2,
+        "swap_short": -2.8
+      },
+      "EURUSD": {
+        "swap_mode": 1,
+        "swap_long": -7.98,
+        "swap_short": 2.21
+      },
+      "GBPUSD": {
+        "swap_mode": 1,
+        "swap_long": -2.79,
+        "swap_short": -2.38
+      },
+      "NZDUSD": {
+        "swap_mode": 1,
+        "swap_long": -3.35,
+        "swap_short": 0.81
+      },
+      "XAUUSD": {
+        "swap_mode": 1,
+        "swap_long": -86.42,
+        "swap_short": 30.41
+      }
+    },
+    "usd_per_lot_night": {
+      "AUDUSD": {
+        "converted": true,
+        "BUY": -0.2,
+        "SELL": -2.8
+      },
+      "EURUSD": {
+        "converted": true,
+        "BUY": -7.98,
+        "SELL": 2.21
+      },
+      "GBPUSD": {
+        "converted": true,
+        "BUY": -2.79,
+        "SELL": -2.38
+      },
+      "NZDUSD": {
+        "converted": true,
+        "BUY": -3.35,
+        "SELL": 0.81
+      },
+      "XAUUSD": {
+        "converted": true,
+        "BUY": -86.42,
+        "SELL": 30.41
+      }
+    }
+  }
+}

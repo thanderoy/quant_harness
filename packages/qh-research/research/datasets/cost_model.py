@@ -329,6 +329,51 @@ def measured_slip_model(symbol: str, quantile: str = "p50",
 PEPPERSTONE_XAUUSD_SWAP_LONG_USD_PER_LOT_NIGHT = -10.0    # placeholder
 PEPPERSTONE_XAUUSD_SWAP_SHORT_USD_PER_LOT_NIGHT = -2.0    # placeholder
 
+# -- Swap: MEASURED 2026-10-29 ----------------------------------------------
+#
+# Two sources, both from PepperstoneKE-MT5-Live01 (phase0/swap_cost_20261029.json):
+# the swap booked on 179 closed live positions, and symbol_info as quoted on the
+# day of collection.
+#
+# The booked swaps fix the units and the calendar. Every one of the 24
+# positions that crossed a server-clock midnight was charged and no other was;
+# the Wednesday night costs about three plain nights (ratios 2.5-3.3, coarse
+# because 0.01-lot swaps round to cents); and for FX the booked per-lot rate
+# matches today's quoted points one for one (EURUSD long -8.00 booked, -7.98
+# quoted). So symbol_info's swap_mode-1 figure IS USD per lot per night.
+#
+# Gold is where the placeholders are wrong, and in both directions. Quoted
+# today: long -86.42, short +30.41 USD per lot per night — the long charge is
+# 8.6x the placeholder, and the short is a credit where the placeholder
+# charges. The one gold position that held overnight (Feb 2025, short) was
+# charged -8.00, so the short's sign has flipped inside twenty months: swap
+# follows the rate differential and is not a constant at all.
+#
+# **The placeholders are still the default.** Replacing them re-prices every
+# btpy_runner result that held a position overnight — longs get worse, shorts
+# get better — and one quoted day is not a history. Which rate a backtest
+# should charge across 21 years is a decision for the user, as commission was
+# at seq=105.
+#
+# The registry snapshots of 2026-09-06 and 2026-10-09 read 0.0 for these
+# fields; today the same endpoint on the same terminal returns the figures
+# below. Why the snapshots read zero is still unknown.
+SWAP_MEASURED = {
+    "provenance": "MEASURED",
+    "artifact": "phase0/swap_cost_20261029.json",
+    "source": "/api/v1/deals + /api/v1/symbol_info on PepperstoneKE-MT5-Live01",
+    "measured_on": "2026-10-29",
+    "units": "USD per 1.0 lot per night, MT5 sign (negative is a charge)",
+    "triple_weekday": 2,
+    "n_positions": 179,
+    "n_crossed_rollover": 24,
+    "crossed_but_uncharged": 0,
+    "charged_but_not_crossed": 0,
+    "xauusd_quoted": {"BUY": -86.42, "SELL": 30.41},
+    "xauusd_booked": {"SELL": -8.00, "n": 1, "span": "2025-02-10..2025-02-11"},
+    "default_changed": False,
+}
+
 # Stops level safety floor for backtests, in USD/oz.
 PEPPERSTONE_XAUUSD_STOPS_LEVEL_FLOOR_USD_PER_OZ = 0.10
 
