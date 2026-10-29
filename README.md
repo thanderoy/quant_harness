@@ -86,12 +86,12 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 897 tests.
-# Locally with the market data present: 897 passed, 0 skipped. The H1 panel
+# expected: 907 tests.
+# Locally with the market data present: 907 passed, 0 skipped. The H1 panel
 # and crest_n_keel CSVs are read from $QH_DATA_DIR, which defaults to
 # packages/qh-research/research/data/. Only the XAUUSD series there are
 # tracked; the rest is gitignored broker data, so a fresh clone lacks it.
-# On CI, which has only the tracked XAUUSD series: 889 / 8.
+# On CI, which has only the tracked XAUUSD series: 899 / 8.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.
@@ -288,7 +288,8 @@ from datetime import datetime
 cost = PepperstoneXAUUSDCostModel()
 # Defaults are MEASURED on the live account: $0.17/oz spread, $0.00 commission
 # (seq=105). PepperstoneXAUUSDCostModel.for_scenario("conservative") gives the
-# published Razor figures ($0.22, $7 RT/lot). Swaps are documented values.
+# published Razor figures ($0.22, $7 RT/lot). Swaps are still placeholders;
+# the measured rates are SWAP_MEASURED (see below).
 breakdown = cost.trade_cost(
     lots=0.10, direction="BUY",
     entry_dt=datetime(2024, 5, 6, 12, 0),
@@ -297,8 +298,10 @@ breakdown = cost.trade_cost(
 # breakdown.spread_usd, .commission_usd, .swap_usd, .total_usd
 ```
 
-**Override swap rates with current values from MT5 Symbol Specifications**
-for production accuracy. Pepperstone updates these weekly.
+**The default swap rates are placeholders** (long −$10, short −$2 per lot per
+night). The live account's rates, measured 2026-10-29, are recorded as
+`SWAP_MEASURED` in `cost_model.py` and differ a lot — see below. Pepperstone
+updates them weekly.
 
 ### Execution cost from live fills
 
@@ -410,10 +413,23 @@ Cost model defaults are documented Pepperstone values as of 2025–2026:
 | Lot step | 0.01 | Pepperstone docs |
 | Commission (MT5 Razor) | $7 round-turn / lot ($0.07 per 0.01 lot) | Pepperstone Costs and Charges — **but see below** |
 | Spread (typical) | ~$0.22 / oz | User-observed; Pepperstone-published range $0.05–$0.30 |
-| Triple-swap day | Wednesday rollover | Pepperstone docs |
+| Triple-swap day | Wednesday rollover | Measured on 24 live positions (seq=160) |
 | Server rollover | 5pm New York / 23:59 server time | Pepperstone docs |
-| Swap rates | floating, weekly-updated | Override from MT5 Symbol Specifications |
+| Swap rates (XAUUSD) | long −$86.42, short +$30.41 / lot / night on 2026-10-29; default still the −$10 / −$2 placeholders | `symbol_info` on the live account (seq=160) |
 | Stops level | floor at $0.10/oz (assumed) | Verify in MT5 |
+
+**Measured 2026-10-29: gold swap is far from the placeholders** (seq=160).
+The swap booked on 179 closed live positions confirms the calendar — every
+position that crossed a server-midnight rollover was charged, no other was,
+and Wednesday costs three nights — and for FX it matches the terminal's quoted
+rate one for one. Quoted the same day, XAUUSD charges **−$86.42 per lot per
+night long** (8.6x the placeholder) and **pays +$30.41 short**, where the
+placeholder charges. The one gold position held overnight, a short in Feb
+2025, was charged −$8.00, so the sign moves with rates and no constant
+describes history. The model's own calendar is also off: it puts the triple
+on Tuesday night and charges the weekend twice, 8 units a week against the
+measured 7. Neither is changed yet, because both re-price every recorded
+result that held overnight — longs get worse, shorts better.
 
 Practical implication, corrected 2026-09-20. **There is no $2 gold trade.** The
 old version divided a $0.29 round trip by a $2 risk budget and reported costs
