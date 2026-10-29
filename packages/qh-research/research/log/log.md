@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 161
+- **Entries:** 162
 - **Trial count (floor N for DSR):** 35
-- **Hash chain:** OK — chain ok (161 entries)
+- **Hash chain:** OK — chain ok (162 entries)
 
 ## Principles
 
@@ -2497,3 +2497,13 @@ _Metrics_: `artifact`=phase0/swap_cost_20261029.json, `charged_but_not_crossed`=
 > Swap was the last cost input with no source: PEPPERSTONE_XAUUSD_SWAP_* were placeholders (long -10, short -2 USD per lot per night) and the registry snapshots of 2026-09-06 and 2026-10-09 read swap_long/swap_short as 0.0. A new GET-only collector (phase0.collectors.swap_deals) grouped the live account's deals by position, dropped identity at the boundary, and read symbol_info for the same symbols. 179 closed positions, 2025-02-10..2026-04-13, every lot 0.03 or smaller. THE CALENDAR AND THE UNITS ARE VERIFIED. All 24 positions that crossed a server-clock midnight ending a weekday were charged and no other was. A Wednesday night costs about three plain nights (single-night ratios 2.5-3.3; coarse, because 0.01-lot swaps round to cents). The FX booked per-lot rate matches today's quoted swap points one for one (EURUSD long -8.00 booked vs -7.98 quoted, GBPUSD -2.75 vs -2.79, NZDUSD -3.92 vs -3.35, NZDUSD short +1.00 vs +0.81), so symbol_info swap_mode 1 is USD per lot per night on this account. GOLD. Quoted 2026-10-29: long -86.42, short +30.41 USD per lot per night. The long placeholder understates the charge 8.6x; the short placeholder charges where the account now pays a credit. The only overnight gold position (short, Feb 2025) was charged -8.00, so the short's sign has flipped inside twenty months. Swap follows the rate differential; no single constant describes 21 years of history. A SECOND FINDING, about the model rather than the account: PepperstoneXAUUSDCostModel.swap_usd counts UTC midnights, places the triple on the night ending Tuesday (it tests the weekday of the midnight, not of the day it ends), and charges both weekend midnights, i.e. 8 units per week against the measured 7. NOT VERIFIED: a Friday-to-Monday hold (none in the sample), so the measured convention's single Friday charge is assumed; and the Friday rule for gold specifically (one overnight gold position). The zero snapshots are unexplained: the same endpoint on the same terminal returns non-zero today. NO DEFAULT MOVED. Replacing the placeholders, or fixing the calendar, re-prices every btpy_runner result that held overnight: longs worse, shorts better. That is a decision for the owner, recorded as SWAP_MEASURED beside the placeholders.
 
 _hash_: `8bc28e4c244d6507…` · _prev_: `b479f135a6b14697…`
+
+### seq 161 · 2026-10-29T15:00:23Z · audit · `record:swap-scenario-default`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `default_swap_scenario`=measured_20261029, `legacy_equivalence_holds_tested`=400, `legacy_units_per_week`=8, `legacy_usd_per_lot_night`={'BUY': -10.0, 'SELL': -2.0}, `measured_units_per_week`=7, `measured_usd_per_lot_night`={'BUY': -86.42, 'SELL': 30.41}, `parent_seq`=160, `results_rerun`=0, `verdicts_changed`=0
+
+> The owner's decision on seq=160 (option 1 of three: side by side, rather than today's rates alone or a time-varying series). PepperstoneXAUUSDCostModel gains swap_scenario. MEASURED, the default: -86.42 long / +30.41 short USD per lot per night, the rates quoted 2026-10-29, on the calendar the booked swaps verified (a rollover per midnight ending Monday-Friday, the one ending Wednesday x3, 7 units a week). LEGACY: the -10 / -2 placeholders on the old calendar (UTC midnights, Saturday's skipped, the triple on the midnight starting Wednesday, 8 units a week). Every CostBreakdown now carries swap_scenario beside scenario. LEGACY is tested equal, over 400 seeded holds in both directions, to the frozen _swap_usd copy in research.post.sweeps.cnk_engine, so any figure recorded before this entry reproduces by asking for it. WHAT MOVES. Only PepperstoneXAUUSDCostModel, i.e. btpy_runner and its cost-stress walk (which now carries the scenario into the stressed models). The sweep engines (cnk, zlch, ebb, asqs, the momentum family, state_gate_wf) keep their own frozen LEGACY copies and are deliberately untouched: they are bound to recorded results. NOTHING RECORDED WAS RE-RUN; no verdict in the log changes by this entry. Re-pricing under MEASURED moves overnight longs down and overnight shorts up. LIMIT: MEASURED is one quoted day applied to whatever history a run covers; the short side's sign has already flipped once since Feb 2025. Running a result under both scenarios, not MEASURED alone, is the intended use.
+
+_hash_: `e8223d317ccb76dd…` · _prev_: `8bc28e4c244d6507…`

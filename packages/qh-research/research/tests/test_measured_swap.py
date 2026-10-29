@@ -1,4 +1,4 @@
-"""The measured swap is recorded by name, and the default did not move.
+"""The measured swap is the default, and LEGACY reproduces what came before.
 
 The constants in ``cost_model`` are copied from the committed aggregate
 artifact; these tests keep the two in step and keep per-position rows out of it.
@@ -7,16 +7,21 @@ artifact; these tests keep the two in step and keep per-position rows out of it.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+import random
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+import pandas as pd
 
 from research.datasets.cost_model import (
     PEPPERSTONE_XAUUSD_SWAP_LONG_USD_PER_LOT_NIGHT,
     PEPPERSTONE_XAUUSD_SWAP_SHORT_USD_PER_LOT_NIGHT,
     SWAP_MEASURED,
     PepperstoneXAUUSDCostModel,
+    SwapScenario,
 )
 from research.datasets.swap_cost import booked, quoted, rollover_units
+from research.post.sweeps.cnk_engine import _swap_usd as cnk_swap_usd
 
 ARTIFACT = Path(__file__).resolve().parents[4] / SWAP_MEASURED["artifact"]
 
@@ -25,11 +30,62 @@ def _s(iso: str) -> int:
     return int(datetime.fromisoformat(iso).replace(tzinfo=timezone.utc).timestamp())
 
 
-def test_the_default_swap_did_not_move():
-    """The measurement is available by name; nothing was silently re-priced."""
+def _intervals(n: int = 400) -> list[tuple[datetime, datetime]]:
+    """Seeded holds of 0-12 days starting on any hour of 2024."""
+    rng = random.Random(20261029)
+    t0 = datetime(2024, 1, 1)
+    out = []
+    for _ in range(n):
+        a = t0 + timedelta(hours=rng.randrange(366 * 24))
+        out.append((a, a + timedelta(hours=rng.randrange(12 * 24))))
+    return out
+
+
+def test_the_default_is_measured_and_says_so():
     m = PepperstoneXAUUSDCostModel()
-    assert m.swap_long_per_lot_night == PEPPERSTONE_XAUUSD_SWAP_LONG_USD_PER_LOT_NIGHT == -10.0
-    assert m.swap_short_per_lot_night == PEPPERSTONE_XAUUSD_SWAP_SHORT_USD_PER_LOT_NIGHT == -2.0
+    assert m.swap_scenario is SwapScenario.MEASURED
+    assert (m.swap_long_per_lot_night, m.swap_short_per_lot_night) == (
+        SWAP_MEASURED["xauusd_quoted"]["BUY"],
+        SWAP_MEASURED["xauusd_quoted"]["SELL"])
+    bd = m.trade_cost(0.01, "BUY", datetime(2026, 2, 25, 17), datetime(2026, 2, 26, 3))
+    assert bd.swap_scenario == "measured_20261029"
+
+
+def test_legacy_reproduces_the_pre_seq161_pricing_exactly():
+    """LEGACY must equal the frozen copy every sweep engine still carries."""
+    m = PepperstoneXAUUSDCostModel(swap_scenario=SwapScenario.LEGACY)
+    assert (m.swap_long_per_lot_night, m.swap_short_per_lot_night) == (
+        PEPPERSTONE_XAUUSD_SWAP_LONG_USD_PER_LOT_NIGHT,
+        PEPPERSTONE_XAUUSD_SWAP_SHORT_USD_PER_LOT_NIGHT) == (-10.0, -2.0)
+    for a, b in _intervals():
+        for is_long in (True, False):
+            got, _, _ = m.swap_usd(0.01, "BUY" if is_long else "SELL", a, b)
+            want = cnk_swap_usd(0.01, is_long, pd.Timestamp(a), pd.Timestamp(b))
+            assert got == want, (a, b, is_long)
+
+
+def test_measured_charges_the_verified_calendar():
+    """MEASURED counts the units the booked swaps verified, hold by hold."""
+    m = PepperstoneXAUUSDCostModel(swap_long_per_lot_night=-1.0)
+    for a, b in _intervals():
+        got, nights, _ = m.swap_usd(1.0, "BUY", a, b)
+        units, want_nights = rollover_units(_s(a.isoformat()), _s(b.isoformat()))
+        if b.time() == datetime.min.time():
+            continue  # a hold ending exactly on midnight: the walk excludes it
+        assert (-got, nights) == (units, want_nights), (a, b)
+
+
+def test_a_full_week_is_seven_units_measured_and_eight_legacy():
+    a, b = datetime(2026, 2, 23, 16), datetime(2026, 3, 2, 16)
+    measured = PepperstoneXAUUSDCostModel(swap_long_per_lot_night=-1.0)
+    legacy = PepperstoneXAUUSDCostModel(swap_long_per_lot_night=-1.0,
+                                        swap_scenario="legacy")
+    assert measured.swap_usd(1.0, "BUY", a, b)[0] == -7.0
+    assert legacy.swap_usd(1.0, "BUY", a, b)[0] == -8.0
+
+
+def test_the_measurement_record_itself_did_not_move():
+    """The default moved through SwapScenario (seq=161), not by editing seq=160."""
     assert SWAP_MEASURED["default_changed"] is False
 
 
