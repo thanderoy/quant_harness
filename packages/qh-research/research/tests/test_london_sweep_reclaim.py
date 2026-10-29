@@ -101,3 +101,10 @@ def test_registration_parameters_are_one_set_for_the_universe():
     params = ls.registration_parameters()
     assert params["symbol"] == ls.SYMBOL and "XAUUSD" not in params.get("by_instrument", {})
     assert params["decisive_stream"] == "p_timing"
+
+
+def test_a_published_trade_carries_no_price_level():
+    s, _ = ls.find_setup("2020-01-06", _short_setup_day())
+    t = ls.public_trade(s, 1.0)
+    assert not {"entry", "stop", "target", "asian_high", "asian_low"} & set(t)
+    assert t["stop_dist_usd"] == 4.0 and t["target_dist_usd"] == 3.0

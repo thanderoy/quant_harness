@@ -43,7 +43,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -311,8 +311,18 @@ def evaluate(days: dict[str, np.ndarray],
             "streams": {"p_timing": pooled["p"],
                         "p_timing_long": sides["long"]["p"],
                         "p_timing_short": sides["short"]["p"]},
-            "trades": [{**asdict(s), "gross_usd": float(g)}
-                       for s, g in zip(found, gross)]}
+            "trades": [public_trade(s, g) for s, g in zip(found, gross)]}
+
+
+def public_trade(s: Setup, gross: float) -> dict:
+    """A trade with no price level in it. The repo is public and broker
+    prices stay out of it; distances and P&L carry what the result needs."""
+    return {"date": s.date, "direction": s.direction, "sweep_bar": s.sweep_bar,
+            "reclaim_bar": s.reclaim_bar, "entry_bar": s.entry_bar,
+            "asian_width_usd": round(s.asian_high - s.asian_low, 4),
+            "stop_dist_usd": round(abs(s.stop - s.entry), 4),
+            "target_dist_usd": round(abs(s.target - s.entry), 4),
+            "gross_usd": float(gross)}
 
 
 def run(log_dir: Optional[Path] = None,
