@@ -86,12 +86,12 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 907 tests.
-# Locally with the market data present: 907 passed, 0 skipped. The H1 panel
+# expected: 911 tests.
+# Locally with the market data present: 911 passed, 0 skipped. The H1 panel
 # and crest_n_keel CSVs are read from $QH_DATA_DIR, which defaults to
 # packages/qh-research/research/data/. Only the XAUUSD series there are
 # tracked; the rest is gitignored broker data, so a fresh clone lacks it.
-# On CI, which has only the tracked XAUUSD series: 899 / 8.
+# On CI, which has only the tracked XAUUSD series: 903 / 8.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.
@@ -288,8 +288,8 @@ from datetime import datetime
 cost = PepperstoneXAUUSDCostModel()
 # Defaults are MEASURED on the live account: $0.17/oz spread, $0.00 commission
 # (seq=105). PepperstoneXAUUSDCostModel.for_scenario("conservative") gives the
-# published Razor figures ($0.22, $7 RT/lot). Swaps are still placeholders;
-# the measured rates are SWAP_MEASURED (see below).
+# published Razor figures ($0.22, $7 RT/lot). Swap is its own axis:
+# swap_scenario="measured_20261029" (default) or "legacy" (see below).
 breakdown = cost.trade_cost(
     lots=0.10, direction="BUY",
     entry_dt=datetime(2024, 5, 6, 12, 0),
@@ -298,10 +298,20 @@ breakdown = cost.trade_cost(
 # breakdown.spread_usd, .commission_usd, .swap_usd, .total_usd
 ```
 
-**The default swap rates are placeholders** (long −$10, short −$2 per lot per
-night). The live account's rates, measured 2026-10-29, are recorded as
-`SWAP_MEASURED` in `cost_model.py` and differ a lot — see below. Pepperstone
-updates them weekly.
+**Swap is a declared scenario** (seq=161). The default,
+`SwapScenario.MEASURED`, charges the rates quoted on the live account on
+2026-10-29 on the verified rollover calendar. `SwapScenario.LEGACY` gives the
+old −$10 / −$2 placeholders on the old calendar and reproduces every result
+recorded before seq=161 exactly. Pepperstone resets rates weekly, so report a
+result that holds overnight under both:
+
+```python
+legacy = PepperstoneXAUUSDCostModel(swap_scenario="legacy")
+# every CostBreakdown carries .scenario and .swap_scenario
+```
+
+The sweep engines under `research/post/sweeps/` keep their own frozen LEGACY
+copies and are not affected.
 
 ### Execution cost from live fills
 
@@ -415,7 +425,7 @@ Cost model defaults are documented Pepperstone values as of 2025–2026:
 | Spread (typical) | ~$0.22 / oz | User-observed; Pepperstone-published range $0.05–$0.30 |
 | Triple-swap day | Wednesday rollover | Measured on 24 live positions (seq=160) |
 | Server rollover | 5pm New York / 23:59 server time | Pepperstone docs |
-| Swap rates (XAUUSD) | long −$86.42, short +$30.41 / lot / night on 2026-10-29; default still the −$10 / −$2 placeholders | `symbol_info` on the live account (seq=160) |
+| Swap rates (XAUUSD) | long −$86.42, short +$30.41 / lot / night on 2026-10-29 — the default since seq=161; `legacy` keeps −$10 / −$2 | `symbol_info` on the live account (seq=160) |
 | Stops level | floor at $0.10/oz (assumed) | Verify in MT5 |
 
 **Measured 2026-10-29: gold swap is far from the placeholders** (seq=160).
@@ -428,8 +438,10 @@ placeholder charges. The one gold position held overnight, a short in Feb
 2025, was charged −$8.00, so the sign moves with rates and no constant
 describes history. The model's own calendar is also off: it puts the triple
 on Tuesday night and charges the weekend twice, 8 units a week against the
-measured 7. Neither is changed yet, because both re-price every recorded
-result that held overnight — longs get worse, shorts better.
+measured 7. Both now sit behind `SwapScenario` (seq=161): MEASURED fixes
+them, LEGACY keeps them so that recorded figures still reproduce. Nothing
+recorded was re-run; under MEASURED, overnight longs get worse and shorts
+better.
 
 Practical implication, corrected 2026-09-20. **There is no $2 gold trade.** The
 old version divided a $0.29 round trip by a $2 risk budget and reported costs
