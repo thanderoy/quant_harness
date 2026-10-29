@@ -61,7 +61,7 @@ def main():
     print("Sample trade cost (Pepperstone Razor MT5, current defaults):")
     print(f"  spread_per_oz_typical : ${cost.spread_usd_per_oz}")
     print(f"  commission_per_lot_RT : ${cost.commission_per_lot_round_turn}")
-    print(f"  swap_long_per_lot_night : ${cost.swap_long_per_lot_night} (placeholder)")
+    print(f"  swap_long_per_lot_night : ${cost.swap_long_per_lot_night} ({cost.swap_scenario.value})")
     print()
 
     examples = [

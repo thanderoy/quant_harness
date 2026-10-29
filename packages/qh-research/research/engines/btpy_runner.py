@@ -760,6 +760,7 @@ def run_spread_stress(
             ),
             swap_long_per_lot_night=cost_model.swap_long_per_lot_night,
             swap_short_per_lot_night=cost_model.swap_short_per_lot_night,
+            swap_scenario=cost_model.swap_scenario,
             stops_level_floor_usd_per_oz=(
                 cost_model.stops_level_floor_usd_per_oz
             ),

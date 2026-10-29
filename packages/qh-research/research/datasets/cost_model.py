@@ -349,11 +349,12 @@ PEPPERSTONE_XAUUSD_SWAP_SHORT_USD_PER_LOT_NIGHT = -2.0    # placeholder
 # charged -8.00, so the short's sign has flipped inside twenty months: swap
 # follows the rate differential and is not a constant at all.
 #
-# **The placeholders are still the default.** Replacing them re-prices every
-# btpy_runner result that held a position overnight — longs get worse, shorts
-# get better — and one quoted day is not a history. Which rate a backtest
-# should charge across 21 years is a decision for the user, as commission was
-# at seq=105.
+# **Superseded as the default 2026-10-29 (seq=161), by the owner's decision.**
+# Swap is now a declared axis like commission: SwapScenario.MEASURED (these
+# rates on the server-clock calendar) is the default and SwapScenario.LEGACY
+# (the placeholders on the old calendar) reproduces every result recorded
+# before it. One quoted day is still not a history; MEASURED is the account's
+# rate now, not across 21 years.
 #
 # The registry snapshots of 2026-09-06 and 2026-10-09 read 0.0 for these
 # fields; today the same endpoint on the same terminal returns the figures
@@ -371,7 +372,32 @@ SWAP_MEASURED = {
     "charged_but_not_crossed": 0,
     "xauusd_quoted": {"BUY": -86.42, "SELL": 30.41},
     "xauusd_booked": {"SELL": -8.00, "n": 1, "span": "2025-02-10..2025-02-11"},
+    #: False when measured (seq=160); the default moved at seq=161 through
+    #: SwapScenario, not by editing this record.
     "default_changed": False,
+}
+
+
+class SwapScenario(str, Enum):
+    """Which swap rates and rollover calendar a result was produced under."""
+
+    #: Rates quoted on the live account 2026-10-29, on the calendar the booked
+    #: swaps verified: one rollover per server midnight ending Monday-Friday,
+    #: the one ending Wednesday charged three times — 7 units a week.
+    MEASURED = "measured_20261029"
+
+    #: The -10 / -2 placeholders on the calendar every result before seq=161
+    #: was priced with: UTC midnights, Saturday's skipped, the triple on the
+    #: midnight that STARTS Wednesday — 8 units a week. Kept so a recorded
+    #: figure can be reproduced exactly, not because it describes anything.
+    LEGACY = "legacy"
+
+
+SWAP_SCENARIO_VALUES = {
+    SwapScenario.MEASURED: (SWAP_MEASURED["xauusd_quoted"]["BUY"],
+                            SWAP_MEASURED["xauusd_quoted"]["SELL"]),
+    SwapScenario.LEGACY: (PEPPERSTONE_XAUUSD_SWAP_LONG_USD_PER_LOT_NIGHT,
+                          PEPPERSTONE_XAUUSD_SWAP_SHORT_USD_PER_LOT_NIGHT),
 }
 
 # Stops level safety floor for backtests, in USD/oz.
@@ -438,6 +464,7 @@ class CostBreakdown:
     #: Which assumptions produced this. Present so a figure cannot be quoted
     #: without them.
     scenario: str = CostScenario.MEASURED.value
+    swap_scenario: str = SwapScenario.MEASURED.value
 
 
 # -- Cost model -------------------------------------------------------------
@@ -452,8 +479,9 @@ class PepperstoneXAUUSDCostModel:
     on a buy, mid - half_spread on a sell). Commission is round-trip
     when entry+exit have both occurred.
 
-    Defaults are documented Pepperstone values as of 2025-2026; override
-    swap rates with current MT5-displayed values for accuracy.
+    Defaults are MEASURED on the live account. Swap rates and the rollover
+    calendar come from ``swap_scenario``; rates passed explicitly override the
+    scenario's rates but not its calendar.
     """
     contract_size: float = PEPPERSTONE_XAUUSD_CONTRACT_SIZE
     #: Defaults are MEASURED. The published-schedule figures are a scenario,
@@ -461,16 +489,22 @@ class PepperstoneXAUUSDCostModel:
     commission_per_lot_round_turn: float = MEASURED_COMMISSION_PER_LOT_RT
     spread_usd_per_oz: float = MEASURED_SPREAD_USD_PER_OZ
     scenario: CostScenario = CostScenario.MEASURED
-    swap_long_per_lot_night: float = (
-        PEPPERSTONE_XAUUSD_SWAP_LONG_USD_PER_LOT_NIGHT
-    )
-    swap_short_per_lot_night: float = (
-        PEPPERSTONE_XAUUSD_SWAP_SHORT_USD_PER_LOT_NIGHT
-    )
+    #: ``None`` takes the rate from ``swap_scenario``.
+    swap_long_per_lot_night: Optional[float] = None
+    swap_short_per_lot_night: Optional[float] = None
+    swap_scenario: SwapScenario = SwapScenario.MEASURED
     stops_level_floor_usd_per_oz: float = (
         PEPPERSTONE_XAUUSD_STOPS_LEVEL_FLOOR_USD_PER_OZ
     )
     triple_swap_weekday: int = 2   # Wednesday (Mon=0, Sun=6) per Pepperstone
+
+    def __post_init__(self) -> None:
+        self.swap_scenario = SwapScenario(self.swap_scenario)
+        long_, short = SWAP_SCENARIO_VALUES[self.swap_scenario]
+        if self.swap_long_per_lot_night is None:
+            self.swap_long_per_lot_night = long_
+        if self.swap_short_per_lot_night is None:
+            self.swap_short_per_lot_night = short
 
     @classmethod
     def for_scenario(cls, scenario: "CostScenario | str",
@@ -503,7 +537,7 @@ class PepperstoneXAUUSDCostModel:
     # ----- Swap ------------------------------------------------------------
 
     def _is_swap_night(self, dt: datetime) -> bool:
-        """True if a position held over this date close incurs swap.
+        """LEGACY calendar: True if the midnight ``dt`` charges swap.
 
         Forex / metal positions held past the daily server rollover incur
         swap. We model rollover as 21:00 UTC (~5pm New York winter, but
@@ -522,7 +556,11 @@ class PepperstoneXAUUSDCostModel:
 
         Triple swap applied on `triple_swap_weekday` (Wednesday) to
         cover Wed-Thu-Fri-Sat rolling that takes T+2 settlement past
-        the weekend.
+        the weekend. Under MEASURED the midnight that charges is the one
+        ending a weekday, so the triple is the night of Wednesday; under
+        LEGACY it is the midnight starting one (see ``SwapScenario``).
+        Timestamps are taken on whatever clock they carry; MEASURED was
+        verified on the server clock.
         """
         if exit_dt <= entry_dt:
             return 0.0, 0, 0
@@ -533,9 +571,15 @@ class PepperstoneXAUUSDCostModel:
         if cur <= entry_dt:
             cur = cur + pd.Timedelta(days=1)
         while cur < exit_dt:
-            if self._is_swap_night(cur):
+            if self.swap_scenario is SwapScenario.LEGACY:
+                charged = self._is_swap_night(cur)
+                weekday = cur.weekday()
+            else:
+                weekday = (cur - pd.Timedelta(days=1)).weekday()
+                charged = weekday < 5
+            if charged:
                 nights += 1
-                if cur.weekday() == self.triple_swap_weekday:
+                if weekday == self.triple_swap_weekday:
                     triples += 1
             cur = cur + pd.Timedelta(days=1)
 
@@ -563,6 +607,7 @@ class PepperstoneXAUUSDCostModel:
             swap_usd=swap,
             total_usd=spread + commission + swap,
             scenario=self.scenario.value,
+            swap_scenario=self.swap_scenario.value,
             nights_held=nights,
             triple_swap_nights=triples,
         )
