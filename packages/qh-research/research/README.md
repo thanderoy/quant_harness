@@ -39,10 +39,31 @@ Why the split: it keeps the two halves of the pipeline from blurring together,
 and gives `dsr.py` **one unambiguous home** — `research.post.dsr` is *the*
 canonical DSR for this repo. See "DSR canonicality" below.
 
+## Registering a hypothesis (schema v3)
+
+Since seq=162 a registration is refused unless it names four things, each
+only honest before the test:
+
+| Field | What it says |
+|---|---|
+| `counterparty` | Who is on the other side, and why they keep losing |
+| `information_source` | What the signal is built from, and whether it lies outside the traded price series |
+| `failure_condition` | Where the effect should vanish if the mechanism is right |
+| `prior_survival` | Probability, strictly between 0 and 1, that it survives the test |
+
+The three prose fields must be a sentence (20 characters or more).
+`prior_calibration()` compares the priors with the verdicts: mean prior,
+survival rate and Brier score over resolved hypotheses. Earlier
+registrations are not back-filled, because a prior written once the verdict
+is known is a posterior.
+
 ## End-to-end pipeline
 
 ```
   register_hypothesis()            research.log        ← log the idea + edge_gate_role
+        │                                                 + counterparty, information
+        │                                                 source, failure condition,
+        │                                                 prior (schema v3)
         │
         ▼
   pre/signal_edge gate             research.pre        ← E-Ratio on the raw entry
