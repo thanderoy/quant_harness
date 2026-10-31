@@ -69,10 +69,12 @@ __all__ = [
     "LogEntry", "PRINCIPLES",
     "register_hypothesis", "update_hypothesis", "append_record",
     "migrate_schema", "schema_migrated",
+    "migrate_schema_v3", "schema_v3_migrated", "prior_calibration",
     "trial_count", "trial_breakdown", "history", "current_state",
     "verify", "render_markdown",
     "PerInstrumentTuningError", "SchemaFieldsRequired",
     "SCHEMA_MIGRATION_ID", "SCHEMA_V2_FIELDS",
+    "SCHEMA_V3_MIGRATION_ID", "SCHEMA_V3_FIELDS",
     "DEFAULT_LOG_DIR", "ENTRIES_FILENAME", "RENDERED_FILENAME",
 ]
 
@@ -182,6 +184,31 @@ SCHEMA_V2_FIELDS: tuple[str, ...] = (
     "registry_snapshot",
 )
 
+#: ``record_id`` of the marker that makes the v3 fields mandatory.
+SCHEMA_V3_MIGRATION_ID = "record:log-schema-v3-mechanism"
+
+#: Fields added by schema v3. Optional before the marker, required after it.
+#: Each names part of the mechanism that is only honest before a result:
+#:
+#: * ``counterparty`` — who is on the other side, and why they keep losing.
+#: * ``information_source`` — what the signal is built from, and whether it
+#:   comes from outside the traded price series.
+#: * ``failure_condition`` — where the effect should vanish, if the
+#:   mechanism is right. A free falsification test.
+#: * ``prior_survival`` — the probability, written before the test, that the
+#:   hypothesis survives it. Read back by :func:`prior_calibration`.
+SCHEMA_V3_FIELDS: tuple[str, ...] = (
+    "counterparty",
+    "information_source",
+    "failure_condition",
+    "prior_survival",
+)
+
+#: Shortest text accepted for a v3 prose field. As with a decisive stream's
+#: rationale: if it cannot be said in a sentence before the run, it is not
+#: yet a mechanism.
+MIN_V3_TEXT = 20
+
 
 class EdgeGateRole(str, Enum):
     """How the E-Ratio signal-edge gate applies to this hypothesis."""
@@ -258,6 +285,14 @@ class LogEntry:
     registry_snapshot: Optional[str] = None
     parameters: Optional[dict] = None
 
+    # --- schema v3 ---------------------------------------------------------
+    # Same contract as v2: None is omitted from the payload, so every entry
+    # written before these existed still hashes to the line it was written as.
+    counterparty: Optional[str] = None
+    information_source: Optional[str] = None
+    failure_condition: Optional[str] = None
+    prior_survival: Optional[float] = None
+
 
 # ---------------------------------------------------------------------------
 # Serialisation + hashing
@@ -274,7 +309,7 @@ _ENUM_FIELDS = {
 #: Fields introduced after the first entries were written. Omitted from the
 #: payload when None so that adding them does not change how an older entry
 #: serialises.
-_V2_OPTIONAL = (*SCHEMA_V2_FIELDS, "parameters")
+_V2_OPTIONAL = (*SCHEMA_V2_FIELDS, "parameters", *SCHEMA_V3_FIELDS)
 
 
 def _entry_to_payload(entry: LogEntry) -> dict:
@@ -410,9 +445,18 @@ def register_hypothesis(
     min_decidable_sharpe: Optional[float] = None,
     registry_snapshot: Optional[str] = None,
     parameters: Optional[dict] = None,
+    counterparty: Optional[str] = None,
+    information_source: Optional[str] = None,
+    failure_condition: Optional[str] = None,
+    prior_survival: Optional[float] = None,
     log_dir: Path = DEFAULT_LOG_DIR,
 ) -> LogEntry:
     """Append a new HYPOTHESIS event. Counts as at least one trial.
+
+    After the schema v3 marker every field in :data:`SCHEMA_V3_FIELDS` is
+    mandatory too, for the same reason: a failure condition named after the
+    result is named to have been met, and a prior written afterwards is a
+    posterior.
 
     After the schema v2 marker every field in :data:`SCHEMA_V2_FIELDS` is
     mandatory. They are demanded here, at registration, because each one is
@@ -429,7 +473,8 @@ def register_hypothesis(
     ValueError
         If ``hypothesis_id`` already has a HYPOTHESIS event in the log.
     SchemaFieldsRequired
-        If a v2 field is missing after the migration marker.
+        If a v2 field is missing after the v2 marker, or a v3 field after
+        the v3 marker.
     PerInstrumentTuningError
         If ``parameters`` is keyed by instrument.
     """
@@ -463,6 +508,15 @@ def register_hypothesis(
                 f"is chosen to be beaten. Pass them to register_hypothesis()."
             )
 
+    v3 = {
+        "counterparty": counterparty,
+        "information_source": information_source,
+        "failure_condition": failure_condition,
+        "prior_survival": prior_survival,
+    }
+    _check_v3_fields(hypothesis_id, v3,
+                     required=_has_marker(entries, SCHEMA_V3_MIGRATION_ID))
+
     seq, prev_hash = _next_seq_and_prev_hash(entries)
     entry = LogEntry(
         seq=seq, timestamp=_now_iso(), prev_hash=prev_hash, entry_hash="",
@@ -478,10 +532,51 @@ def register_hypothesis(
         min_decidable_sharpe=min_decidable_sharpe,
         registry_snapshot=registry_snapshot,
         parameters=dict(parameters) if parameters else None,
+        counterparty=counterparty.strip() if counterparty else None,
+        information_source=(information_source.strip()
+                            if information_source else None),
+        failure_condition=(failure_condition.strip()
+                           if failure_condition else None),
+        prior_survival=(float(prior_survival)
+                        if prior_survival is not None else None),
     )
     entry.entry_hash = _hash(_entry_to_payload(entry))
     _append(log_dir, entry)
     return entry
+
+
+def _has_marker(entries: list[LogEntry], record_id: str) -> bool:
+    return any(e.event_type == EventType.SCHEMA_MIGRATION
+               and e.hypothesis_id == record_id for e in entries)
+
+
+def _check_v3_fields(hypothesis_id: str, supplied: dict,
+                     required: bool) -> None:
+    """Refuse a missing v3 field after the marker, and a malformed one always.
+
+    The prior must lie strictly inside (0, 1): a 0 or a 1 is a certainty, and
+    a certainty is not something a test can calibrate.
+    """
+    if required:
+        missing = [k for k in SCHEMA_V3_FIELDS if supplied[k] is None]
+        if missing:
+            raise SchemaFieldsRequired(
+                f"{hypothesis_id!r}: schema v3 requires {missing}. Name who "
+                f"loses, what the signal is built from, where it should "
+                f"fail, and how likely it is to survive -- before the test, "
+                f"because afterwards each is fitted to the result."
+            )
+    for name in ("counterparty", "information_source", "failure_condition"):
+        v = supplied[name]
+        if v is not None and len(v.strip()) < MIN_V3_TEXT:
+            raise ValueError(
+                f"{hypothesis_id!r}: {name} must be a sentence, at least "
+                f"{MIN_V3_TEXT} characters; got {v!r}")
+    p = supplied["prior_survival"]
+    if p is not None and not 0.0 < float(p) < 1.0:
+        raise ValueError(
+            f"{hypothesis_id!r}: prior_survival must lie strictly in (0, 1); "
+            f"got {p}")
 
 
 def _reject_per_instrument_tuning(
@@ -678,6 +773,89 @@ def trial_breakdown(log_dir: Path = DEFAULT_LOG_DIR) -> dict:
 # T6 schema migration
 # ---------------------------------------------------------------------------
 
+def schema_v3_migrated(log_dir: Path = DEFAULT_LOG_DIR) -> bool:
+    """True once the v3 marker has been appended."""
+    return _has_marker(_read_all(log_dir), SCHEMA_V3_MIGRATION_ID)
+
+
+def migrate_schema_v3(log_dir: Path = DEFAULT_LOG_DIR) -> LogEntry:
+    """Append the marker that makes the v3 fields mandatory.
+
+    Additive, like v2. No earlier registration is given a counterparty or a
+    prior after the fact: a prior written now, for a hypothesis whose verdict
+    is known, would be a posterior, and calibrating against it would flatter
+    the idea pipeline. Earlier entries simply carry none.
+    """
+    entries = _read_all(log_dir)
+    if _has_marker(entries, SCHEMA_V3_MIGRATION_ID):
+        raise ValueError("schema v3 migration marker is already present")
+    if not _has_marker(entries, SCHEMA_MIGRATION_ID):
+        raise ValueError("schema v3 needs the v2 marker first")
+
+    terminal = entries[-1].entry_hash if entries else ""
+    return append_record(
+        EventType.SCHEMA_MIGRATION,
+        record_id=SCHEMA_V3_MIGRATION_ID,
+        title="Log schema v3 — counterparty, information source, failure "
+              "condition, prior",
+        note=(
+            "Additive extension. Registrations appended after this marker "
+            "must carry counterparty (who is on the other side and why they "
+            "keep losing), information_source (what the signal is built "
+            "from, and whether it lies outside the traded price series), "
+            "failure_condition (where the effect should vanish if the "
+            "mechanism is right) and prior_survival (the probability, "
+            "written before the test, that it survives).\n\n"
+            "No earlier registration is back-filled. A prior written now for "
+            "a hypothesis whose verdict is known would be a posterior, and "
+            "prior_calibration() would read it as skill. Earlier entries "
+            "carry none of the four, on disk or by implication.\n\n"
+            "Nothing about trial accounting changes: trial_count() is the "
+            "same before and after this marker."
+        ),
+        metrics={
+            "schema_version": 3,
+            "terminal_hash_before_migration": terminal,
+            "entries_before_migration": len(entries),
+            "new_fields": list(SCHEMA_V3_FIELDS),
+            "prior_entries_backfilled": False,
+            "trial_count_before_migration": trial_count(log_dir),
+        },
+        log_dir=log_dir,
+    )
+
+
+#: How a final verdict scores against a prior. SHELVED is a failure to
+#: establish the effect, so it scores as not surviving; OPEN is unresolved.
+_SURVIVED = {Verdict.PROMOTED: 1.0, Verdict.DEPLOYED: 1.0,
+             Verdict.KILLED: 0.0, Verdict.SHELVED: 0.0}
+
+
+def prior_calibration(log_dir: Path = DEFAULT_LOG_DIR) -> dict:
+    """Compare the priors written at registration with what happened.
+
+    Over every hypothesis registered with a ``prior_survival`` whose current
+    verdict is resolved: the mean prior, the observed survival rate and the
+    Brier score. A mean prior well above the survival rate says the ideas
+    are rated better than they test; a falling Brier score over time says
+    the rating is learning.
+    """
+    entries = _read_all(log_dir)
+    state = current_state(log_dir)
+    priors = {e.hypothesis_id: e.prior_survival for e in entries
+              if e.event_type == EventType.HYPOTHESIS
+              and e.prior_survival is not None}
+    resolved = [(p, _SURVIVED[state[h].verdict]) for h, p in priors.items()
+                if state[h].verdict in _SURVIVED]
+    out: dict = {"n_with_prior": len(priors), "n_resolved": len(resolved)}
+    if resolved:
+        n = len(resolved)
+        out["mean_prior"] = round(sum(p for p, _ in resolved) / n, 4)
+        out["survival_rate"] = round(sum(o for _, o in resolved) / n, 4)
+        out["brier"] = round(sum((p - o) ** 2 for p, o in resolved) / n, 4)
+    return out
+
+
 def schema_migrated(log_dir: Path = DEFAULT_LOG_DIR) -> bool:
     """True once the v2 marker has been appended."""
     return any(e.event_type == EventType.SCHEMA_MIGRATION
@@ -839,6 +1017,14 @@ def render_markdown(log_dir: Path = DEFAULT_LOG_DIR) -> str:
     lines.append(f"- **Entries:** {len(entries)}")
     lines.append(f"- **Trial count (floor N for DSR):** {trial_count(log_dir)}")
     lines.append(f"- **Hash chain:** {'OK' if ok else 'BROKEN'} — {msg}")
+    cal = prior_calibration(log_dir)
+    if cal["n_with_prior"]:
+        line = (f"- **Prior calibration:** {cal['n_resolved']} of "
+                f"{cal['n_with_prior']} registrations with a prior resolved")
+        if cal["n_resolved"]:
+            line += (f"; mean prior {cal['mean_prior']}, survived "
+                     f"{cal['survival_rate']}, Brier {cal['brier']}")
+        lines.append(line)
     lines.append("")
 
     lines.append("## Principles")
@@ -898,6 +1084,15 @@ def render_markdown(log_dir: Path = DEFAULT_LOG_DIR) -> str:
                 lines.append("_Predictions_:")
                 for p in e.predictions:
                     lines.append(f"- {p}")
+                lines.append("")
+            for label, value in (("Counterparty", e.counterparty),
+                                 ("Information source", e.information_source),
+                                 ("Failure condition", e.failure_condition)):
+                if value:
+                    lines.append(f"_{label}_: {value}")
+                    lines.append("")
+            if e.prior_survival is not None:
+                lines.append(f"_Prior that it survives_: {e.prior_survival}")
                 lines.append("")
         else:
             lines.append(

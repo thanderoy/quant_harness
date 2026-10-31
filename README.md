@@ -86,12 +86,12 @@ uv sync --group test
 
 # Verify on your machine
 uv run pytest -q
-# expected: 911 tests.
-# Locally with the market data present: 911 passed, 0 skipped. The H1 panel
+# expected: 923 tests.
+# Locally with the market data present: 923 passed, 0 skipped. The H1 panel
 # and crest_n_keel CSVs are read from $QH_DATA_DIR, which defaults to
 # packages/qh-research/research/data/. Only the XAUUSD series there are
 # tracked; the rest is gitignored broker data, so a fresh clone lacks it.
-# On CI, which has only the tracked XAUUSD series: 903 / 8.
+# On CI, which has only the tracked XAUUSD series: 915 / 8.
 # Both figures are for a branch that appends to the research log. Where the log
 # matches origin/develop, the rewrite check has nothing to diff and skips: one
 # fewer passed, one more skipped.

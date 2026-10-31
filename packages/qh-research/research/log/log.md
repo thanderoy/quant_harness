@@ -2,9 +2,9 @@
 
 > **Generated artifact** — do not edit. Source: `entries.jsonl`. Regenerate with `render_markdown()`.
 
-- **Entries:** 162
+- **Entries:** 163
 - **Trial count (floor N for DSR):** 35
-- **Hash chain:** OK — chain ok (162 entries)
+- **Hash chain:** OK — chain ok (163 entries)
 
 ## Principles
 
@@ -2507,3 +2507,17 @@ _Metrics_: `default_swap_scenario`=measured_20261029, `legacy_equivalence_holds_
 > The owner's decision on seq=160 (option 1 of three: side by side, rather than today's rates alone or a time-varying series). PepperstoneXAUUSDCostModel gains swap_scenario. MEASURED, the default: -86.42 long / +30.41 short USD per lot per night, the rates quoted 2026-10-29, on the calendar the booked swaps verified (a rollover per midnight ending Monday-Friday, the one ending Wednesday x3, 7 units a week). LEGACY: the -10 / -2 placeholders on the old calendar (UTC midnights, Saturday's skipped, the triple on the midnight starting Wednesday, 8 units a week). Every CostBreakdown now carries swap_scenario beside scenario. LEGACY is tested equal, over 400 seeded holds in both directions, to the frozen _swap_usd copy in research.post.sweeps.cnk_engine, so any figure recorded before this entry reproduces by asking for it. WHAT MOVES. Only PepperstoneXAUUSDCostModel, i.e. btpy_runner and its cost-stress walk (which now carries the scenario into the stressed models). The sweep engines (cnk, zlch, ebb, asqs, the momentum family, state_gate_wf) keep their own frozen LEGACY copies and are deliberately untouched: they are bound to recorded results. NOTHING RECORDED WAS RE-RUN; no verdict in the log changes by this entry. Re-pricing under MEASURED moves overnight longs down and overnight shorts up. LIMIT: MEASURED is one quoted day applied to whatever history a run covers; the short side's sign has already flipped once since Feb 2025. Running a result under both scenarios, not MEASURED alone, is the intended use.
 
 _hash_: `e8223d317ccb76dd…` · _prev_: `8bc28e4c244d6507…`
+
+### seq 162 · 2026-10-30T08:07:40Z · schema_migration · `record:log-schema-v3-mechanism`
+
+stage=0_hypothesis · verdict=open · counts_as_trial=False
+
+_Metrics_: `entries_before_migration`=162, `new_fields`=['counterparty', 'information_source', 'failure_condition', 'prior_survival'], `prior_entries_backfilled`=False, `schema_version`=3, `terminal_hash_before_migration`=e8223d317ccb76ddcb928e1bd17d65903282bbe1b522982bd15f5129dc512ff3, `trial_count_before_migration`=35
+
+> Additive extension. Registrations appended after this marker must carry counterparty (who is on the other side and why they keep losing), information_source (what the signal is built from, and whether it lies outside the traded price series), failure_condition (where the effect should vanish if the mechanism is right) and prior_survival (the probability, written before the test, that it survives).
+
+No earlier registration is back-filled. A prior written now for a hypothesis whose verdict is known would be a posterior, and prior_calibration() would read it as skill. Earlier entries carry none of the four, on disk or by implication.
+
+Nothing about trial accounting changes: trial_count() is the same before and after this marker.
+
+_hash_: `1ceb6d1a4e0d4d3d…` · _prev_: `e8223d317ccb76dd…`
