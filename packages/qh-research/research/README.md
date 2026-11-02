@@ -18,6 +18,8 @@ research/
 ├── log/              ← SPINE: entries.jsonl (source of truth) + log.md (rendered)
 ├── pre/              ← PRE-strategy signal-edge gate
 │   ├── signal_edge.py    E-Ratio (MFE/MAE asymmetry) + permutation test + baseline
+│   ├── information_test.py  does a continuous score rank its target? (rank IC,
+│   │                     monotonicity, conditional check; refuses undecidable designs)
 │   ├── signals/          signal generators (emit +1/-1/0 series) + helpers
 │   ├── scripts/          runnable edge reports (write to pre/artifacts/)
 │   └── artifacts/        signal-edge JSON outputs
@@ -57,6 +59,31 @@ survival rate and Brier score over resolved hypotheses. Earlier
 registrations are not back-filled, because a prior written once the verdict
 is known is a posterior.
 
+## Testing a score for information
+
+`research.pre.information_test` asks whether a continuous score ranks the
+forward return it claims to predict, before any trading rule, cost or sizing
+is put on it. It has two calls:
+
+- **`design(...)`, at registration.** It refuses a score that shares an
+  input with the target's normalizer, and a prior IC the design cannot
+  detect. The minimum detectable IC is
+  `(z_{1-α/2} + z_power) / sqrt(T_eff · N_eff)`. Here
+  `T_eff = n_periods / horizon`, because overlapping targets are not
+  independent, and `N_eff = N / (1 + (N-1)·ρ̄)` over the instruments.
+  `mean_abs_correlation()` gives `ρ̄` from raw returns, so no signal is read.
+- **`run(panel, design, condition=...)`, on the data.** It returns:
+  - the rank IC with a Newey-West t-stat. With a panel (`cross_sectional`)
+    the IC is per period, which ranks out the move all instruments share.
+    With one instrument (`time_series`) it is the time-series IC.
+  - the target in score buckets, as excess over the mean.
+  - the IC inside and outside the registered failure condition.
+
+  It also refuses data shorter than the design promised.
+
+The p-values come back keyed by `STREAMS`, so `decisive_stream.declare`
+picks the deciding one at registration.
+
 ## End-to-end pipeline
 
 ```
@@ -65,6 +92,12 @@ is known is a posterior.
         │                                                 source, failure condition,
         │                                                 prior (schema v3)
         │
+        ▼
+  pre/information_test             research.pre        ← the score alone, before any
+        │                                                 rule: rank IC with the time
+        │                                                 effect ranked out, buckets,
+        │                                                 IC inside/outside the
+        │                                                 failure condition
         ▼
   pre/signal_edge gate             research.pre        ← E-Ratio on the raw entry
         │                                                 (HARD GATE for breakout/
